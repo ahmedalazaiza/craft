@@ -10,6 +10,8 @@ export interface Creator {
   skills: string[];
   isCurrentUser?: boolean;
   followersCount?: number;
+  isVerified?: boolean;
+  isOnline?: boolean;
 }
 
 export interface Comment {
@@ -85,6 +87,8 @@ export const mockUsers: Creator[] = [
     skills: ["Brand Systems", "Typography", "Art Direction", "Motion"],
     isCurrentUser: true, // Mock signed-in user
     followersCount: 1240,
+    isVerified: true,
+    isOnline: true,
   },
   {
     id: "user-2",
@@ -97,6 +101,8 @@ export const mockUsers: Creator[] = [
     website: "https://sato.works",
     skills: ["UI Systems", "Creative Code", "Interaction", "Next.js"],
     followersCount: 890,
+    isVerified: true,
+    isOnline: true,
   },
   {
     id: "user-3",
@@ -109,6 +115,8 @@ export const mockUsers: Creator[] = [
     website: "https://mayalin.studio",
     skills: ["Photography", "3D Rendering", "CGI", "Editorial"],
     followersCount: 1420,
+    isVerified: true,
+    isOnline: false,
   },
   {
     id: "user-4",
@@ -121,6 +129,8 @@ export const mockUsers: Creator[] = [
     website: "https://keller-editions.ch",
     skills: ["Editorial", "Print", "Book Design", "Identity"],
     followersCount: 650,
+    isVerified: true,
+    isOnline: true,
   },
   {
     id: "user-5",
@@ -133,6 +143,8 @@ export const mockUsers: Creator[] = [
     website: "https://sophiachen.audio",
     skills: ["Industrial Design", "Hardware UI", "Machining", "CAD"],
     followersCount: 1100,
+    isVerified: false,
+    isOnline: false,
   },
   {
     id: "user-6",
@@ -145,6 +157,8 @@ export const mockUsers: Creator[] = [
     website: "https://nordstrom-ark.se",
     skills: ["Architecture", "Spatial Design", "Timber Craft", "Structures"],
     followersCount: 780,
+    isVerified: true,
+    isOnline: false,
   }
 ];
 

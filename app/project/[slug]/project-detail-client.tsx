@@ -13,6 +13,8 @@ import { ShareModal } from "@/components/ui/share-modal";
 import { useSession } from "@/lib/session-context";
 import { FadeIn } from "@/components/ui/motion-wrapper";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { OnlineBadge } from "@/components/ui/online-badge";
+import { VerifiedBadge } from "@/components/ui/verified-badge";
 import {
   Heart,
   MessageSquare,
@@ -164,16 +166,19 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
               <div className="mt-4 pt-2">
                 <Link
                   href={`/u/${project.creator.username}`}
-                  className="group relative block h-12 w-12 rounded-full overflow-hidden ring-2 ring-[var(--border-neutral)] hover:ring-[var(--primary-forest-green)] transition-all shadow-md"
+                  className="group relative block h-12 w-12 rounded-full ring-2 ring-[var(--border-neutral)] hover:ring-[var(--primary-forest-green)] transition-all shadow-md"
                   title={`View ${project.creator.displayName}'s studio profile`}
                 >
-                  <Image
-                    src={project.creator.avatarUrl}
-                    alt={project.creator.displayName}
-                    fill
-                    sizes="48px"
-                    className="object-cover transition-transform duration-300 group-hover:scale-110"
-                  />
+                  <div className="relative h-full w-full rounded-full overflow-hidden">
+                    <Image
+                      src={project.creator.avatarUrl}
+                      alt={project.creator.displayName}
+                      fill
+                      sizes="48px"
+                      className="object-cover transition-transform duration-300 group-hover:scale-110"
+                    />
+                  </div>
+                  <OnlineBadge isOnline={project.creator.isOnline} size="sm" className="absolute -bottom-0.5 -right-0.5 z-10" />
                 </Link>
               </div>
             </aside>
@@ -296,15 +301,18 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
 
         <Link
           href={`/u/${project.creator.username}`}
-          className="relative h-10 w-10 rounded-full overflow-hidden ring-1 ring-[var(--border-neutral)] shrink-0"
+          className="relative h-10 w-10 rounded-full ring-1 ring-[var(--border-neutral)] shrink-0"
         >
-          <Image
-            src={project.creator.avatarUrl}
-            alt={project.creator.displayName}
-            fill
-            sizes="40px"
-            className="object-cover"
-          />
+          <div className="relative h-full w-full rounded-full overflow-hidden">
+            <Image
+              src={project.creator.avatarUrl}
+              alt={project.creator.displayName}
+              fill
+              sizes="40px"
+              className="object-cover"
+            />
+          </div>
+          <OnlineBadge isOnline={project.creator.isOnline} size="sm" className="absolute -bottom-0.5 -right-0.5 z-10" />
         </Link>
       </div>
 

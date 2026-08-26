@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { VerifiedBadge } from "@/components/ui/verified-badge";
+import { OnlineBadge } from "@/components/ui/online-badge";
 
 export function ProfileDropdown() {
   const router = useRouter();
@@ -87,8 +89,8 @@ export function ProfileDropdown() {
           sizes="36px"
           className="object-cover"
         />
-        {/* Subtle Active Online Indicator */}
-        <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-[#8DFF00] ring-2 ring-[var(--bg-screen)]" />
+        {/* Dynamic Online Indicator */}
+        <OnlineBadge isOnline={user.isOnline} size="sm" className="absolute bottom-0 right-0 z-10" />
       </button>
 
       {/* Dropdown Menu Popover */}
@@ -111,13 +113,14 @@ export function ProfileDropdown() {
                   sizes="44px"
                   className="object-cover"
                 />
+                <OnlineBadge isOnline={user.isOnline} size="sm" className="absolute bottom-0 right-0 z-10" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs font-bold text-[var(--content-primary)] truncate">
                     {user.displayName}
                   </span>
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#8DFF00] shrink-0" />
+                  {user.isVerified !== false && <VerifiedBadge size="sm" />}
                 </div>
                 <div className="text-[11px] text-[var(--content-tertiary)] truncate">
                   @{user.username}

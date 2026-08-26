@@ -11,6 +11,8 @@ import { AppreciationButton } from "@/components/project/appreciation-button";
 import { useSession } from "@/lib/session-context";
 import { Share2 } from "lucide-react";
 import { ShareModal } from "@/components/ui/share-modal";
+import { VerifiedBadge } from "@/components/ui/verified-badge";
+import { OnlineBadge } from "@/components/ui/online-badge";
 import { cn } from "@/lib/utils";
 
 interface ProjectCardProps {
@@ -100,7 +102,7 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
             <div className="mt-4 pt-3.5 border-t border-[var(--border-neutral)] flex items-center justify-between">
               <div
                 onClick={handleCreatorClick}
-                className="flex items-center gap-2.5 hover:opacity-80 transition-opacity group/creator cursor-pointer"
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity group/creator cursor-pointer"
               >
                 <div className="relative h-7 w-7 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-1 ring-[var(--border-neutral)] shrink-0">
                   <Image
@@ -110,10 +112,14 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
                     sizes="28px"
                     className="object-cover"
                   />
+                  <OnlineBadge isOnline={liveProject.creator.isOnline} size="sm" className="absolute -bottom-0.5 -right-0.5 z-10" />
                 </div>
-                <span className="type-title-group text-[var(--content-primary)] group-hover/creator:text-[var(--primary-forest-green)] transition-colors truncate max-w-[140px] sm:max-w-[170px]">
-                  {liveProject.creator.displayName}
-                </span>
+                <div className="flex items-center gap-1 min-w-0">
+                  <span className="type-title-group text-[var(--content-primary)] group-hover/creator:text-[var(--primary-forest-green)] transition-colors truncate max-w-[130px] sm:max-w-[150px]">
+                    {liveProject.creator.displayName}
+                  </span>
+                  {liveProject.creator.isVerified !== false && <VerifiedBadge size="sm" />}
+                </div>
               </div>
 
               <span className="type-label text-[var(--content-tertiary)] shrink-0">

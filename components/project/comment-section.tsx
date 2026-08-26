@@ -8,6 +8,8 @@ import { useSession } from "@/lib/session-context";
 import { Comment } from "@/lib/mock";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { VerifiedBadge } from "@/components/ui/verified-badge";
+import { OnlineBadge } from "@/components/ui/online-badge";
 import { Send, MessageSquare } from "lucide-react";
 
 interface CommentSectionProps {
@@ -54,9 +56,11 @@ export function CommentSection({ projectId, comments }: CommentSectionProps) {
                   sizes="32px"
                   className="object-cover"
                 />
+                <OnlineBadge isOnline={user.isOnline} size="sm" className="absolute bottom-0 right-0 z-10" />
               </div>
-              <span className="type-body-default-bold text-[var(--content-primary)]">
-                Commenting as {user.displayName}
+              <span className="type-body-default-bold text-[var(--content-primary)] flex items-center gap-1.5">
+                <span>Commenting as {user.displayName}</span>
+                {user.isVerified !== false && <VerifiedBadge size="sm" />}
               </span>
             </div>
 
@@ -122,14 +126,16 @@ export function CommentSection({ projectId, comments }: CommentSectionProps) {
                   sizes="40px"
                   className="object-cover"
                 />
+                <OnlineBadge isOnline={c.author.isOnline} size="sm" className="absolute bottom-0 right-0 z-10" />
               </Link>
               <div className="flex-1">
                 <div className="flex items-baseline justify-between gap-2">
                   <Link
                     href={`/u/${c.author.username}`}
-                    className="type-body-default-bold text-[var(--content-primary)] hover:text-[var(--primary-forest-green)] transition-colors"
+                    className="type-body-default-bold text-[var(--content-primary)] hover:text-[var(--primary-forest-green)] transition-colors flex items-center gap-1.5"
                   >
-                    {c.author.displayName}
+                    <span>{c.author.displayName}</span>
+                    {c.author.isVerified !== false && <VerifiedBadge size="sm" />}
                   </Link>
                   <span className="type-label text-[var(--content-tertiary)]">
                     {c.createdAt}

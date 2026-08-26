@@ -8,6 +8,8 @@ import { useSession } from "@/lib/session-context";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Heart, FolderKanban, ArrowRight, Share2 } from "lucide-react";
 import { ShareModal } from "@/components/ui/share-modal";
+import { VerifiedBadge } from "@/components/ui/verified-badge";
+import { OnlineBadge } from "@/components/ui/online-badge";
 import { cn } from "@/lib/utils";
 
 interface CreatorListItemProps {
@@ -61,19 +63,21 @@ export function CreatorListItem({
                 sizes="36px"
                 className="object-cover"
               />
+              <OnlineBadge isOnline={creator.isOnline} size="sm" className="absolute bottom-0 right-0 z-10" />
             </div>
             <div>
-              <div className="type-title-group text-[var(--content-primary)]">
-                {creator.displayName}
+              <div className="type-title-group text-[var(--content-primary)] flex items-center gap-1">
+                <span>{creator.displayName}</span>
+                {creator.isVerified !== false && <VerifiedBadge size="sm" />}
               </div>
               <div className="type-label text-[var(--content-tertiary)]">
                 @{creator.username} • {creator.city || creator.location}
               </div>
             </div>
           </div>
-          <Badge variant="neutral" size="sm">
+          <span className="text-[11px] font-semibold text-[var(--content-secondary)] px-2.5 py-0.5 rounded-full bg-[var(--bg-neutral)]">
             {publishedCount} works
-          </Badge>
+          </span>
         </Link>
       </>
     );
@@ -99,11 +103,15 @@ export function CreatorListItem({
                   sizes="56px"
                   className="object-cover"
                 />
+                <OnlineBadge isOnline={creator.isOnline} size="sm" className="absolute bottom-0.5 right-0.5 z-10" />
               </div>
               <div>
-                <h3 className="type-title-body text-[var(--content-primary)] group-hover:text-[var(--primary-forest-green)] transition-colors">
-                  {creator.displayName}
-                </h3>
+                <div className="flex items-center gap-1.5">
+                  <h3 className="type-title-body text-[var(--content-primary)] group-hover:text-[var(--primary-forest-green)] transition-colors">
+                    {creator.displayName}
+                  </h3>
+                  {creator.isVerified !== false && <VerifiedBadge size="sm" />}
+                </div>
                 <div className="type-label text-[var(--content-tertiary)] flex items-center gap-1.5 mt-0.5">
                   <span>@{creator.username}</span>
                   <span>•</span>
