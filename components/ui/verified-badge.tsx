@@ -32,21 +32,20 @@ export function VerifiedBadge({
       <svg
         viewBox="0 0 24 24"
         fill="none"
-        className={cn(sizeClasses[size], "transition-transform hover:scale-110")}
+        className={cn(sizeClasses[size], "transition-transform duration-200 hover:scale-110 drop-shadow-xs")}
       >
-        {/* Outer 8-point geometric rosette star */}
+        {/* Outer 8-point geometric rosette seal background (Dark Obsidian #090C09 with subtle border in dark mode) */}
         <path
           d="M12 1L14.7 3.9L18.6 3.4L19.7 7.2L23.2 9.1L22.4 13L24 16.7L20.4 18.4L19.2 22.1L15.3 21.8L12.7 24.8L9.9 22L6 22.5L4.8 18.7L1.4 16.9L2.1 13L0.6 9.2L4.1 7.6L5.3 3.8L9.2 4.1L12 1Z"
-          className="fill-[#090C09] dark:fill-[#8DFF00]"
+          className="fill-[#090C09] dark:fill-[#090C09] dark:stroke-[#8DFF00]/40 dark:stroke-[0.75]"
         />
-        {/* Inner crisp checkmark */}
+        {/* Inner crisp checkmark in our signature kinetic lime #8DFF00 */}
         <path
           d="M7.5 12.2L10.3 15L16.5 8.8"
-          stroke="currentColor"
-          strokeWidth="2.4"
+          stroke="#8DFF00"
+          strokeWidth="2.6"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="text-[#8DFF00] dark:text-[#090C09]"
         />
       </svg>
     </span>
