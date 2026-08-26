@@ -84,9 +84,9 @@ export function MeClient() {
     0
   );
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateProfile({
+    await updateProfile({
       displayName: editName,
       bio: editBio,
       location: editLocation,

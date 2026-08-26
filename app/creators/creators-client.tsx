@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { mockUsers, mockProjects } from "@/lib/mock";
+import { useSession } from "@/lib/session-context";
 import { bricolage } from "@/lib/fonts";
 import { CreatorListItem } from "@/components/creator/creator-list-item";
 import { SearchField } from "@/components/search/search-field";
@@ -24,6 +24,7 @@ const QUICK_DISCIPLINES = [
 ];
 
 export function CreatorsClient() {
+  const { creators, projects } = useSession();
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filters, setFilters] = useState<CreatorFilters>({
@@ -33,7 +34,7 @@ export function CreatorsClient() {
   });
 
   const filteredCreators = useMemo(() => {
-    return mockUsers.filter((creator) => {
+    return creators.filter((creator) => {
       // Search text matching
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -62,7 +63,7 @@ export function CreatorsClient() {
 
       // Has published monograph/project
       if (filters.hasPublishedOnly) {
-        const hasWork = mockProjects.some(
+        const hasWork = projects.some(
           (p) => p.creator.id === creator.id && p.published
         );
         if (!hasWork) return false;
@@ -70,7 +71,7 @@ export function CreatorsClient() {
 
       return true;
     });
-  }, [searchQuery, filters]);
+  }, [creators, projects, searchQuery, filters]);
 
   const activeFilterCount =
     (filters.discipline !== "All" ? 1 : 0) +
@@ -78,7 +79,7 @@ export function CreatorsClient() {
     (filters.hasPublishedOnly ? 1 : 0);
 
   // Distinct cities count for directory stats
-  const uniqueCitiesCount = new Set(mockUsers.map((u) => u.city)).size;
+  const uniqueCitiesCount = new Set(creators.map((u) => u.city)).size;
 
   return (
     <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-4 sm:py-6">
@@ -118,7 +119,7 @@ export function CreatorsClient() {
               <Users className="h-4 w-4 text-[var(--primary-forest-green)]" />
               <div className="text-left">
                 <span className="block text-xs font-bold text-[var(--content-primary)]">
-                  {mockUsers.length} Creators
+                  {creators.length} Creators
                 </span>
                 <span className="text-[10px] text-[var(--content-tertiary)] uppercase font-mono">
                   Verified Studios

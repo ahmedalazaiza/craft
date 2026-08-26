@@ -2,6 +2,7 @@ import React from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { mockProjects, getProjectBySlug } from "@/lib/mock";
+import { fetchProjectBySlug } from "@/lib/supabase/queries";
 import { getProjectMetadata, generateProjectJsonLd } from "@/lib/seo";
 import { ProjectDetailClient } from "./project-detail-client";
 
@@ -17,7 +18,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const project = getProjectBySlug(slug);
+  const project = (await fetchProjectBySlug(slug)) || getProjectBySlug(slug);
 
   if (!project) {
     return {
@@ -31,7 +32,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ProjectPage({ params }: PageProps) {
   const { slug } = await params;
-  const project = getProjectBySlug(slug);
+  const project = (await fetchProjectBySlug(slug)) || getProjectBySlug(slug);
 
   if (!project) {
     notFound();

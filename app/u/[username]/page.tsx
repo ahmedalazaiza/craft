@@ -2,6 +2,7 @@ import React from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { mockUsers, getCreatorByUsername } from "@/lib/mock";
+import { fetchCreatorByUsername } from "@/lib/supabase/queries";
 import { getProfileMetadata, generateProfileJsonLd } from "@/lib/seo";
 import { CreatorProfileClient } from "./creator-profile-client";
 
@@ -17,7 +18,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { username } = await params;
-  const creator = getCreatorByUsername(username);
+  const creator = (await fetchCreatorByUsername(username)) || getCreatorByUsername(username);
 
   if (!creator) {
     return {
@@ -31,7 +32,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function UserProfilePage({ params }: PageProps) {
   const { username } = await params;
-  const creator = getCreatorByUsername(username);
+  const creator = (await fetchCreatorByUsername(username)) || getCreatorByUsername(username);
 
   if (!creator) {
     notFound();

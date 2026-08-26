@@ -126,9 +126,9 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     setGalleryImages(galleryImages.filter((_, idx) => idx !== idxToRemove));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const saved = saveProject({
+    await saveProject({
       id: initialData?.id,
       title,
       summary,
