@@ -182,7 +182,7 @@ export function MeClient() {
 
               {/* Action Buttons: Edit Profile + Share Icon & View Public Profile */}
               <div className="space-y-2 pt-2">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                   <Button
                     variant="secondary"
                     size="default"
@@ -193,21 +193,23 @@ export function MeClient() {
                       setEditWebsite(user.website || "");
                       setIsEditingProfile(true);
                     }}
-                    className="flex-1 gap-2 font-semibold shadow-xs"
+                    className="flex-1 gap-2 font-semibold"
                   >
                     <Edit3 className="h-4 w-4" />
                     <span>Edit Profile</span>
                   </Button>
 
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
+                    size="icon"
                     onClick={() => setIsShareModalOpen(true)}
-                    className="h-10 w-10 shrink-0 rounded-full bg-[var(--bg-neutral)] hover:bg-[var(--bg-neutral)]/80 border border-[var(--border-neutral)] text-[var(--content-primary)] flex items-center justify-center transition-all cursor-pointer shadow-xs hover:scale-105"
+                    className="transition-transform hover:scale-105 active:scale-95"
                     title="Share Studio Profile"
                     aria-label="Share Studio Profile"
                   >
-                    <Share2 className="h-4 w-4 text-current" />
-                  </button>
+                    <Share2 className="h-4 w-4" />
+                  </Button>
                 </div>
 
                 <Link href={`/u/${user.username}`} className="block w-full">

@@ -14,7 +14,7 @@ export interface ButtonProps
     | "secondary"
     | "tertiary"
     | "ghost";
-  size?: "default" | "sm" | "lg" | "icon";
+  size?: "default" | "sm" | "lg" | "icon" | "icon-sm";
   asChild?: boolean;
 }
 
@@ -39,7 +39,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       destructive:
         "bg-[var(--negative)] text-[#FFFFFF] hover:bg-[var(--negative-hover)] active:bg-[var(--negative-active)] shadow-xs",
       secondary:
-        "bg-[var(--bg-elevated)] text-[var(--content-primary)] border border-[var(--border-neutral)] hover:bg-[var(--bg-neutral-hover)] active:bg-[var(--bg-neutral-active)]",
+        "bg-[var(--bg-elevated)] text-[var(--content-primary)] border border-[var(--border-neutral)] hover:bg-[var(--bg-neutral-hover)] active:bg-[var(--bg-neutral-active)] shadow-xs",
       tertiary:
         "bg-transparent text-[var(--content-primary)] hover:text-[var(--content-link)] hover:bg-[var(--bg-neutral)] active:bg-[var(--bg-neutral-active)]",
       ghost:
@@ -50,7 +50,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       default: "h-12 px-6 text-sm", // h-48
       sm: "h-8 px-3.5 text-xs",     // sm h-32
       lg: "h-14 px-8 text-base",
-      icon: "h-10 w-10 p-0 rounded-full",
+      icon: "h-12 w-12 p-0 rounded-full shrink-0",
+      "icon-sm": "h-8 w-8 p-0 rounded-full shrink-0",
     };
 
     return (
