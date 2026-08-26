@@ -275,12 +275,14 @@ export function MeClient() {
                   onClick={() => setIsShareModalOpen(true)}
                   className="w-full flex items-center justify-center gap-2 py-2.5 rounded-full bg-[var(--bg-neutral)]/50 hover:bg-[var(--bg-neutral)] text-xs font-semibold text-[var(--content-primary)] transition-all cursor-pointer shadow-xs border border-transparent hover:border-[var(--border-neutral)]"
                 >
-                  <Share2 className="h-3.5 w-3.5 text-[#090C09] dark:text-[#8DFF00]" />
+                  <Share2 className="h-3.5 w-3.5 text-current opacity-80" />
                   <span>Share Studio Profile</span>
                 </button>
               </div>
             </div>
-          </aside>          {/* ===================================================================== */}
+          </aside>
+
+          {/* ===================================================================== */}
           {/* RIGHT COLUMN: Studio Projects Management (9 cols on desktop)          */}
           {/* ===================================================================== */}
           <main className="lg:col-span-8 xl:col-span-9 space-y-6 min-w-0">

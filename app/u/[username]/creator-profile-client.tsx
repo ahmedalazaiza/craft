@@ -20,6 +20,7 @@ import {
   Layers,
   Users,
   Check,
+  Plus,
   Share2,
   Bell,
   BellRing,
@@ -170,7 +171,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                 {isCurrentUser ? (
                   <Link href="/me" className="block w-full">
                     <Button variant="secondary" size="default" className="w-full gap-2">
-                      <Edit3 className="h-4 w-4" />
+                      <Edit3 className="h-4 w-4 text-current" />
                       <span>Manage Studio in /me</span>
                     </Button>
                   </Link>
@@ -186,12 +187,12 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                   >
                     {isFollowing ? (
                       <>
-                        <BellRing className="h-4 w-4 text-[var(--accent)]" />
+                        <Check className="h-4 w-4 text-current" />
                         <span>Following Studio</span>
                       </>
                     ) : (
                       <>
-                        <Bell className="h-4 w-4" />
+                        <Plus className="h-4 w-4 text-current" />
                         <span>Follow Studio</span>
                       </>
                     )}
@@ -264,7 +265,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                   onClick={() => setIsShareModalOpen(true)}
                   className="w-full flex items-center justify-center gap-2 py-2.5 rounded-full bg-[var(--bg-neutral)]/50 hover:bg-[var(--bg-neutral)] text-xs font-semibold text-[var(--content-primary)] transition-all cursor-pointer shadow-xs border border-transparent hover:border-[var(--border-neutral)]"
                 >
-                  <Share2 className="h-3.5 w-3.5 text-[#090C09] dark:text-[#8DFF00]" />
+                  <Share2 className="h-3.5 w-3.5 text-current opacity-80" />
                   <span>Share Studio Profile</span>
                 </button>
               </div>
