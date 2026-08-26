@@ -117,11 +117,11 @@ export function MeClient() {
         {/* ========================================================================= */}
         {/* 2-COLUMN STUDIO DASHBOARD LAYOUT (Identical to Creator Profile Structure) */}
         {/* ========================================================================= */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
           {/* ===================================================================== */}
-          {/* LEFT COLUMN: Sticky Studio Profile Card (4 cols)                      */}
+          {/* LEFT COLUMN: Sticky Studio Profile Card (Sleek 3 cols on desktop)     */}
           {/* ===================================================================== */}
-          <aside className="lg:col-span-4 lg:sticky lg:top-24 space-y-6">
+          <aside className="lg:col-span-4 xl:col-span-3 lg:sticky lg:top-24 space-y-6">
             <div className="rounded-[28px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] p-6 sm:p-7 shadow-[0_12px_32px_rgba(9,12,9,0.04)] space-y-6">
               {/* Creator Avatar & Identity */}
               <div className="flex flex-col items-center text-center">
@@ -280,62 +280,43 @@ export function MeClient() {
                 </button>
               </div>
             </div>
-          </aside>
-
+          </aside>          {/* ===================================================================== */}
+          {/* RIGHT COLUMN: Studio Projects Management (9 cols on desktop)          */}
           {/* ===================================================================== */}
-          {/* RIGHT COLUMN: Studio Projects Management (8 cols)                     */}
-          {/* ===================================================================== */}
-          <main className="lg:col-span-8 space-y-6">
+          <main className="lg:col-span-8 xl:col-span-9 space-y-6 min-w-0">
             {/* Header Toolbar: Tabs on Left + New Project Button on Right */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[var(--border-neutral)]">
-              {/* Tabs */}
-              <div className="flex items-center gap-6">
+              {/* Tab Switcher: Published vs Drafts */}
+              <div className="flex items-center gap-1.5 bg-[var(--bg-neutral)] p-1 rounded-full text-xs font-semibold">
                 <button
                   type="button"
                   onClick={() => setActiveTab("published")}
                   className={cn(
-                    "pb-1 text-lg sm:text-xl font-bold transition-all relative cursor-pointer",
+                    "px-3.5 py-1.5 rounded-full transition-all cursor-pointer",
                     activeTab === "published"
-                      ? "text-[var(--primary-forest-green)]"
-                      : "text-[var(--content-tertiary)] hover:text-[var(--content-primary)]"
+                      ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                      : "text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
                   )}
                 >
-                  <span className="flex items-center gap-2">
-                    <span>Published Works</span>
-                    <span className="rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] px-2 py-0.5 text-xs font-mono font-bold">
-                      {publishedProjects.length}
-                    </span>
-                  </span>
-                  {activeTab === "published" && (
-                    <div className="absolute -bottom-4 left-0 right-0 h-0.5 bg-[var(--primary-forest-green)] rounded-full" />
-                  )}
+                  Published ({publishedProjects.length})
                 </button>
-
                 <button
                   type="button"
                   onClick={() => setActiveTab("drafts")}
                   className={cn(
-                    "pb-1 text-lg sm:text-xl font-bold transition-all relative cursor-pointer",
+                    "px-3.5 py-1.5 rounded-full transition-all cursor-pointer",
                     activeTab === "drafts"
-                      ? "text-[var(--primary-forest-green)]"
-                      : "text-[var(--content-tertiary)] hover:text-[var(--content-primary)]"
+                      ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                      : "text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
                   )}
                 >
-                  <span className="flex items-center gap-2">
-                    <span>Drafts</span>
-                    <span className="rounded-full bg-[var(--bg-neutral)] text-[var(--content-secondary)] px-2 py-0.5 text-xs font-mono font-bold">
-                      {draftProjects.length}
-                    </span>
-                  </span>
-                  {activeTab === "drafts" && (
-                    <div className="absolute -bottom-4 left-0 right-0 h-0.5 bg-[var(--primary-forest-green)] rounded-full" />
-                  )}
+                  Drafts ({draftProjects.length})
                 </button>
               </div>
 
-              {/* Primary CTA */}
-              <Link href="/me/projects/new" className="shrink-0">
-                <Button variant="accent" size="default" className="gap-2 font-bold shadow-xs">
+              {/* + New Project CTA */}
+              <Link href="/me/projects/new">
+                <Button variant="accent" size="sm" className="gap-2 font-bold shadow-xs">
                   <Plus className="h-4 w-4" />
                   <span>New Project</span>
                 </Button>
@@ -363,7 +344,7 @@ export function MeClient() {
                   </Link>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                   {publishedProjects.map((project, idx) => (
                     <StaggerGridItem key={project.id} index={idx} className="relative group">
                       <ProjectCard project={project} />
@@ -403,7 +384,7 @@ export function MeClient() {
                 </Link>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                 {draftProjects.map((project, idx) => (
                   <StaggerGridItem key={project.id} index={idx} className="relative group">
                     <ProjectCard project={project} />

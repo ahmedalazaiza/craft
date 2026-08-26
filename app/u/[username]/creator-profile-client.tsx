@@ -102,11 +102,11 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
         {/* ========================================================================= */}
         {/* 2-COLUMN PROFILE LAYOUT: Sidebar Studio Card (Left) + Works Grid (Right) */}
         {/* ========================================================================= */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
           {/* ===================================================================== */}
-          {/* LEFT COLUMN: Sticky Creator Studio Profile Card (4 cols)              */}
+          {/* LEFT COLUMN: Sticky Creator Studio Profile Card (Sleek 3 cols)        */}
           {/* ===================================================================== */}
-          <aside className="lg:col-span-4 lg:sticky lg:top-24 space-y-6">
+          <aside className="lg:col-span-4 xl:col-span-3 lg:sticky lg:top-24 space-y-6">
             <div className="rounded-[28px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] p-6 sm:p-7 shadow-[0_12px_32px_rgba(9,12,9,0.04)] space-y-6">
               {/* Creator Avatar & Identity */}
               <div className="flex flex-col items-center text-center">
@@ -272,9 +272,9 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
           </aside>
 
           {/* ===================================================================== */}
-          {/* RIGHT COLUMN: Creator's Published Works (8 cols)                      */}
+          {/* RIGHT COLUMN: Creator's Published Works (9 cols on desktop)           */}
           {/* ===================================================================== */}
-          <main className="lg:col-span-8 space-y-6">
+          <main className="lg:col-span-8 xl:col-span-9 space-y-6 min-w-0">
             {/* Header & Sort Controls */}
             <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-4 pb-4 border-b border-[var(--border-neutral)]">
               <div>
@@ -334,7 +334,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                 {creatorProjects.map((project, idx) => (
                   <StaggerGridItem key={project.id} index={idx}>
                     <ProjectCard project={project} />
