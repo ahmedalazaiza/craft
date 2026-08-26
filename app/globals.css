@@ -1,0 +1,320 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: var(--font-display), "Bricolage Grotesque", sans-serif;
+  --font-sans: var(--font-body), Inter, sans-serif;
+
+  --color-primary-bright-green: var(--primary-bright-green);
+  --color-primary-forest-green: var(--primary-forest-green);
+  --color-content-primary: var(--content-primary);
+  --color-content-secondary: var(--content-secondary);
+  --color-content-tertiary: var(--content-tertiary);
+  --color-content-link: var(--content-link);
+  --color-content-link-hover: var(--content-link-hover);
+  --color-content-link-active: var(--content-link-active);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-active: var(--accent-active);
+  --color-interactive-primary: var(--interactive-primary);
+  --color-interactive-primary-hover: var(--interactive-primary-hover);
+  --color-interactive-primary-active: var(--interactive-primary-active);
+  --color-interactive-primary-foreground: var(--interactive-primary-foreground);
+  --color-interactive-secondary: var(--interactive-secondary);
+  --color-interactive-secondary-hover: var(--interactive-secondary-hover);
+  --color-interactive-secondary-active: var(--interactive-secondary-active);
+  --color-negative: var(--negative);
+  --color-negative-hover: var(--negative-hover);
+  --color-negative-active: var(--negative-active);
+  --color-bg-screen: var(--bg-screen);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-overlay: var(--bg-overlay);
+  --color-bg-dimmer: var(--bg-dimmer);
+  --color-bg-neutral: var(--bg-neutral);
+  --color-bg-neutral-hover: var(--bg-neutral-hover);
+  --color-bg-neutral-active: var(--bg-neutral-active);
+  --color-border-neutral: var(--border-neutral);
+  --color-base-contrast: var(--base-contrast);
+  --color-base-dark: var(--base-dark);
+  --color-base-light: var(--base-light);
+  --color-sentiment-positive: var(--sentiment-positive);
+  --color-sentiment-warning: var(--sentiment-warning);
+  --color-sentiment-negative: var(--sentiment-negative);
+
+  --color-btn-cta-bg: var(--btn-cta-bg);
+  --color-btn-cta-fg: var(--btn-cta-fg);
+  --color-btn-cta-bg-hover: var(--btn-cta-bg-hover);
+  --color-btn-cta-bg-active: var(--btn-cta-bg-active);
+
+  --color-chip-bg: var(--chip-bg);
+  --color-chip-fg: var(--chip-fg);
+  --color-chip-bg-hover: var(--chip-bg-hover);
+
+  --color-tag-cyan: #A0E1E1;
+  --color-tag-orange: #FFC091;
+  --color-tag-pink: #FFD7EF;
+  --color-tag-yellow: #FFEB69;
+}
+
+:root,
+html[data-theme="light"] {
+  /* Brand */
+  --primary-bright-green: #8DFF00;
+  --primary-forest-green: #090C09;
+
+  /* Main CTA Button Tokens — identical in Light and Dark */
+  --btn-cta-bg: #8DFF00;
+  --btn-cta-fg: #090C09;
+  --btn-cta-bg-hover: #7AE600;
+  --btn-cta-bg-active: #68CC00;
+
+  /* Chip / Badge Tokens — identical in Light and Dark */
+  --chip-bg: #090C09;
+  --chip-fg: #F3F4F0;
+  --chip-bg-hover: #000000;
+
+  /* Content */
+  --content-primary: #090C09;
+  --content-secondary: #454745;
+  --content-tertiary: #6A6C6A;
+  --content-link: #090C09;
+  --content-link-hover: #000000;
+  --content-link-active: #090C09;
+
+  /* Interactive */
+  --accent: #8DFF00;
+  --accent-hover: #7AE600;
+  --accent-active: #68CC00;
+  --interactive-primary: #090C09;
+  --interactive-primary-hover: #000000;
+  --interactive-primary-active: #000000;
+  --interactive-primary-foreground: #FFFFFF;
+  --interactive-secondary: #868685;
+  --interactive-secondary-hover: #6C6C6B;
+  --interactive-secondary-active: #525251;
+  --negative: #E74848;
+  --negative-hover: #D03238;
+  --negative-active: #BF1E2C;
+
+  /* Surface */
+  --bg-screen: #FFFFFF;
+  --bg-elevated: #FFFFFF;
+  --bg-overlay: #090C0914;
+  --bg-dimmer: #FFFFFFB2;
+  --bg-neutral: #090C0914;
+  --bg-neutral-hover: #090C0921;
+  --bg-neutral-active: #090C092E;
+  --border-neutral: #090C091F;
+  --base-contrast: #FFFFFF;
+  --base-dark: #121511;
+  --base-light: #FFFFFF;
+
+  /* Sentiment */
+  --sentiment-positive: #2F5711;
+  --sentiment-warning: #EDC843;
+  --sentiment-negative: #A8200D;
+}
+
+html[data-theme="dark"] {
+  /* Brand */
+  --primary-bright-green: #8DFF00;
+  --primary-forest-green: #8DFF00;
+
+  /* Main CTA Button Tokens — identical in Light and Dark */
+  --btn-cta-bg: #8DFF00;
+  --btn-cta-fg: #090C09;
+  --btn-cta-bg-hover: #7AE600;
+  --btn-cta-bg-active: #68CC00;
+
+  /* Chip / Badge Tokens — identical in Light and Dark */
+  --chip-bg: #090C09;
+  --chip-fg: #F3F4F0;
+  --chip-bg-hover: #000000;
+
+  /* Content */
+  --content-primary: #F3F4F0;
+  --content-secondary: #C4C7C0;
+  --content-tertiary: #8B8E87;
+  --content-link: #8DFF00;
+  --content-link-hover: #A5FF33;
+  --content-link-active: #F3F4F0;
+
+  /* Interactive */
+  --accent: #8DFF00;
+  --accent-hover: #7AE600;
+  --accent-active: #68CC00;
+  --interactive-primary: #090C09;
+  --interactive-primary-hover: #000000;
+  --interactive-primary-active: #000000;
+  --interactive-primary-foreground: #FFFFFF;
+  --interactive-secondary: #8B8E87;
+  --interactive-secondary-hover: #A4A7A0;
+  --interactive-secondary-active: #C4C7C0;
+  --negative: #E74848;
+  --negative-hover: #FF6B6B;
+  --negative-active: #BF1E2C;
+
+  /* Surface */
+  --bg-screen: #121511;
+  --bg-elevated: #1A1D18;
+  --bg-overlay: #00000080;
+  --bg-dimmer: #121511D9;
+  --bg-neutral: #8DFF001A;
+  --bg-neutral-hover: #8DFF0029;
+  --bg-neutral-active: #8DFF0038;
+  --border-neutral: #FFFFFF1F;
+  --base-contrast: #090C09;
+  --base-dark: #121511;
+  --base-light: #F3F4F0;
+
+  /* Sentiment */
+  --sentiment-positive: #8DFF00;
+  --sentiment-warning: #EDC843;
+  --sentiment-negative: #FF6B6B;
+}
+
+/* Base Body & UI Elements — strictly Inter / var(--font-body) */
+body,
+button,
+input,
+textarea,
+select,
+nav,
+footer {
+  font-family: var(--font-body), Inter, sans-serif;
+}
+
+/* Headings and Heading Classes ONLY — Bricolage Grotesque */
+.font-display,
+.title-screen,
+.type-title-screen,
+.title-screen-lg,
+.type-title-screen-lg,
+.title-section,
+.type-title-section,
+.title-subsection,
+.type-title-subsection,
+.title-body,
+.type-title-body,
+.title-group,
+.type-title-group,
+h1,
+h2,
+h3 {
+  font-family: var(--font-display), "Bricolage Grotesque", sans-serif !important;
+}
+
+/* Heading Sizes & Typography Scale */
+.type-title-screen,
+.title-screen {
+  font-size: 30px;
+  line-height: 34px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+@media (min-width: 768px) {
+  .type-title-screen-lg,
+  .title-screen-lg {
+    font-size: 44px;
+    line-height: 48px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+}
+
+.type-title-section,
+.title-section {
+  font-size: 26px;
+  line-height: 32px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.type-title-subsection,
+.title-subsection {
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.type-title-body,
+.title-body {
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.type-title-group,
+.title-group {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  letter-spacing: 0.015em;
+}
+
+/* Body & Metadata Scale — Inter */
+.type-body-large {
+  font-family: var(--font-body), Inter, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+}
+
+.type-body-large-bold {
+  font-family: var(--font-body), Inter, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+}
+
+.type-body-default {
+  font-family: var(--font-body), Inter, sans-serif;
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+.type-body-default-bold {
+  font-family: var(--font-body), Inter, sans-serif;
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 600;
+  letter-spacing: 0.0125em;
+}
+
+.type-label {
+  font-family: var(--font-body), Inter, sans-serif;
+  font-size: 12px;
+  line-height: normal;
+  font-weight: 400;
+}
+
+/* Global Reset & Base Styling */
+html,
+body {
+  background-color: var(--bg-screen);
+  color: var(--content-primary);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-neutral);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--interactive-secondary);
+}
