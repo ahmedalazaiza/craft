@@ -180,23 +180,35 @@ export function MeClient() {
                 </div>
               </div>
 
-              {/* Action Buttons: Edit Profile & View Public Profile */}
+              {/* Action Buttons: Edit Profile + Share Icon & View Public Profile */}
               <div className="space-y-2 pt-2">
-                <Button
-                  variant="secondary"
-                  size="default"
-                  onClick={() => {
-                    setEditName(user.displayName);
-                    setEditBio(user.bio);
-                    setEditLocation(user.location);
-                    setEditWebsite(user.website || "");
-                    setIsEditingProfile(true);
-                  }}
-                  className="w-full gap-2 font-semibold shadow-xs"
-                >
-                  <Edit3 className="h-4 w-4" />
-                  <span>Edit Profile</span>
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="secondary"
+                    size="default"
+                    onClick={() => {
+                      setEditName(user.displayName);
+                      setEditBio(user.bio);
+                      setEditLocation(user.location);
+                      setEditWebsite(user.website || "");
+                      setIsEditingProfile(true);
+                    }}
+                    className="flex-1 gap-2 font-semibold shadow-xs"
+                  >
+                    <Edit3 className="h-4 w-4" />
+                    <span>Edit Profile</span>
+                  </Button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsShareModalOpen(true)}
+                    className="h-10 w-10 shrink-0 rounded-full bg-[var(--bg-neutral)] hover:bg-[var(--bg-neutral)]/80 border border-[var(--border-neutral)] text-[var(--content-primary)] flex items-center justify-center transition-all cursor-pointer shadow-xs hover:scale-105"
+                    title="Share Studio Profile"
+                    aria-label="Share Studio Profile"
+                  >
+                    <Share2 className="h-4 w-4 text-current" />
+                  </button>
+                </div>
 
                 <Link href={`/u/${user.username}`} className="block w-full">
                   <Button
@@ -267,18 +279,6 @@ export function MeClient() {
                   </div>
                 </div>
               )}
-
-              {/* Share Profile Button */}
-              <div className="pt-2 border-t border-[var(--border-neutral)]">
-                <button
-                  type="button"
-                  onClick={() => setIsShareModalOpen(true)}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-full bg-[var(--bg-neutral)]/50 hover:bg-[var(--bg-neutral)] text-xs font-semibold text-[var(--content-primary)] transition-all cursor-pointer shadow-xs border border-transparent hover:border-[var(--border-neutral)]"
-                >
-                  <Share2 className="h-3.5 w-3.5 text-current opacity-80" />
-                  <span>Share Studio Profile</span>
-                </button>
-              </div>
             </div>
           </aside>
 

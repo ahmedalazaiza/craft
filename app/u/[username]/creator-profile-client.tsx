@@ -166,10 +166,10 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                 </div>
               </div>
 
-              {/* Follow Studio or Manage Profile Action */}
-              <div className="pt-2">
+              {/* Follow Studio or Manage Profile Action + Share Icon Button */}
+              <div className="pt-2 flex items-center gap-2">
                 {isCurrentUser ? (
-                  <Link href="/me" className="block w-full">
+                  <Link href="/me" className="flex-1">
                     <Button variant="secondary" size="default" className="w-full gap-2">
                       <Edit3 className="h-4 w-4 text-current" />
                       <span>Manage Studio in /me</span>
@@ -181,7 +181,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                     variant={isFollowing ? "secondary" : "accent"}
                     size="default"
                     className={cn(
-                      "w-full gap-2 font-bold shadow-xs transition-all",
+                      "flex-1 gap-2 font-bold shadow-xs transition-all",
                       isFollowing && "bg-[var(--bg-neutral)] text-[var(--content-primary)] border-[var(--border-neutral)]"
                     )}
                   >
@@ -198,6 +198,16 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                     )}
                   </Button>
                 )}
+
+                <button
+                  type="button"
+                  onClick={() => setIsShareModalOpen(true)}
+                  className="h-10 w-10 shrink-0 rounded-full bg-[var(--bg-neutral)] hover:bg-[var(--bg-neutral)]/80 border border-[var(--border-neutral)] text-[var(--content-primary)] flex items-center justify-center transition-all cursor-pointer shadow-xs hover:scale-105"
+                  title={`Share ${creator.displayName}'s profile`}
+                  aria-label="Share Studio Profile"
+                >
+                  <Share2 className="h-4 w-4 text-current" />
+                </button>
               </div>
 
               {/* Bio Statement */}
@@ -257,18 +267,6 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                   </div>
                 </div>
               )}
-
-              {/* Share Profile Button */}
-              <div className="pt-2 border-t border-[var(--border-neutral)]">
-                <button
-                  type="button"
-                  onClick={() => setIsShareModalOpen(true)}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-full bg-[var(--bg-neutral)]/50 hover:bg-[var(--bg-neutral)] text-xs font-semibold text-[var(--content-primary)] transition-all cursor-pointer shadow-xs border border-transparent hover:border-[var(--border-neutral)]"
-                >
-                  <Share2 className="h-3.5 w-3.5 text-current opacity-80" />
-                  <span>Share Studio Profile</span>
-                </button>
-              </div>
             </div>
           </aside>
 
