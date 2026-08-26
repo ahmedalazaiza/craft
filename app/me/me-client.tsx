@@ -139,7 +139,7 @@ export function MeClient() {
                   <OnlineBadge isOnline={user.isOnline} size="lg" className="absolute bottom-1 right-1 z-10" />
                 </div>
 
-                <div className="flex items-center gap-1.5 justify-center">
+                <div className="flex items-center gap-2 justify-center">
                   <h1
                     className={cn(
                       bricolage.className,
@@ -148,7 +148,7 @@ export function MeClient() {
                   >
                     {user.displayName}
                   </h1>
-                  {user.isVerified !== false && <VerifiedBadge size="default" />}
+                  {user.isVerified !== false && <VerifiedBadge size="lg" />}
                 </div>
 
                 <p className="text-xs font-semibold text-[var(--content-tertiary)] mt-0.5">
