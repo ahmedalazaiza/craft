@@ -148,10 +148,10 @@ export function ResetPasswordClient() {
     return (
       <div className="flex min-h-[calc(100vh-14rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
         <FadeIn className="w-full max-w-md">
-          <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[28px] p-4 sm:p-6 text-center shadow-xl">
-            <CardHeader className="pb-4 pt-4">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-[#8DFF00]/20 border border-[#8DFF00]/30 text-[#8DFF00] shadow-sm animate-bounce">
-                <CheckCircle2 className="h-8 w-8" />
+          <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[28px] p-6 sm:p-8 text-center shadow-xl">
+            <CardHeader className="pb-4 pt-2">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#8DFF00]/15 border border-[#8DFF00]/30 text-[#8DFF00] shadow-sm">
+                <CheckCircle2 className="h-7 w-7" />
               </div>
 
               <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip-bg)] px-3 py-1 text-[11px] font-semibold text-[var(--chip-fg)] mx-auto mb-3 shadow-xs">
@@ -169,21 +169,15 @@ export function ResetPasswordClient() {
               </h1>
 
               <p className="mt-2 text-xs sm:text-sm text-[var(--content-secondary)] leading-relaxed max-w-xs mx-auto">
-                Your account password has been changed securely. You can now use your new password to sign in.
+                Your account password has been updated securely. You are signed in and ready to dive back in.
               </p>
             </CardHeader>
 
-            <CardContent className="space-y-4 pt-2">
-              <Link href="/me" className="block w-full">
-                <Button variant="accent" className="w-full font-bold shadow-xs gap-2">
-                  <span>Enter My Workspace</span>
+            <CardContent className="pt-3">
+              <Link href="/explore" className="block w-full">
+                <Button variant="accent" className="w-full font-bold shadow-xs gap-2 h-12 text-sm">
+                  <span>Explore Projects</span>
                   <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-
-              <Link href="/login" className="block w-full">
-                <Button variant="secondary" className="w-full font-semibold">
-                  Go to Login Screen
                 </Button>
               </Link>
             </CardContent>
