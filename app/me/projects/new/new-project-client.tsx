@@ -10,9 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Mail, ShieldAlert, CheckCircle2, ArrowRight } from "lucide-react";
 import { sendVerificationEmail } from "@/lib/resend-limiter";
+import { FullPageLoader } from "@/components/ui/full-page-loader";
 
 export function NewProjectClient() {
-  const { user } = useSession();
+  const { user, isLoadingDb } = useSession();
   const [resending, setResending] = useState(false);
   const [resendSent, setResendSent] = useState(false);
 
@@ -28,6 +29,11 @@ export function NewProjectClient() {
       setResending(false);
     }
   };
+
+  // While session/auth is initializing on reload
+  if (isLoadingDb) {
+    return <FullPageLoader text="Loading creator studio..." />;
+  }
 
   // Guest State
   if (!user) {

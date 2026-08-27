@@ -68,6 +68,28 @@ export function OnboardingClient() {
   );
   const [website, setWebsite] = useState(user?.website || "");
 
+  // Sync state when user session finishes loading from Supabase
+  React.useEffect(() => {
+    if (user) {
+      if (user.displayName) setDisplayName((prev) => prev || user.displayName);
+      if (user.avatarUrl && user.avatarUrl !== "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80") {
+        setAvatarUrl(user.avatarUrl);
+      }
+      if (user.location && user.location !== "Worldwide") {
+        setLocation(user.location);
+      }
+      if (user.skills && user.skills.length > 0) {
+        setSkills(user.skills);
+      }
+      if (user.bio && user.bio !== "Independent designer crafting identity systems and digital experiences.") {
+        setBio(user.bio);
+      }
+      if (user.website) {
+        setWebsite((prev) => prev || user.website || "");
+      }
+    }
+  }, [user]);
+
   const handleNext = () => {
     if (currentStep < 4) {
       setCurrentStep((prev) => (prev + 1) as 1 | 2 | 3 | 4);

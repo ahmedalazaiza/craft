@@ -34,10 +34,11 @@ import { ShareModal } from "@/components/ui/share-modal";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { OnlineBadge } from "@/components/ui/online-badge";
+import { CreatorProfileSkeleton } from "@/components/creator/creator-profile-skeleton";
 
 export function MeClient() {
   const router = useRouter();
-  const { user, projects, updateProfile } = useSession();
+  const { user, projects, updateProfile, isLoadingDb } = useSession();
   const [activeTab, setActiveTab] = useState<"published" | "drafts">("published");
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -49,7 +50,22 @@ export function MeClient() {
   const [editLocation, setEditLocation] = useState(user?.location || "");
   const [editWebsite, setEditWebsite] = useState(user?.website || "");
 
-  // If user is guest, prompt to login
+  // Synchronize edit fields when user loads from session
+  React.useEffect(() => {
+    if (user) {
+      setEditName(user.displayName);
+      setEditBio(user.bio || "");
+      setEditLocation(user.location || "");
+      setEditWebsite(user.website || "");
+    }
+  }, [user]);
+
+  // While session/auth is initializing from Supabase on reload, show smooth profile skeleton
+  if (isLoadingDb) {
+    return <CreatorProfileSkeleton />;
+  }
+
+  // If user is truly guest after loading completes, prompt to login
   if (!user) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-20 text-center">
