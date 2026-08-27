@@ -3,7 +3,7 @@
 import React from "react";
 import { ProjectCardSkeleton } from "@/components/project/project-card-skeleton";
 
-export function CreatorProfileSkeleton() {
+export function MyProfileSkeleton() {
   return (
     <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-4 sm:py-6 animate-pulse">
       {/* Breadcrumbs Skeleton */}
@@ -13,9 +13,9 @@ export function CreatorProfileSkeleton() {
         <div className="h-4 w-28 rounded-full bg-[var(--bg-neutral)]" />
       </div>
 
-      {/* 2-Column Profile Layout */}
+      {/* 2-Column Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
-        {/* LEFT COLUMN: Sticky Profile Card (3 cols on desktop) */}
+        {/* LEFT COLUMN: Profile Sidebar Card */}
         <aside className="lg:col-span-4 xl:col-span-3 space-y-6">
           <div className="rounded-[28px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] p-6 sm:p-7 shadow-xs space-y-6">
             {/* Avatar & Info */}
@@ -64,7 +64,7 @@ export function CreatorProfileSkeleton() {
           </div>
         </aside>
 
-        {/* RIGHT COLUMN: Toolbar + Works Grid (9 cols on desktop) */}
+        {/* RIGHT COLUMN: Toolbar + Projects Grid */}
         <main className="lg:col-span-8 xl:col-span-9 space-y-6 min-w-0">
           {/* Header Toolbar */}
           <div className="flex items-center justify-between pb-4 border-b border-[var(--border-neutral)]">
