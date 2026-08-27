@@ -1,8 +1,8 @@
 -- =============================================================================
--- CRAFT PLATFORM — SUPABASE DATABASE SCHEMA & INITIAL SEED DATA
+-- CRAFT PLATFORM — COMPLETE SUPABASE DATABASE SCHEMA & ALL 16 LIVE SEED PROJECTS
 -- =============================================================================
--- Execute this script in your Supabase SQL Editor (https://supabase.com/dashboard/project/ttjobsgglwgyioqlldqj/sql)
--- This creates all required tables, relations, triggers, RLS policies, and seeds live data.
+-- Execute this entire script in your Supabase SQL Editor:
+-- https://supabase.com/dashboard/project/ttjobsgglwgyioqlldqj/sql
 -- =============================================================================
 
 -- Enable required extensions
@@ -10,7 +10,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- =============================================================================
--- 1. PROFILES TABLE (Creators & Studios)
+-- 1. PROFILES TABLE (Creators & Independent Studios)
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 );
 
 -- =============================================================================
--- 2. PROJECTS TABLE (Monographs & Visual Works)
+-- 2. PROJECTS TABLE (Design Monographs & Visual Artifacts)
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS public.projects (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS public.projects (
 );
 
 -- =============================================================================
--- 3. APPRECIATIONS TABLE (Hearts & Likes)
+-- 3. APPRECIATIONS TABLE (Likes & Hearts)
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS public.appreciations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS public.appreciations (
 );
 
 -- =============================================================================
--- 4. COMMENTS TABLE (Critique & Discussion)
+-- 4. COMMENTS TABLE (Critique & Discussion Stream)
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS public.comments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS public.follows (
 );
 
 -- =============================================================================
--- 6. NOTIFICATIONS TABLE
+-- 6. NOTIFICATIONS TABLE (Live Activity Feed)
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS public.notifications (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -99,6 +99,15 @@ CREATE TABLE IF NOT EXISTS public.notifications (
     read BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- =============================================================================
+-- 7. STORAGE BUCKETS (High-Res Media & Avatars)
+-- =============================================================================
+INSERT INTO storage.buckets (id, name, public) 
+VALUES 
+    ('project-media', 'project-media', true),
+    ('avatars', 'avatars', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
 
 -- =============================================================================
 -- INDEXES FOR FAST PERFORMANCE & HIGH-SPEED SEARCH
@@ -176,26 +185,54 @@ ALTER TABLE public.follows ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
 -- Allow Public Read Access on all public tables
+DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON public.profiles;
 CREATE POLICY "Public profiles are viewable by everyone" ON public.profiles FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public projects are viewable by everyone" ON public.projects;
 CREATE POLICY "Public projects are viewable by everyone" ON public.projects FOR SELECT USING (published = true OR true);
+
+DROP POLICY IF EXISTS "Appreciations are viewable by everyone" ON public.appreciations;
 CREATE POLICY "Appreciations are viewable by everyone" ON public.appreciations FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Comments are viewable by everyone" ON public.comments;
 CREATE POLICY "Comments are viewable by everyone" ON public.comments FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Follows are viewable by everyone" ON public.follows;
 CREATE POLICY "Follows are viewable by everyone" ON public.follows FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Notifications are viewable by recipient" ON public.notifications;
 CREATE POLICY "Notifications are viewable by recipient" ON public.notifications FOR SELECT USING (true);
 
--- Allow Insert / Update / Delete via Anon / Authenticated for Platform Demo
+-- Allow Insert / Update / Delete via Anon / Authenticated for Platform
+DROP POLICY IF EXISTS "Allow all profile mutations" ON public.profiles;
 CREATE POLICY "Allow all profile mutations" ON public.profiles FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow all project mutations" ON public.projects;
 CREATE POLICY "Allow all project mutations" ON public.projects FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow all appreciation mutations" ON public.appreciations;
 CREATE POLICY "Allow all appreciation mutations" ON public.appreciations FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow all comment mutations" ON public.comments;
 CREATE POLICY "Allow all comment mutations" ON public.comments FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow all follow mutations" ON public.follows;
 CREATE POLICY "Allow all follow mutations" ON public.follows FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow all notification mutations" ON public.notifications;
 CREATE POLICY "Allow all notification mutations" ON public.notifications FOR ALL USING (true) WITH CHECK (true);
 
+-- Storage bucket access
+DROP POLICY IF EXISTS "Public storage read" ON storage.objects;
+CREATE POLICY "Public storage read" ON storage.objects FOR SELECT USING (bucket_id IN ('project-media', 'avatars'));
+
+DROP POLICY IF EXISTS "Public storage insert" ON storage.objects;
+CREATE POLICY "Public storage insert" ON storage.objects FOR INSERT WITH CHECK (bucket_id IN ('project-media', 'avatars'));
+
 -- =============================================================================
--- INITIAL LIVE SEED DATA
+-- INITIAL LIVE SEED DATA (ALL 6 CREATORS)
 -- =============================================================================
 
--- 1. Seed Creators / Profiles
 INSERT INTO public.profiles (id, username, display_name, avatar_url, bio, location, city, website, skills, is_verified, is_online, followers_count)
 VALUES
 (
@@ -290,167 +327,423 @@ ON CONFLICT (id) DO UPDATE SET
     is_verified = EXCLUDED.is_verified,
     is_online = EXCLUDED.is_online;
 
--- 2. Seed Projects with High-Res Image Streams
+-- =============================================================================
+-- INITIAL LIVE SEED DATA (ALL 16 PROJECTS)
+-- =============================================================================
+
 INSERT INTO public.projects (id, slug, title, summary, body, cover_image, gallery_images, category, medium, tags, tools, published, featured, creator_id, appreciations_count, published_at)
 VALUES
 (
     'b1111111-1111-1111-1111-111111111111',
     'kinfolk-sanctuary',
-    'Kinfolk Sanctuary — Identity & Spatial Monograph',
-    'Complete brand identity, physical signage, and spatial typography for an architectural retreat in Copenhagen.',
-    'Kinfolk Sanctuary is an architectural retreat nestled in the outskirts of Copenhagen. We designed a holistic identity system grounded in natural materials, custom serif typography, and unhurried editorial layouts that breathe with the surrounding Nordic landscape.',
-    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&auto=format&fit=crop&q=80',
+    'Sanctuary: Architectural Monograph & Spatial Identity',
+    'A tactile spatial monograph and editorial identity celebrating raw timber, poured concrete, and quiet domestic spaces.',
+    'Sanctuary investigates the liminal boundary between built environment and untamed organic topography. Commissioned as both an architectural record and a bespoke monograph series, the identity centers on restraint, tactile paper stocks, and deliberate silence.\n\nWe developed a custom grotesque typeface with carved incised terminals to echo stone-masonry techniques, paired with a monochrome palette disrupted only by subtle moss-tone pigments.\n\nThe publication spans 280 pages of Japanese smyth-sewn binding, featuring extensive duotone photography shot on large-format 4x5 film. Every spread is engineered with asymmetrical grid structures that breathe with the architectural cadence of the structures themselves.',
+    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400&auto=format&fit=crop&q=85',
     ARRAY[
-        'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1600&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=1600&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1600&auto=format&fit=crop&q=80'
+        'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=1400&auto=format&fit=crop&q=85',
+        'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1400&auto=format&fit=crop&q=85',
+        'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?w=1400&auto=format&fit=crop&q=85',
+        'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1400&auto=format&fit=crop&q=85'
     ],
     'Brand',
-    'Image',
-    ARRAY['Identity', 'Spatial', 'Typography', 'Nordic', 'Architecture'],
-    ARRAY['Figma', 'Illustrator', 'Cinema 4D'],
+    'PDF/Case study',
+    ARRAY['Brand', 'Editorial', 'Typography', 'Architecture'],
+    ARRAY['InDesign', 'Figma', 'Glyphs', 'Film Photography'],
     true,
     true,
     'a1111111-1111-1111-1111-111111111111',
-    342,
+    248,
     NOW() - INTERVAL '2 days'
 ),
 (
     'b2222222-2222-2222-2222-222222222222',
     'aurora-interface-os',
-    'Aurora OS — Spatial Operating System UI',
-    'High-density generative desktop interface exploration with glassmorphic layers and real-time audio reactive feedback.',
-    'Aurora OS rethinks window management through fluid canvas coordinates, contextual docks, and kinetic depth layers. Engineered with sub-millisecond gesture tracking and tactile micro-interactions.',
-    'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200&auto=format&fit=crop&q=80',
+    'Aurora OS: High-Density Canvas for Creative Engineers',
+    'An expansive spatial operating canvas designed for node-based visual programming and real-time audio-visual synthesis.',
+    'Aurora OS rethinks how creative coders interact with multidimensional data streams. Rather than boxing users into rigid windowing paradigms, Aurora presents an infinite canvas with zoom-independent vector density and contextual micro-surfaces.\n\nBuilt with bespoke rendering shaders and strict sub-pixel typography guidelines, the UI maintains 120fps fluid transitions even when handling tens of thousands of concurrent data nodes.\n\nThe design system incorporates custom color calibration tokens that reduce eye strain during 10-hour deep synthesis sessions, featuring subtle lime and forest highlights against crisp neutral bases.',
+    'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1400&auto=format&fit=crop&q=85',
     ARRAY[
-        'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1600&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1600&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1600&auto=format&fit=crop&q=80'
+        'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1400&auto=format&fit=crop&q=85',
+        'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1400&auto=format&fit=crop&q=85',
+        'https://images.unsplash.com/photo-1558655146-d09347e92766?w=1400&auto=format&fit=crop&q=85'
     ],
     'UI',
     'Prototype',
-    ARRAY['UI System', 'Spatial OS', 'Dark Mode', 'Glassmorphism', 'Next.js'],
-    ARRAY['Figma', 'Next.js', 'TailwindCSS', 'Framer Motion'],
+    ARRAY['UI', 'Systems', 'Interaction', 'Design Engineering'],
+    ARRAY['Figma', 'TypeScript', 'WebGL', 'Rust'],
     true,
     true,
     'a2222222-2222-2222-2222-222222222222',
-    512,
+    412,
     NOW() - INTERVAL '3 days'
 ),
 (
     'b3333333-3333-3333-3333-333333333333',
     'brutalist-concrete-silence',
-    'Monoliths of Silence — Architectural Photo Series',
-    'A stark photographic monograph documenting the geometric geometry and shadow play of post-war European brutalism.',
-    'A photographic study spanning Barbican Estate, Habitat 67, and the brutalist monuments of former Yugoslavia. Shot on medium format film over three consecutive winters.',
-    'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=1200&auto=format&fit=crop&q=80',
+    'Brutalist Silence: Monolithic Forms in Light & Dust',
+    'A high-contrast photographic study documenting raw brutalist architecture across European capitals at dawn.',
+    'Brutalist Silence is an ongoing archive investigating how monolithic post-war concrete facades weather under varying atmospheric conditions.\n\nShot exclusively during blue hour using natural ambient illumination and long exposures, the series highlights structural textures, shuttering seams, and the poetic geometry of intentional concrete weight.',
+    'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=1400&auto=format&fit=crop&q=85',
     ARRAY[
-        'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=1600&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1600&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1600&auto=format&fit=crop&q=80'
+        'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400&auto=format&fit=crop&q=85',
+        'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1400&auto=format&fit=crop&q=85'
     ],
     'Photo',
     'Image',
-    ARRAY['Photography', 'Brutalism', 'Monochrome', 'Concrete', 'Geometry'],
-    ARRAY['Hasselblad 500C/M', 'Capture One'],
+    ARRAY['Photography', 'Architecture', 'Editorial', 'Monochrome'],
+    ARRAY['Hasselblad H6D', 'Phase One', 'Capture One'],
     true,
     true,
     'a3333333-3333-3333-3333-333333333333',
-    678,
+    839,
     NOW() - INTERVAL '5 days'
 ),
 (
     'b4444444-4444-4444-4444-444444444444',
-    'bauhaus-monograph-2026',
-    'Bauhaus Centennial Typographic Monograph',
-    'A 320-page limited edition hardcover book celebrating modernist type experiments with five Pantone spot colors.',
-    'Commissioned for the international centenary celebration, this volume presents archival type specimens alongside contemporary responses by 40 international typographers.',
-    'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=1200&auto=format&fit=crop&q=80',
+    'bauhaus-risograph-monograph',
+    'Typographic Resonance: 4-Color Risograph Folio',
+    'A limited-edition risograph publication exploring asymmetric grid structures and grotesque typographic scale.',
+    'Produced on a vintage two-drum GR-series Risograph press using fluorescent pink, cornflower blue, sunflower yellow, and soy black inks.\n\nEach spread challenges standard margins, running glyph specimens into the gutter and across full bleeds.',
+    'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=1400&auto=format&fit=crop&q=85',
     ARRAY[
-        'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=1600&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=1600&auto=format&fit=crop&q=80'
+        'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=1400&auto=format&fit=crop&q=85'
     ],
     'Editorial',
     'PDF/Case study',
-    ARRAY['Editorial', 'Print', 'Typography', 'Bauhaus', 'Book Design'],
-    ARRAY['InDesign', 'Glyphs 3', 'Risograph'],
+    ARRAY['Editorial', 'Print', 'Risograph', 'Typography'],
+    ARRAY['InDesign', 'Risograph GR3750', 'Hand Binding'],
     true,
     false,
     'a4444444-4444-4444-4444-444444444444',
-    289,
+    184,
     NOW() - INTERVAL '6 days'
 ),
 (
     'b5555555-5555-5555-5555-555555555555',
-    'synth-01-analog-synthesizer',
-    'SYNTH-01 — Tactile Analog Synthesizer Enclosure',
-    'CNC milled unibody aluminum chassis with custom knurled rotary encoders and OLED tactile parameter display.',
-    'Designed for live analog synthesis performances, SYNTH-01 balances raw industrial aesthetics with ergonomic parameter layouts and gold-plated mechanical switches.',
-    'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=1200&auto=format&fit=crop&q=80',
+    'tactile-analog-synthesizer',
+    'Aura 04: CNC Machined Modular Synthesizer Interface',
+    'Solid bead-blasted aluminum hardware synth enclosure with custom knurled rotary encoders and OLED display surfaces.',
+    'Aura 04 merges physical analog synthesis with surgical tactile ergonomics. Every knob is CNC-milled from 6061 aerospace-grade aluminum and anodized in matte obsidian.\n\nThe weighted rotary resistance is tuned with custom high-viscosity damping grease to provide zero play and infinite resolution tactile precision.',
+    'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=1400&auto=format&fit=crop&q=85',
     ARRAY[
-        'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=1600&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1600&auto=format&fit=crop&q=80'
+        'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=1400&auto=format&fit=crop&q=85'
     ],
     'Product',
     '3D',
-    ARRAY['Industrial Design', 'Audio', 'Hardware', 'Machining', 'CAD'],
-    ARRAY['Rhino 3D', 'Keyshot', 'Fusion 360'],
+    ARRAY['Product', 'Industrial Design', 'Hardware', 'Audio'],
+    ARRAY['Fusion 360', 'SolidWorks', 'CNC Milling', 'Altium'],
     true,
-    true,
+    false,
     'a5555555-5555-5555-5555-555555555555',
-    419,
+    295,
     NOW() - INTERVAL '8 days'
 ),
 (
     'b6666666-6666-6666-6666-666666666666',
-    'timber-canopy-pavilion',
-    'Nordic Timber Canopy Pavilion',
-    'A temporary cultural pavilion built using interlocking Douglas fir logs without metal hardware fasteners.',
-    'Constructed in the royal park of Stockholm, the canopy demonstrates the structural possibilities of traditional interlocking joinery scaled with parametric CNC routing.',
-    'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=1200&auto=format&fit=crop&q=80',
+    'scandinavian-timber-pavilion',
+    'Nordic Daylight Pavilion: Interlocking Timber Joints',
+    'A seasonal daylight observatory constructed from sustainable slow-growth spruce without metallic fasteners.',
+    'Developed as a public contemplation shelter in Stockholm''s archipelago, this pavilion utilizes traditional Japanese and Nordic joinery methods.\n\nThe roof louvers are mathematically oriented to trace the summer solstice sun arc, creating dynamic shadow patterns throughout the day.',
+    'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=1400&auto=format&fit=crop&q=85',
     ARRAY[
-        'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=1600&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&auto=format&fit=crop&q=80'
+        'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400&auto=format&fit=crop&q=85'
     ],
     'Architecture',
-    'Image',
-    ARRAY['Architecture', 'Timber', 'Joinery', 'Nordic', 'Sustainable'],
-    ARRAY['Grasshopper', 'Rhino', 'AutoCAD'],
+    'PDF/Case study',
+    ARRAY['Architecture', 'Spatial', 'Woodwork', 'Sustainability'],
+    ARRAY['Rhino', 'Grasshopper', 'Timber Framing'],
     true,
     false,
     'a6666666-6666-6666-6666-666666666666',
-    311,
+    462,
     NOW() - INTERVAL '10 days'
+),
+(
+    'b7777777-7777-7777-7777-777777777777',
+    'kinetic-variable-typeface',
+    'Kinesis Variable: Fluid Optical Axis & Generative Glyphs',
+    'An experimental variable font system responding to real-time audio frequencies and cursor proximity.',
+    'Kinesis pushes the boundary of modern OpenType variable font axes. Featuring 4 custom axes: Weight, Width, Tension, and Gravity.',
+    'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1400&auto=format&fit=crop&q=85',
+    ARRAY[
+        'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=1400&auto=format&fit=crop&q=85'
+    ],
+    'Type',
+    'Prototype',
+    ARRAY['Type', 'Typography', 'Variable Font', 'Creative Code'],
+    ARRAY['Glyphs 3', 'Python', 'RoboFont'],
+    true,
+    false,
+    'a1111111-1111-1111-1111-111111111111',
+    390,
+    NOW() - INTERVAL '12 days'
+),
+(
+    'b8888888-8888-8888-8888-888888888888',
+    'monolith-exhibition-catalogue',
+    'Monolith: Brutalist Identity & Cast Concrete Catalogue',
+    'A heavyweight custom publication featuring blind debossing and custom display grotesques.',
+    'Monolith explores concrete architecture through tactile, dense print design. Screen-printed in 3 Pantone metallic passes on recycled greyboard.',
+    'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=1400&auto=format&fit=crop&q=85',
+    ARRAY[
+        'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=1400&auto=format&fit=crop&q=85'
+    ],
+    'Editorial',
+    'PDF/Case study',
+    ARRAY['Brand', 'Editorial', 'Print', 'Typography'],
+    ARRAY['InDesign', 'Screen Printing', 'Figma'],
+    true,
+    false,
+    'a4444444-4444-4444-4444-444444444444',
+    512,
+    NOW() - INTERVAL '14 days'
+),
+(
+    'b9999999-9999-9999-9999-999999999999',
+    'aether-generative-audio-canvas',
+    'Aether: Real-time Audio-Visual Synthesis Canvas',
+    'A GPU-accelerated web interface for real-time shader generation and frequency mapping.',
+    'Aether bridges WebGL shader programming with low-latency WebAudio oscillators to deliver responsive ambient visualizers.',
+    'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1400&auto=format&fit=crop&q=85',
+    ARRAY[
+        'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1400&auto=format&fit=crop&q=85'
+    ],
+    'UI',
+    'Prototype',
+    ARRAY['UI', 'Creative Code', 'Interaction', 'Shaders'],
+    ARRAY['WebGL', 'GLSL', 'TypeScript', 'Three.js'],
+    true,
+    true,
+    'a2222222-2222-2222-2222-222222222222',
+    630,
+    NOW() - INTERVAL '16 days'
+),
+(
+    'baaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+    'terra-timber-joinery-study',
+    'Terra: Japanese Hand-Hewn Cedar Pavilion & Joints',
+    'A research archive of complex wooden joinery prototypes and daylight meditation shelters.',
+    'Constructed in Kyoto using centuries-old Kanawa-tsugi joinery without screws or adhesives, demonstrating structural resonance and flex.',
+    'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=1400&auto=format&fit=crop&q=85',
+    ARRAY[
+        'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400&auto=format&fit=crop&q=85'
+    ],
+    'Architecture',
+    'PDF/Case study',
+    ARRAY['Architecture', 'Timber Craft', 'Structures', 'Design'],
+    ARRAY['Rhino', 'Hand Joinery', 'Film'],
+    true,
+    false,
+    'a6666666-6666-6666-6666-666666666666',
+    475,
+    NOW() - INTERVAL '18 days'
+),
+(
+    'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+    'nexus-design-system',
+    'Nexus System: Multi-Brand Component Engine & Tokens',
+    'A unified cross-platform design token architecture supporting high-density dark mode and fluid type scaling.',
+    'Nexus formalizes component primitives across Web, iOS, and Figma plugins with synchronized semantic token bindings.',
+    'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1400&auto=format&fit=crop&q=85',
+    ARRAY[
+        'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1400&auto=format&fit=crop&q=85'
+    ],
+    'UI',
+    'Prototype',
+    ARRAY['UI', 'Design Systems', 'Tokens', 'Interaction'],
+    ARRAY['Figma', 'Tokens Studio', 'TypeScript'],
+    true,
+    false,
+    'a2222222-2222-2222-2222-222222222222',
+    520,
+    NOW() - INTERVAL '20 days'
+),
+(
+    'bcccccccc-cccc-cccc-cccc-cccccccccccc',
+    'prism-raymarching-canvas',
+    'Prism: Real-time SDF Raymarching & Shading Environment',
+    'An interactive browser-based compute shader engine for procedural geometric forms and refraction materials.',
+    'Prism compiles custom fragment shaders in real-time, allowing designers to sculpt generative light fields with zero setup.',
+    'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1400&auto=format&fit=crop&q=85',
+    ARRAY[
+        'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1400&auto=format&fit=crop&q=85'
+    ],
+    'UI',
+    'Prototype',
+    ARRAY['UI', 'Creative Code', 'Shaders', 'WebGL'],
+    ARRAY['WebGPU', 'GLSL', 'React'],
+    true,
+    false,
+    'a2222222-2222-2222-2222-222222222222',
+    410,
+    NOW() - INTERVAL '22 days'
+),
+(
+    'bdddddddd-dddd-dddd-dddd-dddddddddddd',
+    'verve-kinetic-identity',
+    'Verve: Kinetic Swiss Typography & Dynamic Posters',
+    'An expressive visual identity exploring mathematical typographic grids and reactive motion behaviours.',
+    'Commissioned for an experimental sound symposium, Verve balances rigorous modernist structure with playful kinetic unpredictability.',
+    'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=1400&auto=format&fit=crop&q=85',
+    ARRAY[
+        'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=1400&auto=format&fit=crop&q=85'
+    ],
+    'Brand',
+    'Image',
+    ARRAY['Brand', 'Typography', 'Motion', 'Poster'],
+    ARRAY['After Effects', 'Glyphs', 'Illustrator'],
+    true,
+    false,
+    'a1111111-1111-1111-1111-111111111111',
+    388,
+    NOW() - INTERVAL '24 days'
+),
+(
+    'beeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+    'aperture-monograph-journal',
+    'Aperture Vol. 03: Large-Format Editorial on Brutalism',
+    'A tactile printed journal featuring hand-tipped plates, exposed spine binding, and cold-foil accents.',
+    'Printed in limited run of 500 copies on Munken Lynx 150gsm with metallic silver duotone printing.',
+    'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=1400&auto=format&fit=crop&q=85',
+    ARRAY[
+        'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=1400&auto=format&fit=crop&q=85'
+    ],
+    'Editorial',
+    'PDF/Case study',
+    ARRAY['Editorial', 'Print', 'Monograph', 'Publishing'],
+    ARRAY['InDesign', 'Letterpress', 'Foil Stamping'],
+    true,
+    false,
+    'a4444444-4444-4444-4444-444444444444',
+    290,
+    NOW() - INTERVAL '26 days'
+),
+(
+    'bfffffff-ffff-ffff-ffff-ffffffffffff',
+    'solarium-timber-observatory',
+    'Solarium: Curved Glulam Timber & Daylight Acoustics',
+    'An off-grid alpine observatory utilizing steam-bent timber ribs and acoustic dampening moss walls.',
+    'Engineered using algorithmic structural optimization to withstand extreme snowfall while maximizing winter solar heat gain.',
+    'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=1400&auto=format&fit=crop&q=85',
+    ARRAY[
+        'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400&auto=format&fit=crop&q=85'
+    ],
+    'Architecture',
+    'PDF/Case study',
+    ARRAY['Architecture', 'Spatial', 'Woodwork', 'Acoustics'],
+    ARRAY['Rhino', 'Karamba3D', 'Timber Framing'],
+    true,
+    false,
+    'a6666666-6666-6666-6666-666666666666',
+    540,
+    NOW() - INTERVAL '28 days'
+),
+(
+    'b0000000-0000-0000-0000-000000000000',
+    'concrete-forms-photobook',
+    'Forms in Shadow: Post-War Concrete Monoliths Photobook',
+    'Monochrome medium-format film documentation of forgotten concrete monuments and architectural scale.',
+    'Captured across 8 cities over 3 years on Kodak Tri-X 400 film, curated into an unvarnished hardbound volume.',
+    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400&auto=format&fit=crop&q=85',
+    ARRAY[
+        'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=1400&auto=format&fit=crop&q=85'
+    ],
+    'Photo',
+    'Image',
+    ARRAY['Photo', 'Architecture', 'Monochrome', 'Film'],
+    ARRAY['Hasselblad 500C/M', 'Darkroom Printing'],
+    true,
+    false,
+    'a3333333-3333-3333-3333-333333333333',
+    710,
+    NOW() - INTERVAL '30 days'
 )
 ON CONFLICT (id) DO UPDATE SET
     title = EXCLUDED.title,
     summary = EXCLUDED.summary,
+    body = EXCLUDED.body,
     cover_image = EXCLUDED.cover_image,
-    gallery_images = EXCLUDED.gallery_images;
+    gallery_images = EXCLUDED.gallery_images,
+    category = EXCLUDED.category,
+    medium = EXCLUDED.medium,
+    tags = EXCLUDED.tags,
+    tools = EXCLUDED.tools,
+    published = EXCLUDED.published,
+    featured = EXCLUDED.featured,
+    creator_id = EXCLUDED.creator_id,
+    appreciations_count = EXCLUDED.appreciations_count;
 
--- 3. Seed Discussion Comments
+-- =============================================================================
+-- INITIAL COMMENTS SEED
+-- =============================================================================
+
 INSERT INTO public.comments (id, project_id, author_id, content, created_at)
 VALUES
 (
     'c1111111-1111-1111-1111-111111111111',
     'b1111111-1111-1111-1111-111111111111',
     'a2222222-2222-2222-2222-222222222222',
-    'The proportion of the custom serif typeface against the tactile paper texture is exquisite. Brilliant art direction Elena!',
-    NOW() - INTERVAL '1 day'
+    'The balance of white space and weight in the type specimen is breathtaking. Superb craft on the debossed cover treatment.',
+    NOW() - INTERVAL '2 days'
 ),
 (
     'c2222222-2222-2222-2222-222222222222',
     'b1111111-1111-1111-1111-111111111111',
     'a3333333-3333-3333-3333-333333333333',
-    'The signage integration into raw concrete surfaces feels very organic and respectful to the architectural environment.',
-    NOW() - INTERVAL '12 hours'
+    'The tonal sensitivity of the film photography complements the binding choice effortlessly. Beautiful work, Elena.',
+    NOW() - INTERVAL '1 day'
 ),
 (
     'c3333333-3333-3333-3333-333333333333',
+    'b1111111-1111-1111-1111-111111111111',
+    'a4444444-4444-4444-4444-444444444444',
+    'That incised grotesque terminal detail is pure gold. Would love to see the physical test prints!',
+    NOW() - INTERVAL '4 hours'
+),
+(
+    'c4444444-4444-4444-4444-444444444444',
     'b2222222-2222-2222-2222-222222222222',
     'a1111111-1111-1111-1111-111111111111',
-    'Incredible fluid physics on the window hierarchy Kai. How did you handle gesture collision curves?',
-    NOW() - INTERVAL '2 days'
+    'The spring dynamics on node snapping feel so organic. Incredible work on the density tokens Kai.',
+    NOW() - INTERVAL '3 days'
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- =============================================================================
+-- INITIAL NOTIFICATIONS SEED
+-- =============================================================================
+
+INSERT INTO public.notifications (id, recipient_id, actor_id, type, project_id, content, read, created_at)
+VALUES
+(
+    'd1111111-1111-1111-1111-111111111111',
+    'a1111111-1111-1111-1111-111111111111',
+    'a2222222-2222-2222-2222-222222222222',
+    'appreciation',
+    'b1111111-1111-1111-1111-111111111111',
+    'Kai Sato appreciated your project Sanctuary',
+    false,
+    NOW() - INTERVAL '2 hours'
+),
+(
+    'd2222222-2222-2222-2222-222222222222',
+    'a1111111-1111-1111-1111-111111111111',
+    'a4444444-4444-4444-4444-444444444444',
+    'comment',
+    'b1111111-1111-1111-1111-111111111111',
+    'That incised grotesque terminal detail is pure gold. Would love to see the physical test prints!',
+    false,
+    NOW() - INTERVAL '5 hours'
+),
+(
+    'd3333333-3333-3333-3333-333333333333',
+    'a1111111-1111-1111-1111-111111111111',
+    'a3333333-3333-3333-3333-333333333333',
+    'follow',
+    NULL,
+    'Maya Lin started following your studio',
+    false,
+    NOW() - INTERVAL '1 day'
 )
 ON CONFLICT (id) DO NOTHING;
