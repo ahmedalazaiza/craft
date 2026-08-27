@@ -10,12 +10,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import {
   UploadCloud,
   Check,
   ArrowLeft,
   Plus,
   X,
+  Upload,
+  Image as ImageIcon,
+  Loader2,
 } from "lucide-react";
 
 interface ProjectFormProps {
@@ -57,6 +61,9 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const router = useRouter();
   const { saveProject } = useSession();
 
+  const coverFileInputRef = React.useRef<HTMLInputElement>(null);
+  const galleryFileInputRef = React.useRef<HTMLInputElement>(null);
+
   const [title, setTitle] = useState(initialData?.title || "");
   const [summary, setSummary] = useState(initialData?.summary || "");
   const [body, setBody] = useState(initialData?.body || "");
@@ -85,6 +92,9 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     initialData ? initialData.published : true
   );
   const [isSaved, setIsSaved] = useState(false);
+  const [isDraggingCover, setIsDraggingCover] = useState(false);
+  const [isDraggingGallery, setIsDraggingGallery] = useState(false);
+  const [isProcessingFiles, setIsProcessingFiles] = useState(false);
 
   const handleAddTag = (e: React.KeyboardEvent | React.MouseEvent) => {
     if (("key" in e && e.key === "Enter") || e.type === "click") {
@@ -114,16 +124,53 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     setTools(tools.filter((t) => t !== toolToRemove));
   };
 
-  const handleAddGalleryImage = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddGalleryImage = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (newGalleryUrl.trim()) {
-      setGalleryImages([...galleryImages, newGalleryUrl.trim()]);
+      setGalleryImages((prev) => [...prev, newGalleryUrl.trim()]);
       setNewGalleryUrl("");
     }
   };
 
   const handleRemoveGalleryImage = (idxToRemove: number) => {
-    setGalleryImages(galleryImages.filter((_, idx) => idx !== idxToRemove));
+    setGalleryImages((prev) => prev.filter((_, idx) => idx !== idxToRemove));
+  };
+
+  // Direct File Upload Handlers
+  const handleCoverFile = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload a valid image file (PNG, JPG, WebP).");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        setCoverImage(e.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleGalleryFiles = async (files: FileList | File[]) => {
+    setIsProcessingFiles(true);
+    const newUrls: string[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.type.startsWith("image/")) {
+        const dataUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.readAsDataURL(file);
+        });
+        if (dataUrl) newUrls.push(dataUrl);
+      }
+    }
+
+    if (newUrls.length > 0) {
+      setGalleryImages((prev) => [...prev, ...newUrls]);
+    }
+    setIsProcessingFiles(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -287,52 +334,134 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           </div>
 
           {/* Extra Gallery Images */}
-          <div>
-            <label className="type-body-default-bold text-[var(--content-primary)] block mb-1">
-              Exhibition Plates & Gallery Images
-            </label>
-            <p className="type-label text-[var(--content-tertiary)] mb-3">
-              Add supplementary spreads, closeups, and photography URLs (rendered in intrinsic scale).
-            </p>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="type-body-default-bold text-[var(--content-primary)] block">
+                  Exhibition Plates & Gallery Images
+                </label>
+                <p className="type-label text-[var(--content-tertiary)]">
+                  Add high-fidelity spreads, closeups, and photography plates (rendered in intrinsic scale).
+                </p>
+              </div>
+              <span className="text-xs font-mono font-semibold text-[var(--content-tertiary)]">
+                {galleryImages.length} plate{galleryImages.length === 1 ? "" : "s"}
+              </span>
+            </div>
 
-            <div className="flex gap-2 mb-4">
+            {/* Multiple Files Drag & Drop Area */}
+            <input
+              type="file"
+              multiple
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              ref={galleryFileInputRef}
+              onChange={(e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                  handleGalleryFiles(e.target.files);
+                }
+              }}
+              className="hidden"
+            />
+
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDraggingGallery(true);
+              }}
+              onDragLeave={() => setIsDraggingGallery(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDraggingGallery(false);
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                  handleGalleryFiles(e.dataTransfer.files);
+                }
+              }}
+              onClick={() => galleryFileInputRef.current?.click()}
+              className={cn(
+                "relative rounded-[20px] border-2 border-dashed p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 group",
+                isDraggingGallery
+                  ? "border-[var(--primary-forest-green)] bg-[var(--bg-neutral)]/60 scale-[0.99]"
+                  : "border-[var(--border-neutral)] bg-[var(--bg-elevated)]/60 hover:bg-[var(--bg-neutral)]/40 hover:border-[var(--primary-forest-green)]/60"
+              )}
+            >
+              {isProcessingFiles ? (
+                <div className="flex flex-col items-center py-3">
+                  <Loader2 className="h-7 w-7 animate-spin text-[var(--primary-forest-green)] mb-2" />
+                  <span className="text-sm font-semibold text-[var(--content-primary)]">Processing images...</span>
+                </div>
+              ) : (
+                <>
+                  <div className="h-12 w-12 rounded-full bg-[var(--bg-neutral)] flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Upload className="h-5 w-5 text-[var(--content-primary)]" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-bold text-[var(--content-primary)]">
+                      Drop image files here, or <span className="text-[var(--content-link)] underline">browse from your computer</span>
+                    </p>
+                    <p className="text-xs text-[var(--content-tertiary)]">
+                      Select multiple PNG, JPG, or WebP files at once
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* URL Input Strip for External CDNs */}
+            <div className="flex gap-2 pt-1">
               <Input
                 type="url"
                 value={newGalleryUrl}
                 onChange={(e) => setNewGalleryUrl(e.target.value)}
-                placeholder="https://images.unsplash.com/photo-..."
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddGalleryImage();
+                  }
+                }}
+                placeholder="Or paste an image URL (Unsplash, Behance, Cloudinary...)"
+                className="text-xs h-11"
               />
               <Button
                 type="button"
                 variant="secondary"
-                onClick={handleAddGalleryImage}
-                className="shrink-0"
+                onClick={() => handleAddGalleryImage()}
+                className="shrink-0 font-semibold h-11"
               >
-                <Plus className="h-4 w-4 mr-1" /> Add Plate
+                <Plus className="h-4 w-4 mr-1" /> Add URL
               </Button>
             </div>
 
+            {/* Gallery Images Grid Preview */}
             {galleryImages.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
                 {galleryImages.map((url, idx) => (
                   <div
                     key={idx}
-                    className="group relative aspect-[4/3] rounded-[12px] overflow-hidden bg-[var(--bg-neutral)] border border-[var(--border-neutral)]"
+                    className="group relative aspect-[4/3] rounded-[16px] overflow-hidden bg-[var(--bg-neutral)] border border-[var(--border-neutral)] shadow-xs"
                   >
                     <Image
                       src={url}
                       alt={`Gallery ${idx + 1}`}
                       fill
-                      sizes="180px"
-                      className="object-cover"
+                      sizes="220px"
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
                     />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveGalleryImage(idx)}
-                      className="absolute top-1.5 right-1.5 rounded-full bg-[var(--negative)] text-white p-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-2.5">
+                      <span className="text-[10px] font-mono font-bold text-white bg-black/50 px-2 py-0.5 rounded-full">
+                        Plate #{idx + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveGalleryImage(idx);
+                        }}
+                        className="rounded-full bg-[var(--negative)] text-white p-1 hover:scale-110 transition-transform cursor-pointer shadow-sm"
+                        title="Remove plate"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -343,16 +472,48 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
         {/* Right Col: Visual Cover Dropzone & Metadata */}
         <div className="space-y-8">
           {/* Cover Dropzone */}
-          <div className="rounded-[20px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 shadow-xs">
+          <div className="rounded-[24px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 shadow-xs">
             <label className="type-body-default-bold text-[var(--content-primary)] block mb-1">
               Cover Image (Dominant Visual)
             </label>
             <p className="type-label text-[var(--content-tertiary)] mb-4">
-              Visual dropzone & curated monograph presets.
+              Click dropzone to upload a file, drag & drop, or choose a preset.
             </p>
 
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              ref={coverFileInputRef}
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  handleCoverFile(e.target.files[0]);
+                }
+              }}
+              className="hidden"
+            />
+
             {/* Visual Cover Dropzone */}
-            <div className="relative aspect-[4/3] w-full rounded-[16px] overflow-hidden bg-[var(--bg-neutral)] border-2 border-dashed border-[var(--border-neutral)] flex flex-col items-center justify-center p-4 text-center group transition-colors hover:border-[var(--accent)]">
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDraggingCover(true);
+              }}
+              onDragLeave={() => setIsDraggingCover(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDraggingCover(false);
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                  handleCoverFile(e.dataTransfer.files[0]);
+                }
+              }}
+              onClick={() => coverFileInputRef.current?.click()}
+              className={cn(
+                "relative aspect-[4/3] w-full rounded-[18px] overflow-hidden bg-[var(--bg-neutral)] border-2 border-dashed flex flex-col items-center justify-center p-4 text-center group cursor-pointer transition-all",
+                isDraggingCover
+                  ? "border-[var(--primary-forest-green)] bg-[var(--bg-neutral)]/80 scale-[0.99]"
+                  : "border-[var(--border-neutral)] hover:border-[var(--primary-forest-green)]"
+              )}
+            >
               {coverImage ? (
                 <>
                   <Image
@@ -360,22 +521,23 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                     alt="Cover preview"
                     fill
                     sizes="320px"
-                    className="object-cover group-hover:opacity-90 transition-opacity"
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <div className="absolute inset-0 bg-[var(--content-primary)]/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="text-xs font-semibold text-white bg-black/60 px-3 py-1.5 rounded-full">
-                      Change Cover Below
+                  <div className="absolute inset-0 bg-[var(--primary-forest-green)]/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-4">
+                    <Upload className="h-6 w-6 text-white" />
+                    <span className="text-xs font-bold text-white bg-black/60 px-3 py-1.5 rounded-full">
+                      Click to Replace Cover
                     </span>
                   </div>
                 </>
               ) : (
                 <div className="flex flex-col items-center">
-                  <UploadCloud className="h-8 w-8 text-[var(--content-tertiary)] mb-2" />
+                  <UploadCloud className="h-9 w-9 text-[var(--content-tertiary)] mb-2 group-hover:scale-110 transition-transform" />
                   <span className="type-body-default-bold text-[var(--content-primary)]">
-                    Drag & drop cover file
+                    Upload Cover Image
                   </span>
                   <span className="type-label text-[var(--content-tertiary)] mt-1">
-                    PNG, JPG, WebP up to 10MB
+                    Click to browse or drop file (PNG, JPG, WebP)
                   </span>
                 </div>
               )}
