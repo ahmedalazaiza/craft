@@ -22,6 +22,10 @@ import {
   KeyRound,
   RefreshCw,
 } from "lucide-react";
+import {
+  PasswordStrengthIndicator,
+  getPasswordStrength,
+} from "@/components/ui/password-strength-indicator";
 import { bricolage } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
@@ -73,21 +77,23 @@ export function ResetPasswordClient() {
     checkRecoverySession();
   }, []);
 
+  const { isRequiredSatisfied } = getPasswordStrength(password);
+
   const isMatching =
     password.length > 0 &&
     confirmPassword.length > 0 &&
     password === confirmPassword;
 
-  const isFormValid = password.length >= 6 && confirmPassword.length >= 6 && isMatching;
+  const isFormValid = isRequiredSatisfied && isMatching;
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isFormValid) {
-      if (password.length < 6) {
-        setErrorMessage("Password must be at least 6 characters long.");
-      } else if (!isMatching) {
-        setErrorMessage("Passwords do not match. Please re-enter.");
-      }
+    if (!isRequiredSatisfied) {
+      setErrorMessage("Password must satisfy all required strength criteria.");
+      return;
+    }
+    if (!isMatching) {
+      setErrorMessage("Passwords do not match. Please re-enter.");
       return;
     }
 
@@ -234,16 +240,16 @@ export function ResetPasswordClient() {
             <form onSubmit={handleUpdatePassword} className="space-y-4">
               <div>
                 <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5">
-                  New password (6+ characters)
+                  New password
                 </label>
                 <div className="relative">
                   <Input
                     type={showPassword ? "text" : "password"}
                     required
-                    minLength={6}
+                    minLength={8}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter new password"
+                    placeholder="Enter new secure password"
                     autoComplete="new-password"
                     autoFocus
                   />
@@ -255,6 +261,9 @@ export function ResetPasswordClient() {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+
+                {/* Password Strength Indicator & Rules Checklist */}
+                <PasswordStrengthIndicator password={password} />
               </div>
 
               <div>

@@ -24,6 +24,10 @@ import {
   ExternalLink,
   Loader2,
 } from "lucide-react";
+import {
+  PasswordStrengthIndicator,
+  getPasswordStrength,
+} from "@/components/ui/password-strength-indicator";
 import { getResendStatus, sendVerificationEmail } from "@/lib/resend-limiter";
 import { generateUniqueUsername, slugifyUsername } from "@/lib/supabase/auth";
 import { bricolage } from "@/lib/fonts";
@@ -50,10 +54,12 @@ export function SignupClient() {
   const [resendSuccess, setResendSuccess] = useState(false);
   const [cooldown, setCooldown] = useState(0);
 
+  const { isRequiredSatisfied } = getPasswordStrength(password);
+
   const isFormValid =
     displayName.trim().length > 0 &&
     email.trim().length > 0 &&
-    password.trim().length >= 6;
+    isRequiredSatisfied;
 
   // Real-time live check against Supabase profiles table
   useEffect(() => {
@@ -93,10 +99,16 @@ export function SignupClient() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isFormValid) {
-      if (password.trim().length < 6) {
-        setErrorMessage("Password must be at least 6 characters long.");
-      }
+    if (!displayName.trim()) {
+      setErrorMessage("Please enter your full name.");
+      return;
+    }
+    if (!email.trim()) {
+      setErrorMessage("Please enter a valid email address.");
+      return;
+    }
+    if (!isRequiredSatisfied) {
+      setErrorMessage("Please make sure your password satisfies the required strength criteria.");
       return;
     }
 
@@ -356,13 +368,13 @@ export function SignupClient() {
 
               <div>
                 <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5">
-                  Password (6+ characters)
+                  Password
                 </label>
                 <div className="relative">
                   <Input
                     type={showPassword ? "text" : "password"}
                     required
-                    minLength={6}
+                    minLength={8}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Choose secure password"
@@ -376,6 +388,9 @@ export function SignupClient() {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+
+                {/* Password Strength Indicator & Rules Checklist */}
+                <PasswordStrengthIndicator password={password} />
               </div>
 
               <Button
