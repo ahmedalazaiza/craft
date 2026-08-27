@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Mail, ShieldAlert, CheckCircle2, ArrowRight } from "lucide-react";
 import { sendVerificationEmail } from "@/lib/resend-limiter";
-import { FullPageLoader } from "@/components/ui/full-page-loader";
+import { ProjectEditorSkeleton } from "@/components/project/project-editor-skeleton";
 
 export function NewProjectClient() {
   const { user, isLoadingDb } = useSession();
@@ -30,9 +30,9 @@ export function NewProjectClient() {
     }
   };
 
-  // While session/auth is initializing on reload
+  // While session/auth is initializing on reload, show authentic editor skeleton
   if (isLoadingDb) {
-    return <FullPageLoader text="Loading creator studio..." />;
+    return <ProjectEditorSkeleton />;
   }
 
   // Guest State

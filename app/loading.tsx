@@ -1,16 +1,40 @@
 import React from "react";
 import { ProjectGridSkeleton } from "@/components/project/project-grid-skeleton";
-import { CraftLoader } from "@/components/ui/craft-loader";
 
 export default function RootLoading() {
   return (
-    <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-8 space-y-12 animate-fade-in">
-      {/* Hero Skeleton / Craft Loader Header */}
-      <div className="flex flex-col items-center justify-center py-12 text-center space-y-4">
-        <CraftLoader size="md" text="Curating monographs..." />
+    <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-4 sm:py-6 animate-pulse space-y-6">
+      {/* Breadcrumbs Skeleton */}
+      <div className="flex items-center gap-2">
+        <div className="h-4 w-28 rounded-full bg-[var(--bg-neutral)]" />
       </div>
 
-      {/* Grid Skeleton */}
+      {/* Balanced 2-Column Header Skeleton */}
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-[var(--border-neutral)] mb-6">
+        <div className="space-y-3 max-w-2xl">
+          <div className="h-6 w-36 rounded-full bg-[var(--bg-neutral)]" />
+          <div className="h-10 sm:h-12 w-72 max-w-full rounded-2xl bg-[var(--bg-neutral)]" />
+          <div className="h-4 w-full max-w-xl rounded-full bg-[var(--bg-neutral)]/70" />
+        </div>
+
+        {/* Right Metrics Box Skeleton */}
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="h-14 w-36 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]" />
+          <div className="h-14 w-36 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]" />
+        </div>
+      </div>
+
+      {/* Search Bar & Category Pills Skeleton */}
+      <div className="space-y-4 mb-6">
+        <div className="h-12 w-full rounded-2xl bg-[var(--bg-neutral)]" />
+        <div className="flex items-center gap-2 overflow-hidden pb-3 border-b border-[var(--border-neutral)]">
+          {["w-14", "w-28", "w-32", "w-24", "w-24", "w-28", "w-36", "w-20"].map((w, idx) => (
+            <div key={idx} className={`h-8 ${w} shrink-0 rounded-full bg-[var(--bg-neutral)]/70`} />
+          ))}
+        </div>
+      </div>
+
+      {/* Projects Grid Skeleton (4 columns) */}
       <ProjectGridSkeleton count={8} columns={4} />
     </div>
   );
