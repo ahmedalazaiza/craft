@@ -3,8 +3,11 @@ import { bricolage, inter } from "@/lib/fonts";
 import "./globals.css";
 import { SessionProvider } from "@/lib/session-context";
 import { ThemeProvider } from "@/components/layout/theme-provider";
+import { Suspense } from "react";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { TopProgressBar } from "@/components/layout/top-progress-bar";
+import { NetworkStatusIndicator } from "@/components/layout/network-status-indicator";
 import { SITE_NAME, SITE_URL, defaultTitle, defaultDescription } from "@/lib/seo";
 
 export const metadata: Metadata = {
@@ -83,9 +86,13 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <SessionProvider>
+            <Suspense fallback={null}>
+              <TopProgressBar />
+            </Suspense>
             <SiteHeader />
             <main className="flex-1">{children}</main>
             <SiteFooter />
+            <NetworkStatusIndicator />
           </SessionProvider>
         </ThemeProvider>
       </body>
