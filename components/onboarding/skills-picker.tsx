@@ -150,7 +150,7 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
           value={customInput}
           onChange={(e) => setCustomInput(e.target.value)}
           placeholder="Add custom specialty (e.g. Generative AI, Spatial Audio)..."
-          className="flex-1 rounded-xl border border-[var(--border-neutral)] bg-[var(--bg-screen)] px-3.5 py-2 text-xs text-[var(--content-primary)] placeholder-[var(--content-tertiary)] focus:border-[var(--accent)] focus:outline-hidden"
+          className="flex-1 rounded-xl border border-[var(--border-neutral)] bg-[var(--bg-screen)] px-3.5 py-2 text-xs text-[var(--content-primary)] placeholder-[var(--content-tertiary)] focus:border-[var(--input-focus-border)] focus:ring-2 focus:ring-[var(--input-focus-ring)] focus:outline-hidden"
         />
         <button
           type="submit"

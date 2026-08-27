@@ -214,7 +214,7 @@ export function OnboardingClient() {
                           value={displayName}
                           onChange={(e) => setDisplayName(e.target.value)}
                           placeholder="Your full name or studio alias"
-                          className="w-full rounded-2xl border border-[var(--border-neutral)] bg-[var(--bg-neutral)]/50 px-4 py-3 text-xs sm:text-sm text-[var(--content-primary)] focus:border-[var(--accent)] focus:outline-hidden"
+                          className="w-full rounded-2xl border border-[var(--border-neutral)] bg-[var(--bg-neutral)]/50 px-4 py-3 text-xs sm:text-sm text-[var(--content-primary)] focus:border-[var(--input-focus-border)] focus:ring-2 focus:ring-[var(--input-focus-ring)] focus:outline-hidden"
                         />
                       </div>
 
@@ -251,7 +251,7 @@ export function OnboardingClient() {
                           value={location}
                           onChange={(e) => setLocation(e.target.value)}
                           placeholder="Or type custom city (e.g. Kyoto, Japan)..."
-                          className="w-full rounded-2xl border border-[var(--border-neutral)] bg-[var(--bg-neutral)]/50 px-4 py-2.5 text-xs text-[var(--content-primary)] focus:border-[var(--accent)] focus:outline-hidden mt-1"
+                          className="w-full rounded-2xl border border-[var(--border-neutral)] bg-[var(--bg-neutral)]/50 px-4 py-2.5 text-xs text-[var(--content-primary)] focus:border-[var(--input-focus-border)] focus:ring-2 focus:ring-[var(--input-focus-ring)] focus:outline-hidden mt-1"
                         />
                       </div>
                     </motion.div>
@@ -318,7 +318,7 @@ export function OnboardingClient() {
                           value={bio}
                           onChange={(e) => setBio(e.target.value)}
                           placeholder="Briefly describe your design philosophy, past work, and interests..."
-                          className="w-full rounded-2xl border border-[var(--border-neutral)] bg-[var(--bg-neutral)]/50 p-4 text-xs sm:text-sm text-[var(--content-primary)] focus:border-[var(--accent)] focus:outline-hidden resize-none leading-relaxed"
+                          className="w-full rounded-2xl border border-[var(--border-neutral)] bg-[var(--bg-neutral)]/50 p-4 text-xs sm:text-sm text-[var(--content-primary)] focus:border-[var(--input-focus-border)] focus:ring-2 focus:ring-[var(--input-focus-ring)] focus:outline-hidden resize-none leading-relaxed"
                         />
                       </div>
 
@@ -333,7 +333,7 @@ export function OnboardingClient() {
                           value={website}
                           onChange={(e) => setWebsite(e.target.value)}
                           placeholder="https://yourname.design"
-                          className="w-full rounded-2xl border border-[var(--border-neutral)] bg-[var(--bg-neutral)]/50 px-4 py-3 text-xs sm:text-sm text-[var(--content-primary)] focus:border-[var(--accent)] focus:outline-hidden"
+                          className="w-full rounded-2xl border border-[var(--border-neutral)] bg-[var(--bg-neutral)]/50 px-4 py-3 text-xs sm:text-sm text-[var(--content-primary)] focus:border-[var(--input-focus-border)] focus:ring-2 focus:ring-[var(--input-focus-ring)] focus:outline-hidden"
                         />
                       </div>
                     </motion.div>

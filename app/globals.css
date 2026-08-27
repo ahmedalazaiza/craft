@@ -112,6 +112,10 @@ html[data-theme="light"] {
   --sentiment-positive: #2F5711;
   --sentiment-warning: #EDC843;
   --sentiment-negative: #A8200D;
+
+  /* Input Focus States — Dark Forest Green */
+  --input-focus-border: #162E1C;
+  --input-focus-ring: rgba(22, 46, 28, 0.16);
 }
 
 html[data-theme="dark"] {
@@ -170,6 +174,10 @@ html[data-theme="dark"] {
   --sentiment-positive: #8DFF00;
   --sentiment-warning: #EDC843;
   --sentiment-negative: #FF6B6B;
+
+  /* Input Focus States — Refined Dark Green */
+  --input-focus-border: #3E6B46;
+  --input-focus-ring: rgba(62, 107, 70, 0.28);
 }
 
 /* Base Body & UI Elements — strictly Inter / var(--font-body) */
