@@ -18,6 +18,8 @@ import {
   insertComment,
   toggleAppreciationInDb,
   updateProfileInDb,
+  fetchUserFollows,
+  toggleFollowInDb,
 } from "./supabase/queries";
 import {
   signInWithEmail,
@@ -109,9 +111,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
       if (activeAuthUser) {
         setUser(activeAuthUser);
+        const userFollows = await fetchUserFollows(activeAuthUser.id);
+        setFollowingCreatorIds(new Set(userFollows));
       } else {
         setUser(null);
         setNotifications([]);
+        setFollowingCreatorIds(new Set());
       }
     } catch (err) {
       console.error("Failed to load initial data from Supabase:", err);
@@ -129,6 +134,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         const profile = await getCurrentAuthUser();
         if (profile) {
           setUser(profile);
+          const userFollows = await fetchUserFollows(profile.id);
+          setFollowingCreatorIds(new Set(userFollows));
         }
       } else if (event === "SIGNED_OUT" || !session) {
         setUser(null);
@@ -221,14 +228,16 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       return false;
     }
 
+    const wasFollowing = followingCreatorIds.has(creatorId);
+
+    // Optimistically update following list
     setFollowingCreatorIds((prev) => {
       const next = new Set(prev);
-      const wasFollowing = next.has(creatorId);
       if (wasFollowing) {
         next.delete(creatorId);
       } else {
         next.add(creatorId);
-        if (targetCreator) {
+        if (targetCreator && targetCreator.id !== user.id) {
           addNotification({
             type: "follow",
             actor: user,
@@ -238,6 +247,39 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       }
       return next;
     });
+
+    // Optimistically update real followersCount in creators list
+    setCreators((prev) =>
+      prev.map((c) => {
+        if (c.id === creatorId) {
+          const currentCount = c.followersCount || 0;
+          return {
+            ...c,
+            followersCount: wasFollowing
+              ? Math.max(0, currentCount - 1)
+              : currentCount + 1,
+          };
+        }
+        return c;
+      })
+    );
+
+    // If user is viewing themselves
+    if (user.id === creatorId) {
+      setUser((prev) => {
+        if (!prev) return prev;
+        const currentCount = prev.followersCount || 0;
+        return {
+          ...prev,
+          followersCount: wasFollowing
+            ? Math.max(0, currentCount - 1)
+            : currentCount + 1,
+        };
+      });
+    }
+
+    // Persist follow in Supabase
+    toggleFollowInDb(user.id, creatorId).catch(console.error);
 
     return true;
   };

@@ -462,3 +462,82 @@ export async function updateProfileInDb(id: string, updates: Partial<Creator>): 
     return false;
   }
 }
+
+/**
+ * Fetch list of creator IDs that a user follows
+ */
+export async function fetchUserFollows(userId: string): Promise<string[]> {
+  try {
+    const { data, error } = await supabase
+      .from("follows")
+      .select("following_id")
+      .eq("follower_id", userId);
+
+    if (error || !data) return [];
+    return data.map((r: { following_id: string }) => r.following_id);
+  } catch (err) {
+    console.error("Error fetching user follows from Supabase:", err);
+    return [];
+  }
+}
+
+/**
+ * Toggle follow status between two creators in Supabase
+ */
+export async function toggleFollowInDb(followerId: string, followingId: string): Promise<boolean> {
+  try {
+    // Check if relationship already exists
+    const { data } = await supabase
+      .from("follows")
+      .select("id")
+      .eq("follower_id", followerId)
+      .eq("following_id", followingId)
+      .maybeSingle();
+
+    if (data) {
+      // Unfollow: delete row
+      await supabase.from("follows").delete().eq("id", data.id);
+
+      // Decrement followers_count on following creator
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("followers_count")
+        .eq("id", followingId)
+        .maybeSingle();
+
+      if (profile) {
+        const currentCount = profile.followers_count ?? 0;
+        await supabase
+          .from("profiles")
+          .update({ followers_count: Math.max(0, currentCount - 1) })
+          .eq("id", followingId);
+      }
+      return false; // Not following anymore
+    } else {
+      // Follow: insert row
+      await supabase.from("follows").insert({
+        follower_id: followerId,
+        following_id: followingId,
+      });
+
+      // Increment followers_count on following creator
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("followers_count")
+        .eq("id", followingId)
+        .maybeSingle();
+
+      if (profile) {
+        const currentCount = profile.followers_count ?? 0;
+        await supabase
+          .from("profiles")
+          .update({ followers_count: currentCount + 1 })
+          .eq("id", followingId);
+      }
+      return true; // Now following
+    }
+  } catch (err) {
+    console.error("Error toggling follow in Supabase:", err);
+    return false;
+  }
+}

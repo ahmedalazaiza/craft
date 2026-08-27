@@ -94,6 +94,7 @@ const POPULAR_CITIES = [
 export function CreatorProfileClient({ initialCreator }: { initialCreator: Creator }) {
   const {
     projects,
+    creators,
     user,
     isFollowingCreator,
     toggleFollowCreator,
@@ -103,8 +104,10 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
   const isCurrentUser =
     user && user.username.toLowerCase() === initialCreator.username.toLowerCase();
 
-  // If viewing own profile, use live user data from session context if updated
-  const creator = isCurrentUser && user ? user : initialCreator;
+  // Grab the live creator data from session context (tracks live followersCount & profile updates)
+  const creator =
+    creators.find((c) => c.username.toLowerCase() === initialCreator.username.toLowerCase()) ||
+    (isCurrentUser && user ? user : initialCreator);
 
   if (!creator) {
     notFound();
@@ -222,13 +225,12 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
 
   const displayedProjects = activeTab === "published" ? publishedProjects : draftProjects;
 
-  // Aggregate stats
   const totalAppreciations = publishedProjects.reduce(
     (sum, p) => sum + p.appreciations,
     0
   );
 
-  const followersCount = (creator.followersCount || 120) + (isFollowing && !isCurrentUser ? 1 : 0);
+  const followersCount = creator.followersCount ?? 0;
 
   return (
     <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-4 sm:py-6">

@@ -274,7 +274,7 @@ export function MeClient() {
 
                   <div className="p-3 rounded-[16px] bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
                     <span className="block text-lg font-bold text-[var(--content-primary)]">
-                      {user.followersCount || 1240}
+                      {user.followersCount ?? 0}
                     </span>
                     <span className="text-[10px] text-[var(--content-tertiary)] uppercase font-mono">
                       Followers
