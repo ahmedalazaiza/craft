@@ -15,6 +15,7 @@ import { FadeIn } from "@/components/ui/motion-wrapper";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { OnlineBadge } from "@/components/ui/online-badge";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
+import { Button } from "@/components/ui/button";
 import {
   Heart,
   MessageSquare,
@@ -23,6 +24,7 @@ import {
   Tag,
   Wrench,
   ArrowLeft,
+  Edit3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -39,13 +41,21 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
     toggleAppreciation,
   } = useSession();
 
-  const project = projects.find((p) => p.id === initialProject.id) || initialProject;
-
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
+  // Grab live project data from session context if updated
+  const project =
+    projects.find((p) => p.id === initialProject.id) || initialProject;
+
   const isAppreciated = isProjectAppreciated(project.id);
+
+  const isAuthor =
+    user &&
+    project.creator &&
+    (user.id === project.creator.id ||
+      user.username.toLowerCase() === project.creator.username.toLowerCase());
 
   // Combine cover image + gallery images into { url, alt } objects
   const rawImages = [project.coverImage, ...(project.galleryImages || [])];
@@ -89,20 +99,33 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
           />
 
           {/* ================================================================= */}
-          {/* 1. TOP HEADER: Project Title & Simple Description                 */}
+          {/* 1. TOP HEADER: Project Title, Description & Author Edit Button   */}
           {/* ================================================================= */}
           <header className="mb-8 sm:mb-10">
-            <h1
-              className={cn(
-                bricolage.className,
-                "text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[var(--primary-forest-green)] leading-[1.1]"
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+              <div className="flex-1">
+                <h1
+                  className={cn(
+                    bricolage.className,
+                    "text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[var(--primary-forest-green)] leading-[1.1]"
+                  )}
+                >
+                  {project.title}
+                </h1>
+                <p className="mt-3 text-sm sm:text-base text-[var(--content-secondary)] leading-relaxed max-w-4xl">
+                  {project.summary}
+                </p>
+              </div>
+
+              {isAuthor && (
+                <Link href={`/me/projects/${project.id}`} className="shrink-0 pt-1">
+                  <Button variant="secondary" size="default" className="gap-2 font-bold shadow-xs">
+                    <Edit3 className="h-4 w-4" />
+                    <span>Edit Case Study</span>
+                  </Button>
+                </Link>
               )}
-            >
-              {project.title}
-            </h1>
-            <p className="mt-3 text-sm sm:text-base text-[var(--content-secondary)] leading-relaxed max-w-4xl">
-              {project.summary}
-            </p>
+            </div>
           </header>
 
           {/* ================================================================= */}

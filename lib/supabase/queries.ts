@@ -219,6 +219,33 @@ export async function fetchProjectBySlug(slug: string): Promise<Project | null> 
 }
 
 /**
+ * Fetch a single project by its unique ID (UUID or custom ID)
+ */
+export async function fetchProjectById(id: string): Promise<Project | null> {
+  try {
+    const { data, error } = await supabase
+      .from("projects")
+      .select(`
+        *,
+        creator:profiles!creator_id(*),
+        comments(*, author:profiles!author_id(*))
+      `)
+      .eq("id", id)
+      .maybeSingle();
+
+    if (error || !data) {
+      const fallback = mockProjects.find((p) => p.id === id);
+      return fallback || null;
+    }
+
+    return mapProjectRow(data);
+  } catch (err) {
+    console.error(`Error fetching project with id '${id}':`, err);
+    return mockProjects.find((p) => p.id === id) || null;
+  }
+}
+
+/**
  * Fetch all creators from Supabase
  */
 export async function fetchCreators(): Promise<Creator[]> {

@@ -259,7 +259,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         next.delete(projectId);
       } else {
         next.add(projectId);
-        if (targetProject) {
+        // Only notify the creator if the liker is NOT the creator themselves
+        if (targetProject && targetProject.creator && targetProject.creator.id !== user.id) {
           addNotification({
             type: "appreciation",
             actor: user,
@@ -323,7 +324,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       })
     );
 
-    if (targetProject) {
+    // Only notify the creator if the commenter is NOT the creator themselves
+    if (targetProject && targetProject.creator && targetProject.creator.id !== user.id) {
       addNotification({
         type: "comment",
         actor: user,
@@ -398,18 +400,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       };
 
       setProjects((prev) => [newProj, ...prev]);
-
-      if (newProj.published && user) {
-        addNotification({
-          type: "publish",
-          actor: user,
-          project: {
-            id: newProj.id,
-            slug: newProj.slug,
-            title: newProj.title,
-          },
-        });
-      }
 
       // Persist to Supabase
       try {

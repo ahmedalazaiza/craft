@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -10,6 +10,9 @@ import { bricolage } from "@/lib/fonts";
 import { ProjectCard } from "@/components/project/project-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card } from "@/components/ui/card";
 import { FadeIn, StaggerGridItem } from "@/components/ui/motion-wrapper";
 import {
   MapPin,
@@ -22,10 +25,9 @@ import {
   Check,
   Plus,
   Share2,
-  Bell,
-  BellRing,
   FolderKanban,
-  CheckCircle2,
+  X,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ShareModal } from "@/components/ui/share-modal";
@@ -39,30 +41,63 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
     user,
     isFollowingCreator,
     toggleFollowCreator,
+    updateProfile,
   } = useSession();
 
-  const creator = initialCreator;
+  const isCurrentUser =
+    user && user.username.toLowerCase() === initialCreator.username.toLowerCase();
+
+  // If viewing own profile, use live user data from session context if updated
+  const creator = isCurrentUser && user ? user : initialCreator;
+
   if (!creator) {
     notFound();
   }
 
+  const [activeTab, setActiveTab] = useState<"published" | "drafts">("published");
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [copied, setCopied] = useState(false);
   const [sortBy, setSortBy] = useState<"newest" | "appreciated">("newest");
 
-  const isCurrentUser =
-    user && user.username.toLowerCase() === creator.username.toLowerCase();
+  // Profile Edit Form State
+  const [editName, setEditName] = useState(creator.displayName);
+  const [editBio, setEditBio] = useState(creator.bio || "");
+  const [editLocation, setEditLocation] = useState(creator.location || creator.city || "");
+  const [editWebsite, setEditWebsite] = useState(creator.website || "");
+
+  useEffect(() => {
+    if (creator) {
+      setEditName(creator.displayName);
+      setEditBio(creator.bio || "");
+      setEditLocation(creator.location || creator.city || "");
+      setEditWebsite(creator.website || "");
+    }
+  }, [creator]);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await updateProfile({
+      displayName: editName,
+      bio: editBio,
+      location: editLocation,
+      website: editWebsite,
+    });
+    setIsEditingProfile(false);
+  };
 
   const isFollowing = isFollowingCreator(creator.id);
 
-  // Published projects for this creator
-  const creatorProjects = useMemo(() => {
-    return projects
-      .filter(
-        (p) =>
-          p.creator.username.toLowerCase() === creator.username.toLowerCase() &&
-          p.published
-      )
+  // All projects for this creator (published and drafts)
+  const allCreatorProjects = useMemo(() => {
+    return projects.filter(
+      (p) => p.creator.username.toLowerCase() === creator.username.toLowerCase()
+    );
+  }, [projects, creator.username]);
+
+  const publishedProjects = useMemo(() => {
+    return allCreatorProjects
+      .filter((p) => p.published)
       .sort((a, b) => {
         if (sortBy === "appreciated") {
           return b.appreciations - a.appreciations;
@@ -71,23 +106,21 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
           new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
         );
       });
-  }, [projects, creator.username, sortBy]);
+  }, [allCreatorProjects, sortBy]);
+
+  const draftProjects = useMemo(() => {
+    return allCreatorProjects.filter((p) => !p.published);
+  }, [allCreatorProjects]);
+
+  const displayedProjects = activeTab === "published" ? publishedProjects : draftProjects;
 
   // Aggregate stats
-  const totalAppreciations = creatorProjects.reduce(
+  const totalAppreciations = publishedProjects.reduce(
     (sum, p) => sum + p.appreciations,
     0
   );
 
-  const followersCount = (creator.followersCount || 120) + (isFollowing ? 1 : 0);
-
-  const handleShare = () => {
-    if (typeof window !== "undefined") {
-      navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
+  const followersCount = (creator.followersCount || 120) + (isFollowing && !isCurrentUser ? 1 : 0);
 
   return (
     <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-4 sm:py-6">
@@ -166,15 +199,18 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                 </div>
               </div>
 
-              {/* Follow or Manage Profile Action + Share Icon Button */}
+              {/* Action Buttons: Edit Profile (for owner) or Follow (for public) + Share */}
               <div className="pt-2 flex items-center gap-2.5">
                 {isCurrentUser ? (
-                  <Link href="/me" className="flex-1">
-                    <Button variant="secondary" size="default" className="w-full gap-2 font-semibold">
-                      <Edit3 className="h-4 w-4" />
-                      <span>Edit Profile in /me</span>
-                    </Button>
-                  </Link>
+                  <Button
+                    onClick={() => setIsEditingProfile(true)}
+                    variant="secondary"
+                    size="default"
+                    className="flex-1 gap-2 font-bold"
+                  >
+                    <Edit3 className="h-4 w-4" />
+                    <span>Edit Profile</span>
+                  </Button>
                 ) : (
                   <Button
                     onClick={() => toggleFollowCreator(creator.id)}
@@ -224,7 +260,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="p-3 rounded-[16px] bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
                     <span className="block text-lg font-bold text-[var(--content-primary)]">
-                      {creatorProjects.length}
+                      {publishedProjects.length}
                     </span>
                     <span className="text-[10px] text-[var(--content-tertiary)] uppercase font-mono">
                       Works
@@ -270,70 +306,135 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
           </aside>
 
           {/* ===================================================================== */}
-          {/* RIGHT COLUMN: Creator's Published Works (9 cols on desktop)           */}
+          {/* RIGHT COLUMN: Works & Studio Dashboard (9 cols on desktop)            */}
           {/* ===================================================================== */}
           <main className="lg:col-span-8 xl:col-span-9 space-y-6 min-w-0">
-            {/* Header & Sort Controls */}
-            <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-4 pb-4 border-b border-[var(--border-neutral)]">
-              <div>
-                <h2
-                  className={cn(
-                    bricolage.className,
-                    "text-2xl sm:text-3xl font-bold text-[var(--content-primary)]"
-                  )}
-                >
-                  Published Works ({creatorProjects.length})
-                </h2>
-                <p className="type-body-default text-[var(--content-tertiary)] mt-1">
-                  Public case studies and visual monographs published by {creator.displayName}.
-                </p>
-              </div>
+            {/* Header & Tab Controls */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[var(--border-neutral)]">
+              {isCurrentUser ? (
+                /* Studio Owner Tabs (Published vs Drafts) */
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("published")}
+                    className={cn(
+                      "rounded-full px-4 py-1.5 text-xs font-bold transition-all cursor-pointer",
+                      activeTab === "published"
+                        ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                        : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
+                    )}
+                  >
+                    Published Works ({publishedProjects.length})
+                  </button>
 
-              {/* Sort Switcher */}
-              <div className="flex items-center gap-1.5 bg-[var(--bg-neutral)] p-1 rounded-full text-xs font-semibold shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setSortBy("newest")}
-                  className={cn(
-                    "px-3 py-1 rounded-full transition-all cursor-pointer",
-                    sortBy === "newest"
-                      ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
-                      : "text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
-                  )}
-                >
-                  Newest
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSortBy("appreciated")}
-                  className={cn(
-                    "px-3 py-1 rounded-full transition-all cursor-pointer",
-                    sortBy === "appreciated"
-                      ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
-                      : "text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
-                  )}
-                >
-                  Most Appreciated
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("drafts")}
+                    className={cn(
+                      "rounded-full px-4 py-1.5 text-xs font-bold transition-all cursor-pointer",
+                      activeTab === "drafts"
+                        ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                        : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
+                    )}
+                  >
+                    Drafts ({draftProjects.length})
+                  </button>
+                </div>
+              ) : (
+                /* Public Visitor Header */
+                <div>
+                  <h2
+                    className={cn(
+                      bricolage.className,
+                      "text-2xl sm:text-3xl font-bold text-[var(--content-primary)]"
+                    )}
+                  >
+                    Published Works ({publishedProjects.length})
+                  </h2>
+                  <p className="type-body-default text-[var(--content-tertiary)] mt-1">
+                    Public case studies and visual monographs published by {creator.displayName}.
+                  </p>
+                </div>
+              )}
+
+              {/* Action Toolbar on Right (Sort Switcher or New Project CTA) */}
+              <div className="flex items-center gap-3">
+                {isCurrentUser ? (
+                  /* Only show + New Project button if current active tab has > 0 projects to avoid duplicates */
+                  displayedProjects.length > 0 && (
+                    <Link href="/me/projects/new">
+                      <Button variant="accent" size="sm" className="gap-1.5 font-bold shadow-xs">
+                        <Plus className="h-4 w-4" />
+                        <span>New Project</span>
+                      </Button>
+                    </Link>
+                  )
+                ) : (
+                  <div className="flex items-center gap-1.5 bg-[var(--bg-neutral)] p-1 rounded-full text-xs font-semibold shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setSortBy("newest")}
+                      className={cn(
+                        "px-3 py-1 rounded-full transition-all cursor-pointer",
+                        sortBy === "newest"
+                          ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                          : "text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
+                      )}
+                    >
+                      Newest
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSortBy("appreciated")}
+                      className={cn(
+                        "px-3 py-1 rounded-full transition-all cursor-pointer",
+                        sortBy === "appreciated"
+                          ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                          : "text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
+                      )}
+                    >
+                      Most Appreciated
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Projects Grid */}
-            {creatorProjects.length === 0 ? (
-              <div className="flex min-h-[300px] flex-col items-center justify-center rounded-[24px] border border-dashed border-[var(--border-neutral)] bg-[var(--bg-neutral)]/30 p-10 text-center my-6">
-                <div className="h-12 w-12 rounded-full bg-[var(--bg-neutral)] flex items-center justify-center text-[var(--content-tertiary)] mb-4">
-                  <FolderKanban className="h-6 w-6" />
+            {/* Projects Grid / Empty State */}
+            {displayedProjects.length === 0 ? (
+              <div className="flex min-h-[340px] flex-col items-center justify-center rounded-[28px] border border-dashed border-[var(--border-neutral)] bg-[var(--bg-screen)] p-10 text-center my-6">
+                <div className="h-14 w-14 rounded-full bg-[var(--bg-neutral)] flex items-center justify-center text-[var(--content-tertiary)] mb-4">
+                  <FolderKanban className="h-7 w-7" />
                 </div>
+
                 <h3 className="type-title-subsection text-[var(--content-primary)]">
-                  No public projects yet
+                  {isCurrentUser
+                    ? activeTab === "published"
+                      ? "No published projects yet"
+                      : "No draft projects"
+                    : "No public projects yet"}
                 </h3>
-                <p className="mt-1.5 type-body-default text-[var(--content-secondary)] max-w-sm">
-                  {creator.displayName} has not published any public case studies yet. Follow this creator to get notified when they publish work.
+
+                <p className="mt-2 type-body-default text-[var(--content-secondary)] max-w-md">
+                  {isCurrentUser
+                    ? activeTab === "published"
+                      ? "Publish your first monograph or design case study to showcase your visual craft to the community."
+                      : "You don't have any saved drafts. Start a new project to save your progress."
+                    : `${creator.displayName} has not published any public case studies yet.`}
                 </p>
+
+                {isCurrentUser && (
+                  <Link href="/me/projects/new" className="mt-6">
+                    <Button variant="accent" size="default" className="gap-2 font-bold shadow-xs">
+                      <Plus className="h-4 w-4" />
+                      <span>{activeTab === "published" ? "Create First Project" : "Start New Draft"}</span>
+                    </Button>
+                  </Link>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                {creatorProjects.map((project, idx) => (
+                {displayedProjects.map((project, idx) => (
                   <StaggerGridItem key={project.id} index={idx}>
                     <ProjectCard project={project} />
                   </StaggerGridItem>
@@ -342,6 +443,92 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
             )}
           </main>
         </div>
+
+        {/* Edit Profile Modal */}
+        {isEditingProfile && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
+            <div className="relative w-full max-w-lg rounded-[28px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] p-6 sm:p-8 shadow-2xl">
+              <div className="flex items-center justify-between pb-4 border-b border-[var(--border-neutral)] mb-6">
+                <div className="flex items-center gap-2">
+                  <Edit3 className="h-5 w-5 text-[var(--primary-forest-green)]" />
+                  <h2 className="type-title-section text-[var(--content-primary)]">
+                    Edit Studio Profile
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingProfile(false)}
+                  className="rounded-full p-1.5 text-[var(--content-tertiary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveProfile} className="space-y-4">
+                <div>
+                  <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5">
+                    Display Name
+                  </label>
+                  <Input
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5">
+                    About / Bio
+                  </label>
+                  <Textarea
+                    value={editBio}
+                    onChange={(e) => setEditBio(e.target.value)}
+                    rows={4}
+                    placeholder="Tell the community about your design philosophy and disciplines..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5">
+                      Location / City
+                    </label>
+                    <Input
+                      value={editLocation}
+                      onChange={(e) => setEditLocation(e.target.value)}
+                      placeholder="e.g. Berlin, Germany"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5">
+                      Website URL
+                    </label>
+                    <Input
+                      type="url"
+                      value={editWebsite}
+                      onChange={(e) => setEditWebsite(e.target.value)}
+                      placeholder="https://studio.design"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-[var(--border-neutral)] mt-6">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setIsEditingProfile(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" variant="accent" className="font-bold">
+                    Save Changes
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Share Modal */}
         <ShareModal

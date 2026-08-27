@@ -50,15 +50,16 @@ export function MeClient() {
   const [editLocation, setEditLocation] = useState(user?.location || "");
   const [editWebsite, setEditWebsite] = useState(user?.website || "");
 
-  // Synchronize edit fields when user loads from session
+  // Synchronize edit fields and forward to canonical username route
   React.useEffect(() => {
     if (user) {
       setEditName(user.displayName);
       setEditBio(user.bio || "");
       setEditLocation(user.location || "");
       setEditWebsite(user.website || "");
+      router.replace(`/u/${user.username}`);
     }
-  }, [user]);
+  }, [user, router]);
 
   // While session/auth is initializing from Supabase on reload, show smooth profile skeleton
   if (isLoadingDb) {

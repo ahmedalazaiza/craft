@@ -9,7 +9,7 @@ import { MotionCardWrapper } from "@/components/ui/motion-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { AppreciationButton } from "@/components/project/appreciation-button";
 import { useSession } from "@/lib/session-context";
-import { Share2 } from "lucide-react";
+import { Share2, Edit3 } from "lucide-react";
 import { ShareModal } from "@/components/ui/share-modal";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { OnlineBadge } from "@/components/ui/online-badge";
@@ -23,11 +23,17 @@ interface ProjectCardProps {
 
 export function ProjectCard({ project, priority = false, className }: ProjectCardProps) {
   const router = useRouter();
-  const { projects } = useSession();
+  const { projects, user } = useSession();
   const [isShareOpen, setIsShareOpen] = useState(false);
 
   // Pick up live appreciation count and session data if available
   const liveProject = projects.find((p) => p.id === project.id) || project;
+
+  const isOwner =
+    user &&
+    liveProject.creator &&
+    (user.id === liveProject.creator.id ||
+      user.username.toLowerCase() === liveProject.creator.username.toLowerCase());
 
   const handleCardClick = () => {
     router.push(`/project/${liveProject.slug}`);
@@ -68,8 +74,22 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
               </Badge>
             </div>
 
-            {/* Action Buttons Top-Right: Quick Share + Appreciation */}
+            {/* Action Buttons Top-Right: Owner Edit + Quick Share + Appreciation */}
             <div className="absolute top-3.5 right-3.5 z-10 flex items-center gap-1.5">
+              {isOwner && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push(`/me/projects/${liveProject.id}`);
+                  }}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--bg-elevated)]/90 backdrop-blur-xs text-[var(--content-primary)] hover:bg-[var(--primary-forest-green)] hover:text-white transition-all shadow-xs cursor-pointer border border-[var(--border-neutral)]"
+                  title="Edit case study"
+                >
+                  <Edit3 className="h-3.5 w-3.5" />
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={handleShareClick}

@@ -134,29 +134,15 @@ export function ProfileDropdown() {
             {/* Navigation Options */}
             <div className="p-1.5 space-y-0.5">
               <Link
-                href="/me"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center justify-between gap-2.5 rounded-[12px] px-3 py-2 text-xs font-medium text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-colors"
-              >
-                <div className="flex items-center gap-2.5">
-                  <User className="h-4 w-4 text-[var(--content-tertiary)]" />
-                  <span>My Profile</span>
-                </div>
-                <ChevronRight className="h-3.5 w-3.5 text-[var(--content-tertiary)]" />
-              </Link>
-
-              <Link
                 href={`/u/${user.username}`}
                 onClick={() => setIsOpen(false)}
                 className="flex items-center justify-between gap-2.5 rounded-[12px] px-3 py-2 text-xs font-medium text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-colors"
               >
                 <div className="flex items-center gap-2.5">
-                  <ExternalLink className="h-4 w-4 text-[var(--content-tertiary)]" />
-                  <span>View Public Profile</span>
+                  <User className="h-4 w-4 text-[var(--content-tertiary)]" />
+                  <span>My Studio Profile</span>
                 </div>
-                <span className="text-[10px] text-[var(--content-tertiary)] font-mono">
-                  ↗
-                </span>
+                <ChevronRight className="h-3.5 w-3.5 text-[var(--content-tertiary)]" />
               </Link>
 
               <Link

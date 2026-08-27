@@ -1,7 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { mockProjects, getProjectById } from "@/lib/mock";
+import { fetchProjectById } from "@/lib/supabase/queries";
 import { EditProjectClient } from "./edit-project-client";
 
 interface PageProps {
@@ -16,10 +16,10 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const project = getProjectById(id);
+  const project = getProjectById(id) || (await fetchProjectById(id));
 
   return {
-    title: project ? `Edit "${project.title}"` : "Edit Project",
+    title: project ? `Edit "${project.title}"` : "Edit Project — Craft",
     robots: {
       index: false,
       follow: false,
@@ -29,11 +29,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function EditProjectPage({ params }: PageProps) {
   const { id } = await params;
-  const project = getProjectById(id);
+  const project = getProjectById(id) || (await fetchProjectById(id));
 
-  if (!project) {
-    notFound();
-  }
-
-  return <EditProjectClient initialProject={project} />;
+  return <EditProjectClient projectId={id} initialProject={project || undefined} />;
 }
