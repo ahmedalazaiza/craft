@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { FadeIn } from "@/components/ui/motion-wrapper";
-import { Lock, Mail, User, ArrowRight, Sparkles, AtSign, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { Lock, Mail, User, ArrowRight, Sparkles, Eye, EyeOff, AlertCircle, CheckCircle2 } from "lucide-react";
 import { bricolage } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
@@ -17,12 +17,19 @@ export function SignupClient() {
   const router = useRouter();
   const { signup } = useSession();
   const [displayName, setDisplayName] = useState("");
-  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const autoHandle =
+    displayName
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "_")
+      .replace(/_+/g, "_")
+      .replace(/^_|_$/g, "") || "handle";
 
   const isFormValid =
     displayName.trim().length > 0 &&
@@ -41,15 +48,9 @@ export function SignupClient() {
     setLoading(true);
     setErrorMessage(null);
 
-    const generatedUsername =
-      username.trim() ||
-      displayName
-        .toLowerCase()
-        .replace(/[^a-z0-9_]/g, "")
-        .slice(0, 20);
-
     try {
-      const res = await signup(email, password, displayName, generatedUsername);
+      // Auto-generates unique username on the backend & Supabase
+      const res = await signup(email, password, displayName);
       if (res.success) {
         router.push("/me");
       } else {
@@ -111,33 +112,21 @@ export function SignupClient() {
                     type="text"
                     required
                     value={displayName}
-                    onChange={(e) => {
-                      setDisplayName(e.target.value);
-                      if (!username) {
-                        setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""));
-                      }
-                    }}
-                    placeholder="Elena Vance"
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="e.g. Elena Vance"
                     autoComplete="name"
                   />
                   <User className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--content-tertiary)] pointer-events-none" />
                 </div>
-              </div>
-
-              <div>
-                <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5">
-                  Username (@username)
-                </label>
-                <div className="relative">
-                  <Input
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
-                    placeholder="elena_v"
-                    autoComplete="username"
-                  />
-                  <AtSign className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--content-tertiary)] pointer-events-none" />
-                </div>
+                {displayName.trim() && (
+                  <div className="mt-2 flex items-center gap-1.5 text-[11px] text-[var(--content-tertiary)]">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-[#8DFF00] shrink-0" />
+                    <span>Your unique handle will be:</span>
+                    <span className="font-mono font-semibold text-[var(--content-primary)] bg-[var(--bg-neutral)] px-2 py-0.5 rounded-md">
+                      @{autoHandle}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div>

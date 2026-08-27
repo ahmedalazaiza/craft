@@ -9,18 +9,97 @@ export interface AuthResponse {
 }
 
 /**
+ * Generate a guaranteed unique username based on full name and email
+ */
+export async function generateUniqueUsername(displayName: string, email: string): Promise<string> {
+  // 1. Derive base slug from Display Name or Email
+  let base = displayName
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "");
+
+  if (!base || base.length < 2) {
+    const emailPrefix = email.split("@")[0] || "creator";
+    base = emailPrefix
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "_")
+      .replace(/_+/g, "_")
+      .replace(/^_|_$/g, "");
+  }
+
+  // Ensure base length is within bounds (max 16 chars)
+  base = base.slice(0, 16) || "creator";
+
+  // 2. Check existence against Supabase profiles table
+  try {
+    const { data: existingProfiles } = await supabase
+      .from("profiles")
+      .select("username")
+      .ilike("username", `${base}%`);
+
+    if (!existingProfiles || existingProfiles.length === 0) {
+      return base;
+    }
+
+    const takenUsernames = new Set(
+      existingProfiles.map((p) => (p.username || "").toLowerCase())
+    );
+
+    if (!takenUsernames.has(base.toLowerCase())) {
+      return base;
+    }
+
+    // Try suffixes _1, _2, ...
+    for (let i = 1; i <= 50; i++) {
+      const candidate = `${base}_${i}`;
+      if (!takenUsernames.has(candidate.toLowerCase())) {
+        return candidate;
+      }
+    }
+
+    // If all sequential slots are occupied, append 3 random digits
+    const randomSuffix = Math.floor(100 + Math.random() * 900);
+    return `${base}_${randomSuffix}`;
+  } catch (err) {
+    console.warn("Could not query profiles for username collision check:", err);
+    const randomSuffix = Math.floor(100 + Math.random() * 900);
+    return `${base}_${randomSuffix}`;
+  }
+}
+
+/**
  * Sign up a new user with Email and Password
+ * Username is automatically generated and guaranteed unique!
  */
 export async function signUpWithEmail(
   email: string,
   password: string,
   displayName: string,
-  username?: string
+  customUsername?: string
 ): Promise<AuthResponse> {
   try {
     const cleanEmail = email.trim().toLowerCase();
     const cleanDisplayName = displayName.trim();
-    const cleanUsername = (username || cleanDisplayName.toLowerCase().replace(/[^a-z0-9_]/g, "")).trim();
+
+    // Generate unique username automatically if not provided or to ensure uniqueness
+    let finalUsername = customUsername?.trim();
+    if (!finalUsername) {
+      finalUsername = await generateUniqueUsername(cleanDisplayName, cleanEmail);
+    } else {
+      // Clean custom username and verify uniqueness
+      finalUsername = finalUsername.toLowerCase().replace(/[^a-z0-9_]/g, "");
+      const { data: collision } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("username", finalUsername)
+        .maybeSingle();
+
+      if (collision) {
+        finalUsername = await generateUniqueUsername(cleanDisplayName, cleanEmail);
+      }
+    }
 
     // 1. Supabase Auth Sign Up
     const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -29,7 +108,7 @@ export async function signUpWithEmail(
       options: {
         data: {
           display_name: cleanDisplayName,
-          username: cleanUsername,
+          username: finalUsername,
         },
       },
     });
@@ -46,7 +125,7 @@ export async function signUpWithEmail(
     // 2. Ensure profile exists in public.profiles table
     const profileRow = {
       id: authUser.id,
-      username: cleanUsername,
+      username: finalUsername,
       display_name: cleanDisplayName,
       avatar_url: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80`,
       bio: "Independent designer & creative practitioner.",

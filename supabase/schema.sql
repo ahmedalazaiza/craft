@@ -754,7 +754,29 @@ ON CONFLICT (id) DO NOTHING;
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+    candidate_username TEXT;
+    temp_username TEXT;
+    counter INT := 1;
 BEGIN
+    -- Derive clean base username from metadata or email
+    candidate_username := COALESCE(
+        NEW.raw_user_meta_data->>'username',
+        regexp_replace(lower(split_part(NEW.email, '@', 1)), '[^a-z0-9_]', '_', 'g')
+    );
+    
+    IF candidate_username IS NULL OR length(candidate_username) < 2 THEN
+        candidate_username := 'creator';
+    END IF;
+
+    temp_username := candidate_username;
+
+    -- Ensure uniqueness in public.profiles table
+    WHILE EXISTS (SELECT 1 FROM public.profiles WHERE username = temp_username AND id <> NEW.id) LOOP
+        temp_username := candidate_username || '_' || counter;
+        counter := counter + 1;
+    END LOOP;
+
     INSERT INTO public.profiles (
         id,
         username,
@@ -767,7 +789,7 @@ BEGIN
     )
     VALUES (
         NEW.id,
-        COALESCE(NEW.raw_user_meta_data->>'username', split_part(NEW.email, '@', 1)),
+        temp_username,
         COALESCE(NEW.raw_user_meta_data->>'display_name', split_part(NEW.email, '@', 1)),
         'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
         'Independent designer & creative practitioner.',
@@ -776,7 +798,7 @@ BEGIN
         0
     )
     ON CONFLICT (id) DO UPDATE SET
-        username = COALESCE(EXCLUDED.username, public.profiles.username),
+        username = COALESCE(public.profiles.username, EXCLUDED.username),
         display_name = COALESCE(EXCLUDED.display_name, public.profiles.display_name);
     RETURN NEW;
 END;
@@ -786,4 +808,5 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
 AFTER INSERT ON auth.users
 FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
 
