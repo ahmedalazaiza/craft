@@ -57,10 +57,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [creators, setCreators] = useState<Creator[]>(mockUsers);
   const [isLoadingDb, setIsLoadingDb] = useState<boolean>(true);
   const [appreciatedProjectIds, setAppreciatedProjectIds] = useState<Set<string>>(
-    new Set(["b1111111-1111-1111-1111-111111111111", "proj-1"])
+    new Set(["b0000001-0000-4000-8000-000000000001", "proj-1"])
   );
   const [followingCreatorIds, setFollowingCreatorIds] = useState<Set<string>>(
-    new Set(["a2222222-2222-2222-2222-222222222222", "a3333333-3333-3333-3333-333333333333"])
+    new Set(["a0000002-0000-4000-8000-000000000002", "a0000003-0000-4000-8000-000000000003"])
   );
   const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
 
@@ -319,7 +319,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       try {
         const dbResult = await insertProject({
           ...newProj,
-          creatorId: user?.id || "a1111111-1111-1111-1111-111111111111",
+          creatorId: user?.id || "a0000001-0000-4000-8000-000000000001",
         });
         if (dbResult) {
           setProjects((prev) => prev.map((p) => (p.slug === slug ? dbResult : p)));

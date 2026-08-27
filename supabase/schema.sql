@@ -236,7 +236,7 @@ CREATE POLICY "Public storage insert" ON storage.objects FOR INSERT WITH CHECK (
 INSERT INTO public.profiles (id, username, display_name, avatar_url, bio, location, city, website, skills, is_verified, is_online, followers_count)
 VALUES
 (
-    'a1111111-1111-1111-1111-111111111111',
+    'a0000001-0000-4000-8000-000000000001',
     'elena_v',
     'Elena Vance',
     'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
@@ -250,7 +250,7 @@ VALUES
     1240
 ),
 (
-    'a2222222-2222-2222-2222-222222222222',
+    'a0000002-0000-4000-8000-000000000002',
     'kai_sato',
     'Kai Sato',
     'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
@@ -264,7 +264,7 @@ VALUES
     890
 ),
 (
-    'a3333333-3333-3333-3333-333333333333',
+    'a0000003-0000-4000-8000-000000000003',
     'maya_lin',
     'Maya Lin',
     'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&auto=format&fit=crop&q=80',
@@ -278,7 +278,7 @@ VALUES
     1420
 ),
 (
-    'a4444444-4444-4444-4444-444444444444',
+    'a0000004-0000-4000-8000-000000000004',
     'marcus_k',
     'Marcus Keller',
     'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&auto=format&fit=crop&q=80',
@@ -292,7 +292,7 @@ VALUES
     650
 ),
 (
-    'a5555555-5555-5555-5555-555555555555',
+    'a0000005-0000-4000-8000-000000000005',
     'sophia_chen',
     'Sophia Chen',
     'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=300&auto=format&fit=crop&q=80',
@@ -306,7 +306,7 @@ VALUES
     1100
 ),
 (
-    'a6666666-6666-6666-6666-666666666666',
+    'a0000006-0000-4000-8000-000000000006',
     'david_nord',
     'David Nordström',
     'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=300&auto=format&fit=crop&q=80',
@@ -334,7 +334,7 @@ ON CONFLICT (id) DO UPDATE SET
 INSERT INTO public.projects (id, slug, title, summary, body, cover_image, gallery_images, category, medium, tags, tools, published, featured, creator_id, appreciations_count, published_at)
 VALUES
 (
-    'b1111111-1111-1111-1111-111111111111',
+    'b0000001-0000-4000-8000-000000000001',
     'kinfolk-sanctuary',
     'Sanctuary: Architectural Monograph & Spatial Identity',
     'A tactile spatial monograph and editorial identity celebrating raw timber, poured concrete, and quiet domestic spaces.',
@@ -352,12 +352,12 @@ VALUES
     ARRAY['InDesign', 'Figma', 'Glyphs', 'Film Photography'],
     true,
     true,
-    'a1111111-1111-1111-1111-111111111111',
+    'a0000001-0000-4000-8000-000000000001',
     248,
     NOW() - INTERVAL '2 days'
 ),
 (
-    'b2222222-2222-2222-2222-222222222222',
+    'b0000002-0000-4000-8000-000000000002',
     'aurora-interface-os',
     'Aurora OS: High-Density Canvas for Creative Engineers',
     'An expansive spatial operating canvas designed for node-based visual programming and real-time audio-visual synthesis.',
@@ -374,12 +374,12 @@ VALUES
     ARRAY['Figma', 'TypeScript', 'WebGL', 'Rust'],
     true,
     true,
-    'a2222222-2222-2222-2222-222222222222',
+    'a0000002-0000-4000-8000-000000000002',
     412,
     NOW() - INTERVAL '3 days'
 ),
 (
-    'b3333333-3333-3333-3333-333333333333',
+    'b0000003-0000-4000-8000-000000000003',
     'brutalist-concrete-silence',
     'Brutalist Silence: Monolithic Forms in Light & Dust',
     'A high-contrast photographic study documenting raw brutalist architecture across European capitals at dawn.',
@@ -395,12 +395,12 @@ VALUES
     ARRAY['Hasselblad H6D', 'Phase One', 'Capture One'],
     true,
     true,
-    'a3333333-3333-3333-3333-333333333333',
+    'a0000003-0000-4000-8000-000000000003',
     839,
     NOW() - INTERVAL '5 days'
 ),
 (
-    'b4444444-4444-4444-4444-444444444444',
+    'b0000004-0000-4000-8000-000000000004',
     'bauhaus-risograph-monograph',
     'Typographic Resonance: 4-Color Risograph Folio',
     'A limited-edition risograph publication exploring asymmetric grid structures and grotesque typographic scale.',
@@ -415,12 +415,12 @@ VALUES
     ARRAY['InDesign', 'Risograph GR3750', 'Hand Binding'],
     true,
     false,
-    'a4444444-4444-4444-4444-444444444444',
+    'a0000004-0000-4000-8000-000000000004',
     184,
     NOW() - INTERVAL '6 days'
 ),
 (
-    'b5555555-5555-5555-5555-555555555555',
+    'b0000005-0000-4000-8000-000000000005',
     'tactile-analog-synthesizer',
     'Aura 04: CNC Machined Modular Synthesizer Interface',
     'Solid bead-blasted aluminum hardware synth enclosure with custom knurled rotary encoders and OLED display surfaces.',
@@ -435,12 +435,12 @@ VALUES
     ARRAY['Fusion 360', 'SolidWorks', 'CNC Milling', 'Altium'],
     true,
     false,
-    'a5555555-5555-5555-5555-555555555555',
+    'a0000005-0000-4000-8000-000000000005',
     295,
     NOW() - INTERVAL '8 days'
 ),
 (
-    'b6666666-6666-6666-6666-666666666666',
+    'b0000006-0000-4000-8000-000000000006',
     'scandinavian-timber-pavilion',
     'Nordic Daylight Pavilion: Interlocking Timber Joints',
     'A seasonal daylight observatory constructed from sustainable slow-growth spruce without metallic fasteners.',
@@ -455,12 +455,12 @@ VALUES
     ARRAY['Rhino', 'Grasshopper', 'Timber Framing'],
     true,
     false,
-    'a6666666-6666-6666-6666-666666666666',
+    'a0000006-0000-4000-8000-000000000006',
     462,
     NOW() - INTERVAL '10 days'
 ),
 (
-    'b7777777-7777-7777-7777-777777777777',
+    'b0000007-0000-4000-8000-000000000007',
     'kinetic-variable-typeface',
     'Kinesis Variable: Fluid Optical Axis & Generative Glyphs',
     'An experimental variable font system responding to real-time audio frequencies and cursor proximity.',
@@ -475,12 +475,12 @@ VALUES
     ARRAY['Glyphs 3', 'Python', 'RoboFont'],
     true,
     false,
-    'a1111111-1111-1111-1111-111111111111',
+    'a0000001-0000-4000-8000-000000000001',
     390,
     NOW() - INTERVAL '12 days'
 ),
 (
-    'b8888888-8888-8888-8888-888888888888',
+    'b0000008-0000-4000-8000-000000000008',
     'monolith-exhibition-catalogue',
     'Monolith: Brutalist Identity & Cast Concrete Catalogue',
     'A heavyweight custom publication featuring blind debossing and custom display grotesques.',
@@ -495,12 +495,12 @@ VALUES
     ARRAY['InDesign', 'Screen Printing', 'Figma'],
     true,
     false,
-    'a4444444-4444-4444-4444-444444444444',
+    'a0000004-0000-4000-8000-000000000004',
     512,
     NOW() - INTERVAL '14 days'
 ),
 (
-    'b9999999-9999-9999-9999-999999999999',
+    'b0000009-0000-4000-8000-000000000009',
     'aether-generative-audio-canvas',
     'Aether: Real-time Audio-Visual Synthesis Canvas',
     'A GPU-accelerated web interface for real-time shader generation and frequency mapping.',
@@ -515,12 +515,12 @@ VALUES
     ARRAY['WebGL', 'GLSL', 'TypeScript', 'Three.js'],
     true,
     true,
-    'a2222222-2222-2222-2222-222222222222',
+    'a0000002-0000-4000-8000-000000000002',
     630,
     NOW() - INTERVAL '16 days'
 ),
 (
-    'baaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+    'b0000010-0000-4000-8000-000000000010',
     'terra-timber-joinery-study',
     'Terra: Japanese Hand-Hewn Cedar Pavilion & Joints',
     'A research archive of complex wooden joinery prototypes and daylight meditation shelters.',
@@ -535,12 +535,12 @@ VALUES
     ARRAY['Rhino', 'Hand Joinery', 'Film'],
     true,
     false,
-    'a6666666-6666-6666-6666-666666666666',
+    'a0000006-0000-4000-8000-000000000006',
     475,
     NOW() - INTERVAL '18 days'
 ),
 (
-    'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+    'b0000011-0000-4000-8000-000000000011',
     'nexus-design-system',
     'Nexus System: Multi-Brand Component Engine & Tokens',
     'A unified cross-platform design token architecture supporting high-density dark mode and fluid type scaling.',
@@ -555,12 +555,12 @@ VALUES
     ARRAY['Figma', 'Tokens Studio', 'TypeScript'],
     true,
     false,
-    'a2222222-2222-2222-2222-222222222222',
+    'a0000002-0000-4000-8000-000000000002',
     520,
     NOW() - INTERVAL '20 days'
 ),
 (
-    'bcccccccc-cccc-cccc-cccc-cccccccccccc',
+    'b0000012-0000-4000-8000-000000000012',
     'prism-raymarching-canvas',
     'Prism: Real-time SDF Raymarching & Shading Environment',
     'An interactive browser-based compute shader engine for procedural geometric forms and refraction materials.',
@@ -575,12 +575,12 @@ VALUES
     ARRAY['WebGPU', 'GLSL', 'React'],
     true,
     false,
-    'a2222222-2222-2222-2222-222222222222',
+    'a0000002-0000-4000-8000-000000000002',
     410,
     NOW() - INTERVAL '22 days'
 ),
 (
-    'bdddddddd-dddd-dddd-dddd-dddddddddddd',
+    'b0000013-0000-4000-8000-000000000013',
     'verve-kinetic-identity',
     'Verve: Kinetic Swiss Typography & Dynamic Posters',
     'An expressive visual identity exploring mathematical typographic grids and reactive motion behaviours.',
@@ -595,12 +595,12 @@ VALUES
     ARRAY['After Effects', 'Glyphs', 'Illustrator'],
     true,
     false,
-    'a1111111-1111-1111-1111-111111111111',
+    'a0000001-0000-4000-8000-000000000001',
     388,
     NOW() - INTERVAL '24 days'
 ),
 (
-    'beeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+    'b0000014-0000-4000-8000-000000000014',
     'aperture-monograph-journal',
     'Aperture Vol. 03: Large-Format Editorial on Brutalism',
     'A tactile printed journal featuring hand-tipped plates, exposed spine binding, and cold-foil accents.',
@@ -615,12 +615,12 @@ VALUES
     ARRAY['InDesign', 'Letterpress', 'Foil Stamping'],
     true,
     false,
-    'a4444444-4444-4444-4444-444444444444',
+    'a0000004-0000-4000-8000-000000000004',
     290,
     NOW() - INTERVAL '26 days'
 ),
 (
-    'bfffffff-ffff-ffff-ffff-ffffffffffff',
+    'b0000015-0000-4000-8000-000000000015',
     'solarium-timber-observatory',
     'Solarium: Curved Glulam Timber & Daylight Acoustics',
     'An off-grid alpine observatory utilizing steam-bent timber ribs and acoustic dampening moss walls.',
@@ -635,12 +635,12 @@ VALUES
     ARRAY['Rhino', 'Karamba3D', 'Timber Framing'],
     true,
     false,
-    'a6666666-6666-6666-6666-666666666666',
+    'a0000006-0000-4000-8000-000000000006',
     540,
     NOW() - INTERVAL '28 days'
 ),
 (
-    'b0000000-0000-0000-0000-000000000000',
+    'b0000016-0000-4000-8000-000000000016',
     'concrete-forms-photobook',
     'Forms in Shadow: Post-War Concrete Monoliths Photobook',
     'Monochrome medium-format film documentation of forgotten concrete monuments and architectural scale.',
@@ -655,7 +655,7 @@ VALUES
     ARRAY['Hasselblad 500C/M', 'Darkroom Printing'],
     true,
     false,
-    'a3333333-3333-3333-3333-333333333333',
+    'a0000003-0000-4000-8000-000000000003',
     710,
     NOW() - INTERVAL '30 days'
 )
@@ -681,30 +681,30 @@ ON CONFLICT (id) DO UPDATE SET
 INSERT INTO public.comments (id, project_id, author_id, content, created_at)
 VALUES
 (
-    'c1111111-1111-1111-1111-111111111111',
-    'b1111111-1111-1111-1111-111111111111',
-    'a2222222-2222-2222-2222-222222222222',
+    'c0000001-0000-4000-8000-000000000001',
+    'b0000001-0000-4000-8000-000000000001',
+    'a0000002-0000-4000-8000-000000000002',
     'The balance of white space and weight in the type specimen is breathtaking. Superb craft on the debossed cover treatment.',
     NOW() - INTERVAL '2 days'
 ),
 (
-    'c2222222-2222-2222-2222-222222222222',
-    'b1111111-1111-1111-1111-111111111111',
-    'a3333333-3333-3333-3333-333333333333',
+    'c0000002-0000-4000-8000-000000000002',
+    'b0000001-0000-4000-8000-000000000001',
+    'a0000003-0000-4000-8000-000000000003',
     'The tonal sensitivity of the film photography complements the binding choice effortlessly. Beautiful work, Elena.',
     NOW() - INTERVAL '1 day'
 ),
 (
-    'c3333333-3333-3333-3333-333333333333',
-    'b1111111-1111-1111-1111-111111111111',
-    'a4444444-4444-4444-4444-444444444444',
+    'c0000003-0000-4000-8000-000000000003',
+    'b0000001-0000-4000-8000-000000000001',
+    'a0000004-0000-4000-8000-000000000004',
     'That incised grotesque terminal detail is pure gold. Would love to see the physical test prints!',
     NOW() - INTERVAL '4 hours'
 ),
 (
-    'c4444444-4444-4444-4444-444444444444',
-    'b2222222-2222-2222-2222-222222222222',
-    'a1111111-1111-1111-1111-111111111111',
+    'c0000004-0000-4000-8000-000000000004',
+    'b0000002-0000-4000-8000-000000000002',
+    'a0000001-0000-4000-8000-000000000001',
     'The spring dynamics on node snapping feel so organic. Incredible work on the density tokens Kai.',
     NOW() - INTERVAL '3 days'
 )
@@ -717,29 +717,29 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO public.notifications (id, recipient_id, actor_id, type, project_id, content, read, created_at)
 VALUES
 (
-    'd1111111-1111-1111-1111-111111111111',
-    'a1111111-1111-1111-1111-111111111111',
-    'a2222222-2222-2222-2222-222222222222',
+    'd0000001-0000-4000-8000-000000000001',
+    'a0000001-0000-4000-8000-000000000001',
+    'a0000002-0000-4000-8000-000000000002',
     'appreciation',
-    'b1111111-1111-1111-1111-111111111111',
+    'b0000001-0000-4000-8000-000000000001',
     'Kai Sato appreciated your project Sanctuary',
     false,
     NOW() - INTERVAL '2 hours'
 ),
 (
-    'd2222222-2222-2222-2222-222222222222',
-    'a1111111-1111-1111-1111-111111111111',
-    'a4444444-4444-4444-4444-444444444444',
+    'd0000002-0000-4000-8000-000000000002',
+    'a0000001-0000-4000-8000-000000000001',
+    'a0000004-0000-4000-8000-000000000004',
     'comment',
-    'b1111111-1111-1111-1111-111111111111',
+    'b0000001-0000-4000-8000-000000000001',
     'That incised grotesque terminal detail is pure gold. Would love to see the physical test prints!',
     false,
     NOW() - INTERVAL '5 hours'
 ),
 (
-    'd3333333-3333-3333-3333-333333333333',
-    'a1111111-1111-1111-1111-111111111111',
-    'a3333333-3333-3333-3333-333333333333',
+    'd0000003-0000-4000-8000-000000000003',
+    'a0000001-0000-4000-8000-000000000001',
+    'a0000003-0000-4000-8000-000000000003',
     'follow',
     NULL,
     'Maya Lin started following your studio',
