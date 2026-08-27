@@ -318,13 +318,16 @@ export function MeClient() {
                 </button>
               </div>
 
-              {/* + New Project CTA */}
-              <Link href="/me/projects/new">
-                <Button variant="accent" size="sm" className="gap-2 font-bold shadow-xs">
-                  <Plus className="h-4 w-4" />
-                  <span>New Project</span>
-                </Button>
-              </Link>
+              {/* + New Project CTA (Only shown when active tab has projects to prevent duplicate empty-state CTAs) */}
+              {((activeTab === "published" && publishedProjects.length > 0) ||
+                (activeTab === "drafts" && draftProjects.length > 0)) && (
+                <Link href="/me/projects/new">
+                  <Button variant="accent" size="sm" className="gap-2 font-bold shadow-xs">
+                    <Plus className="h-4 w-4" />
+                    <span>New Project</span>
+                  </Button>
+                </Link>
+              )}
             </div>
 
             {/* Tab Content */}
