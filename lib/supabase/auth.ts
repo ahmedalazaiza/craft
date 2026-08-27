@@ -34,26 +34,32 @@ export async function generateUniqueUsername(
     slugifyUsername(email.split("@")[0]) ||
     "creator";
 
-  // Check if baseCandidate is available
   try {
+    // 1. Check if baseCandidate itself is completely free
+    const { data: directMatch } = await supabase
+      .from("profiles")
+      .select("id")
+      .ilike("username", baseCandidate)
+      .maybeSingle();
+
+    if (!directMatch) {
+      return baseCandidate;
+    }
+
+    // 2. Find all existing matching prefixes to guarantee unique sequential suffix
     const { data: existing, error } = await supabase
       .from("profiles")
       .select("username")
       .ilike("username", `${baseCandidate}%`);
 
     if (error || !existing || existing.length === 0) {
-      return baseCandidate;
+      return `${baseCandidate}_1`;
     }
 
     const takenUsernames = new Set(
       existing.map((row) => (row.username as string).toLowerCase())
     );
 
-    if (!takenUsernames.has(baseCandidate.toLowerCase())) {
-      return baseCandidate;
-    }
-
-    // Append sequential numbers until an available username is found
     let counter = 1;
     while (takenUsernames.has(`${baseCandidate}_${counter}`.toLowerCase())) {
       counter++;
