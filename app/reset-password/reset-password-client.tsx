@@ -45,8 +45,17 @@ export function ResetPasswordClient() {
   const [isUpdated, setIsUpdated] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Verify auth session from password reset token
+  // Verify auth session from password reset token & prevent back-nav to completed reset
   useEffect(() => {
+    // 1. If password was already reset in this browser session, prevent returning via Back button
+    if (typeof window !== "undefined") {
+      const alreadyCompleted = sessionStorage.getItem("craft_password_reset_completed");
+      if (alreadyCompleted === "true") {
+        router.replace("/explore");
+        return;
+      }
+    }
+
     async function checkRecoverySession() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -75,7 +84,7 @@ export function ResetPasswordClient() {
     }
 
     checkRecoverySession();
-  }, []);
+  }, [router]);
 
   const { isRequiredSatisfied } = getPasswordStrength(password);
 
@@ -108,6 +117,11 @@ export function ResetPasswordClient() {
       if (error) {
         setErrorMessage(error.message);
       } else {
+        // Mark as completed in sessionStorage & clean URL hash
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("craft_password_reset_completed", "true");
+          window.history.replaceState(null, "", "/reset-password");
+        }
         setIsUpdated(true);
         await refreshFromDb();
       }
@@ -118,6 +132,11 @@ export function ResetPasswordClient() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoToExplore = () => {
+    // Replaces history entry so pressing Back in browser won't return to /reset-password
+    router.replace("/explore");
   };
 
   // =========================================================================
@@ -174,12 +193,14 @@ export function ResetPasswordClient() {
             </CardHeader>
 
             <CardContent className="pt-3">
-              <Link href="/explore" className="block w-full">
-                <Button variant="accent" className="w-full font-bold shadow-xs gap-2 h-12 text-sm">
-                  <span>Explore Projects</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
+              <Button
+                variant="accent"
+                onClick={handleGoToExplore}
+                className="w-full font-bold shadow-xs gap-2 h-12 text-sm cursor-pointer"
+              >
+                <span>Explore Projects</span>
+                <ArrowRight className="h-4 w-4" />
+              </Button>
             </CardContent>
           </Card>
         </FadeIn>
@@ -219,7 +240,7 @@ export function ResetPasswordClient() {
             </h1>
 
             <p className="mt-1.5 text-xs sm:text-sm text-[var(--content-secondary)] leading-relaxed max-w-xs mx-auto">
-              Please enter your new password below (minimum 6 characters).
+              Please enter your new strong password below to secure your account.
             </p>
           </CardHeader>
 
