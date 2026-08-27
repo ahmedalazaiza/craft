@@ -43,7 +43,6 @@ export function SignupClient() {
   // Live Unique Username Check State
   const [resolvedUsername, setResolvedUsername] = useState("");
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
-  const [isTakenOriginal, setIsTakenOriginal] = useState(false);
 
   // Success "Check Inbox" screen state
   const [isRegistered, setIsRegistered] = useState(false);
@@ -60,7 +59,6 @@ export function SignupClient() {
   useEffect(() => {
     if (!displayName.trim() && !email.trim()) {
       setResolvedUsername("");
-      setIsTakenOriginal(false);
       return;
     }
 
@@ -69,8 +67,6 @@ export function SignupClient() {
       try {
         const unique = await generateUniqueUsername(displayName, email);
         setResolvedUsername(unique);
-        const baseSlug = slugifyUsername(displayName) || slugifyUsername(email.split("@")[0]);
-        setIsTakenOriginal(unique.toLowerCase() !== baseSlug.toLowerCase());
       } catch (err) {
         console.error("Live handle generation error:", err);
       } finally {
@@ -329,20 +325,12 @@ export function SignupClient() {
                         <span className="h-3.5 w-20 rounded-md bg-[var(--bg-neutral)] inline-block" />
                       </div>
                     ) : (
-                      <div className="space-y-1 animate-fade-in">
-                        <div className="flex items-center gap-1.5 text-[11px] text-[var(--content-tertiary)]">
-                          <CheckCircle2 className="h-3.5 w-3.5 text-[#8DFF00] shrink-0" />
-                          <span>Your unique handle will be:</span>
-                          <span className="font-mono font-semibold text-[var(--content-primary)] bg-[var(--bg-neutral)] px-2 py-0.5 rounded-md">
-                            @{resolvedUsername || slugifyUsername(displayName)}
-                          </span>
-                        </div>
-
-                        {isTakenOriginal && (
-                          <p className="text-[10px] text-amber-500 font-medium pl-5 leading-tight">
-                            Note: @{slugifyUsername(displayName)} is already registered by a creator, so we reserved this unique handle for you.
-                          </p>
-                        )}
+                      <div className="flex items-center gap-1.5 text-[11px] text-[var(--content-tertiary)] animate-fade-in">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[#8DFF00] shrink-0" />
+                        <span>Your unique handle will be:</span>
+                        <span className="font-mono font-semibold text-[var(--content-primary)] bg-[var(--bg-neutral)] px-2 py-0.5 rounded-md">
+                          @{resolvedUsername || slugifyUsername(displayName)}
+                        </span>
                       </div>
                     )}
                   </div>
