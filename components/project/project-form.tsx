@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { uploadMediaFile, uploadMultipleMediaFiles } from "@/lib/supabase/storage";
 import {
   UploadCloud,
   Check,
@@ -95,6 +96,8 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const [isDraggingCover, setIsDraggingCover] = useState(false);
   const [isDraggingGallery, setIsDraggingGallery] = useState(false);
   const [isProcessingFiles, setIsProcessingFiles] = useState(false);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
 
   const handleAddTag = (e: React.KeyboardEvent | React.MouseEvent) => {
     if (("key" in e && e.key === "Enter") || e.type === "click") {
@@ -136,41 +139,44 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     setGalleryImages((prev) => prev.filter((_, idx) => idx !== idxToRemove));
   };
 
-  // Direct File Upload Handlers
-  const handleCoverFile = (file: File) => {
+  // Direct File Upload Handlers (with Supabase Storage + Fast Compression)
+  const handleCoverFile = async (file: File) => {
     if (!file.type.startsWith("image/")) {
       alert("Please upload a valid image file (PNG, JPG, WebP).");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        setCoverImage(e.target.result as string);
-      }
-    };
-    reader.readAsDataURL(file);
+    setIsUploadingCover(true);
+    try {
+      const cdnUrl = await uploadMediaFile(file, "project-media", "covers");
+      setCoverImage(cdnUrl);
+    } catch (err) {
+      console.error("Cover upload error:", err);
+    } finally {
+      setIsUploadingCover(false);
+    }
   };
 
   const handleGalleryFiles = async (files: FileList | File[]) => {
+    const fileList = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    if (fileList.length === 0) return;
+
     setIsProcessingFiles(true);
-    const newUrls: string[] = [];
-
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (file.type.startsWith("image/")) {
-        const dataUrl = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (e) => resolve(e.target?.result as string);
-          reader.readAsDataURL(file);
-        });
-        if (dataUrl) newUrls.push(dataUrl);
+    setUploadProgress({ current: 0, total: fileList.length });
+    try {
+      const cdnUrls = await uploadMultipleMediaFiles(
+        fileList,
+        "project-media",
+        (current, total) => setUploadProgress({ current, total })
+      );
+      if (cdnUrls.length > 0) {
+        setGalleryImages((prev) => [...prev, ...cdnUrls]);
       }
+    } catch (err) {
+      console.error("Gallery files upload error:", err);
+    } finally {
+      setIsProcessingFiles(false);
+      setUploadProgress(null);
     }
-
-    if (newUrls.length > 0) {
-      setGalleryImages((prev) => [...prev, ...newUrls]);
-    }
-    setIsProcessingFiles(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -385,9 +391,26 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
               )}
             >
               {isProcessingFiles ? (
-                <div className="flex flex-col items-center py-3">
-                  <Loader2 className="h-7 w-7 animate-spin text-[var(--primary-forest-green)] mb-2" />
-                  <span className="text-sm font-semibold text-[var(--content-primary)]">Processing images...</span>
+                <div className="flex flex-col items-center py-4 space-y-2 w-full max-w-xs mx-auto">
+                  <Loader2 className="h-7 w-7 animate-spin text-[var(--primary-forest-green)] mb-1" />
+                  <span className="text-sm font-bold text-[var(--content-primary)]">
+                    {uploadProgress
+                      ? `Uploading & optimizing ${uploadProgress.current} of ${uploadProgress.total} plates...`
+                      : "Processing images..."}
+                  </span>
+                  {uploadProgress && (
+                    <div className="w-full h-1.5 bg-[var(--bg-neutral)] rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-[var(--primary-forest-green)] transition-all duration-300 rounded-full"
+                        style={{
+                          width: `${Math.round((uploadProgress.current / uploadProgress.total) * 100)}%`,
+                        }}
+                      />
+                    </div>
+                  )}
+                  <span className="text-[11px] text-[var(--content-tertiary)]">
+                    Compressing & storing in Supabase CDN
+                  </span>
                 </div>
               ) : (
                 <>
@@ -399,7 +422,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                       Drop image files here, or <span className="text-[var(--content-link)] underline">browse from your computer</span>
                     </p>
                     <p className="text-xs text-[var(--content-tertiary)]">
-                      Select multiple PNG, JPG, or WebP files at once
+                      Select multiple PNG, JPG, or WebP files at once (automatically optimized)
                     </p>
                   </div>
                 </>
@@ -514,7 +537,12 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                   : "border-[var(--border-neutral)] hover:border-[var(--primary-forest-green)]"
               )}
             >
-              {coverImage ? (
+              {isUploadingCover ? (
+                <div className="flex flex-col items-center py-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-[var(--primary-forest-green)] mb-2" />
+                  <span className="text-xs font-bold text-[var(--content-primary)]">Uploading & storing cover...</span>
+                </div>
+              ) : coverImage ? (
                 <>
                   <Image
                     src={coverImage}
