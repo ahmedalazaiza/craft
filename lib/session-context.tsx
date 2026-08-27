@@ -27,6 +27,7 @@ import {
   AuthResponse,
 } from "./supabase/auth";
 import { supabase } from "./supabase/client";
+import { VerificationModal, GatedActionType } from "@/components/ui/verification-modal";
 
 interface SessionContextType {
   user: Creator | null;
@@ -37,6 +38,11 @@ interface SessionContextType {
   followingCreatorIds: Set<string>;
   notifications: Notification[];
   unreadNotificationsCount: number;
+  isVerificationModalOpen: boolean;
+  verificationModalAction: GatedActionType;
+  verificationModalTargetName?: string;
+  openVerificationModal: (action: GatedActionType, targetName?: string) => void;
+  closeVerificationModal: () => void;
   login: (email: string, password: string) => Promise<AuthResponse>;
   signup: (email: string, password: string, displayName: string, customUsername?: string) => Promise<AuthResponse>;
   logout: () => Promise<void>;
@@ -68,6 +74,21 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [appreciatedProjectIds, setAppreciatedProjectIds] = useState<Set<string>>(new Set());
   const [followingCreatorIds, setFollowingCreatorIds] = useState<Set<string>>(new Set());
   const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  // Verification Gate Modal State
+  const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
+  const [verificationModalAction, setVerificationModalAction] = useState<GatedActionType>("like");
+  const [verificationModalTargetName, setVerificationModalTargetName] = useState<string | undefined>(undefined);
+
+  const openVerificationModal = (action: GatedActionType, targetName?: string) => {
+    setVerificationModalAction(action);
+    setVerificationModalTargetName(targetName);
+    setIsVerificationModalOpen(true);
+  };
+
+  const closeVerificationModal = () => {
+    setIsVerificationModalOpen(false);
+  };
 
   // Check auth and fetch live database on mount
   const refreshFromDb = useCallback(async () => {
@@ -141,6 +162,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     const res = await signUpWithEmail(email, password, displayName, customUsername);
     if (res.success && res.user) {
       setUser(res.user);
+      // Remember registered email for easy resends
+      if (typeof window !== "undefined") {
+        localStorage.setItem("craft_last_registered_email", email.trim().toLowerCase());
+      }
       await refreshFromDb();
     }
     return res;
@@ -186,12 +211,15 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setNotifications((prev) => [newNotification, ...prev]);
   };
 
+  // GATED ACTION: Follow Creator (Strictly Verified Only)
   const toggleFollowCreator = (creatorId: string): boolean => {
-    if (!user) {
+    const targetCreator = creators.find((u) => u.id === creatorId);
+
+    // If guest or not verified, trigger verification modal
+    if (!user || !user.isVerified) {
+      openVerificationModal("follow", targetCreator?.displayName);
       return false;
     }
-
-    const targetCreator = creators.find((u) => u.id === creatorId);
 
     setFollowingCreatorIds((prev) => {
       const next = new Set(prev);
@@ -214,12 +242,15 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
+  // GATED ACTION: Appreciate Project (Strictly Verified Only)
   const toggleAppreciation = (projectId: string): boolean => {
-    if (!user) {
+    const targetProject = projects.find((p) => p.id === projectId);
+
+    // If guest or not verified, trigger verification modal
+    if (!user || !user.isVerified) {
+      openVerificationModal("like", targetProject?.title);
       return false;
     }
-
-    const targetProject = projects.find((p) => p.id === projectId);
 
     setAppreciatedProjectIds((prev) => {
       const next = new Set(prev);
@@ -264,8 +295,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
+  // GATED ACTION: Add Comment (Strictly Verified Only)
   const addComment = async (projectId: string, content: string) => {
-    if (!user) return;
+    if (!user || !user.isVerified) {
+      openVerificationModal("comment");
+      return;
+    }
 
     const optimisticComment: Comment = {
       id: `c-${Date.now()}`,
@@ -309,7 +344,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // GATED ACTION: Save Project (Strictly Verified Only)
   const saveProject = async (projectData: Partial<Project> & { title: string }): Promise<Project> => {
+    if (!user || !user.isVerified) {
+      openVerificationModal("publish");
+      throw new Error("Email verification is required before publishing projects.");
+    }
+
     if (projectData.id) {
       // Update existing project
       let updated: Project | undefined;
@@ -335,21 +376,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           .replace(/[^a-z0-9]+/g, "-")
           .replace(/^-|-$/g, "") || `project-${Date.now()}`;
 
-      const activeCreator = user || {
-        id: "guest-user",
-        username: "creator",
-        displayName: "Anonymous Creator",
-        avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80",
-        bio: "",
-        location: "Worldwide",
-        city: "Global",
-        skills: [],
-        isVerified: false,
-        isOnline: true,
-        followersCount: 0,
-        isCurrentUser: true,
-      };
-
       const newProj: Project = {
         id: `proj-${Date.now()}`,
         slug,
@@ -360,7 +386,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           projectData.coverImage ||
           "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1400&auto=format&fit=crop&q=85",
         galleryImages: projectData.galleryImages || [projectData.coverImage || ""],
-        creator: activeCreator,
+        creator: user,
         tags: projectData.tags && projectData.tags.length > 0 ? projectData.tags : ["Design"],
         tools: projectData.tools && projectData.tools.length > 0 ? projectData.tools : ["Figma"],
         category: projectData.category || "Brand",
@@ -389,7 +415,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       try {
         const dbResult = await insertProject({
           ...newProj,
-          creatorId: user?.id || "a0000001-0000-4000-8000-000000000001",
+          creatorId: user.id,
         });
         if (dbResult) {
           setProjects((prev) => prev.map((p) => (p.slug === slug ? dbResult : p)));
@@ -429,6 +455,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         followingCreatorIds,
         notifications,
         unreadNotificationsCount,
+        isVerificationModalOpen,
+        verificationModalAction,
+        verificationModalTargetName,
+        openVerificationModal,
+        closeVerificationModal,
         login,
         signup,
         logout,
@@ -448,6 +479,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
+
+      {/* Global Gated Action Verification Modal */}
+      <VerificationModal
+        isOpen={isVerificationModalOpen}
+        onClose={closeVerificationModal}
+        action={verificationModalAction}
+        targetName={verificationModalTargetName}
+      />
     </SessionContext.Provider>
   );
 }

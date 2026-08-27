@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { SearchField } from "@/components/search/search-field";
 import { NotificationsPopover } from "@/components/layout/notifications-popover";
 import { ProfileDropdown } from "@/components/layout/profile-dropdown";
+import { VerificationBanner } from "@/components/layout/verification-banner";
 import { Plus, Search, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -42,12 +43,16 @@ export function SiteHeader() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-[var(--border-neutral)] bg-[var(--bg-screen)]/95 backdrop-blur-md transition-all">
-      <div className="mx-auto flex h-16 max-w-[1580px] items-center justify-between px-4 sm:px-6 gap-4">
-        {/* Left: Wordmark & Navigation Links */}
-        <div className="flex items-center gap-8 shrink-0">
-          <Link
-            href="/"
+    <>
+      {/* Top Announcement Banner for Unverified Users */}
+      <VerificationBanner />
+
+      <header className="sticky top-0 z-40 w-full border-b border-[var(--border-neutral)] bg-[var(--bg-screen)]/95 backdrop-blur-md transition-all">
+        <div className="mx-auto flex h-16 max-w-[1580px] items-center justify-between px-4 sm:px-6 gap-4">
+          {/* Left: Wordmark & Navigation Links */}
+          <div className="flex items-center gap-8 shrink-0">
+            <Link
+              href="/"
             className="flex items-center gap-1.5 text-xl font-bold tracking-tight text-[var(--primary-forest-green)] select-none hover:opacity-90 transition-opacity"
           >
             <span className="font-semibold tracking-[-0.04em] text-[22px]">
@@ -236,5 +241,6 @@ export function SiteHeader() {
         </div>
       )}
     </header>
+    </>
   );
 }

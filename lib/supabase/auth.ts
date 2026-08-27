@@ -149,6 +149,7 @@ export async function signUpWithEmail(
 
     const creator = mapProfileToCreator(profileData || profileRow);
     creator.isCurrentUser = true;
+    creator.email = cleanEmail;
 
     return {
       success: true,
@@ -225,6 +226,7 @@ export async function signInWithEmail(
     }
 
     creator.isCurrentUser = true;
+    creator.email = cleanEmail;
 
     return {
       success: true,
@@ -271,6 +273,7 @@ export async function getCurrentAuthUser(): Promise<Creator | null> {
     if (profile) {
       const creator = mapProfileToCreator(profile);
       creator.isCurrentUser = true;
+      creator.email = user.email;
       return creator;
     }
 
@@ -280,6 +283,7 @@ export async function getCurrentAuthUser(): Promise<Creator | null> {
       id: user.id,
       username: fallbackUsername,
       displayName: fallbackName,
+      email: user.email,
       avatarUrl: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80`,
       bio: "Independent designer & creative practitioner.",
       location: "Worldwide",
