@@ -107,9 +107,12 @@ export function LoginClient() {
                   <label className="type-body-default-bold text-[var(--content-primary)]">
                     Password
                   </label>
-                  <span className="type-label text-[var(--content-tertiary)] hover:underline cursor-pointer">
+                  <Link
+                    href="/forgot-password"
+                    className="type-label text-[var(--content-tertiary)] hover:text-[var(--content-primary)] hover:underline cursor-pointer transition-colors"
+                  >
                     Forgot?
-                  </span>
+                  </Link>
                 </div>
                 <div className="relative">
                   <Input
