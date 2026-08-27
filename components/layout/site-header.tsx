@@ -160,7 +160,7 @@ export function SiteHeader() {
           )}
         </div>
 
-        {/* Right: Actions (New Project CTA + Notifications + Profile Dropdown) */}
+        {/* Right: Actions (New Project CTA + Notifications + Profile Dropdown for User; Login + Sign Up for Guest) */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
           {/* Mobile Search Toggle */}
           <button
@@ -176,11 +176,11 @@ export function SiteHeader() {
             )}
           </button>
 
-          {/* Notifications Popover Dropdown */}
-          <NotificationsPopover />
-
           {user ? (
             <>
+              {/* Notifications Popover Dropdown (Logged in only) */}
+              <NotificationsPopover />
+
               {/* Primary Action: + New Project */}
               <Link href="/me/projects/new">
                 <Button
@@ -204,9 +204,9 @@ export function SiteHeader() {
               <ProfileDropdown />
             </>
           ) : (
-            <>
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <Link href="/login">
-                <Button variant="tertiary" size="sm" className="h-9 px-3.5">
+                <Button variant="ghost" size="sm" className="h-9 px-3 text-xs sm:text-sm font-medium">
                   Log in
                 </Button>
               </Link>
@@ -214,12 +214,12 @@ export function SiteHeader() {
                 <Button
                   variant="accent"
                   size="sm"
-                  className="h-9 px-3.5 font-bold"
+                  className="h-9 px-3.5 text-xs sm:text-sm font-bold shadow-xs"
                 >
-                  Sign up
+                  Join as Creator
                 </Button>
               </Link>
-            </>
+            </div>
           )}
         </div>
       </div>

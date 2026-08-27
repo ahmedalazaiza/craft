@@ -149,6 +149,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     await authSignOut();
     setUser(null);
+    setNotifications([]);
+    setAppreciatedProjectIds(new Set());
+    setFollowingCreatorIds(new Set());
   };
 
   const unreadNotificationsCount = notifications.filter((n) => !n.read).length;
