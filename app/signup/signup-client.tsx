@@ -22,8 +22,10 @@ import {
   Clock,
   ShieldCheck,
   ExternalLink,
+  Loader2,
 } from "lucide-react";
 import { getResendStatus, sendVerificationEmail } from "@/lib/resend-limiter";
+import { generateUniqueUsername, slugifyUsername } from "@/lib/supabase/auth";
 import { bricolage } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
@@ -38,24 +40,46 @@ export function SignupClient() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Live Unique Username Check State
+  const [resolvedUsername, setResolvedUsername] = useState("");
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [isTakenOriginal, setIsTakenOriginal] = useState(false);
+
   // Success "Check Inbox" screen state
   const [isRegistered, setIsRegistered] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
   const [cooldown, setCooldown] = useState(0);
 
-  const autoHandle =
-    displayName
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, "_")
-      .replace(/_+/g, "_")
-      .replace(/^_|_$/g, "") || "handle";
-
   const isFormValid =
     displayName.trim().length > 0 &&
     email.trim().length > 0 &&
     password.trim().length >= 6;
+
+  // Real-time live check against Supabase profiles table
+  useEffect(() => {
+    if (!displayName.trim() && !email.trim()) {
+      setResolvedUsername("");
+      setIsTakenOriginal(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsCheckingUsername(true);
+      try {
+        const unique = await generateUniqueUsername(displayName, email);
+        setResolvedUsername(unique);
+        const baseSlug = slugifyUsername(displayName) || slugifyUsername(email.split("@")[0]);
+        setIsTakenOriginal(unique.toLowerCase() !== baseSlug.toLowerCase());
+      } catch (err) {
+        console.error("Live handle generation error:", err);
+      } finally {
+        setIsCheckingUsername(false);
+      }
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [displayName, email]);
 
   // Rate limiter cooldown countdown for "Check Inbox" screen
   useEffect(() => {
@@ -84,8 +108,8 @@ export function SignupClient() {
     setErrorMessage(null);
 
     try {
-      // Auto-generates unique username on the backend & Supabase
-      const res = await signup(email, password, displayName);
+      // Auto-generates unique username on the backend & Supabase with guaranteed uniqueness
+      const res = await signup(email, password, displayName, resolvedUsername || undefined);
       if (res.success) {
         setIsRegistered(true);
       } else {
@@ -292,12 +316,24 @@ export function SignupClient() {
                   <User className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--content-tertiary)] pointer-events-none" />
                 </div>
                 {displayName.trim() && (
-                  <div className="mt-2 flex items-center gap-1.5 text-[11px] text-[var(--content-tertiary)]">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-[#8DFF00] shrink-0" />
-                    <span>Your unique handle will be:</span>
-                    <span className="font-mono font-semibold text-[var(--content-primary)] bg-[var(--bg-neutral)] px-2 py-0.5 rounded-md">
-                      @{autoHandle}
-                    </span>
+                  <div className="mt-2 space-y-1">
+                    <div className="flex items-center gap-1.5 text-[11px] text-[var(--content-tertiary)]">
+                      {isCheckingUsername ? (
+                        <Loader2 className="h-3.5 w-3.5 text-[#8DFF00] animate-spin shrink-0" />
+                      ) : (
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[#8DFF00] shrink-0" />
+                      )}
+                      <span>Your unique handle will be:</span>
+                      <span className="font-mono font-semibold text-[var(--content-primary)] bg-[var(--bg-neutral)] px-2 py-0.5 rounded-md">
+                        @{resolvedUsername || slugifyUsername(displayName)}
+                      </span>
+                    </div>
+
+                    {isTakenOriginal && !isCheckingUsername && (
+                      <p className="text-[10px] text-amber-500 font-medium pl-5">
+                        Note: @{slugifyUsername(displayName)} is already registered by a creator, so we reserved this unique handle for you.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
