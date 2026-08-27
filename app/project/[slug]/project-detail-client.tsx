@@ -218,10 +218,10 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
             </aside>
 
             {/* ------------------------------------------------------------- */}
-            {/* RIGHT/CENTER: Continuous Image List (2px Gap, Radius 0)        */}
+            {/* RIGHT/CENTER: Continuous Image List (1px Gap, Radius 0)        */}
             {/* ------------------------------------------------------------- */}
             <main className="flex-1 min-w-0">
-              <div className="flex flex-col gap-[2px] w-full rounded-none overflow-hidden bg-[var(--border-neutral)] border-0 shadow-sm">
+              <div className="flex flex-col gap-[1px] w-full rounded-none overflow-hidden bg-[var(--border-neutral)] border-0 shadow-sm">
                 {allImages.map((img, idx) => (
                   <div
                     key={idx}
