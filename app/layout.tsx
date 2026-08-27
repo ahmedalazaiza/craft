@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/layout/theme-provider";
 import { Suspense } from "react";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { TopProgressBar } from "@/components/layout/top-progress-bar";
+import { PageLoadingOverlay } from "@/components/layout/page-loading-overlay";
 import { NetworkStatusIndicator } from "@/components/layout/network-status-indicator";
 import { SITE_NAME, SITE_URL, defaultTitle, defaultDescription } from "@/lib/seo";
 
@@ -87,7 +87,7 @@ export default function RootLayout({
         <ThemeProvider>
           <SessionProvider>
             <Suspense fallback={null}>
-              <TopProgressBar />
+              <PageLoadingOverlay />
             </Suspense>
             <SiteHeader />
             <main className="flex-1">{children}</main>
