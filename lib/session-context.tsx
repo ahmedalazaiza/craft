@@ -6,10 +6,8 @@ import {
   Project,
   Comment,
   Notification,
-  currentUser,
   mockProjects,
   mockUsers,
-  mockNotifications,
 } from "./mock";
 import {
   fetchProjects,
@@ -40,10 +38,9 @@ interface SessionContextType {
   notifications: Notification[];
   unreadNotificationsCount: number;
   login: (email: string, password: string) => Promise<AuthResponse>;
-  signup: (email: string, password: string, displayName: string, username?: string) => Promise<AuthResponse>;
+  signup: (email: string, password: string, displayName: string, customUsername?: string) => Promise<AuthResponse>;
   logout: () => Promise<void>;
   refreshFromDb: () => Promise<void>;
-  toggleUserSession: () => void;
   setUser: (user: Creator | null) => void;
   toggleAppreciation: (projectId: string) => boolean;
   isProjectAppreciated: (projectId: string) => boolean;
@@ -63,17 +60,14 @@ interface SessionContextType {
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<Creator | null>(currentUser);
+  // Guest by default (user === null)
+  const [user, setUser] = useState<Creator | null>(null);
   const [projects, setProjects] = useState<Project[]>(mockProjects);
   const [creators, setCreators] = useState<Creator[]>(mockUsers);
   const [isLoadingDb, setIsLoadingDb] = useState<boolean>(true);
-  const [appreciatedProjectIds, setAppreciatedProjectIds] = useState<Set<string>>(
-    new Set(["b0000001-0000-4000-8000-000000000001", "proj-1"])
-  );
-  const [followingCreatorIds, setFollowingCreatorIds] = useState<Set<string>>(
-    new Set(["a0000002-0000-4000-8000-000000000002", "a0000003-0000-4000-8000-000000000003"])
-  );
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+  const [appreciatedProjectIds, setAppreciatedProjectIds] = useState<Set<string>>(new Set());
+  const [followingCreatorIds, setFollowingCreatorIds] = useState<Set<string>>(new Set());
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   // Check auth and fetch live database on mount
   const refreshFromDb = useCallback(async () => {
@@ -94,6 +88,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
       if (activeAuthUser) {
         setUser(activeAuthUser);
+      } else {
+        setUser(null);
+        setNotifications([]);
       }
     } catch (err) {
       console.error("Failed to load initial data from Supabase:", err);
@@ -112,8 +109,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         if (profile) {
           setUser(profile);
         }
-      } else if (event === "SIGNED_OUT") {
+      } else if (event === "SIGNED_OUT" || !session) {
         setUser(null);
+        setNotifications([]);
+        setAppreciatedProjectIds(new Set());
+        setFollowingCreatorIds(new Set());
       }
     });
 
@@ -136,9 +136,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     email: string,
     password: string,
     displayName: string,
-    username?: string
+    customUsername?: string
   ): Promise<AuthResponse> => {
-    const res = await signUpWithEmail(email, password, displayName, username);
+    const res = await signUpWithEmail(email, password, displayName, customUsername);
     if (res.success && res.user) {
       setUser(res.user);
       await refreshFromDb();
@@ -155,10 +155,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   };
 
   const unreadNotificationsCount = notifications.filter((n) => !n.read).length;
-
-  const toggleUserSession = () => {
-    setUser((prev) => (prev ? null : currentUser));
-  };
 
   const isProjectAppreciated = (projectId: string) => {
     return appreciatedProjectIds.has(projectId);
@@ -339,6 +335,21 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           .replace(/[^a-z0-9]+/g, "-")
           .replace(/^-|-$/g, "") || `project-${Date.now()}`;
 
+      const activeCreator = user || {
+        id: "guest-user",
+        username: "creator",
+        displayName: "Anonymous Creator",
+        avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80",
+        bio: "",
+        location: "Worldwide",
+        city: "Global",
+        skills: [],
+        isVerified: false,
+        isOnline: true,
+        followersCount: 0,
+        isCurrentUser: true,
+      };
+
       const newProj: Project = {
         id: `proj-${Date.now()}`,
         slug,
@@ -349,7 +360,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           projectData.coverImage ||
           "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1400&auto=format&fit=crop&q=85",
         galleryImages: projectData.galleryImages || [projectData.coverImage || ""],
-        creator: user || currentUser,
+        creator: activeCreator,
         tags: projectData.tags && projectData.tags.length > 0 ? projectData.tags : ["Design"],
         tools: projectData.tools && projectData.tools.length > 0 ? projectData.tools : ["Figma"],
         category: projectData.category || "Brand",
@@ -362,10 +373,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
       setProjects((prev) => [newProj, ...prev]);
 
-      if (newProj.published) {
+      if (newProj.published && user) {
         addNotification({
           type: "publish",
-          actor: user || currentUser,
+          actor: user,
           project: {
             id: newProj.id,
             slug: newProj.slug,
@@ -422,7 +433,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         signup,
         logout,
         refreshFromDb,
-        toggleUserSession,
         setUser,
         toggleAppreciation,
         isProjectAppreciated,
