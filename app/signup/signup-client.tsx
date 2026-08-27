@@ -309,30 +309,41 @@ export function SignupClient() {
                     type="text"
                     required
                     value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
+                    onChange={(e) => {
+                      setDisplayName(e.target.value);
+                      if (e.target.value.trim()) {
+                        setIsCheckingUsername(true);
+                      }
+                    }}
                     placeholder="e.g. Elena Vance"
                     autoComplete="name"
                   />
                   <User className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--content-tertiary)] pointer-events-none" />
                 </div>
                 {displayName.trim() && (
-                  <div className="mt-2 space-y-1">
-                    <div className="flex items-center gap-1.5 text-[11px] text-[var(--content-tertiary)]">
-                      {isCheckingUsername ? (
+                  <div className="mt-2.5 min-h-[22px]">
+                    {isCheckingUsername ? (
+                      <div className="flex items-center gap-2 text-[11px] text-[var(--content-secondary)] animate-pulse">
                         <Loader2 className="h-3.5 w-3.5 text-[#8DFF00] animate-spin shrink-0" />
-                      ) : (
-                        <CheckCircle2 className="h-3.5 w-3.5 text-[#8DFF00] shrink-0" />
-                      )}
-                      <span>Your unique handle will be:</span>
-                      <span className="font-mono font-semibold text-[var(--content-primary)] bg-[var(--bg-neutral)] px-2 py-0.5 rounded-md">
-                        @{resolvedUsername || slugifyUsername(displayName)}
-                      </span>
-                    </div>
+                        <span>Verifying unique handle availability...</span>
+                        <span className="h-3.5 w-20 rounded-md bg-[var(--bg-neutral)] inline-block" />
+                      </div>
+                    ) : (
+                      <div className="space-y-1 animate-fade-in">
+                        <div className="flex items-center gap-1.5 text-[11px] text-[var(--content-tertiary)]">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-[#8DFF00] shrink-0" />
+                          <span>Your unique handle will be:</span>
+                          <span className="font-mono font-semibold text-[var(--content-primary)] bg-[var(--bg-neutral)] px-2 py-0.5 rounded-md">
+                            @{resolvedUsername || slugifyUsername(displayName)}
+                          </span>
+                        </div>
 
-                    {isTakenOriginal && !isCheckingUsername && (
-                      <p className="text-[10px] text-amber-500 font-medium pl-5">
-                        Note: @{slugifyUsername(displayName)} is already registered by a creator, so we reserved this unique handle for you.
-                      </p>
+                        {isTakenOriginal && (
+                          <p className="text-[10px] text-amber-500 font-medium pl-5 leading-tight">
+                            Note: @{slugifyUsername(displayName)} is already registered by a creator, so we reserved this unique handle for you.
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}
