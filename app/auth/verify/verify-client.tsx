@@ -103,17 +103,17 @@ export function VerifyClient() {
                 </p>
               </CardHeader>
 
-              <CardContent className="space-y-4 pt-2">
-                <Link href="/me" className="block w-full">
+              <CardContent className="space-y-3 pt-2">
+                <Link href="/onboarding" className="block w-full">
                   <Button variant="accent" className="w-full font-bold shadow-xs gap-2">
-                    <span>Enter My Profile</span>
+                    <span>Set up your creator profile</span>
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
 
-                <Link href="/explore" className="block w-full">
+                <Link href="/me" className="block w-full">
                   <Button variant="secondary" className="w-full font-semibold">
-                    Explore Directory
+                    Skip directly to workspace
                   </Button>
                 </Link>
               </CardContent>
