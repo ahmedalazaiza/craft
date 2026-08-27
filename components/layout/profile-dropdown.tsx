@@ -26,7 +26,7 @@ import { OnlineBadge } from "@/components/ui/online-badge";
 
 export function ProfileDropdown() {
   const router = useRouter();
-  const { user, setUser } = useSession();
+  const { user, logout } = useSession();
   const { theme, resolvedTheme, setTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -61,9 +61,9 @@ export function ProfileDropdown() {
     { value: "system", label: "System", icon: Laptop },
   ];
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsOpen(false);
-    setUser(null);
+    await logout();
     router.push("/");
   };
 

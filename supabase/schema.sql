@@ -747,3 +747,43 @@ VALUES
     NOW() - INTERVAL '1 day'
 )
 ON CONFLICT (id) DO NOTHING;
+
+-- =============================================================================
+-- AUTOMATED AUTH TRIGGER (Create profile in public.profiles when user signs up)
+-- =============================================================================
+
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.profiles (
+        id,
+        username,
+        display_name,
+        avatar_url,
+        bio,
+        is_verified,
+        is_online,
+        followers_count
+    )
+    VALUES (
+        NEW.id,
+        COALESCE(NEW.raw_user_meta_data->>'username', split_part(NEW.email, '@', 1)),
+        COALESCE(NEW.raw_user_meta_data->>'display_name', split_part(NEW.email, '@', 1)),
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
+        'Independent creator & studio founder.',
+        false,
+        true,
+        0
+    )
+    ON CONFLICT (id) DO UPDATE SET
+        username = COALESCE(EXCLUDED.username, public.profiles.username),
+        display_name = COALESCE(EXCLUDED.display_name, public.profiles.display_name);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+AFTER INSERT ON auth.users
+FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+

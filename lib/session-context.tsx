@@ -21,6 +21,14 @@ import {
   toggleAppreciationInDb,
   updateProfileInDb,
 } from "./supabase/queries";
+import {
+  signInWithEmail,
+  signUpWithEmail,
+  signOut as authSignOut,
+  getCurrentAuthUser,
+  AuthResponse,
+} from "./supabase/auth";
+import { supabase } from "./supabase/client";
 
 interface SessionContextType {
   user: Creator | null;
@@ -31,6 +39,9 @@ interface SessionContextType {
   followingCreatorIds: Set<string>;
   notifications: Notification[];
   unreadNotificationsCount: number;
+  login: (email: string, password: string) => Promise<AuthResponse>;
+  signup: (email: string, password: string, displayName: string, username?: string) => Promise<AuthResponse>;
+  logout: () => Promise<void>;
   refreshFromDb: () => Promise<void>;
   toggleUserSession: () => void;
   setUser: (user: Creator | null) => void;
@@ -64,12 +75,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   );
   const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
 
+  // Check auth and fetch live database on mount
   const refreshFromDb = useCallback(async () => {
     try {
       setIsLoadingDb(true);
-      const [dbProjects, dbCreators] = await Promise.all([
+      const [dbProjects, dbCreators, activeAuthUser] = await Promise.all([
         fetchProjects({ publishedOnly: false }),
         fetchCreators(),
+        getCurrentAuthUser(),
       ]);
 
       if (dbProjects && dbProjects.length > 0) {
@@ -77,11 +90,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       }
       if (dbCreators && dbCreators.length > 0) {
         setCreators(dbCreators);
-        // Sync current user profile from db if found
-        const currentDbUser = dbCreators.find((c) => c.username === "elena_v");
-        if (currentDbUser) {
-          setUser(currentDbUser);
-        }
+      }
+
+      if (activeAuthUser) {
+        setUser(activeAuthUser);
       }
     } catch (err) {
       console.error("Failed to load initial data from Supabase:", err);
@@ -90,10 +102,54 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Fetch initial live data on mount
   useEffect(() => {
     refreshFromDb();
+
+    // Listen to Supabase Auth state changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const profile = await getCurrentAuthUser();
+        if (profile) {
+          setUser(profile);
+        }
+      } else if (event === "SIGNED_OUT") {
+        setUser(null);
+      }
+    });
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
   }, [refreshFromDb]);
+
+  // Auth Operations
+  const login = async (email: string, password: string): Promise<AuthResponse> => {
+    const res = await signInWithEmail(email, password);
+    if (res.success && res.user) {
+      setUser(res.user);
+      await refreshFromDb();
+    }
+    return res;
+  };
+
+  const signup = async (
+    email: string,
+    password: string,
+    displayName: string,
+    username?: string
+  ): Promise<AuthResponse> => {
+    const res = await signUpWithEmail(email, password, displayName, username);
+    if (res.success && res.user) {
+      setUser(res.user);
+      await refreshFromDb();
+    }
+    return res;
+  };
+
+  const logout = async () => {
+    await authSignOut();
+    setUser(null);
+  };
 
   const unreadNotificationsCount = notifications.filter((n) => !n.read).length;
 
@@ -203,7 +259,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       })
     );
 
-    // Sync with Supabase asynchronously
+    // Sync with Supabase
     toggleAppreciationInDb(projectId, user.id).catch(console.error);
 
     return true;
@@ -359,6 +415,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         followingCreatorIds,
         notifications,
         unreadNotificationsCount,
+        login,
+        signup,
+        logout,
         refreshFromDb,
         toggleUserSession,
         setUser,
