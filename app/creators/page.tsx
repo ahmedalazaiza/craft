@@ -5,14 +5,14 @@ import { CreatorsClient } from "./creators-client";
 export const metadata: Metadata = {
   title: "Creators",
   description:
-    "Discover independent studios, typographers, spatial designers, and creative engineers.",
+    "Discover independent designers, typographers, art directors, and creative practitioners.",
   alternates: {
     canonical: "/creators",
   },
   openGraph: {
     title: "Creators · Craft",
     description:
-      "Discover independent studios, typographers, spatial designers, and creative engineers.",
+      "Discover independent designers, typographers, art directors, and creative practitioners.",
     url: "/creators",
   },
 };

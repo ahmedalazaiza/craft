@@ -106,10 +106,10 @@ export function CreatorsClient() {
                 "text-3xl sm:text-4xl lg:text-[42px] font-bold text-[var(--primary-forest-green)] leading-tight tracking-tight"
               )}
             >
-              Discover Creators & Studios
+              Discover Creators & Designers
             </h1>
             <p className="mt-2 type-body-large text-[var(--content-secondary)] leading-relaxed">
-              Explore designer portfolios, follow independent studios, and connect with creative talent worldwide.
+              Explore portfolios, follow designers, and connect with creative talent worldwide.
             </p>
           </div>
 
@@ -122,7 +122,7 @@ export function CreatorsClient() {
                   {creators.length} Creators
                 </span>
                 <span className="text-[10px] text-[var(--content-tertiary)] uppercase font-mono">
-                  Verified Studios
+                  Verified Creators
                 </span>
               </div>
             </div>

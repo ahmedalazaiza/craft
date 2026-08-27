@@ -12,14 +12,14 @@ export function NewProjectClient() {
         {/* Breadcrumbs Navigation */}
         <Breadcrumbs
           items={[
-            { label: "My Studio", href: "/me" },
+            { label: "My Profile", href: "/me" },
             { label: "Publish New Project", isCurrent: true },
           ]}
         />
 
         <div className="mb-8">
           <h1 className="type-title-screen text-[var(--primary-forest-green)]">
-            Create New Studio Monograph
+            Create New Project
           </h1>
           <p className="mt-1.5 type-body-large text-[var(--content-secondary)]">
             Document your process, design artifacts, and spatial identity systems.

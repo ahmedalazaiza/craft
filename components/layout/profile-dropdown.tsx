@@ -126,7 +126,7 @@ export function ProfileDropdown() {
                   @{user.username}
                 </div>
                 <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-[var(--chip-bg)] px-2 py-0.5 text-[10px] font-semibold text-[var(--chip-fg)]">
-                  <span>Verified Studio</span>
+                  <span>Verified Creator</span>
                 </div>
               </div>
             </div>
@@ -140,7 +140,7 @@ export function ProfileDropdown() {
               >
                 <div className="flex items-center gap-2.5">
                   <User className="h-4 w-4 text-[var(--content-tertiary)]" />
-                  <span>My Studio Profile</span>
+                  <span>My Profile</span>
                 </div>
                 <ChevronRight className="h-3.5 w-3.5 text-[var(--content-tertiary)]" />
               </Link>
@@ -152,7 +152,7 @@ export function ProfileDropdown() {
               >
                 <div className="flex items-center gap-2.5">
                   <ExternalLink className="h-4 w-4 text-[var(--content-tertiary)]" />
-                  <span>View Public Studio</span>
+                  <span>View Public Profile</span>
                 </div>
                 <span className="text-[10px] text-[var(--content-tertiary)] font-mono">
                   ↗

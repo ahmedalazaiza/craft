@@ -24,7 +24,7 @@ export function SiteFooter() {
               </span>
             </Link>
             <p className="type-body-default text-[var(--content-secondary)] max-w-sm leading-relaxed">
-              A modern portfolio platform for designers, art directors, and creative studios to showcase their work, build their presence, and discover standout projects worldwide.
+              A modern portfolio platform for designers, art directors, and creative professionals to showcase their work, build their presence, and discover standout projects worldwide.
             </p>
           </div>
 
@@ -64,7 +64,7 @@ export function SiteFooter() {
           {/* Column 2: Account */}
           <div>
             <h4 className="type-title-group text-[var(--content-primary)] font-semibold mb-4">
-              Account & Studio
+              Account & Profile
             </h4>
             <ul className="space-y-2.5">
               {user ? (
@@ -74,7 +74,7 @@ export function SiteFooter() {
                       href="/me"
                       className="type-body-default text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] transition-colors"
                     >
-                      Studio Dashboard
+                      My Profile
                     </Link>
                   </li>
                   <li>
@@ -129,7 +129,7 @@ export function SiteFooter() {
         {/* Bottom copyright & notes */}
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
           <p className="type-label text-[var(--content-tertiary)]">
-            &copy; {new Date().getFullYear()} Craft. Portfolio Platform for Independent Creators & Studios.
+            &copy; {new Date().getFullYear()} Craft. Portfolio Platform for Independent Designers & Creators.
           </p>
           <div className="flex items-center gap-4">
             <span className="type-label text-[var(--content-tertiary)]">Theme:</span>

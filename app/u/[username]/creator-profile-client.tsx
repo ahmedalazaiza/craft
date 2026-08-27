@@ -166,13 +166,13 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                 </div>
               </div>
 
-              {/* Follow Studio or Manage Profile Action + Share Icon Button */}
+              {/* Follow or Manage Profile Action + Share Icon Button */}
               <div className="pt-2 flex items-center gap-2.5">
                 {isCurrentUser ? (
                   <Link href="/me" className="flex-1">
                     <Button variant="secondary" size="default" className="w-full gap-2 font-semibold">
                       <Edit3 className="h-4 w-4" />
-                      <span>Manage Studio in /me</span>
+                      <span>Edit Profile in /me</span>
                     </Button>
                   </Link>
                 ) : (
@@ -185,12 +185,12 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                     {isFollowing ? (
                       <>
                         <Check className="h-4 w-4" />
-                        <span>Following Studio</span>
+                        <span>Following</span>
                       </>
                     ) : (
                       <>
                         <Plus className="h-4 w-4" />
-                        <span>Follow Studio</span>
+                        <span>Follow</span>
                       </>
                     )}
                   </Button>
@@ -203,7 +203,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                   onClick={() => setIsShareModalOpen(true)}
                   className="transition-transform hover:scale-105 active:scale-95"
                   title={`Share ${creator.displayName}'s profile`}
-                  aria-label="Share Studio Profile"
+                  aria-label="Share Profile"
                 >
                   <Share2 className="h-4 w-4" />
                 </Button>
@@ -212,14 +212,14 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
               {/* Bio Statement */}
               <div className="pt-2 border-t border-[var(--border-neutral)]">
                 <span className="type-label font-semibold text-[var(--content-tertiary)] uppercase tracking-wider block mb-2">
-                  Studio Statement
+                  About
                 </span>
                 <p className="text-sm text-[var(--content-secondary)] leading-relaxed">
                   {creator.bio}
                 </p>
               </div>
 
-              {/* Studio Metrics Grid */}
+              {/* Metrics Grid */}
               <div className="pt-2 border-t border-[var(--border-neutral)]">
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="p-3 rounded-[16px] bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
@@ -328,7 +328,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                   No public projects yet
                 </h3>
                 <p className="mt-1.5 type-body-default text-[var(--content-secondary)] max-w-sm">
-                  {creator.displayName} has not published any public case studies yet. Follow this studio to get notified when they publish work.
+                  {creator.displayName} has not published any public case studies yet. Follow this creator to get notified when they publish work.
                 </p>
               </div>
             ) : (
@@ -347,7 +347,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
         <ShareModal
           isOpen={isShareModalOpen}
           onClose={() => setIsShareModalOpen(false)}
-          title="Share Studio Profile"
+          title="Share Profile"
           subtitle={`Share ${creator.displayName}'s portfolio with your network or copy the public link.`}
           creatorName={creator.displayName}
           url={

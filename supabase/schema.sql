@@ -742,7 +742,7 @@ VALUES
     'a0000003-0000-4000-8000-000000000003',
     'follow',
     NULL,
-    'Maya Lin started following your studio',
+    'Maya Lin started following you',
     false,
     NOW() - INTERVAL '1 day'
 )
@@ -770,7 +770,7 @@ BEGIN
         COALESCE(NEW.raw_user_meta_data->>'username', split_part(NEW.email, '@', 1)),
         COALESCE(NEW.raw_user_meta_data->>'display_name', split_part(NEW.email, '@', 1)),
         'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
-        'Independent creator & studio founder.',
+        'Independent designer & creative practitioner.',
         false,
         true,
         0

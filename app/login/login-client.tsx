@@ -53,7 +53,7 @@ export function LoginClient() {
         <Breadcrumbs
           className="justify-center mb-4"
           items={[
-            { label: "Studio Sign-In", isCurrent: true },
+            { label: "Sign-In", isCurrent: true },
           ]}
         />
 
@@ -61,7 +61,7 @@ export function LoginClient() {
           <CardHeader className="text-center pb-4 pt-4">
             <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip-bg)] px-3 py-1 text-[11px] font-semibold text-[var(--chip-fg)] mx-auto mb-3 shadow-xs">
               <span className="h-1.5 w-1.5 rounded-full bg-[#8DFF00]" />
-              <span>Studio Access</span>
+              <span>Welcome Back</span>
             </div>
             <h1
               className={cn(
@@ -69,10 +69,10 @@ export function LoginClient() {
                 "text-2xl sm:text-3xl font-bold text-[var(--content-primary)] tracking-tight"
               )}
             >
-              Enter your studio
+              Sign in to your account
             </h1>
             <p className="mt-1.5 text-xs sm:text-sm text-[var(--content-secondary)] leading-relaxed max-w-xs mx-auto">
-              Manage your living monographs, draft new work, and track appreciations.
+              Manage your portfolio, publish new work, and track appreciations.
             </p>
           </CardHeader>
 
@@ -95,7 +95,7 @@ export function LoginClient() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@studio.com"
+                    placeholder="name@example.com"
                     autoComplete="email"
                   />
                   <Mail className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--content-tertiary)] pointer-events-none" />
@@ -136,7 +136,7 @@ export function LoginClient() {
                 disabled={loading || !isFormValid}
                 className="w-full mt-2 font-semibold shadow-xs"
               >
-                {loading ? "Signing in with Supabase..." : "Log in to Studio"}
+                {loading ? "Signing in..." : "Log in"}
                 <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             </form>
@@ -148,7 +148,7 @@ export function LoginClient() {
                   href="/signup"
                   className="font-semibold text-[var(--content-link)] hover:text-[var(--content-link-hover)] underline underline-offset-4"
                 >
-                  Create studio profile
+                  Create an account
                 </Link>
               </p>
             </div>

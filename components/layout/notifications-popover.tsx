@@ -198,7 +198,7 @@ export function NotificationsPopover() {
                     No notifications to show
                   </p>
                   <p className="text-[11px] text-[var(--content-tertiary)] mt-0.5">
-                    Activity on your projects and followed studios will appear here.
+                    Activity on your projects and followers will appear here.
                   </p>
                 </div>
               ) : (
@@ -254,7 +254,7 @@ export function NotificationsPopover() {
                               <Link
                                 href={`/project/${notif.project.slug}`}
                                 onClick={(e) => {
-                                  e.stopPropagation();
+                                   e.stopPropagation();
                                   setIsOpen(false);
                                 }}
                                 className="font-bold text-[var(--content-primary)] hover:underline underline-offset-2"
@@ -283,7 +283,7 @@ export function NotificationsPopover() {
                         )}
                         {notif.type === "follow" && (
                           <span className="text-[var(--content-secondary)]">
-                            started following your studio
+                            started following you
                           </span>
                         )}
                         {notif.type === "publish" && (
@@ -333,7 +333,7 @@ export function NotificationsPopover() {
                 onClick={() => setIsOpen(false)}
                 className="text-xs font-semibold text-[var(--content-tertiary)] hover:text-[var(--content-primary)] transition-colors"
               >
-                Studio Settings & Preferences →
+                Profile Settings & Preferences →
               </Link>
             </div>
           </motion.div>

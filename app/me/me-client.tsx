@@ -109,17 +109,17 @@ export function MeClient() {
         {/* Breadcrumbs Navigation */}
         <Breadcrumbs
           items={[
-            { label: "My Studio", href: "/me" },
+            { label: "My Profile", href: "/me" },
             { label: activeTab === "published" ? "Published Works" : "Drafts", isCurrent: true },
           ]}
         />
 
         {/* ========================================================================= */}
-        {/* 2-COLUMN STUDIO DASHBOARD LAYOUT (Identical to Creator Profile Structure) */}
+        {/* 2-COLUMN PROFILE DASHBOARD LAYOUT (Identical to Creator Profile Structure) */}
         {/* ========================================================================= */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
           {/* ===================================================================== */}
-          {/* LEFT COLUMN: Sticky Studio Profile Card (Sleek 3 cols on desktop)     */}
+          {/* LEFT COLUMN: Sticky Profile Card (Sleek 3 cols on desktop)           */}
           {/* ===================================================================== */}
           <aside className="lg:col-span-4 xl:col-span-3 lg:sticky lg:top-24 space-y-6">
             <div className="rounded-[28px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] p-6 sm:p-7 shadow-[0_12px_32px_rgba(9,12,9,0.04)] space-y-6">
@@ -205,8 +205,8 @@ export function MeClient() {
                     size="icon"
                     onClick={() => setIsShareModalOpen(true)}
                     className="transition-transform hover:scale-105 active:scale-95"
-                    title="Share Studio Profile"
-                    aria-label="Share Studio Profile"
+                    title="Share Profile"
+                    aria-label="Share Profile"
                   >
                     <Share2 className="h-4 w-4" />
                   </Button>
@@ -218,7 +218,7 @@ export function MeClient() {
                     size="sm"
                     className="w-full gap-1.5 text-xs text-[var(--content-link)] hover:text-[var(--content-link-hover)]"
                   >
-                    <span>View Public Studio</span>
+                    <span>View Public Profile</span>
                     <ExternalLink className="h-3.5 w-3.5" />
                   </Button>
                 </Link>
@@ -227,14 +227,14 @@ export function MeClient() {
               {/* Bio Statement */}
               <div className="pt-2 border-t border-[var(--border-neutral)]">
                 <span className="type-label font-semibold text-[var(--content-tertiary)] uppercase tracking-wider block mb-2">
-                  Studio Statement
+                  About
                 </span>
                 <p className="text-sm text-[var(--content-secondary)] leading-relaxed">
                   {user.bio}
                 </p>
               </div>
 
-              {/* Studio Metrics Grid */}
+              {/* Metrics Grid */}
               <div className="pt-2 border-t border-[var(--border-neutral)]">
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="p-3 rounded-[16px] bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
@@ -464,7 +464,7 @@ export function MeClient() {
 
                 <div>
                   <label className="type-body-default-bold text-[var(--content-primary)] block mb-1">
-                    Studio Statement / Bio
+                    Bio / About
                   </label>
                   <Textarea
                     value={editBio}
@@ -489,12 +489,12 @@ export function MeClient() {
             </div>
           </div>
         )}
-        {/* Studio Share Modal */}
+        {/* Profile Share Modal */}
         {user && (
           <ShareModal
             isOpen={isShareModalOpen}
             onClose={() => setIsShareModalOpen(false)}
-            title="Share Studio Profile"
+            title="Share Profile"
             subtitle={`Share ${user.displayName}'s portfolio with your network or copy the public link.`}
             creatorName={user.displayName}
             url={

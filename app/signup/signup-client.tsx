@@ -86,7 +86,7 @@ export function SignupClient() {
                 "text-2xl sm:text-3xl font-bold text-[var(--content-primary)] tracking-tight"
               )}
             >
-              Create your studio
+              Create your profile
             </h1>
             <p className="mt-1.5 text-xs sm:text-sm text-[var(--content-secondary)] leading-relaxed max-w-xs mx-auto">
               Publish living case studies and connect with makers worldwide.
@@ -104,7 +104,7 @@ export function SignupClient() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5">
-                  Full name / Studio name
+                  Full name
                 </label>
                 <div className="relative">
                   <Input
@@ -126,7 +126,7 @@ export function SignupClient() {
 
               <div>
                 <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5">
-                  Studio handle (@username)
+                  Username (@username)
                 </label>
                 <div className="relative">
                   <Input
@@ -150,7 +150,7 @@ export function SignupClient() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="elena@studio.com"
+                    placeholder="elena@example.com"
                     autoComplete="email"
                   />
                   <Mail className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--content-tertiary)] pointer-events-none" />
@@ -187,7 +187,7 @@ export function SignupClient() {
                 disabled={loading || !isFormValid}
                 className="w-full mt-2 font-semibold shadow-xs"
               >
-                {loading ? "Creating Studio with Supabase..." : "Join as a Creator"}
+                {loading ? "Creating account..." : "Join as a Creator"}
                 <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             </form>

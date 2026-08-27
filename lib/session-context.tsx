@@ -208,7 +208,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           addNotification({
             type: "follow",
             actor: user,
-            content: `You started following ${targetCreator.displayName}'s studio`,
+            content: `You started following ${targetCreator.displayName}`,
           });
         }
       }

@@ -179,7 +179,7 @@ export function CreatorListItem({
         isOpen={isShareOpen}
         onClose={() => setIsShareOpen(false)}
         title="Share Creator Profile"
-        subtitle={`Share ${creator.displayName}'s studio portfolio with your network or copy the public link.`}
+        subtitle={`Share ${creator.displayName}'s profile with your network or copy the public link.`}
         creatorName={creator.displayName}
         url={
           typeof window !== "undefined"

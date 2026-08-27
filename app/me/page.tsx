@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { MeClient } from "./me-client";
 
 export const metadata: Metadata = {
-  title: "Studio Dashboard",
-  description: "Manage your published monographs, drafts, and studio profile.",
+  title: "My Profile",
+  description: "Manage your published projects, drafts, and profile.",
   robots: {
     index: false,
     follow: false,
