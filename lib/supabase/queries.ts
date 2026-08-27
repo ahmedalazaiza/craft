@@ -20,7 +20,7 @@ export function mapProfileToCreator(row: any): Creator {
     city: row.city || row.location || "",
     website: row.website || undefined,
     skills: row.skills || [],
-    isVerified: row.is_verified ?? true,
+    isVerified: Boolean(row.is_verified),
     isOnline: row.is_online ?? false,
     followersCount: row.followers_count ?? 0,
     isCurrentUser: row.username === "elena_v",

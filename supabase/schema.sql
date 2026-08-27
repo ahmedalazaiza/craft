@@ -809,4 +809,20 @@ CREATE TRIGGER on_auth_user_created
 AFTER INSERT ON auth.users
 FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
+-- Auto-sync is_verified when auth.users.email_confirmed_at is set/updated
+CREATE OR REPLACE FUNCTION public.handle_user_email_confirmed()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.email_confirmed_at IS NOT NULL AND (OLD.email_confirmed_at IS NULL OR OLD.email_confirmed_at <> NEW.email_confirmed_at) THEN
+        UPDATE public.profiles
+        SET is_verified = true
+        WHERE id = NEW.id;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS on_auth_user_confirmed ON auth.users;
+CREATE TRIGGER on_auth_user_confirmed
+AFTER UPDATE OF email_confirmed_at ON auth.users
+FOR EACH ROW EXECUTE FUNCTION public.handle_user_email_confirmed();

@@ -9,69 +9,65 @@ export interface AuthResponse {
 }
 
 /**
- * Generate a guaranteed unique username based on full name and email
+ * Clean and normalize username candidate string
  */
-export async function generateUniqueUsername(displayName: string, email: string): Promise<string> {
-  // 1. Derive base slug from Display Name or Email
-  let base = displayName
-    .trim()
+export function slugifyUsername(raw: string): string {
+  const normalized = raw
     .toLowerCase()
-    .replace(/[^a-z0-9]/g, "_")
+    .trim()
+    .replace(/[^a-z0-9_]/g, "_")
     .replace(/_+/g, "_")
-    .replace(/^_|_$/g, "");
+    .replace(/^_+|_+$/g, "");
 
-  if (!base || base.length < 2) {
-    const emailPrefix = email.split("@")[0] || "creator";
-    base = emailPrefix
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, "_")
-      .replace(/_+/g, "_")
-      .replace(/^_|_$/g, "");
-  }
+  return normalized.length > 0 ? normalized : "creator";
+}
 
-  // Ensure base length is within bounds (max 16 chars)
-  base = base.slice(0, 16) || "creator";
+/**
+ * Generate a guaranteed unique username by checking Supabase profiles table
+ */
+export async function generateUniqueUsername(
+  displayName: string,
+  email: string
+): Promise<string> {
+  const baseCandidate =
+    slugifyUsername(displayName) ||
+    slugifyUsername(email.split("@")[0]) ||
+    "creator";
 
-  // 2. Check existence against Supabase profiles table
+  // Check if baseCandidate is available
   try {
-    const { data: existingProfiles } = await supabase
+    const { data: existing, error } = await supabase
       .from("profiles")
       .select("username")
-      .ilike("username", `${base}%`);
+      .ilike("username", `${baseCandidate}%`);
 
-    if (!existingProfiles || existingProfiles.length === 0) {
-      return base;
+    if (error || !existing || existing.length === 0) {
+      return baseCandidate;
     }
 
     const takenUsernames = new Set(
-      existingProfiles.map((p) => (p.username || "").toLowerCase())
+      existing.map((row) => (row.username as string).toLowerCase())
     );
 
-    if (!takenUsernames.has(base.toLowerCase())) {
-      return base;
+    if (!takenUsernames.has(baseCandidate.toLowerCase())) {
+      return baseCandidate;
     }
 
-    // Try suffixes _1, _2, ...
-    for (let i = 1; i <= 50; i++) {
-      const candidate = `${base}_${i}`;
-      if (!takenUsernames.has(candidate.toLowerCase())) {
-        return candidate;
-      }
+    // Append sequential numbers until an available username is found
+    let counter = 1;
+    while (takenUsernames.has(`${baseCandidate}_${counter}`.toLowerCase())) {
+      counter++;
     }
 
-    // If all sequential slots are occupied, append 3 random digits
-    const randomSuffix = Math.floor(100 + Math.random() * 900);
-    return `${base}_${randomSuffix}`;
+    return `${baseCandidate}_${counter}`;
   } catch (err) {
-    console.warn("Could not query profiles for username collision check:", err);
-    const randomSuffix = Math.floor(100 + Math.random() * 900);
-    return `${base}_${randomSuffix}`;
+    console.error("Error generating unique username:", err);
+    return `${baseCandidate}_${Math.floor(1000 + Math.random() * 9000)}`;
   }
 }
 
 /**
  * Sign up a new user with Email and Password
- * Username is automatically generated and guaranteed unique!
  */
 export async function signUpWithEmail(
   email: string,
@@ -81,24 +77,25 @@ export async function signUpWithEmail(
 ): Promise<AuthResponse> {
   try {
     const cleanEmail = email.trim().toLowerCase();
-    const cleanDisplayName = displayName.trim();
+    const cleanDisplayName = displayName.trim() || cleanEmail.split("@")[0];
 
-    // Generate unique username automatically if not provided or to ensure uniqueness
-    let finalUsername = customUsername?.trim();
-    if (!finalUsername) {
-      finalUsername = await generateUniqueUsername(cleanDisplayName, cleanEmail);
+    // Determine unique username
+    let finalUsername = "";
+    if (customUsername && customUsername.trim()) {
+      finalUsername = slugifyUsername(customUsername);
     } else {
-      // Clean custom username and verify uniqueness
-      finalUsername = finalUsername.toLowerCase().replace(/[^a-z0-9_]/g, "");
-      const { data: collision } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("username", finalUsername)
-        .maybeSingle();
+      finalUsername = await generateUniqueUsername(cleanDisplayName, cleanEmail);
+    }
 
-      if (collision) {
-        finalUsername = await generateUniqueUsername(cleanDisplayName, cleanEmail);
-      }
+    // Verify uniqueness of finalUsername
+    const { data: collisionCheck } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("username", finalUsername)
+      .maybeSingle();
+
+    if (collisionCheck) {
+      finalUsername = await generateUniqueUsername(cleanDisplayName, cleanEmail);
     }
 
     // 1. Supabase Auth Sign Up
@@ -122,6 +119,8 @@ export async function signUpWithEmail(
       return { success: false, error: "Failed to create user account." };
     }
 
+    const isEmailConfirmed = Boolean(authUser.email_confirmed_at);
+
     // 2. Ensure profile exists in public.profiles table
     const profileRow = {
       id: authUser.id,
@@ -132,7 +131,7 @@ export async function signUpWithEmail(
       location: "Worldwide",
       city: "Global",
       skills: ["Design", "Art Direction"],
-      is_verified: false,
+      is_verified: isEmailConfirmed,
       is_online: true,
       followers_count: 0,
     };
@@ -150,6 +149,7 @@ export async function signUpWithEmail(
     const creator = mapProfileToCreator(profileData || profileRow);
     creator.isCurrentUser = true;
     creator.email = cleanEmail;
+    creator.isVerified = isEmailConfirmed;
 
     return {
       success: true,
@@ -171,7 +171,7 @@ export async function signInWithEmail(
   try {
     const cleanEmail = email.trim().toLowerCase();
 
-    // 1. Authenticate with Supabase
+    // 1. Supabase Auth Sign In
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email: cleanEmail,
       password: password,
@@ -186,6 +186,8 @@ export async function signInWithEmail(
       return { success: false, error: "User session could not be established." };
     }
 
+    const isEmailConfirmed = Boolean(authUser.email_confirmed_at);
+
     // 2. Fetch profile from public.profiles table
     const { data: profileData } = await supabase
       .from("profiles")
@@ -196,6 +198,15 @@ export async function signInWithEmail(
     let creator: Creator;
     if (profileData) {
       creator = mapProfileToCreator(profileData);
+      if (isEmailConfirmed || profileData.is_verified) {
+        creator.isVerified = true;
+        // Sync database if it wasn't marked verified yet
+        if (!profileData.is_verified) {
+          supabase.from("profiles").update({ is_verified: true }).eq("id", authUser.id).then();
+        }
+      } else {
+        creator.isVerified = false;
+      }
     } else {
       // Create fallback profile if not found
       const fallbackUsername = authUser.user_metadata?.username || authUser.email?.split("@")[0] || "creator";
@@ -204,12 +215,13 @@ export async function signInWithEmail(
         id: authUser.id,
         username: fallbackUsername,
         displayName: fallbackName,
+        email: cleanEmail,
         avatarUrl: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80`,
         bio: "Independent designer & creative practitioner.",
         location: "Worldwide",
         city: "Global",
         skills: ["Design"],
-        isVerified: false,
+        isVerified: isEmailConfirmed,
         isOnline: true,
         followersCount: 0,
         isCurrentUser: true,
@@ -220,7 +232,7 @@ export async function signInWithEmail(
         id: authUser.id,
         username: fallbackUsername,
         display_name: fallbackName,
-        is_verified: false,
+        is_verified: isEmailConfirmed,
         is_online: true,
       });
     }
@@ -264,6 +276,8 @@ export async function getCurrentAuthUser(): Promise<Creator | null> {
       return null;
     }
 
+    const isEmailConfirmed = Boolean(user.email_confirmed_at);
+
     const { data: profile } = await supabase
       .from("profiles")
       .select("*")
@@ -274,6 +288,15 @@ export async function getCurrentAuthUser(): Promise<Creator | null> {
       const creator = mapProfileToCreator(profile);
       creator.isCurrentUser = true;
       creator.email = user.email;
+      if (isEmailConfirmed || profile.is_verified) {
+        creator.isVerified = true;
+        // Sync database if it wasn't marked verified yet
+        if (!profile.is_verified) {
+          supabase.from("profiles").update({ is_verified: true }).eq("id", user.id).then();
+        }
+      } else {
+        creator.isVerified = false;
+      }
       return creator;
     }
 
@@ -289,7 +312,7 @@ export async function getCurrentAuthUser(): Promise<Creator | null> {
       location: "Worldwide",
       city: "Global",
       skills: ["Design"],
-      isVerified: false,
+      isVerified: isEmailConfirmed,
       isOnline: true,
       followersCount: 0,
       isCurrentUser: true,
