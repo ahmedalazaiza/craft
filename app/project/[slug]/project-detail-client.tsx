@@ -183,6 +183,17 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                 >
                   <Share2 className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
                 </button>
+
+                {/* 4. Owner Edit Button (When viewer is the author) */}
+                {isAuthor && (
+                  <Link
+                    href={`/me/projects/${project.id}`}
+                    className="h-12 w-12 rounded-full bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--primary-forest-green)] hover:text-white flex items-center justify-center transition-all cursor-pointer select-none group"
+                    title="Edit Case Study"
+                  >
+                    <Edit3 className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                  </Link>
+                )}
               </div>
 
               {/* Separated 4th Action: Publisher Profile Avatar */}
@@ -316,9 +327,20 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
           type="button"
           onClick={() => setIsShareModalOpen(true)}
           className="h-10 w-10 rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] flex items-center justify-center"
+          title="Share Project"
         >
           <Share2 className="h-3.5 w-3.5" />
         </button>
+
+        {isAuthor && (
+          <Link
+            href={`/me/projects/${project.id}`}
+            className="h-10 w-10 rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] hover:bg-[var(--primary-forest-green)] hover:text-white flex items-center justify-center transition-all shrink-0"
+            title="Edit Case Study"
+          >
+            <Edit3 className="h-3.5 w-3.5" />
+          </Link>
+        )}
 
         <div className="h-5 w-[1px] bg-[var(--border-neutral)] mx-0.5" />
 
