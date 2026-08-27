@@ -47,17 +47,6 @@ const MEDIUMS: ProjectMedium[] = [
   "3D",
 ];
 
-const SAMPLE_COVERS = [
-  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400&auto=format&fit=crop&q=85",
-  "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1400&auto=format&fit=crop&q=85",
-  "https://images.unsplash.com/photo-1513694203232-719a280e022f?w=1400&auto=format&fit=crop&q=85",
-  "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=1400&auto=format&fit=crop&q=85",
-  "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=1400&auto=format&fit=crop&q=85",
-  "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=1400&auto=format&fit=crop&q=85",
-  "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=1400&auto=format&fit=crop&q=85",
-  "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1400&auto=format&fit=crop&q=85",
-];
-
 export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const router = useRouter();
   const { saveProject } = useSession();
@@ -75,7 +64,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     initialData?.medium || "Image"
   );
   const [coverImage, setCoverImage] = useState(
-    initialData?.coverImage || SAMPLE_COVERS[0]
+    initialData?.coverImage || ""
   );
   const [galleryImages, setGalleryImages] = useState<string[]>(
     initialData?.galleryImages || []
@@ -181,6 +170,12 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const finalCover = coverImage || galleryImages[0];
+    if (!finalCover) {
+      alert("Please upload a cover image for your project before saving.");
+      return;
+    }
+
     await saveProject({
       id: initialData?.id,
       title,
@@ -188,7 +183,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
       body,
       category,
       medium,
-      coverImage,
+      coverImage: finalCover,
       galleryImages,
       tags,
       tools,
@@ -197,8 +192,8 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
     setIsSaved(true);
     setTimeout(() => {
-      router.push("/me");
-    }, 500);
+      router.push("/explore");
+    }, 600);
   };
 
   return (
@@ -494,13 +489,25 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
         {/* Right Col: Visual Cover Dropzone & Metadata */}
         <div className="space-y-8">
-          {/* Cover Dropzone */}
+          {/* Dedicated Cover Image Uploader */}
           <div className="rounded-[24px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 shadow-xs">
-            <label className="type-body-default-bold text-[var(--content-primary)] block mb-1">
-              Cover Image (Dominant Visual)
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="type-body-default-bold text-[var(--content-primary)] block">
+                Cover Image (Dominant Visual)
+              </label>
+              {coverImage && (
+                <button
+                  type="button"
+                  onClick={() => setCoverImage("")}
+                  className="text-xs text-[var(--negative)] hover:underline font-semibold cursor-pointer flex items-center gap-1"
+                >
+                  <X className="h-3 w-3" />
+                  <span>Remove</span>
+                </button>
+              )}
+            </div>
             <p className="type-label text-[var(--content-tertiary)] mb-4">
-              Click dropzone to upload a file, drag & drop, or choose a preset.
+              Click dropzone or drag & drop to upload cover visual (PNG, JPG, WebP).
             </p>
 
             <input
@@ -538,9 +545,9 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
               )}
             >
               {isUploadingCover ? (
-                <div className="flex flex-col items-center py-4">
+                <div className="flex flex-col items-center py-6">
                   <Loader2 className="h-8 w-8 animate-spin text-[var(--primary-forest-green)] mb-2" />
-                  <span className="text-xs font-bold text-[var(--content-primary)]">Uploading & storing cover...</span>
+                  <span className="text-xs font-bold text-[var(--content-primary)]">Uploading & optimizing cover...</span>
                 </div>
               ) : coverImage ? (
                 <>
@@ -548,66 +555,29 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                     src={coverImage}
                     alt="Cover preview"
                     fill
-                    sizes="320px"
+                    sizes="360px"
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <div className="absolute inset-0 bg-[var(--primary-forest-green)]/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-4">
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-4">
                     <Upload className="h-6 w-6 text-white" />
-                    <span className="text-xs font-bold text-white bg-black/60 px-3 py-1.5 rounded-full">
+                    <span className="text-xs font-bold text-white bg-black/60 px-3 py-1.5 rounded-full backdrop-blur-xs">
                       Click to Replace Cover
                     </span>
                   </div>
                 </>
               ) : (
-                <div className="flex flex-col items-center">
-                  <UploadCloud className="h-9 w-9 text-[var(--content-tertiary)] mb-2 group-hover:scale-110 transition-transform" />
+                <div className="flex flex-col items-center py-8">
+                  <div className="h-12 w-12 rounded-full bg-[var(--bg-screen)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-tertiary)] mb-3 group-hover:text-[var(--primary-forest-green)] group-hover:border-[var(--primary-forest-green)] transition-colors shadow-xs">
+                    <UploadCloud className="h-6 w-6 group-hover:scale-110 transition-transform" />
+                  </div>
                   <span className="type-body-default-bold text-[var(--content-primary)]">
                     Upload Cover Image
                   </span>
-                  <span className="type-label text-[var(--content-tertiary)] mt-1">
-                    Click to browse or drop file (PNG, JPG, WebP)
+                  <span className="type-label text-[var(--content-tertiary)] mt-1 max-w-[220px]">
+                    Click to browse or drop high-resolution image
                   </span>
                 </div>
               )}
-            </div>
-
-            {/* Presets */}
-            <div className="mt-4">
-              <span className="type-label text-[var(--content-tertiary)] block mb-2">
-                Or select from architectural presets:
-              </span>
-              <div className="grid grid-cols-4 gap-2">
-                {SAMPLE_COVERS.map((url, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setCoverImage(url)}
-                    className={`relative aspect-square rounded-[8px] overflow-hidden border-2 cursor-pointer transition-all ${
-                      coverImage === url
-                        ? "border-[var(--primary-forest-green)] ring-2 ring-[var(--accent)]"
-                        : "border-transparent opacity-70 hover:opacity-100"
-                    }`}
-                  >
-                    <Image
-                      src={url}
-                      alt={`Preset ${idx + 1}`}
-                      fill
-                      sizes="80px"
-                      className="object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <Input
-                type="url"
-                value={coverImage}
-                onChange={(e) => setCoverImage(e.target.value)}
-                placeholder="Custom image URL..."
-                className="text-xs h-10"
-              />
             </div>
           </div>
 
