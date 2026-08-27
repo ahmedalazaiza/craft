@@ -244,41 +244,43 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                 ))}
               </div>
 
-              {/* Tools & Disciplines Meta Block if present */}
+              {/* Tools & Disciplines Meta Block (Side-by-Side) */}
               {((project.tools && project.tools.length > 0) ||
                 (project.tags && project.tags.length > 0)) && (
-                <div className="mt-10 rounded-[20px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 space-y-4 shadow-xs">
-                  {project.tools && project.tools.length > 0 && (
-                    <div>
-                      <div className="text-xs font-bold uppercase tracking-wider text-[var(--content-tertiary)] mb-2.5 flex items-center gap-1.5">
-                        <Wrench className="h-3.5 w-3.5 text-[var(--primary-forest-green)]" />
-                        <span>Tools & Technologies</span>
+                <div className="mt-10 rounded-[24px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 sm:p-7 shadow-xs">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 divide-y md:divide-y-0 md:divide-x divide-[var(--border-neutral)]">
+                    {project.tools && project.tools.length > 0 && (
+                      <div className="space-y-3">
+                        <div className="text-xs font-bold uppercase tracking-wider text-[var(--content-tertiary)] flex items-center gap-2">
+                          <Wrench className="h-4 w-4 text-[var(--primary-forest-green)]" />
+                          <span>Tools & Technologies</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {project.tools.map((tool) => (
+                            <Badge key={tool} variant="neutral" size="sm" className="px-3 py-1 font-medium">
+                              {tool}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        {project.tools.map((tool) => (
-                          <Badge key={tool} variant="neutral" size="sm">
-                            {tool}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                    )}
 
-                  {project.tags && project.tags.length > 0 && (
-                    <div className="pt-3 border-t border-[var(--border-neutral)]">
-                      <div className="text-xs font-bold uppercase tracking-wider text-[var(--content-tertiary)] mb-2.5 flex items-center gap-1.5">
-                        <Tag className="h-3.5 w-3.5 text-[var(--primary-forest-green)]" />
-                        <span>Categories & Tags</span>
+                    {project.tags && project.tags.length > 0 && (
+                      <div className={cn("space-y-3", project.tools && project.tools.length > 0 && "pt-6 md:pt-0 md:pl-8")}>
+                        <div className="text-xs font-bold uppercase tracking-wider text-[var(--content-tertiary)] flex items-center gap-2">
+                          <Tag className="h-4 w-4 text-[var(--primary-forest-green)]" />
+                          <span>Categories & Tags</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {project.tags.map((tag) => (
+                            <Badge key={tag} variant="neutral" size="sm" className="px-3 py-1 font-medium">
+                              #{tag}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        {project.tags.map((tag) => (
-                          <Badge key={tag} variant="neutral" size="sm">
-                            #{tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               )}
 

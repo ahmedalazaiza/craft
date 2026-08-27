@@ -91,8 +91,13 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const handleAddTag = (e: React.KeyboardEvent | React.MouseEvent) => {
     if (("key" in e && e.key === "Enter") || e.type === "click") {
       e.preventDefault();
-      if (newTag.trim() && !tags.includes(newTag.trim())) {
-        setTags([...tags, newTag.trim()]);
+      const cleaned = newTag.trim().replace(/^#/, "");
+      if (tags.length >= 15) {
+        alert("You can add a maximum of 15 categories & tags.");
+        return;
+      }
+      if (cleaned && !tags.includes(cleaned)) {
+        setTags([...tags, cleaned]);
         setNewTag("");
       }
     }
@@ -105,8 +110,13 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const handleAddTool = (e: React.KeyboardEvent | React.MouseEvent) => {
     if (("key" in e && e.key === "Enter") || e.type === "click") {
       e.preventDefault();
-      if (newTool.trim() && !tools.includes(newTool.trim())) {
-        setTools([...tools, newTool.trim()]);
+      const cleaned = newTool.trim();
+      if (tools.length >= 5) {
+        alert("You can add a maximum of 5 tools & technologies.");
+        return;
+      }
+      if (cleaned && !tools.includes(cleaned)) {
+        setTools([...tools, cleaned]);
         setNewTool("");
       }
     }
@@ -583,15 +593,24 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
           {/* Tags & Disciplines */}
           <div className="rounded-[20px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 shadow-xs">
-            <label className="type-body-default-bold text-[var(--content-primary)] block mb-1">
-              Disciplines & Tags
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="type-body-default-bold text-[var(--content-primary)] block">
+                Categories & Tags
+              </label>
+              <span className={cn(
+                "text-xs font-mono font-semibold",
+                tags.length >= 15 ? "text-[var(--negative)]" : "text-[var(--content-tertiary)]"
+              )}>
+                {tags.length}/15 max
+              </span>
+            </div>
             <div className="flex gap-2 mt-2 mb-3">
               <Input
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
                 onKeyDown={handleAddTag}
-                placeholder="Add tag (Press Enter)..."
+                placeholder={tags.length >= 15 ? "Maximum 15 tags reached" : "Add tag (Press Enter)..."}
+                disabled={tags.length >= 15}
                 className="h-10 text-xs"
               />
               <Button
@@ -599,6 +618,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                 variant="secondary"
                 size="sm"
                 onClick={handleAddTag}
+                disabled={tags.length >= 15}
               >
                 Add
               </Button>
@@ -624,15 +644,24 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
           {/* Tools & Mediums */}
           <div className="rounded-[20px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 shadow-xs">
-            <label className="type-body-default-bold text-[var(--content-primary)] block mb-1">
-              Tools & Software
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="type-body-default-bold text-[var(--content-primary)] block">
+                Tools & Technologies
+              </label>
+              <span className={cn(
+                "text-xs font-mono font-semibold",
+                tools.length >= 5 ? "text-[var(--negative)]" : "text-[var(--content-tertiary)]"
+              )}>
+                {tools.length}/5 max
+              </span>
+            </div>
             <div className="flex gap-2 mt-2 mb-3">
               <Input
                 value={newTool}
                 onChange={(e) => setNewTool(e.target.value)}
                 onKeyDown={handleAddTool}
-                placeholder="e.g. Figma, Houdini..."
+                placeholder={tools.length >= 5 ? "Maximum 5 tools reached" : "e.g. Figma, Blender, InDesign..."}
+                disabled={tools.length >= 5}
                 className="h-10 text-xs"
               />
               <Button
@@ -640,6 +669,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                 variant="secondary"
                 size="sm"
                 onClick={handleAddTool}
+                disabled={tools.length >= 5}
               >
                 Add
               </Button>
