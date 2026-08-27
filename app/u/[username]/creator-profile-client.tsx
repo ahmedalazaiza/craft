@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -12,28 +12,84 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card } from "@/components/ui/card";
 import { FadeIn, StaggerGridItem } from "@/components/ui/motion-wrapper";
 import {
   MapPin,
   Globe,
   Edit3,
   ExternalLink,
-  Heart,
-  Layers,
-  Users,
   Check,
   Plus,
   Share2,
   FolderKanban,
   X,
-  FileText,
+  Camera,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ShareModal } from "@/components/ui/share-modal";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { OnlineBadge } from "@/components/ui/online-badge";
+import { uploadMediaFile } from "@/lib/supabase/storage";
+
+const POPULAR_CITIES = [
+  "Tokyo, Japan",
+  "Berlin, Germany",
+  "London, United Kingdom",
+  "New York, USA",
+  "San Francisco, USA",
+  "Paris, France",
+  "Amsterdam, Netherlands",
+  "Copenhagen, Denmark",
+  "Stockholm, Sweden",
+  "Seoul, South Korea",
+  "Dubai, UAE",
+  "Riyadh, Saudi Arabia",
+  "Cairo, Egypt",
+  "Gaza, Palestine",
+  "Ramallah, Palestine",
+  "Jerusalem, Palestine",
+  "Amman, Jordan",
+  "Beirut, Lebanon",
+  "Doha, Qatar",
+  "Kuwait City, Kuwait",
+  "Abu Dhabi, UAE",
+  "Manama, Bahrain",
+  "Muscat, Oman",
+  "Toronto, Canada",
+  "Vancouver, Canada",
+  "Sydney, Australia",
+  "Melbourne, Australia",
+  "Singapore",
+  "Hong Kong",
+  "Barcelona, Spain",
+  "Madrid, Spain",
+  "Milan, Italy",
+  "Rome, Italy",
+  "Zurich, Switzerland",
+  "Vienna, Austria",
+  "Oslo, Norway",
+  "Helsinki, Finland",
+  "Warsaw, Poland",
+  "Prague, Czech Republic",
+  "Kyiv, Ukraine",
+  "Istanbul, Turkey",
+  "Sao Paulo, Brazil",
+  "Buenos Aires, Argentina",
+  "Mexico City, Mexico",
+  "Cape Town, South Africa",
+  "Los Angeles, USA",
+  "Seattle, USA",
+  "Chicago, USA",
+  "Austin, USA",
+  "Bangkok, Thailand",
+  "Taipei, Taiwan",
+  "Lisbon, Portugal",
+  "Dublin, Ireland",
+  "Brussels, Belgium",
+  "Geneva, Switzerland",
+];
 
 export function CreatorProfileClient({ initialCreator }: { initialCreator: Creator }) {
   const {
@@ -57,7 +113,6 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
   const [activeTab, setActiveTab] = useState<"published" | "drafts">("published");
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [sortBy, setSortBy] = useState<"newest" | "appreciated">("newest");
 
   // Profile Edit Form State
@@ -65,6 +120,13 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
   const [editBio, setEditBio] = useState(creator.bio || "");
   const [editLocation, setEditLocation] = useState(creator.location || creator.city || "");
   const [editWebsite, setEditWebsite] = useState(creator.website || "");
+  const [editAvatarUrl, setEditAvatarUrl] = useState(creator.avatarUrl);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [showCitySuggestions, setShowCitySuggestions] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const avatarFileInputRef = useRef<HTMLInputElement>(null);
+  const cityContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (creator) {
@@ -72,18 +134,64 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
       setEditBio(creator.bio || "");
       setEditLocation(creator.location || creator.city || "");
       setEditWebsite(creator.website || "");
+      setEditAvatarUrl(creator.avatarUrl);
     }
   }, [creator]);
 
+  // Click outside listener for city autocomplete
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        cityContainerRef.current &&
+        !cityContainerRef.current.contains(e.target as Node)
+      ) {
+        setShowCitySuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const matchingCities = useMemo(() => {
+    if (!editLocation.trim()) return POPULAR_CITIES.slice(0, 8);
+    const query = editLocation.toLowerCase().trim();
+    return POPULAR_CITIES.filter((c) => c.toLowerCase().includes(query)).slice(0, 8);
+  }, [editLocation]);
+
+  const handleAvatarFile = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload a valid image file (PNG, JPG, WebP).");
+      return;
+    }
+    setIsUploadingAvatar(true);
+    try {
+      const cdnUrl = await uploadMediaFile(file, "project-media", "avatars");
+      setEditAvatarUrl(cdnUrl);
+    } catch (err) {
+      console.error("Avatar upload error:", err);
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    await updateProfile({
-      displayName: editName,
-      bio: editBio,
-      location: editLocation,
-      website: editWebsite,
-    });
-    setIsEditingProfile(false);
+    setIsSaving(true);
+    try {
+      await updateProfile({
+        displayName: editName,
+        bio: editBio,
+        location: editLocation,
+        city: editLocation,
+        website: editWebsite,
+        avatarUrl: editAvatarUrl,
+      });
+      setIsEditingProfile(false);
+    } catch (err) {
+      console.error("Failed to update profile:", err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const isFollowing = isFollowingCreator(creator.id);
@@ -178,7 +286,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                 <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-[var(--content-secondary)] mt-3">
                   <span className="inline-flex items-center gap-1">
                     <MapPin className="h-3.5 w-3.5 text-[var(--content-tertiary)]" />
-                    <span>{creator.location || creator.city}</span>
+                    <span>{creator.location || creator.city || "Earth"}</span>
                   </span>
 
                   {creator.website && (
@@ -251,7 +359,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                   About
                 </span>
                 <p className="text-sm text-[var(--content-secondary)] leading-relaxed">
-                  {creator.bio}
+                  {creator.bio || "Craft community designer and visual creator."}
                 </p>
               </div>
 
@@ -360,7 +468,6 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
               {/* Action Toolbar on Right (Sort Switcher or New Project CTA) */}
               <div className="flex items-center gap-3">
                 {isCurrentUser ? (
-                  /* Only show + New Project button if current active tab has > 0 projects to avoid duplicates */
                   displayedProjects.length > 0 && (
                     <Link href="/me/projects/new">
                       <Button variant="accent" size="sm" className="gap-1.5 font-bold shadow-xs">
@@ -458,13 +565,60 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                 <button
                   type="button"
                   onClick={() => setIsEditingProfile(false)}
-                  className="rounded-full p-1.5 text-[var(--content-tertiary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-colors"
+                  className="rounded-full p-1.5 text-[var(--content-tertiary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-colors cursor-pointer"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
               <form onSubmit={handleSaveProfile} className="space-y-4">
+                {/* 1. Avatar Uploader */}
+                <div className="flex flex-col items-center justify-center pb-2">
+                  <div
+                    onClick={() => avatarFileInputRef.current?.click()}
+                    className="group relative h-24 w-24 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-4 ring-[var(--border-neutral)] hover:ring-[var(--primary-forest-green)] transition-all cursor-pointer shadow-md"
+                    title="Click to change profile picture"
+                  >
+                    <Image
+                      src={editAvatarUrl || "/avatars/default.png"}
+                      alt={editName}
+                      fill
+                      sizes="96px"
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white gap-1">
+                      {isUploadingAvatar ? (
+                        <Loader2 className="h-6 w-6 animate-spin text-white" />
+                      ) : (
+                        <>
+                          <Camera className="h-5 w-5" />
+                          <span className="text-[10px] font-bold">Change</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    ref={avatarFileInputRef}
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        handleAvatarFile(e.target.files[0]);
+                      }
+                    }}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => avatarFileInputRef.current?.click()}
+                    className="mt-2 text-xs font-semibold text-[var(--primary-forest-green)] hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Camera className="h-3.5 w-3.5" />
+                    <span>{isUploadingAvatar ? "Uploading photo..." : "Change Profile Photo"}</span>
+                  </button>
+                </div>
+
+                {/* 2. Display Name */}
                 <div>
                   <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5">
                     Display Name
@@ -476,28 +630,73 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                   />
                 </div>
 
+                {/* 3. About / Bio with 280 Max Char Limit */}
                 <div>
-                  <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5">
-                    About / Bio
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="type-body-default-bold text-[var(--content-primary)]">
+                      About / Bio
+                    </label>
+                    <span
+                      className={cn(
+                        "text-xs font-mono font-semibold",
+                        editBio.length >= 280
+                          ? "text-[var(--negative)]"
+                          : editBio.length >= 240
+                          ? "text-amber-500"
+                          : "text-[var(--content-tertiary)]"
+                      )}
+                    >
+                      {editBio.length}/280 max
+                    </span>
+                  </div>
                   <Textarea
                     value={editBio}
-                    onChange={(e) => setEditBio(e.target.value)}
-                    rows={4}
-                    placeholder="Tell the community about your design philosophy and disciplines..."
+                    onChange={(e) => setEditBio(e.target.value.slice(0, 280))}
+                    maxLength={280}
+                    rows={3}
+                    placeholder="Tell the community about your design philosophy and disciplines (max 280 chars)..."
                   />
                 </div>
 
+                {/* 4. Location with Autocomplete & Website */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
+                  {/* Location Autosuggest Field */}
+                  <div ref={cityContainerRef} className="relative">
                     <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5">
                       Location / City
                     </label>
-                    <Input
-                      value={editLocation}
-                      onChange={(e) => setEditLocation(e.target.value)}
-                      placeholder="e.g. Berlin, Germany"
-                    />
+                    <div className="relative">
+                      <Input
+                        value={editLocation}
+                        onChange={(e) => {
+                          setEditLocation(e.target.value);
+                          setShowCitySuggestions(true);
+                        }}
+                        onFocus={() => setShowCitySuggestions(true)}
+                        placeholder="e.g. Berlin, Germany"
+                      />
+                      <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--content-tertiary)] pointer-events-none" />
+                    </div>
+
+                    {/* Autocomplete Suggestions Dropdown */}
+                    {showCitySuggestions && matchingCities.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-48 overflow-y-auto rounded-[16px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] shadow-xl p-1 animate-fade-in">
+                        {matchingCities.map((city) => (
+                          <button
+                            key={city}
+                            type="button"
+                            onClick={() => {
+                              setEditLocation(city);
+                              setShowCitySuggestions(false);
+                            }}
+                            className="flex items-center gap-2 w-full text-left px-3 py-2 text-xs font-medium text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] rounded-[10px] transition-colors cursor-pointer"
+                          >
+                            <MapPin className="h-3.5 w-3.5 text-[var(--content-tertiary)] shrink-0" />
+                            <span>{city}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -518,11 +717,17 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                     type="button"
                     variant="secondary"
                     onClick={() => setIsEditingProfile(false)}
+                    disabled={isSaving}
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" variant="accent" className="font-bold">
-                    Save Changes
+                  <Button
+                    type="submit"
+                    variant="accent"
+                    className="font-bold"
+                    disabled={isSaving || isUploadingAvatar}
+                  >
+                    {isSaving ? "Saving..." : "Save Changes"}
                   </Button>
                 </div>
               </form>
