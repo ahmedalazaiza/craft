@@ -468,6 +468,10 @@ export async function insertProject(project: Partial<Project> & { creatorId?: st
       ? project.galleryImages.filter(Boolean) 
       : [finalCover];
 
+    const finalTags = project.subCategory && !(project.tags || []).includes(project.subCategory)
+      ? [project.subCategory, ...(project.tags || [])]
+      : (project.tags && project.tags.length > 0 ? project.tags : ["Design"]);
+
     const row = {
       slug: finalSlug,
       title: project.title || "Untitled Project",
@@ -476,9 +480,8 @@ export async function insertProject(project: Partial<Project> & { creatorId?: st
       cover_image: finalCover,
       gallery_images: finalGallery.length > 0 ? finalGallery : [finalCover],
       category: project.category || "User Interface Design (UI)",
-      sub_category: project.subCategory || null,
       medium: project.medium || "Image",
-      tags: project.tags && project.tags.length > 0 ? project.tags : ["Design"],
+      tags: finalTags,
       tools: project.tools && project.tools.length > 0 ? project.tools : ["Figma"],
       published: project.published ?? true,
       featured: project.featured ?? false,
@@ -549,7 +552,6 @@ export async function updateProjectInDb(id: string, updates: Partial<Project>): 
     if (updates.coverImage !== undefined) payload.cover_image = updates.coverImage;
     if (updates.galleryImages !== undefined) payload.gallery_images = updates.galleryImages;
     if (updates.category !== undefined) payload.category = updates.category;
-    if (updates.subCategory !== undefined) payload.sub_category = updates.subCategory;
     if (updates.medium !== undefined) payload.medium = updates.medium;
     if (updates.tags !== undefined) payload.tags = updates.tags;
     if (updates.tools !== undefined) payload.tools = updates.tools;
