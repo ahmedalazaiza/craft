@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
 import { MASTER_TAXONOMY, normalizeCategory, getCategoryTaxonomy } from "@/lib/taxonomy";
 
 export const runtime = "nodejs";
@@ -64,16 +63,14 @@ Return ONLY valid JSON matching this structure without markdown formatting or co
     // 1. If Gemini API key is configured, execute multimodal vision analysis
     if (apiKey) {
       try {
-        const ai = new GoogleGenAI({ apiKey });
-
         const parts: any[] = [{ text: promptText }];
 
         // Add base64 image data if provided
         for (const imgData of imageDataList.slice(0, 3)) {
           parts.push({
-            inlineData: {
+            inline_data: {
               data: imgData.data,
-              mimeType: imgData.mimeType || "image/jpeg",
+              mime_type: imgData.mimeType || "image/jpeg",
             },
           });
         }
@@ -97,53 +94,74 @@ Return ONLY valid JSON matching this structure without markdown formatting or co
           for (const img of fetchedImages) {
             if (img) {
               parts.push({
-                inlineData: {
+                inline_data: {
                   data: img.data,
-                  mimeType: img.mimeType,
+                  mime_type: img.mimeType,
                 },
               });
             }
           }
         }
 
-        // Use gemini-2.5-flash for fastest, accurate multimodal vision
-        const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
-          contents: parts,
-          config: {
-            responseMimeType: "application/json",
-            temperature: 0.4,
-          },
-        });
+        const modelsToTry = ["gemini-flash-latest", "gemini-3.5-flash", "gemini-2.5-pro"];
+        let rawText = "";
 
-        const rawText = response.text || "";
-        const cleanedText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
-        const parsed = JSON.parse(cleanedText);
+        for (const model of modelsToTry) {
+          try {
+            const geminiRes = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  contents: [{ parts }],
+                  generationConfig: {
+                    temperature: 0.4,
+                    responseMimeType: "application/json",
+                  },
+                }),
+              }
+            );
 
-        const normalizedCategory = normalizeCategory(parsed.category || "UI");
-        const matchedTax = getCategoryTaxonomy(normalizedCategory) || MASTER_TAXONOMY[0];
-        const validSub = matchedTax.subCategories.includes(parsed.subCategory)
-          ? parsed.subCategory
-          : matchedTax.subCategories[0] || "";
+            if (geminiRes.ok) {
+              const geminiData = await geminiRes.json();
+              rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+              if (rawText) break;
+            }
+          } catch (modelErr) {
+            console.warn(`Model ${model} failed, trying next candidate...`, modelErr);
+          }
+        }
 
-        return NextResponse.json({
-          success: true,
-          source: "gemini-vision",
-          data: {
-            title: parsed.title || "Monograph: Contemporary Visual Study",
-            category: matchedTax.name,
-            subCategory: validSub,
-            body: parsed.body || "A refined visual case study exploring spatial balance and typography.",
-            tags: Array.isArray(parsed.tags) ? parsed.tags : matchedTax.tags.slice(0, 5),
-            tools: Array.isArray(parsed.tools) ? parsed.tools : matchedTax.tools.slice(0, 3),
-          },
-        });
+        if (rawText) {
+          const cleanedText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
+          const parsed = JSON.parse(cleanedText);
+
+          const normalizedCategory = normalizeCategory(parsed.category || "UI");
+          const matchedTax = getCategoryTaxonomy(normalizedCategory) || MASTER_TAXONOMY[0];
+          const validSub = matchedTax.subCategories.includes(parsed.subCategory)
+            ? parsed.subCategory
+            : matchedTax.subCategories[0] || "";
+
+          return NextResponse.json({
+            success: true,
+            source: "gemini-vision",
+            data: {
+              title: parsed.title || "Monograph: Contemporary Visual Study",
+              category: matchedTax.name,
+              subCategory: validSub,
+              body: parsed.body || "A refined visual case study exploring spatial balance and typography.",
+              tags: Array.isArray(parsed.tags) ? parsed.tags : matchedTax.tags.slice(0, 5),
+              tools: Array.isArray(parsed.tools) ? parsed.tools : matchedTax.tools.slice(0, 3),
+            },
+          });
+        }
       } catch (geminiErr) {
         console.warn("Gemini vision analysis failed, falling back to heuristic engine:", geminiErr);
       }
     }
 
-    // 2. Intelligent Heuristic Fallback Engine (when API key is pending or offline)
+    // 2. Intelligent Heuristic Fallback Engine
     const fallbackCategory = MASTER_TAXONOMY[0]; // UI
     return NextResponse.json({
       success: true,
