@@ -6,6 +6,7 @@ export interface CategoryTaxonomyItem {
   id: string;
   name: string;
   shortName: string;
+  description: string;
   subCategories: string[];
   tags: string[];
   tools: string[];
@@ -16,6 +17,8 @@ export const MASTER_TAXONOMY: CategoryTaxonomyItem[] = [
     id: "ui",
     name: "User Interface Design (UI)",
     shortName: "UI",
+    description:
+      "Clean dashboards, mobile applications, responsive design systems, and digital product interfaces.",
     subCategories: [
       "Web Design",
       "Mobile App Design",
@@ -67,6 +70,8 @@ export const MASTER_TAXONOMY: CategoryTaxonomyItem[] = [
     id: "ux",
     name: "User Experience Design (UX)",
     shortName: "UX",
+    description:
+      "In-depth user research, wireframing, usability testing, journey mapping, and information architecture.",
     subCategories: [
       "UX Research",
       "Information Architecture",
@@ -115,6 +120,8 @@ export const MASTER_TAXONOMY: CategoryTaxonomyItem[] = [
     id: "graphic-design",
     name: "Graphic Design",
     shortName: "Graphic",
+    description:
+      "Print publications, editorial layouts, poster compositions, packaging craft, and publication aesthetics.",
     subCategories: [
       "Print Design",
       "Editorial & Magazine Design",
@@ -161,6 +168,8 @@ export const MASTER_TAXONOMY: CategoryTaxonomyItem[] = [
     id: "brand-identity",
     name: "Brand Identity",
     shortName: "Brand",
+    description:
+      "Timeless logos, visual identity systems, brand guidelines, color palettes, and typography rules.",
     subCategories: [
       "Logo Design",
       "Brand Guidelines",
@@ -204,6 +213,8 @@ export const MASTER_TAXONOMY: CategoryTaxonomyItem[] = [
     id: "motion-design",
     name: "Motion Design",
     shortName: "Motion",
+    description:
+      "Kinetic typography, dynamic UI animations, title sequences, 3D broadcast motion, and video graphics.",
     subCategories: [
       "Kinetic Typography",
       "Title Sequences",
@@ -251,6 +262,8 @@ export const MASTER_TAXONOMY: CategoryTaxonomyItem[] = [
     id: "3d-design",
     name: "3D Design",
     shortName: "3D",
+    description:
+      "3D modeling, photorealistic rendering, architectural visualization, and spatial CGI environments.",
     subCategories: [
       "3D Modeling",
       "Architectural Visualization",
@@ -301,6 +314,8 @@ export const MASTER_TAXONOMY: CategoryTaxonomyItem[] = [
     id: "illustration",
     name: "Illustration",
     shortName: "Illustration",
+    description:
+      "Vector artwork, character design, digital painting, editorial illustrations, and custom iconography.",
     subCategories: [
       "Vector Illustration",
       "Character Design",
@@ -347,6 +362,8 @@ export const MASTER_TAXONOMY: CategoryTaxonomyItem[] = [
     id: "game-design",
     name: "Game Design",
     shortName: "Game",
+    description:
+      "Level design, game mechanics, character concept art, UI for gaming, sprite craft, and virtual world-building.",
     subCategories: [
       "Level Design",
       "Game Mechanics",
@@ -391,6 +408,8 @@ export const MASTER_TAXONOMY: CategoryTaxonomyItem[] = [
     id: "spatial-design",
     name: "AR/VR & Spatial Design",
     shortName: "AR/VR",
+    description:
+      "Augmented reality, virtual reality, spatial computing interfaces, WebXR, and immersive 3D realms.",
     subCategories: [
       "Augmented Reality (AR)",
       "Virtual Reality (VR)",
@@ -432,6 +451,8 @@ export const MASTER_TAXONOMY: CategoryTaxonomyItem[] = [
     id: "industrial-design",
     name: "Industrial & Physical Product Design",
     shortName: "Product",
+    description:
+      "Consumer electronics, hardware enclosures, furniture design, CNC prototyping, and physical product ergonomics.",
     subCategories: [
       "Consumer Electronics",
       "Furniture Design",
@@ -474,6 +495,8 @@ export const MASTER_TAXONOMY: CategoryTaxonomyItem[] = [
     id: "animation",
     name: "Animation (2D & Traditional)",
     shortName: "Animation",
+    description:
+      "Character animation, frame-by-frame cel art, stop motion, storyboarding, and classical timing principles.",
     subCategories: [
       "Character Animation",
       "Cel Animation",
@@ -514,6 +537,8 @@ export const MASTER_TAXONOMY: CategoryTaxonomyItem[] = [
     id: "type-design",
     name: "Type Design & Lettering",
     shortName: "Type",
+    description:
+      "Custom font creation, variable font axes, calligraphy specimens, custom logotypes, and expressive glyph systems.",
     subCategories: [
       "Font Creation",
       "Calligraphy",
@@ -554,6 +579,8 @@ export const MASTER_TAXONOMY: CategoryTaxonomyItem[] = [
     id: "presentation-design",
     name: "Presentation & Information Design",
     shortName: "Presentation",
+    description:
+      "Executive pitch decks, data visualization charts, infographics, and persuasive visual storytelling.",
     subCategories: [
       "Pitch Decks",
       "Corporate Presentations",
