@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { useSession } from "@/lib/session-context";
-import { Project } from "@/lib/mock";
+import { Project } from "@/lib/types";
 import { ProjectForm } from "@/components/project/project-form";
 import { FadeIn } from "@/components/ui/motion-wrapper";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";

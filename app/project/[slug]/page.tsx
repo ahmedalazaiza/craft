@@ -1,24 +1,30 @@
 import React from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { mockProjects, getProjectBySlug } from "@/lib/mock";
-import { fetchProjectBySlug } from "@/lib/supabase/queries";
+import { fetchProjectBySlug, fetchProjects } from "@/lib/supabase/queries";
 import { getProjectMetadata, generateProjectJsonLd } from "@/lib/seo";
 import { ProjectDetailClient } from "./project-detail-client";
+
+export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
 export async function generateStaticParams() {
-  return mockProjects.map((project) => ({
-    slug: project.slug,
-  }));
+  try {
+    const projects = await fetchProjects({ publishedOnly: true });
+    return projects.map((project) => ({
+      slug: project.slug,
+    }));
+  } catch {
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const project = (await fetchProjectBySlug(slug)) || getProjectBySlug(slug);
+  const project = await fetchProjectBySlug(slug);
 
   if (!project) {
     return {
@@ -32,7 +38,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ProjectPage({ params }: PageProps) {
   const { slug } = await params;
-  const project = (await fetchProjectBySlug(slug)) || getProjectBySlug(slug);
+  const project = await fetchProjectBySlug(slug);
 
   if (!project) {
     notFound();

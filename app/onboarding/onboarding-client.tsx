@@ -8,7 +8,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "@/lib/session-context";
 import { AvatarUploader } from "@/components/onboarding/avatar-uploader";
 import { SkillsPicker } from "@/components/onboarding/skills-picker";
-import { Button } from "@/components/ui/button";
+import { DEFAULT_AVATAR_URL, getValidAvatarUrl } from "@/lib/avatar";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FadeIn } from "@/components/ui/motion-wrapper";
 import {
@@ -30,17 +31,7 @@ import { bricolage } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { OnlineBadge } from "@/components/ui/online-badge";
-
-const PRESET_LOCATIONS = [
-  "Worldwide",
-  "Berlin, Germany",
-  "Tokyo, Japan",
-  "London, United Kingdom",
-  "New York, USA",
-  "Dubai, UAE",
-  "Copenhagen, Denmark",
-  "Paris, France",
-];
+import { LocationInput } from "@/components/ui/location-input";
 
 export function OnboardingClient() {
   const router = useRouter();
@@ -53,10 +44,7 @@ export function OnboardingClient() {
 
   // Form Fields State
   const [displayName, setDisplayName] = useState(user?.displayName || "");
-  const [avatarUrl, setAvatarUrl] = useState(
-    user?.avatarUrl ||
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80"
-  );
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || DEFAULT_AVATAR_URL);
   const [location, setLocation] = useState(user?.location || "Worldwide");
   const [skills, setSkills] = useState<string[]>(
     user?.skills && user.skills.length > 0
@@ -72,7 +60,7 @@ export function OnboardingClient() {
   React.useEffect(() => {
     if (user) {
       if (user.displayName) setDisplayName((prev) => prev || user.displayName);
-      if (user.avatarUrl && user.avatarUrl !== "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80") {
+      if (user.avatarUrl) {
         setAvatarUrl(user.avatarUrl);
       }
       if (user.location && user.location !== "Worldwide") {
@@ -169,7 +157,7 @@ export function OnboardingClient() {
                   className={cn(
                     "flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer",
                     isCurrent
-                      ? "bg-[var(--accent)] text-[#090C09] shadow-xs"
+                      ? "bg-[var(--accent)] text-[var(--primary-forest-green)] shadow-xs"
                       : isCompleted
                       ? "bg-[var(--bg-neutral)] text-[var(--content-primary)] border border-[var(--border-neutral)]"
                       : "text-[var(--content-tertiary)] hover:text-[var(--content-secondary)]"
@@ -179,9 +167,9 @@ export function OnboardingClient() {
                     className={cn(
                       "flex h-5 w-5 items-center justify-center rounded-full text-[10px]",
                       isCurrent
-                        ? "bg-[#090C09] text-white"
+                        ? "bg-[var(--chip-bg)] text-[var(--chip-fg)]"
                         : isCompleted
-                        ? "bg-[#8DFF00] text-[#090C09]"
+                        ? "bg-[var(--accent)] text-[var(--primary-forest-green)]"
                         : "bg-[var(--bg-neutral)] text-[var(--content-tertiary)]"
                     )}
                   >
@@ -198,7 +186,7 @@ export function OnboardingClient() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start max-w-6xl mx-auto">
           {/* Left: Interactive Form Step Card */}
           <div className="lg:col-span-7">
-            <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[32px] p-6 sm:p-8 shadow-xl">
+            <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[32px] p-6 sm:p-8 shadow-xl dark:shadow-none">
               <CardContent className="p-0">
                 <AnimatePresence mode="wait">
                   {/* STEP 1: VISUAL PERSONA */}
@@ -240,42 +228,14 @@ export function OnboardingClient() {
                         />
                       </div>
 
-                      {/* Location Presets & Input */}
-                      <div className="space-y-2.5">
-                        <label className="text-xs font-semibold text-[var(--content-primary)] flex items-center gap-1.5">
-                          <MapPin className="h-3.5 w-3.5 text-[#8DFF00]" />
-                          <span>Location & Base</span>
-                        </label>
-
-                        <div className="flex flex-wrap gap-2">
-                          {PRESET_LOCATIONS.map((loc) => {
-                            const isSelected = location === loc;
-                            return (
-                              <button
-                                key={loc}
-                                type="button"
-                                onClick={() => setLocation(loc)}
-                                className={cn(
-                                  "rounded-full px-3 py-1 text-xs font-medium transition-all cursor-pointer",
-                                  isSelected
-                                    ? "bg-[var(--accent)] text-[#090C09] font-bold shadow-xs"
-                                    : "border border-[var(--border-neutral)] bg-[var(--bg-screen)] text-[var(--content-secondary)] hover:border-[var(--content-secondary)]"
-                                )}
-                              >
-                                {loc}
-                              </button>
-                            );
-                          })}
-                        </div>
-
-                        <input
-                          type="text"
-                          value={location}
-                          onChange={(e) => setLocation(e.target.value)}
-                          placeholder="Or type custom city (e.g. Kyoto, Japan)..."
-                          className="w-full rounded-2xl border border-[var(--border-neutral)] bg-[var(--bg-neutral)]/50 px-4 py-2.5 text-xs text-[var(--content-primary)] focus:border-[var(--input-focus-border)] focus:ring-2 focus:ring-[var(--input-focus-ring)] focus:outline-hidden mt-1"
-                        />
-                      </div>
+                      {/* Location Selector with IP Auto-Detect & Autocomplete */}
+                      <LocationInput
+                        value={location}
+                        onChange={setLocation}
+                        autoDetectOnMount={true}
+                        enableAutoDetect={true}
+                        showPresets={true}
+                      />
                     </motion.div>
                   )}
 
@@ -419,14 +379,14 @@ export function OnboardingClient() {
                       <span>Back</span>
                     </Button>
                   ) : (
-                    <Link href="/me">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="text-xs text-[var(--content-tertiary)] hover:text-[var(--content-primary)]"
-                      >
-                        Skip for now
-                      </Button>
+                    <Link
+                      href="/me"
+                      className={buttonVariants({
+                        variant: "ghost",
+                        className: "text-xs text-[var(--content-tertiary)] hover:text-[var(--content-primary)]",
+                      })}
+                    >
+                      Skip for now
                     </Link>
                   )}
 
@@ -467,7 +427,7 @@ export function OnboardingClient() {
                     {/* Avatar */}
                     <div className="relative h-14 w-14 rounded-full overflow-hidden border-2 border-[var(--border-neutral)] bg-[var(--bg-neutral)] shrink-0">
                       <Image
-                        src={avatarUrl}
+                        src={getValidAvatarUrl(avatarUrl)}
                         alt="Avatar preview"
                         fill
                         className="object-cover"

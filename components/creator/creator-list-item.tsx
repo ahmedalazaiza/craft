@@ -3,13 +3,16 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Creator, mockProjects } from "@/lib/mock";
+import { Creator } from "@/lib/types";
+
 import { useSession } from "@/lib/session-context";
+
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Heart, FolderKanban, ArrowRight, Share2 } from "lucide-react";
 import { ShareModal } from "@/components/ui/share-modal";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { OnlineBadge } from "@/components/ui/online-badge";
+import { getValidAvatarUrl } from "@/lib/avatar";
 import { cn } from "@/lib/utils";
 
 interface CreatorListItemProps {
@@ -57,13 +60,13 @@ export function CreatorListItem({
           <div className="flex items-center gap-3">
             <div className="relative h-9 w-9 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-1 ring-[var(--border-neutral)] shrink-0">
               <Image
-                src={creator.avatarUrl}
+                src={getValidAvatarUrl(creator.avatarUrl)}
                 alt={creator.displayName}
                 fill
                 sizes="36px"
                 className="object-cover"
               />
-              <OnlineBadge isOnline={creator.isOnline} size="sm" className="absolute bottom-0 right-0 z-10" />
+              <OnlineBadge userId={creator.id} username={creator.username} size="sm" className="absolute bottom-0 right-0 z-10" />
             </div>
             <div>
               <div className="type-title-group text-[var(--content-primary)] flex items-center gap-1">
@@ -88,23 +91,24 @@ export function CreatorListItem({
       <Link
         href={`/u/${creator.username}`}
         className={cn(
-          "group flex flex-col justify-between rounded-[20px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-5 sm:p-6 transition-all duration-200 hover:shadow-[0_8px_30px_rgba(14,15,12,0.06)] hover:border-[var(--primary-forest-green)]/30",
+          "group flex flex-col justify-between rounded-2xl bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-4 sm:p-6 transition-all duration-200 hover:shadow-[0_8px_30px_rgba(14,15,12,0.06)] hover:border-[var(--primary-forest-green)]/30",
           className
         )}
       >
         <div>
           <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3.5">
+            <div className="flex items-center gap-4">
               <div className="relative h-14 w-14 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-2 ring-[var(--border-neutral)] group-hover:ring-[var(--primary-forest-green)] transition-all shrink-0">
                 <Image
-                  src={creator.avatarUrl}
+                  src={getValidAvatarUrl(creator.avatarUrl)}
                   alt={creator.displayName}
                   fill
                   sizes="56px"
                   className="object-cover"
                 />
-                <OnlineBadge isOnline={creator.isOnline} size="sm" className="absolute bottom-0.5 right-0.5 z-10" />
+                <OnlineBadge userId={creator.id} username={creator.username} size="sm" className="absolute bottom-0.5 right-0.5 z-10" />
               </div>
+
               <div>
                 <div className="flex items-center gap-1.5">
                   <h3 className="type-title-body text-[var(--content-primary)] group-hover:text-[var(--primary-forest-green)] transition-colors">

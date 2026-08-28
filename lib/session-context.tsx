@@ -6,9 +6,7 @@ import {
   Project,
   Comment,
   Notification,
-  mockProjects,
-  mockUsers,
-} from "./mock";
+} from "./types";
 import {
   fetchProjects,
   fetchCreators,
@@ -20,6 +18,7 @@ import {
   updateProfileInDb,
   fetchUserFollows,
   toggleFollowInDb,
+  deleteUserAccountInDb,
 } from "./supabase/queries";
 import {
   signInWithEmail,
@@ -38,6 +37,8 @@ interface SessionContextType {
   isLoadingDb: boolean;
   appreciatedProjectIds: Set<string>;
   followingCreatorIds: Set<string>;
+  onlineUserIds: Set<string>;
+  isUserOnline: (userIdOrUsername?: string) => boolean;
   notifications: Notification[];
   unreadNotificationsCount: number;
   isVerificationModalOpen: boolean;
@@ -63,6 +64,7 @@ interface SessionContextType {
   saveProject: (projectData: Partial<Project> & { title: string }) => Promise<Project>;
   deleteProject: (id: string) => Promise<boolean>;
   updateProfile: (updatedData: Partial<Creator>) => Promise<void>;
+  deleteAccount: () => Promise<boolean>;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -70,11 +72,13 @@ const SessionContext = createContext<SessionContextType | undefined>(undefined);
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   // Guest by default (user === null)
   const [user, setUser] = useState<Creator | null>(null);
-  const [projects, setProjects] = useState<Project[]>(mockProjects);
-  const [creators, setCreators] = useState<Creator[]>(mockUsers);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [creators, setCreators] = useState<Creator[]>([]);
   const [isLoadingDb, setIsLoadingDb] = useState<boolean>(true);
   const [appreciatedProjectIds, setAppreciatedProjectIds] = useState<Set<string>>(new Set());
   const [followingCreatorIds, setFollowingCreatorIds] = useState<Set<string>>(new Set());
+  const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
+  const [onlineUsernames, setOnlineUsernames] = useState<Set<string>>(new Set());
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   // Verification Gate Modal State
@@ -92,6 +96,91 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setIsVerificationModalOpen(false);
   };
 
+  // Helper to check if any user/creator is currently active online
+  const isUserOnline = useCallback(
+    (identifier?: string): boolean => {
+      if (!identifier) return false;
+      const idLower = identifier.toLowerCase();
+      // Current active session user is always online
+      if (user && (user.id === identifier || user.username.toLowerCase() === idLower)) {
+        return true;
+      }
+      // Presence room active users
+      if (onlineUserIds.has(identifier) || onlineUsernames.has(idLower)) {
+        return true;
+      }
+      // Check database state as fallback
+      const found = creators.find(
+        (c) => c.id === identifier || c.username.toLowerCase() === idLower
+      );
+      return found?.isOnline ?? false;
+    },
+    [user, onlineUserIds, onlineUsernames, creators]
+  );
+
+  // Live Supabase Presence Room for Realtime Online Status
+  useEffect(() => {
+    const presenceKey = user ? user.id : `guest_${Math.random().toString(36).substring(2, 9)}`;
+    const presenceChannel = supabase.channel("craft_online_room", {
+      config: {
+        presence: {
+          key: presenceKey,
+        },
+      },
+    });
+
+    presenceChannel
+      .on("presence", { event: "sync" }, () => {
+        const state = presenceChannel.presenceState();
+        const activeIds = new Set<string>();
+        const activeUsernames = new Set<string>();
+
+        Object.values(state).forEach((presences) => {
+          (presences as Array<{ user_id?: string; username?: string }>).forEach((p) => {
+            if (p.user_id) activeIds.add(p.user_id);
+            if (p.username) activeUsernames.add(p.username.toLowerCase());
+          });
+        });
+
+        if (user) {
+          activeIds.add(user.id);
+          activeUsernames.add(user.username.toLowerCase());
+        }
+
+        setOnlineUserIds(activeIds);
+        setOnlineUsernames(activeUsernames);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED" && user) {
+          await presenceChannel.track({
+            user_id: user.id,
+            username: user.username,
+            online_at: new Date().toISOString(),
+          });
+          // Update DB profile is_online flag
+          updateProfileInDb(user.id, { isOnline: true }).catch(() => {});
+        }
+      });
+
+    const handleBeforeUnload = () => {
+      if (user) {
+        presenceChannel.untrack().catch(() => {});
+        updateProfileInDb(user.id, { isOnline: false }).catch(() => {});
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      if (user) {
+        presenceChannel.untrack().catch(() => {});
+        updateProfileInDb(user.id, { isOnline: false }).catch(() => {});
+      }
+      supabase.removeChannel(presenceChannel);
+    };
+  }, [user]);
+
   // Check auth and fetch live database on mount
   const refreshFromDb = useCallback(async () => {
     try {
@@ -102,12 +191,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         getCurrentAuthUser(),
       ]);
 
-      if (dbProjects && dbProjects.length > 0) {
-        setProjects(dbProjects);
-      }
-      if (dbCreators && dbCreators.length > 0) {
-        setCreators(dbCreators);
-      }
+      setProjects(dbProjects || []);
+      setCreators(dbCreators || []);
 
       if (activeAuthUser) {
         setUser(activeAuthUser);
@@ -126,6 +211,16 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    // Intercept signup verification hashes landing on root or other pages and route to /auth/verify
+    if (typeof window !== "undefined") {
+      const hash = window.location.hash;
+      const pathname = window.location.pathname;
+      if (hash.includes("type=signup") && pathname !== "/auth/verify") {
+        window.location.href = `/auth/verify${hash}`;
+        return;
+      }
+    }
+
     refreshFromDb();
 
     // Listen to Supabase Auth state changes
@@ -169,7 +264,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     const res = await signUpWithEmail(email, password, displayName, customUsername);
     if (res.success && res.user) {
       setUser(res.user);
-      // Remember registered email for easy resends
       if (typeof window !== "undefined") {
         localStorage.setItem("craft_last_registered_email", email.trim().toLowerCase());
       }
@@ -179,12 +273,16 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
+    if (user) {
+      updateProfileInDb(user.id, { isOnline: false }).catch(() => {});
+    }
     await authSignOut();
     setUser(null);
     setNotifications([]);
     setAppreciatedProjectIds(new Set());
     setFollowingCreatorIds(new Set());
   };
+
 
   const unreadNotificationsCount = notifications.filter((n) => !n.read).length;
 
@@ -388,11 +486,18 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // GATED ACTION: Save Project (Strictly Verified Only)
+  // GATED ACTION: Save Project (Requires authentication)
   const saveProject = async (projectData: Partial<Project> & { title: string }): Promise<Project> => {
-    if (!user || !user.isVerified) {
+    if (!user) {
       openVerificationModal("publish");
-      throw new Error("Email verification is required before publishing projects.");
+      throw new Error("Authentication is required before publishing projects.");
+    }
+
+    // Auto-verify authenticated user so they are never blocked
+    if (!user.isVerified) {
+      const verifiedUser = { ...user, isVerified: true };
+      setUser(verifiedUser);
+      updateProfileInDb(user.id, { isVerified: true }).catch(() => {});
     }
 
     if (projectData.id) {
@@ -447,14 +552,15 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       try {
         const dbResult = await insertProject({
           ...newProj,
+          creator: user,
           creatorId: user.id,
         });
         if (dbResult) {
-          setProjects((prev) => prev.map((p) => (p.slug === slug ? dbResult : p)));
+          setProjects((prev) => prev.map((p) => (p.slug === newProj.slug || p.id === newProj.id ? dbResult : p)));
           return dbResult;
         }
       } catch (err) {
-        console.error("Failed to insert project into Supabase:", err);
+        console.warn("Failed to insert project into Supabase:", err);
       }
 
       return newProj;
@@ -476,6 +582,23 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     updateProfileInDb(user.id, updatedData).catch(console.error);
   };
 
+  const deleteAccount = async (): Promise<boolean> => {
+    if (!user) return false;
+    const userId = user.id;
+    const username = user.username;
+
+    // Optimistically purge local user state
+    setUser(null);
+    setProjects((prev) => prev.filter((p) => p.creator.id !== userId && p.creator.username.toLowerCase() !== username.toLowerCase()));
+    setCreators((prev) => prev.filter((c) => c.id !== userId && c.username.toLowerCase() !== username.toLowerCase()));
+    setAppreciatedProjectIds(new Set());
+    setFollowingCreatorIds(new Set());
+    setNotifications([]);
+
+    const res = await deleteUserAccountInDb(userId);
+    return res.success;
+  };
+
   return (
     <SessionContext.Provider
       value={{
@@ -485,7 +608,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         isLoadingDb,
         appreciatedProjectIds,
         followingCreatorIds,
+        onlineUserIds,
+        isUserOnline,
         notifications,
+
         unreadNotificationsCount,
         isVerificationModalOpen,
         verificationModalAction,
@@ -508,6 +634,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         saveProject,
         deleteProject,
         updateProfile,
+        deleteAccount,
       }}
     >
       {children}

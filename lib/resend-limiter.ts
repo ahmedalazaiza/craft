@@ -108,9 +108,17 @@ export async function sendVerificationEmail(email: string): Promise<{
   }
 
   try {
+    const redirectUrl =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/auth/verify`
+        : process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000/auth/verify";
+
     const { error } = await supabase.auth.resend({
       type: "signup",
       email: email.trim().toLowerCase(),
+      options: {
+        emailRedirectTo: redirectUrl,
+      },
     });
 
     if (error) {

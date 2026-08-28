@@ -19,6 +19,7 @@ export function VerifyClient() {
   const [verifying, setVerifying] = useState(true);
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
     async function completeVerification() {
@@ -27,12 +28,10 @@ export function VerifyClient() {
 
         if (user) {
           // Update is_verified in public.profiles
-          const { data: profile } = await supabase
+          await supabase
             .from("profiles")
             .update({ is_verified: true })
-            .eq("id", user.id)
-            .select("*")
-            .single();
+            .eq("id", user.id);
 
           await refreshFromDb();
           setSuccess(true);
@@ -61,6 +60,24 @@ export function VerifyClient() {
 
     completeVerification();
   }, [refreshFromDb, setUser]);
+
+  // Automatic redirect countdown to /onboarding
+  useEffect(() => {
+    if (!success) return;
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          router.push("/onboarding");
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [success, router]);
 
   return (
     <div className="flex min-h-[calc(100vh-14rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
@@ -99,7 +116,7 @@ export function VerifyClient() {
                 </h1>
 
                 <p className="mt-2 text-xs sm:text-sm text-[var(--content-secondary)] leading-relaxed max-w-xs mx-auto">
-                  Your email has been confirmed. You now have full access to appreciate projects, follow creators, and publish case studies.
+                  Your email has been confirmed. Redirecting you to set up your creator studio in <span className="font-bold text-[var(--content-primary)]">{countdown}s</span>...
                 </p>
               </CardHeader>
 

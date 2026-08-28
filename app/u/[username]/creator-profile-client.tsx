@@ -5,11 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { useSession } from "@/lib/session-context";
-import { Creator } from "@/lib/mock";
+import { Creator } from "@/lib/types";
 import { bricolage } from "@/lib/fonts";
+
 import { ProjectCard } from "@/components/project/project-card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FadeIn, StaggerGridItem } from "@/components/ui/motion-wrapper";
@@ -21,6 +22,7 @@ import {
   Check,
   Plus,
   Share2,
+  Settings,
   FolderKanban,
   X,
   Camera,
@@ -32,64 +34,8 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { OnlineBadge } from "@/components/ui/online-badge";
 import { uploadMediaFile } from "@/lib/supabase/storage";
-
-const POPULAR_CITIES = [
-  "Tokyo, Japan",
-  "Berlin, Germany",
-  "London, United Kingdom",
-  "New York, USA",
-  "San Francisco, USA",
-  "Paris, France",
-  "Amsterdam, Netherlands",
-  "Copenhagen, Denmark",
-  "Stockholm, Sweden",
-  "Seoul, South Korea",
-  "Dubai, UAE",
-  "Riyadh, Saudi Arabia",
-  "Cairo, Egypt",
-  "Gaza, Palestine",
-  "Ramallah, Palestine",
-  "Jerusalem, Palestine",
-  "Amman, Jordan",
-  "Beirut, Lebanon",
-  "Doha, Qatar",
-  "Kuwait City, Kuwait",
-  "Abu Dhabi, UAE",
-  "Manama, Bahrain",
-  "Muscat, Oman",
-  "Toronto, Canada",
-  "Vancouver, Canada",
-  "Sydney, Australia",
-  "Melbourne, Australia",
-  "Singapore",
-  "Hong Kong",
-  "Barcelona, Spain",
-  "Madrid, Spain",
-  "Milan, Italy",
-  "Rome, Italy",
-  "Zurich, Switzerland",
-  "Vienna, Austria",
-  "Oslo, Norway",
-  "Helsinki, Finland",
-  "Warsaw, Poland",
-  "Prague, Czech Republic",
-  "Kyiv, Ukraine",
-  "Istanbul, Turkey",
-  "Sao Paulo, Brazil",
-  "Buenos Aires, Argentina",
-  "Mexico City, Mexico",
-  "Cape Town, South Africa",
-  "Los Angeles, USA",
-  "Seattle, USA",
-  "Chicago, USA",
-  "Austin, USA",
-  "Bangkok, Thailand",
-  "Taipei, Taiwan",
-  "Lisbon, Portugal",
-  "Dublin, Ireland",
-  "Brussels, Belgium",
-  "Geneva, Switzerland",
-];
+import { DEFAULT_AVATAR_URL, getValidAvatarUrl } from "@/lib/avatar";
+import { LocationInput } from "@/components/ui/location-input";
 
 export function CreatorProfileClient({ initialCreator }: { initialCreator: Creator }) {
   const {
@@ -125,11 +71,9 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
   const [editWebsite, setEditWebsite] = useState(creator.website || "");
   const [editAvatarUrl, setEditAvatarUrl] = useState(creator.avatarUrl);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-  const [showCitySuggestions, setShowCitySuggestions] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const avatarFileInputRef = useRef<HTMLInputElement>(null);
-  const cityContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (creator) {
@@ -140,26 +84,6 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
       setEditAvatarUrl(creator.avatarUrl);
     }
   }, [creator]);
-
-  // Click outside listener for city autocomplete
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        cityContainerRef.current &&
-        !cityContainerRef.current.contains(e.target as Node)
-      ) {
-        setShowCitySuggestions(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const matchingCities = useMemo(() => {
-    if (!editLocation.trim()) return POPULAR_CITIES.slice(0, 8);
-    const query = editLocation.toLowerCase().trim();
-    return POPULAR_CITIES.filter((c) => c.toLowerCase().includes(query)).slice(0, 8);
-  }, [editLocation]);
 
   const handleAvatarFile = async (file: File) => {
     if (!file.type.startsWith("image/")) {
@@ -255,18 +179,35 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
               {/* Creator Avatar & Identity */}
               <div className="flex flex-col items-center text-center">
                 <div className="relative mb-4">
-                  <div className="relative h-28 w-28 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-4 ring-[var(--border-neutral)] shadow-sm">
+                  <div
+                    onClick={() => {
+                      if (isCurrentUser) setIsEditingProfile(true);
+                    }}
+                    className={cn(
+                      "group relative h-28 w-28 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-4 ring-[var(--border-neutral)] shadow-sm",
+                      isCurrentUser && "cursor-pointer hover:ring-[var(--primary-forest-green)] transition-all"
+                    )}
+                    title={isCurrentUser ? "Click to edit studio profile & avatar" : undefined}
+                  >
                     <Image
-                      src={creator.avatarUrl}
+                      src={getValidAvatarUrl(creator.avatarUrl)}
                       alt={creator.displayName}
                       fill
                       sizes="112px"
                       priority
                       className="object-cover"
                     />
+                    {isCurrentUser && (
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white gap-1">
+                        <Camera className="h-5 w-5" />
+                        <span className="text-[10px] font-bold">Edit</span>
+                      </div>
+                    )}
                   </div>
-                  <OnlineBadge isOnline={creator.isOnline} size="lg" className="absolute bottom-1 right-1 z-10" />
+                  <OnlineBadge userId={creator.id} username={creator.username} size="lg" className="absolute bottom-1 right-1 z-10" />
+
                 </div>
+
 
                 <div className="flex items-center gap-2 justify-center">
                   <h1
@@ -309,18 +250,33 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                 </div>
               </div>
 
-              {/* Action Buttons: Edit Profile (for owner) or Follow (for public) + Share */}
+              {/* Action Buttons: Edit Profile (for owner) or Follow (for public) + Settings + Share */}
               <div className="pt-2 flex items-center gap-2.5">
                 {isCurrentUser ? (
-                  <Button
-                    onClick={() => setIsEditingProfile(true)}
-                    variant="secondary"
-                    size="default"
-                    className="flex-1 gap-2 font-bold"
-                  >
-                    <Edit3 className="h-4 w-4" />
-                    <span>Edit Profile</span>
-                  </Button>
+                  <>
+                    <Button
+                      onClick={() => setIsEditingProfile(true)}
+                      variant="secondary"
+                      size="default"
+                      className="flex-1 gap-2 font-bold"
+                    >
+                      <Edit3 className="h-4 w-4" />
+                      <span>Edit Profile</span>
+                    </Button>
+
+                    <Link
+                      href="/settings"
+                      className={buttonVariants({
+                        variant: "secondary",
+                        size: "icon",
+                        className: "transition-transform hover:scale-105 active:scale-95",
+                      })}
+                      title="Account Settings"
+                      aria-label="Account Settings"
+                    >
+                      <Settings className="h-4 w-4" />
+                    </Link>
+                  </>
                 ) : (
                   <Button
                     onClick={() => toggleFollowCreator(creator.id)}
@@ -471,11 +427,16 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
               <div className="flex items-center gap-3">
                 {isCurrentUser ? (
                   displayedProjects.length > 0 && (
-                    <Link href="/me/projects/new">
-                      <Button variant="accent" size="sm" className="gap-1.5 font-bold shadow-xs">
-                        <Plus className="h-4 w-4" />
-                        <span>New Project</span>
-                      </Button>
+                    <Link
+                      href="/me/projects/new"
+                      className={buttonVariants({
+                        variant: "accent",
+                        size: "sm",
+                        className: "hidden sm:inline-flex gap-1.5 font-bold shadow-xs",
+                      })}
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span>New Project</span>
                     </Link>
                   )
                 ) : (
@@ -533,11 +494,16 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                 </p>
 
                 {isCurrentUser && (
-                  <Link href="/me/projects/new" className="mt-6">
-                    <Button variant="accent" size="default" className="gap-2 font-bold shadow-xs">
-                      <Plus className="h-4 w-4" />
-                      <span>{activeTab === "published" ? "Create First Project" : "Start New Draft"}</span>
-                    </Button>
+                  <Link
+                    href="/me/projects/new"
+                    className={buttonVariants({
+                      variant: "accent",
+                      size: "default",
+                      className: "mt-6 gap-2 font-bold shadow-xs",
+                    })}
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>{activeTab === "published" ? "Create First Project" : "Start New Draft"}</span>
                   </Link>
                 )}
               </div>
@@ -556,7 +522,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
         {/* Edit Profile Modal */}
         {isEditingProfile && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
-            <div className="relative w-full max-w-lg rounded-[28px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] p-6 sm:p-8 shadow-2xl">
+            <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[28px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] p-5 sm:p-8 shadow-2xl">
               <div className="flex items-center justify-between pb-4 border-b border-[var(--border-neutral)] mb-6">
                 <div className="flex items-center gap-2">
                   <Edit3 className="h-5 w-5 text-[var(--primary-forest-green)]" />
@@ -582,7 +548,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                     title="Click to change profile picture"
                   >
                     <Image
-                      src={editAvatarUrl || "/avatars/default.png"}
+                      src={getValidAvatarUrl(editAvatarUrl)}
                       alt={editName}
                       fill
                       sizes="96px"
@@ -662,44 +628,15 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
 
                 {/* 4. Location with Autocomplete & Website */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Location Autosuggest Field */}
-                  <div ref={cityContainerRef} className="relative">
-                    <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5">
-                      Location / City
-                    </label>
-                    <div className="relative">
-                      <Input
-                        value={editLocation}
-                        onChange={(e) => {
-                          setEditLocation(e.target.value);
-                          setShowCitySuggestions(true);
-                        }}
-                        onFocus={() => setShowCitySuggestions(true)}
-                        placeholder="e.g. Berlin, Germany"
-                      />
-                      <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--content-tertiary)] pointer-events-none" />
-                    </div>
-
-                    {/* Autocomplete Suggestions Dropdown */}
-                    {showCitySuggestions && matchingCities.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-48 overflow-y-auto rounded-[16px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] shadow-xl p-1 animate-fade-in">
-                        {matchingCities.map((city) => (
-                          <button
-                            key={city}
-                            type="button"
-                            onClick={() => {
-                              setEditLocation(city);
-                              setShowCitySuggestions(false);
-                            }}
-                            className="flex items-center gap-2 w-full text-left px-3 py-2 text-xs font-medium text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] rounded-[10px] transition-colors cursor-pointer"
-                          >
-                            <MapPin className="h-3.5 w-3.5 text-[var(--content-tertiary)] shrink-0" />
-                            <span>{city}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  {/* Location Autosuggest Field with IP Auto-Detect */}
+                  <LocationInput
+                    value={editLocation}
+                    onChange={setEditLocation}
+                    label="Location / City"
+                    placeholder="e.g. Berlin, Germany"
+                    showPresets={false}
+                    enableAutoDetect={true}
+                  />
 
                   <div>
                     <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5">

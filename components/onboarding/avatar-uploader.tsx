@@ -2,20 +2,10 @@
 
 import React, { useState, useRef } from "react";
 import Image from "next/image";
-import { Upload, Sparkles, Check, X, Camera, RefreshCw } from "lucide-react";
+import { Upload, Camera, RefreshCw, Trash2, User, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DEFAULT_AVATAR_URL, getValidAvatarUrl } from "@/lib/avatar";
 import { cn } from "@/lib/utils";
-
-const PRESET_AVATARS = [
-  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&auto=format&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&auto=format&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&auto=format&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&auto=format&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=400&auto=format&fit=crop&q=80",
-];
 
 interface AvatarUploaderProps {
   currentAvatar: string;
@@ -29,6 +19,8 @@ export function AvatarUploader({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+
+  const isUsingDefault = !currentAvatar || currentAvatar === DEFAULT_AVATAR_URL;
 
   const handleFile = (file: File) => {
     if (!file.type.startsWith("image/")) {
@@ -69,34 +61,53 @@ export function AvatarUploader({
     setIsDragging(false);
   };
 
+  const handleResetToDefault = () => {
+    onAvatarChange(DEFAULT_AVATAR_URL);
+  };
+
   return (
     <div className="space-y-6">
       {/* Upload Zone & Main Preview */}
-      <div className="flex flex-col sm:flex-row items-center gap-6 rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-neutral)]/40 p-6">
-        {/* Large Avatar Preview */}
-        <div className="relative group shrink-0">
-          <div className="relative h-28 w-28 sm:h-32 sm:w-32 rounded-full overflow-hidden border-3 border-[var(--border-neutral)] bg-[var(--bg-screen)] shadow-md">
-            <Image
-              src={currentAvatar || PRESET_AVATARS[0]}
-              alt="Profile avatar preview"
-              fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-            {isUploading && (
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-xs">
-                <RefreshCw className="h-6 w-6 text-white animate-spin" />
-              </div>
-            )}
+      <div className="flex flex-col sm:flex-row items-center gap-6 rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-neutral)]/40 p-6 sm:p-8">
+        {/* Avatar Preview & Action */}
+        <div className="flex flex-col items-center gap-3 shrink-0">
+          <div className="relative group">
+            <div className="relative h-28 w-28 sm:h-32 sm:w-32 rounded-full overflow-hidden border-3 border-[var(--border-neutral)] bg-[var(--bg-screen)] shadow-md">
+              <Image
+                src={getValidAvatarUrl(currentAvatar)}
+                alt="Profile avatar preview"
+                fill
+                sizes="128px"
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+              {isUploading && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-xs">
+                  <RefreshCw className="h-6 w-6 text-white animate-spin" />
+                </div>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute bottom-0 right-0 h-9 w-9 rounded-full bg-[var(--accent)] text-[#090C09] flex items-center justify-center shadow-lg hover:scale-110 transition-transform cursor-pointer border-2 border-[var(--bg-screen)]"
+              title="Upload custom photo"
+              aria-label="Upload custom photo"
+            >
+              <Camera className="h-4 w-4" />
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="absolute bottom-0 right-0 h-9 w-9 rounded-full bg-[var(--accent)] text-[#090C09] flex items-center justify-center shadow-lg hover:scale-110 transition-transform cursor-pointer border-2 border-[var(--bg-screen)]"
-            title="Upload custom photo"
-          >
-            <Camera className="h-4 w-4" />
-          </button>
+          {!isUsingDefault && (
+            <button
+              type="button"
+              onClick={handleResetToDefault}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-500 hover:text-rose-600 transition-colors cursor-pointer"
+            >
+              <Trash2 className="h-3 w-3" />
+              <span>Use default avatar</span>
+            </button>
+          )}
         </div>
 
         {/* Drop Zone Box */}
@@ -138,46 +149,18 @@ export function AvatarUploader({
         </div>
       </div>
 
-      {/* Curated Presets Library */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-semibold text-[var(--content-secondary)] flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-[#8DFF00]" />
-            <span>Or choose from curated creator presets</span>
-          </label>
+      {/* Default Avatar Info Banner */}
+      <div className="rounded-2xl border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-4 flex items-start gap-3">
+        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--chip-bg)] text-[var(--chip-fg)] shrink-0 mt-0.5">
+          <User className="h-4 w-4" />
         </div>
-
-        <div className="grid grid-cols-4 sm:grid-cols-8 gap-3">
-          {PRESET_AVATARS.map((url, idx) => {
-            const isSelected = currentAvatar === url;
-            return (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => onAvatarChange(url)}
-                className={cn(
-                  "relative aspect-square rounded-2xl overflow-hidden border-2 transition-all cursor-pointer group",
-                  isSelected
-                    ? "border-[#8DFF00] ring-3 ring-[#8DFF00]/30 scale-105"
-                    : "border-[var(--border-neutral)] hover:border-[var(--content-secondary)] opacity-80 hover:opacity-100"
-                )}
-              >
-                <Image
-                  src={url}
-                  alt={`Preset avatar ${idx + 1}`}
-                  fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-110"
-                />
-                {isSelected && (
-                  <div className="absolute inset-0 bg-[#8DFF00]/25 flex items-center justify-center">
-                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#8DFF00] text-[#090C09]">
-                      <Check className="h-3 w-3 stroke-[3]" />
-                    </div>
-                  </div>
-                )}
-              </button>
-            );
-          })}
+        <div className="space-y-0.5">
+          <span className="text-xs font-bold text-[var(--content-primary)] block">
+            Optional Studio Profile Photo
+          </span>
+          <p className="text-[11px] text-[var(--content-secondary)] leading-relaxed">
+            Uploading an avatar is completely optional. If you don&apos;t upload a photo, your studio will be presented with our minimalist signature avatar across all case studies and directory cards.
+          </p>
         </div>
       </div>
     </div>

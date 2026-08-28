@@ -1,8 +1,8 @@
 import { MetadataRoute } from "next";
-import { mockProjects, mockUsers } from "@/lib/mock";
+import { fetchProjects, fetchCreators } from "@/lib/supabase/queries";
 import { absoluteUrl } from "@/lib/seo";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const currentDate = new Date().toISOString();
 
   // Static public routes
@@ -27,23 +27,29 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  // Published project pages only
-  const projectRoutes: MetadataRoute.Sitemap = mockProjects
-    .filter((p) => p.published)
-    .map((project) => ({
+  try {
+    const [dbProjects, dbCreators] = await Promise.all([
+      fetchProjects({ publishedOnly: true }),
+      fetchCreators(),
+    ]);
+
+    const projectRoutes: MetadataRoute.Sitemap = dbProjects.map((project) => ({
       url: absoluteUrl(`/project/${project.slug}`),
       lastModified: currentDate,
       changeFrequency: "weekly",
       priority: 0.8,
     }));
 
-  // Creator profile pages
-  const creatorRoutes: MetadataRoute.Sitemap = mockUsers.map((creator) => ({
-    url: absoluteUrl(`/u/${creator.username}`),
-    lastModified: currentDate,
-    changeFrequency: "weekly",
-    priority: 0.7,
-  }));
+    const creatorRoutes: MetadataRoute.Sitemap = dbCreators.map((creator) => ({
+      url: absoluteUrl(`/u/${creator.username}`),
+      lastModified: currentDate,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    }));
 
-  return [...staticRoutes, ...projectRoutes, ...creatorRoutes];
+    return [...staticRoutes, ...projectRoutes, ...creatorRoutes];
+  } catch (err) {
+    console.error("Error generating dynamic sitemap:", err);
+    return staticRoutes;
+  }
 }

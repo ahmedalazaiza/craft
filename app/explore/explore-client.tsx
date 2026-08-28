@@ -4,12 +4,16 @@ import React, { useState, useMemo } from "react";
 import { useSession } from "@/lib/session-context";
 import { bricolage } from "@/lib/fonts";
 import { ProjectCard } from "@/components/project/project-card";
+import { ProjectGridSkeleton } from "@/components/project/project-grid-skeleton";
 import { SearchField } from "@/components/search/search-field";
 import { FilterDrawer, ProjectFilters } from "@/components/search/filter-drawer";
 import { FilterChip } from "@/components/ui/badge";
 import { FadeIn, StaggerGridItem } from "@/components/ui/motion-wrapper";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
-import { ProjectCategory } from "@/lib/mock";
+import { ProjectCategory } from "@/lib/types";
+
+
+
 import {
   FolderKanban,
   Sparkles,
@@ -33,7 +37,8 @@ const QUICK_CATEGORIES: (ProjectCategory | "All")[] = [
 ];
 
 export function ExploreClient() {
-  const { projects } = useSession();
+  const { projects, isLoadingDb } = useSession();
+
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -112,15 +117,45 @@ export function ExploreClient() {
     return new Set(publishedProjects.map((p) => p.category)).size;
   }, [publishedProjects]);
 
+  if (isLoadingDb && projects.length === 0) {
+    return (
+      <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-4 sm:py-6 space-y-6 animate-pulse">
+        <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Explore" }]} />
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-[var(--border-neutral)] mb-6">
+          <div className="space-y-3 max-w-2xl">
+            <div className="h-6 w-36 rounded-full bg-[var(--bg-neutral)]" />
+            <div className="h-10 sm:h-12 w-72 max-w-full rounded-2xl bg-[var(--bg-neutral)]" />
+            <div className="h-4 w-full max-w-xl rounded-full bg-[var(--bg-neutral)]/70" />
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="h-14 w-36 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]" />
+            <div className="h-14 w-36 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]" />
+          </div>
+        </div>
+        <div className="space-y-4 mb-6">
+          <div className="h-12 w-full rounded-2xl bg-[var(--bg-neutral)]" />
+          <div className="flex items-center gap-2 overflow-hidden pb-3 border-b border-[var(--border-neutral)]">
+            {["w-14", "w-28", "w-32", "w-24", "w-24", "w-28", "w-36", "w-20"].map((w, idx) => (
+              <div key={idx} className={`h-8 ${w} shrink-0 rounded-full bg-[var(--bg-neutral)]/70`} />
+            ))}
+          </div>
+        </div>
+        <ProjectGridSkeleton count={8} columns={4} />
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-4 sm:py-6">
       <FadeIn>
         {/* Breadcrumbs Navigation */}
         <Breadcrumbs
           items={[
-            { label: "Explore Projects", isCurrent: true },
+            { label: "Home", href: "/" },
+            { label: "Explore" },
           ]}
         />
+
 
         {/* ========================================================================= */}
         {/* BALANCED 2-COLUMN HEADER (Title on Left + Quick Metrics Cards on Right)   */}

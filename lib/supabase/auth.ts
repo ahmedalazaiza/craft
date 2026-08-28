@@ -1,6 +1,8 @@
 import { supabase } from "./client";
-import { Creator } from "@/lib/mock";
+import { Creator } from "@/lib/types";
 import { mapProfileToCreator } from "./queries";
+import { DEFAULT_AVATAR_URL } from "@/lib/avatar";
+
 
 export interface AuthResponse {
   success: boolean;
@@ -104,11 +106,17 @@ export async function signUpWithEmail(
       finalUsername = await generateUniqueUsername(cleanDisplayName, cleanEmail);
     }
 
-    // 1. Supabase Auth Sign Up
+    // 1. Supabase Auth Sign Up with explicit redirect to /auth/verify
+    const redirectUrl =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/auth/verify`
+        : process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000/auth/verify";
+
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: cleanEmail,
       password: password,
       options: {
+        emailRedirectTo: redirectUrl,
         data: {
           display_name: cleanDisplayName,
           username: finalUsername,
@@ -132,7 +140,7 @@ export async function signUpWithEmail(
       id: authUser.id,
       username: finalUsername,
       display_name: cleanDisplayName,
-      avatar_url: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80`,
+      avatar_url: DEFAULT_AVATAR_URL,
       bio: "Independent designer & creative practitioner.",
       location: "Worldwide",
       city: "Global",
@@ -222,7 +230,7 @@ export async function signInWithEmail(
         username: fallbackUsername,
         displayName: fallbackName,
         email: cleanEmail,
-        avatarUrl: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80`,
+        avatarUrl: DEFAULT_AVATAR_URL,
         bio: "Independent designer & creative practitioner.",
         location: "Worldwide",
         city: "Global",
@@ -308,23 +316,41 @@ export async function getCurrentAuthUser(): Promise<Creator | null> {
 
     const fallbackUsername = user.user_metadata?.username || user.email?.split("@")[0] || "creator";
     const fallbackName = user.user_metadata?.display_name || user.email?.split("@")[0] || "Creator";
+    
+    const newProfileRow = {
+      id: user.id,
+      username: fallbackUsername,
+      display_name: fallbackName,
+      avatar_url: DEFAULT_AVATAR_URL,
+      bio: "Independent designer & creative practitioner.",
+      location: "Worldwide",
+      city: "Global",
+      skills: ["Design"],
+      is_verified: isEmailConfirmed,
+      is_online: true,
+      followers_count: 0,
+    };
+
+    // Auto-create in public.profiles
+    await supabase.from("profiles").upsert(newProfileRow);
+
     return {
       id: user.id,
       username: fallbackUsername,
       displayName: fallbackName,
       email: user.email,
-      avatarUrl: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80`,
-      bio: "Independent designer & creative practitioner.",
-      location: "Worldwide",
-      city: "Global",
-      skills: ["Design"],
+      avatarUrl: newProfileRow.avatar_url,
+      bio: newProfileRow.bio,
+      location: newProfileRow.location,
+      city: newProfileRow.city,
+      skills: newProfileRow.skills,
       isVerified: isEmailConfirmed,
       isOnline: true,
       followersCount: 0,
       isCurrentUser: true,
     };
   } catch (err) {
-    console.error("Error getting current auth user:", err);
+    console.warn("Notice getting current auth user:", err);
     return null;
   }
 }

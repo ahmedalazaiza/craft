@@ -247,7 +247,7 @@ VALUES
     ARRAY['Brand Systems', 'Typography', 'Art Direction', 'Motion'],
     true,
     true,
-    1240
+    0
 ),
 (
     'a0000002-0000-4000-8000-000000000002',
@@ -261,7 +261,7 @@ VALUES
     ARRAY['UI Systems', 'Creative Code', 'Interaction', 'Next.js'],
     true,
     true,
-    890
+    0
 ),
 (
     'a0000003-0000-4000-8000-000000000003',
@@ -275,7 +275,7 @@ VALUES
     ARRAY['Photography', '3D Rendering', 'CGI', 'Editorial'],
     true,
     false,
-    1420
+    0
 ),
 (
     'a0000004-0000-4000-8000-000000000004',
@@ -289,7 +289,7 @@ VALUES
     ARRAY['Editorial', 'Print', 'Book Design', 'Identity'],
     true,
     true,
-    650
+    0
 ),
 (
     'a0000005-0000-4000-8000-000000000005',
@@ -303,7 +303,7 @@ VALUES
     ARRAY['Industrial Design', 'Hardware UI', 'Machining', 'CAD'],
     false,
     false,
-    1100
+    0
 ),
 (
     'a0000006-0000-4000-8000-000000000006',
@@ -317,7 +317,7 @@ VALUES
     ARRAY['Architecture', 'Spatial Design', 'Timber Craft', 'Structures'],
     true,
     false,
-    780
+    0
 )
 ON CONFLICT (id) DO UPDATE SET
     username = EXCLUDED.username,
@@ -353,7 +353,7 @@ VALUES
     true,
     true,
     'a0000001-0000-4000-8000-000000000001',
-    248,
+    0,
     NOW() - INTERVAL '2 days'
 ),
 (
@@ -375,7 +375,7 @@ VALUES
     true,
     true,
     'a0000002-0000-4000-8000-000000000002',
-    412,
+    0,
     NOW() - INTERVAL '3 days'
 ),
 (
@@ -396,7 +396,7 @@ VALUES
     true,
     true,
     'a0000003-0000-4000-8000-000000000003',
-    839,
+    0,
     NOW() - INTERVAL '5 days'
 ),
 (
@@ -416,7 +416,7 @@ VALUES
     true,
     false,
     'a0000004-0000-4000-8000-000000000004',
-    184,
+    0,
     NOW() - INTERVAL '6 days'
 ),
 (
@@ -436,7 +436,7 @@ VALUES
     true,
     false,
     'a0000005-0000-4000-8000-000000000005',
-    295,
+    0,
     NOW() - INTERVAL '8 days'
 ),
 (
@@ -456,7 +456,7 @@ VALUES
     true,
     false,
     'a0000006-0000-4000-8000-000000000006',
-    462,
+    0,
     NOW() - INTERVAL '10 days'
 ),
 (
@@ -476,7 +476,7 @@ VALUES
     true,
     false,
     'a0000001-0000-4000-8000-000000000001',
-    390,
+    0,
     NOW() - INTERVAL '12 days'
 ),
 (
@@ -496,7 +496,7 @@ VALUES
     true,
     false,
     'a0000004-0000-4000-8000-000000000004',
-    512,
+    0,
     NOW() - INTERVAL '14 days'
 ),
 (
@@ -516,7 +516,7 @@ VALUES
     true,
     true,
     'a0000002-0000-4000-8000-000000000002',
-    630,
+    0,
     NOW() - INTERVAL '16 days'
 ),
 (
@@ -536,7 +536,7 @@ VALUES
     true,
     false,
     'a0000006-0000-4000-8000-000000000006',
-    475,
+    0,
     NOW() - INTERVAL '18 days'
 ),
 (
@@ -556,7 +556,7 @@ VALUES
     true,
     false,
     'a0000002-0000-4000-8000-000000000002',
-    520,
+    0,
     NOW() - INTERVAL '20 days'
 ),
 (
@@ -576,7 +576,7 @@ VALUES
     true,
     false,
     'a0000002-0000-4000-8000-000000000002',
-    410,
+    0,
     NOW() - INTERVAL '22 days'
 ),
 (
@@ -596,7 +596,7 @@ VALUES
     true,
     false,
     'a0000001-0000-4000-8000-000000000001',
-    388,
+    0,
     NOW() - INTERVAL '24 days'
 ),
 (
@@ -616,7 +616,7 @@ VALUES
     true,
     false,
     'a0000004-0000-4000-8000-000000000004',
-    290,
+    0,
     NOW() - INTERVAL '26 days'
 ),
 (
@@ -636,7 +636,7 @@ VALUES
     true,
     false,
     'a0000006-0000-4000-8000-000000000006',
-    540,
+    0,
     NOW() - INTERVAL '28 days'
 ),
 (
@@ -656,7 +656,7 @@ VALUES
     true,
     false,
     'a0000003-0000-4000-8000-000000000003',
-    710,
+    0,
     NOW() - INTERVAL '30 days'
 )
 ON CONFLICT (id) DO UPDATE SET

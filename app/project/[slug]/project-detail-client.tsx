@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Project } from "@/lib/mock";
+import { Project } from "@/lib/types";
 import { bricolage } from "@/lib/fonts";
 import { Badge } from "@/components/ui/badge";
 import { CommentSection } from "@/components/project/comment-section";
@@ -15,7 +15,8 @@ import { FadeIn } from "@/components/ui/motion-wrapper";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { OnlineBadge } from "@/components/ui/online-badge";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { getValidAvatarUrl } from "@/lib/avatar";
 import {
   Heart,
   MessageSquare,
@@ -118,11 +119,16 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
               </div>
 
               {isAuthor && (
-                <Link href={`/me/projects/${project.id}`} className="shrink-0 pt-1">
-                  <Button variant="secondary" size="default" className="gap-2 font-bold shadow-xs">
-                    <Edit3 className="h-4 w-4" />
-                    <span>Edit Case Study</span>
-                  </Button>
+                <Link
+                  href={`/me/projects/${project.id}`}
+                  className={buttonVariants({
+                    variant: "secondary",
+                    size: "default",
+                    className: "shrink-0 gap-2 font-bold shadow-xs",
+                  })}
+                >
+                  <Edit3 className="h-4 w-4" />
+                  <span>Edit Case Study</span>
                 </Link>
               )}
             </div>
@@ -188,7 +194,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                 {isAuthor && (
                   <Link
                     href={`/me/projects/${project.id}`}
-                    className="h-12 w-12 rounded-full bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--primary-forest-green)] hover:text-white flex items-center justify-center transition-all cursor-pointer select-none group"
+                    className="h-12 w-12 rounded-full bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] flex items-center justify-center transition-all cursor-pointer select-none group"
                     title="Edit Case Study"
                   >
                     <Edit3 className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
@@ -205,14 +211,14 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                 >
                   <div className="relative h-full w-full rounded-full overflow-hidden">
                     <Image
-                      src={project.creator.avatarUrl}
+                      src={getValidAvatarUrl(project.creator.avatarUrl)}
                       alt={project.creator.displayName}
                       fill
                       sizes="48px"
                       className="object-cover transition-transform duration-300 group-hover:scale-110"
                     />
                   </div>
-                  <OnlineBadge isOnline={project.creator.isOnline} size="sm" className="absolute -bottom-0.5 -right-0.5 z-10" />
+                  <OnlineBadge userId={project.creator.id} username={project.creator.username} size="sm" className="absolute -bottom-0.5 -right-0.5 z-10" />
                 </Link>
               </div>
             </aside>
@@ -299,67 +305,67 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
       </div>
 
       {/* ----------------------------------------------------------------- */}
-      {/* MOBILE FLOATING ACTION BAR (BOTTOM PILL)                          */}
+      {/* MOBILE FLOATING ACTION BAR (BOTTOM PILL ABOVE MOBILE NAV)         */}
       {/* ----------------------------------------------------------------- */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 md:hidden flex items-center gap-2 p-1.5 rounded-full bg-[var(--bg-screen)]/95 backdrop-blur-md border border-[var(--border-neutral)] shadow-2xl">
+      <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 md:hidden flex items-center gap-2 p-1.5 rounded-full bg-[var(--bg-screen)]/95 backdrop-blur-md border border-[var(--border-neutral)] shadow-2xl dark:shadow-none">
         <button
           type="button"
           onClick={handleToggleAppreciation}
           className={cn(
-            "h-10 px-3 rounded-full flex items-center gap-1.5 text-xs font-bold transition-all",
+            "h-12 min-h-[48px] px-4 rounded-full flex items-center gap-2 text-xs font-bold transition-all",
             isAppreciated
-              ? "bg-[#8DFF00] text-[#090C09]"
+              ? "bg-[var(--accent)] text-[var(--primary-forest-green)]"
               : "bg-[var(--bg-neutral)] text-[var(--content-primary)]"
           )}
         >
-          <Heart className={cn("h-3.5 w-3.5", isAppreciated && "fill-current")} />
+          <Heart className={cn("h-4 w-4", isAppreciated && "fill-current")} />
           <span>{project.appreciations}</span>
         </button>
 
         <button
           type="button"
           onClick={handleScrollToComments}
-          className="h-10 px-3 rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] flex items-center gap-1.5 text-xs font-bold"
+          className="h-12 min-h-[48px] px-4 rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] flex items-center gap-2 text-xs font-bold"
         >
-          <MessageSquare className="h-3.5 w-3.5" />
+          <MessageSquare className="h-4 w-4" />
           <span>{project.comments?.length || 0}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setIsShareModalOpen(true)}
-          className="h-10 w-10 rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] flex items-center justify-center"
+          className="h-12 w-12 min-h-[48px] min-w-[48px] rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] flex items-center justify-center"
           title="Share Project"
         >
-          <Share2 className="h-3.5 w-3.5" />
+          <Share2 className="h-4 w-4" />
         </button>
 
         {isAuthor && (
           <Link
             href={`/me/projects/${project.id}`}
-            className="h-10 w-10 rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] hover:bg-[var(--primary-forest-green)] hover:text-white flex items-center justify-center transition-all shrink-0"
+            className="h-12 w-12 min-h-[48px] min-w-[48px] rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] flex items-center justify-center transition-all shrink-0"
             title="Edit Case Study"
           >
-            <Edit3 className="h-3.5 w-3.5" />
+            <Edit3 className="h-4 w-4" />
           </Link>
         )}
 
-        <div className="h-5 w-[1px] bg-[var(--border-neutral)] mx-0.5" />
+        <div className="h-6 w-[1px] bg-[var(--border-neutral)] mx-0.5" />
 
         <Link
           href={`/u/${project.creator.username}`}
-          className="relative h-10 w-10 rounded-full ring-1 ring-[var(--border-neutral)] shrink-0"
+          className="relative h-12 w-12 min-h-[48px] min-w-[48px] rounded-full ring-1 ring-[var(--border-neutral)] shrink-0"
         >
           <div className="relative h-full w-full rounded-full overflow-hidden">
             <Image
-              src={project.creator.avatarUrl}
+              src={getValidAvatarUrl(project.creator.avatarUrl)}
               alt={project.creator.displayName}
               fill
               sizes="40px"
               className="object-cover"
             />
           </div>
-          <OnlineBadge isOnline={project.creator.isOnline} size="sm" className="absolute -bottom-0.5 -right-0.5 z-10" />
+          <OnlineBadge userId={project.creator.id} username={project.creator.username} size="sm" className="absolute -bottom-0.5 -right-0.5 z-10" />
         </Link>
       </div>
 

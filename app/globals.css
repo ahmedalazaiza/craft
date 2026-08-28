@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
 @theme {
   --font-display: var(--font-display), "Bricolage Grotesque", sans-serif;
   --font-sans: var(--font-body), Inter, sans-serif;
@@ -49,6 +51,9 @@
   --color-chip-fg: var(--chip-fg);
   --color-chip-bg-hover: var(--chip-bg-hover);
 
+  --color-sentiment-positive-bg: var(--sentiment-positive-bg);
+  --color-sentiment-positive-fg: var(--sentiment-positive-fg);
+
   --color-tag-cyan: #A0E1E1;
   --color-tag-orange: #FFC091;
   --color-tag-pink: #FFD7EF;
@@ -61,13 +66,13 @@ html[data-theme="light"] {
   --primary-bright-green: #8DFF00;
   --primary-forest-green: #090C09;
 
-  /* Main CTA Button Tokens — identical in Light and Dark */
-  --btn-cta-bg: #8DFF00;
-  --btn-cta-fg: #090C09;
-  --btn-cta-bg-hover: #7AE600;
-  --btn-cta-bg-active: #68CC00;
+  /* Main CTA Button Tokens — mapped to --primary-forest-green with high-contrast text */
+  --btn-cta-bg: var(--primary-forest-green);
+  --btn-cta-fg: #FFFFFF;
+  --btn-cta-bg-hover: #000000;
+  --btn-cta-bg-active: #090C09;
 
-  /* Chip / Badge Tokens — identical in Light and Dark */
+  /* Chip / Badge Tokens */
   --chip-bg: #090C09;
   --chip-fg: #F3F4F0;
   --chip-bg-hover: #000000;
@@ -75,7 +80,7 @@ html[data-theme="light"] {
   /* Content */
   --content-primary: #090C09;
   --content-secondary: #454745;
-  --content-tertiary: #6A6C6A;
+  --content-tertiary: #5A5D5A;
   --content-link: #090C09;
   --content-link-hover: #000000;
   --content-link-active: #090C09;
@@ -110,6 +115,8 @@ html[data-theme="light"] {
 
   /* Sentiment */
   --sentiment-positive: #2F5711;
+  --sentiment-positive-bg: #2F5711;
+  --sentiment-positive-fg: #FFFFFF;
   --sentiment-warning: #EDC843;
   --sentiment-negative: #A8200D;
 
@@ -123,13 +130,13 @@ html[data-theme="dark"] {
   --primary-bright-green: #8DFF00;
   --primary-forest-green: #8DFF00;
 
-  /* Main CTA Button Tokens — identical in Light and Dark */
-  --btn-cta-bg: #8DFF00;
+  /* Main CTA Button Tokens — mapped to neon green with dark text */
+  --btn-cta-bg: var(--primary-forest-green);
   --btn-cta-fg: #090C09;
   --btn-cta-bg-hover: #7AE600;
   --btn-cta-bg-active: #68CC00;
 
-  /* Chip / Badge Tokens — identical in Light and Dark */
+  /* Chip / Badge Tokens */
   --chip-bg: #090C09;
   --chip-fg: #F3F4F0;
   --chip-bg-hover: #000000;
@@ -172,6 +179,8 @@ html[data-theme="dark"] {
 
   /* Sentiment */
   --sentiment-positive: #8DFF00;
+  --sentiment-positive-bg: #8DFF00;
+  --sentiment-positive-fg: #090C09;
   --sentiment-warning: #EDC843;
   --sentiment-negative: #FF6B6B;
 
@@ -211,11 +220,11 @@ h3 {
   font-family: var(--font-display), "Bricolage Grotesque", sans-serif !important;
 }
 
-/* Heading Sizes & Typography Scale */
+/* Heading Sizes & Typography Scale (Strict 8-Point Line-Heights) */
 .type-title-screen,
 .title-screen {
-  font-size: 30px;
-  line-height: 34px;
+  font-size: 32px;
+  line-height: 40px;
   font-weight: 700;
   letter-spacing: -0.025em;
 }
@@ -223,8 +232,8 @@ h3 {
 @media (min-width: 768px) {
   .type-title-screen-lg,
   .title-screen-lg {
-    font-size: 44px;
-    line-height: 48px;
+    font-size: 48px;
+    line-height: 56px;
     font-weight: 700;
     letter-spacing: -0.03em;
   }
@@ -232,7 +241,7 @@ h3 {
 
 .type-title-section,
 .title-section {
-  font-size: 26px;
+  font-size: 24px;
   line-height: 32px;
   font-weight: 600;
   letter-spacing: -0.015em;
@@ -240,10 +249,10 @@ h3 {
 
 .type-title-subsection,
 .title-subsection {
-  font-size: 22px;
-  line-height: 28px;
+  font-size: 20px;
+  line-height: 24px;
   font-weight: 600;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.01em;
 }
 
 .type-title-body,

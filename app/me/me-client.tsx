@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/session-context";
 import { bricolage } from "@/lib/fonts";
 import { ProjectCard } from "@/components/project/project-card";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,7 @@ import {
   X,
   Sparkles,
   Share2,
+  Settings,
   Check,
   FolderKanban,
 } from "lucide-react";
@@ -35,6 +36,8 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { OnlineBadge } from "@/components/ui/online-badge";
 import { CreatorProfileSkeleton } from "@/components/creator/creator-profile-skeleton";
+import { getValidAvatarUrl } from "@/lib/avatar";
+import { LocationInput } from "@/components/ui/location-input";
 
 export function MeClient() {
   const router = useRouter();
@@ -78,11 +81,17 @@ export function MeClient() {
             You must be signed in to access your studio workspace and manage your portfolio projects.
           </p>
           <div className="mt-6 flex justify-center gap-4">
-            <Link href="/login">
-              <Button variant="accent">Log in to continue</Button>
+            <Link
+              href="/login"
+              className={buttonVariants({ variant: "accent" })}
+            >
+              Log in to continue
             </Link>
-            <Link href="/signup">
-              <Button variant="secondary">Create account</Button>
+            <Link
+              href="/signup"
+              className={buttonVariants({ variant: "secondary" })}
+            >
+              Create account
             </Link>
           </div>
         </div>
@@ -145,7 +154,7 @@ export function MeClient() {
                 <div className="relative mb-4">
                   <div className="relative h-28 w-28 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-4 ring-[var(--border-neutral)] shadow-sm">
                     <Image
-                      src={user.avatarUrl}
+                      src={getValidAvatarUrl(user.avatarUrl)}
                       alt={user.displayName}
                       fill
                       sizes="112px"
@@ -197,7 +206,7 @@ export function MeClient() {
                 </div>
               </div>
 
-              {/* Action Buttons: Edit Profile + Share Icon & View Public Profile */}
+              {/* Action Buttons: Edit Profile + Settings + Share Icon & View Public Profile */}
               <div className="space-y-2 pt-2">
                 <div className="flex items-center gap-2.5">
                   <Button
@@ -215,6 +224,19 @@ export function MeClient() {
                     <Edit3 className="h-4 w-4" />
                     <span>Edit Profile</span>
                   </Button>
+
+                  <Link
+                    href="/settings"
+                    className={buttonVariants({
+                      variant: "secondary",
+                      size: "icon",
+                      className: "transition-transform hover:scale-105 active:scale-95",
+                    })}
+                    title="Account Settings"
+                    aria-label="Account Settings"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Link>
 
                   <Button
                     type="button"
@@ -254,29 +276,29 @@ export function MeClient() {
               {/* Metrics Grid */}
               <div className="pt-2 border-t border-[var(--border-neutral)]">
                 <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="p-3 rounded-[16px] bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
+                  <div className="p-4 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
                     <span className="block text-lg font-bold text-[var(--content-primary)]">
                       {publishedProjects.length}
                     </span>
-                    <span className="text-[10px] text-[var(--content-tertiary)] uppercase font-mono">
+                    <span className="text-xs text-[var(--content-tertiary)] uppercase font-mono">
                       Works
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-[16px] bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
+                  <div className="p-4 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
                     <span className="block text-lg font-bold text-[var(--content-primary)]">
                       {totalAppreciations}
                     </span>
-                    <span className="text-[10px] text-[var(--content-tertiary)] uppercase font-mono">
+                    <span className="text-xs text-[var(--content-tertiary)] uppercase font-mono">
                       Hearts
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-[16px] bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
+                  <div className="p-4 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
                     <span className="block text-lg font-bold text-[var(--content-primary)]">
                       {user.followersCount ?? 0}
                     </span>
-                    <span className="text-[10px] text-[var(--content-tertiary)] uppercase font-mono">
+                    <span className="text-xs text-[var(--content-tertiary)] uppercase font-mono">
                       Followers
                     </span>
                   </div>
@@ -335,14 +357,19 @@ export function MeClient() {
                 </button>
               </div>
 
-              {/* + New Project CTA (Only shown when active tab has projects to prevent duplicate empty-state CTAs) */}
+              {/* + New Project CTA (Desktop only to prevent redundancy with mobile bottom nav bar) */}
               {((activeTab === "published" && publishedProjects.length > 0) ||
                 (activeTab === "drafts" && draftProjects.length > 0)) && (
-                <Link href="/me/projects/new">
-                  <Button variant="accent" size="sm" className="gap-2 font-bold shadow-xs">
-                    <Plus className="h-4 w-4" />
-                    <span>New Project</span>
-                  </Button>
+                <Link
+                  href="/me/projects/new"
+                  className={buttonVariants({
+                    variant: "accent",
+                    size: "sm",
+                    className: "hidden sm:inline-flex gap-2 font-bold shadow-xs",
+                  })}
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>New Project</span>
                 </Link>
               )}
             </div>
@@ -360,11 +387,16 @@ export function MeClient() {
                   <p className="mt-1.5 type-body-default text-[var(--content-secondary)] max-w-sm">
                     Publish your first case study or design monograph to showcase your work to the community.
                   </p>
-                  <Link href="/me/projects/new" className="mt-6">
-                    <Button variant="accent" size="default" className="gap-2 font-bold shadow-xs">
-                      <Plus className="h-4 w-4" />
-                      <span>Create First Project</span>
-                    </Button>
+                  <Link
+                    href="/me/projects/new"
+                    className={buttonVariants({
+                      variant: "accent",
+                      size: "default",
+                      className: "mt-6 gap-2 font-bold shadow-xs",
+                    })}
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Create First Project</span>
                   </Link>
                 </div>
               ) : (
@@ -400,11 +432,16 @@ export function MeClient() {
                 <p className="mt-1.5 type-body-default text-[var(--content-secondary)] max-w-sm">
                   Unpublished monographs and works in progress will be saved here safely.
                 </p>
-                <Link href="/me/projects/new" className="mt-6">
-                  <Button variant="secondary" size="default" className="gap-2 font-semibold">
-                    <Plus className="h-4 w-4" />
-                    <span>Start a Draft</span>
-                  </Button>
+                <Link
+                  href="/me/projects/new"
+                  className={buttonVariants({
+                    variant: "secondary",
+                    size: "default",
+                    className: "mt-6 gap-2 font-semibold",
+                  })}
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Start a Draft</span>
                 </Link>
               </div>
             ) : (
@@ -461,13 +498,13 @@ export function MeClient() {
                 </div>
 
                 <div>
-                  <label className="type-body-default-bold text-[var(--content-primary)] block mb-1">
-                    Location / City
-                  </label>
-                  <Input
+                  <LocationInput
                     value={editLocation}
-                    onChange={(e) => setEditLocation(e.target.value)}
+                    onChange={setEditLocation}
+                    label="Location / City"
                     placeholder="e.g. Berlin, Germany"
+                    showPresets={false}
+                    enableAutoDetect={true}
                   />
                 </div>
 

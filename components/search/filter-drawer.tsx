@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ProjectCategory, ProjectMedium } from "@/lib/mock";
+import { ProjectCategory, ProjectMedium } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Badge, FilterChip } from "@/components/ui/badge";
 import { SlidersHorizontal, X, RotateCcw, Check } from "lucide-react";
@@ -130,13 +130,19 @@ export function FilterDrawer({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-[var(--base-dark)]/40 backdrop-blur-xs transition-opacity">
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-stretch justify-center sm:justify-end bg-[var(--base-dark)]/50 backdrop-blur-xs transition-opacity p-0"
+      onClick={onClose}
+    >
       <div
-        className="relative flex h-full w-full max-w-md flex-col bg-[var(--bg-screen)] border-l border-[var(--border-neutral)] shadow-2xl p-6 sm:p-8 overflow-y-auto"
+        className="relative flex max-h-[88vh] sm:max-h-full h-auto sm:h-full w-full max-w-md flex-col rounded-t-[28px] sm:rounded-none bg-[var(--bg-screen)] border-t sm:border-t-0 sm:border-l border-[var(--border-neutral)] shadow-2xl p-5 sm:p-8 overflow-y-auto pb-safe"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Mobile Pull Handle Indicator */}
+        <div className="w-12 h-1 rounded-full bg-[var(--border-neutral)] mx-auto mb-3 sm:hidden shrink-0" />
+
         {/* Header */}
-        <div className="flex items-center justify-between pb-5 border-b border-[var(--border-neutral)]">
+        <div className="flex items-center justify-between pb-4 sm:pb-5 border-b border-[var(--border-neutral)] shrink-0">
           <div className="flex items-center gap-2.5">
             <SlidersHorizontal className="h-5 w-5 text-[var(--primary-forest-green)]" />
             <h2 className="type-title-subsection text-[var(--content-primary)]">

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/session-context";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { FadeIn } from "@/components/ui/motion-wrapper";
@@ -242,11 +242,15 @@ export function SignupClient() {
                   )}
                 </Button>
 
-                <Link href="/me" className="block w-full">
-                  <Button variant="accent" className="w-full font-bold shadow-xs gap-2">
-                    <span>Continue to My Profile</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
+                <Link
+                  href="/me"
+                  className={buttonVariants({
+                    variant: "accent",
+                    className: "w-full font-bold shadow-xs gap-2",
+                  })}
+                >
+                  <span>Continue to My Profile</span>
+                  <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
 

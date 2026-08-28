@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Project, Creator, getProjectBySlug, getCreatorByUsername } from "./mock";
+import { Project, Creator } from "./types";
 
 export const SITE_NAME = "Craft";
 

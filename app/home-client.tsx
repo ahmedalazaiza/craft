@@ -5,9 +5,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "@/lib/session-context";
 import { bricolage } from "@/lib/fonts";
-import { mockUsers } from "@/lib/mock";
 import { ProjectCard } from "@/components/project/project-card";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { DEFAULT_AVATAR_URL, getValidAvatarUrl } from "@/lib/avatar";
 import {
   ScrollRevealSection,
   StaggerGridItem,
@@ -28,69 +28,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Distinct studio cards for the dual vertical kinetic streams
-const STREAM_COLUMN_A = [
-  {
-    creator: mockUsers[0], // Elena Vance
-    tag: "Brand Systems",
-    city: "Berlin, DE",
-    artifact: "Incised Grotesque Type",
-    stat: "14 Case Studies",
-  },
-  {
-    creator: mockUsers[2], // Maya Lin
-    tag: "3D & Architecture",
-    city: "London, UK",
-    artifact: "Brutalist Concrete Space",
-    stat: "9 Case Studies",
-  },
-  {
-    creator: mockUsers[4], // Sophia Chen
-    tag: "Industrial Hardware",
-    city: "New York, USA",
-    artifact: "Tactile Modular Synth",
-    stat: "12 Case Studies",
-  },
-  {
-    creator: mockUsers[0], // Loop duplicate for infinite feel
-    tag: "Spatial Identity",
-    city: "Berlin, DE",
-    artifact: "Sanctuary Monograph",
-    stat: "14 Case Studies",
-  },
-];
-
-const STREAM_COLUMN_B = [
-  {
-    creator: mockUsers[1], // Kai Sato
-    tag: "UI Interfaces",
-    city: "Tokyo, JP",
-    artifact: "Aurora High-Density OS",
-    stat: "18 Case Studies",
-  },
-  {
-    creator: mockUsers[3], // Marcus Keller
-    tag: "Editorial & Print",
-    city: "Zurich, CH",
-    artifact: "Risograph Monographs",
-    stat: "8 Case Studies",
-  },
-  {
-    creator: mockUsers[5], // David Nordström
-    tag: "Timber Craft",
-    city: "Stockholm, SE",
-    artifact: "Passive Acoustic Pavilion",
-    stat: "11 Case Studies",
-  },
-  {
-    creator: mockUsers[1], // Loop duplicate for infinite feel
-    tag: "Creative Code",
-    city: "Tokyo, JP",
-    artifact: "Generative Shaders",
-    stat: "18 Case Studies",
-  },
-];
-
 const FEATURE_POINTS = [
   {
     num: "01",
@@ -110,12 +47,45 @@ const FEATURE_POINTS = [
 ];
 
 export function HomeClient() {
-  const { projects } = useSession();
+  const { projects, creators } = useSession();
   const shouldReduceMotion = useReducedMotion();
 
   const publishedProjects = useMemo(() => {
     return projects.filter((p) => p.published);
   }, [projects]);
+
+  const streamColumnA = useMemo(() => {
+    if (creators.length === 0) return [];
+    const half = Math.max(1, Math.ceil(creators.length / 2));
+    const subset = creators.slice(0, half);
+    return subset.map((c) => {
+      const topProj = projects.find((p) => p.creator.id === c.id || p.creator.username === c.username);
+      return {
+        creator: c,
+        tag: c.skills[0] || "Brand Systems",
+        city: c.city || c.location || "Earth",
+        artifact: topProj?.title || `${c.displayName}'s Studio`,
+        stat: `${projects.filter((p) => p.creator.id === c.id || p.creator.username === c.username).length} Works`,
+      };
+    });
+  }, [creators, projects]);
+
+  const streamColumnB = useMemo(() => {
+    if (creators.length === 0) return [];
+    const half = Math.max(1, Math.ceil(creators.length / 2));
+    const subset = creators.length > 1 ? creators.slice(half) : creators;
+    return subset.map((c) => {
+      const topProj = projects.find((p) => p.creator.id === c.id || p.creator.username === c.username);
+      return {
+        creator: c,
+        tag: c.skills[0] || "UI Interfaces",
+        city: c.city || c.location || "Earth",
+        artifact: topProj?.title || `${c.displayName}'s Studio`,
+        stat: `${projects.filter((p) => p.creator.id === c.id || p.creator.username === c.username).length} Works`,
+      };
+    });
+  }, [creators, projects]);
+
 
   // Curated Featured (4 items)
   const featuredProjects = useMemo(() => {
@@ -179,15 +149,15 @@ export function HomeClient() {
         <div className="mx-auto max-w-[1580px] px-4 sm:px-6 w-full z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-14 items-center">
             {/* =================================================================== */}
-            {/* LEFT COLUMN: Editorial Typography & Manifesto (7 cols)               */}
+            {/* LEFT COLUMN: Editorial Typography & Manifesto (7 cols on desktop)     */}
             {/* =================================================================== */}
-            <div className="lg:col-span-7 flex flex-col justify-center max-w-2xl">
+            <div className="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left justify-center max-w-2xl mx-auto lg:mx-0 w-full">
               {/* Eyebrow Pill */}
               <motion.div
                 initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, ease: MOTION_EASE }}
-                className="inline-flex items-center gap-2 rounded-full bg-[var(--chip-bg)] px-3.5 py-1 text-xs font-semibold text-[var(--chip-fg)] mb-6 sm:mb-8 w-fit shadow-xs border border-white/10"
+                className="inline-flex items-center gap-2 rounded-full bg-[var(--chip-bg)] px-3.5 py-1 text-xs font-semibold text-[var(--chip-fg)] mb-6 sm:mb-8 w-fit shadow-xs border border-white/10 mx-auto lg:mx-0 select-none"
               >
                 <Sparkles className="h-3.5 w-3.5 text-[#8DFF00]" />
                 <span>Craft Platform</span>
@@ -199,12 +169,12 @@ export function HomeClient() {
               <h1
                 className={cn(
                   bricolage.className,
-                  "text-5xl sm:text-6xl md:text-7xl lg:text-[74px] xl:text-[84px] font-black tracking-[-0.04em] leading-[0.98] text-[var(--primary-forest-green)]"
+                  "text-[40px] sm:text-6xl md:text-7xl lg:text-[72px] xl:text-[80px] font-black tracking-[-0.04em] leading-[1.02] sm:leading-[0.98] text-[var(--primary-forest-green)] text-center lg:text-left w-full flex flex-col items-center lg:items-start"
                 )}
               >
-                <span className="block overflow-hidden">
+                <span className="block w-full text-center lg:text-left overflow-hidden">
                   <motion.span
-                    className="block text-[var(--primary-forest-green)]"
+                    className="inline-block text-[var(--primary-forest-green)] text-center lg:text-left"
                     initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: "100%" }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{
@@ -213,13 +183,13 @@ export function HomeClient() {
                       ease: MOTION_EASE,
                     }}
                   >
-                    Showcase your work<span className="text-[#8DFF00] font-black">.</span>
+                    Showcase your work<span className="text-[var(--accent)] font-black">.</span>
                   </motion.span>
                 </span>
 
-                <span className="block overflow-hidden mt-1.5 sm:mt-2.5">
+                <span className="flex items-center justify-center lg:justify-start w-full overflow-hidden mt-1 sm:mt-2.5">
                   <motion.span
-                    className="inline-flex flex-wrap items-baseline gap-2.5 sm:gap-3.5 text-[var(--content-primary)]"
+                    className="inline-flex flex-wrap items-baseline justify-center lg:justify-start gap-2 sm:gap-3.5 text-[var(--content-primary)] text-center lg:text-left"
                     initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: "100%" }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{
@@ -229,9 +199,9 @@ export function HomeClient() {
                     }}
                   >
                     <span>Connect with</span>
-                    <span className="relative inline-flex items-center px-3.5 sm:px-4 py-0.5 sm:py-1 rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] font-black text-4xl sm:text-5xl md:text-6xl lg:text-[68px] xl:text-[78px] shadow-sm border border-white/10 align-middle">
+                    <span className="relative inline-flex items-center px-3 sm:px-4 py-0.5 sm:py-1 rounded-xl sm:rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] font-black text-3xl sm:text-4xl md:text-5xl lg:text-[68px] xl:text-[78px] shadow-sm border border-white/10 align-middle">
                       <span>makers</span>
-                      <span className="text-[#8DFF00] ml-0.5">.</span>
+                      <span className="text-[var(--accent)] ml-0.5">.</span>
                     </span>
                   </motion.span>
                 </span>
@@ -246,7 +216,7 @@ export function HomeClient() {
                   delay: shouldReduceMotion ? 0 : 0.28,
                   ease: MOTION_EASE,
                 }}
-                className="mt-6 sm:mt-8 text-lg sm:text-xl text-[var(--content-secondary)] max-w-xl leading-relaxed font-normal"
+                className="mt-6 sm:mt-8 text-base sm:text-xl text-[var(--content-secondary)] max-w-xl leading-relaxed font-normal text-center lg:text-left mx-auto lg:mx-0"
               >
                 A modern portfolio platform to publish your projects, build your studio profile, and discover inspiring work from designers worldwide.
               </motion.p>
@@ -260,18 +230,28 @@ export function HomeClient() {
                   delay: shouldReduceMotion ? 0 : 0.38,
                   ease: MOTION_EASE,
                 }}
-                className="mt-8 sm:mt-10 flex flex-wrap items-center gap-4"
+                className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 w-full sm:w-auto mx-auto lg:mx-0 max-w-md sm:max-w-none"
               >
-                <Link href="/explore">
-                  <Button variant="accent" size="lg" className="gap-2 shadow-sm">
-                    <span>Explore Projects</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
+                <Link
+                  href="/explore"
+                  className={buttonVariants({
+                    variant: "accent",
+                    size: "lg",
+                    className: "w-full sm:w-auto gap-2 shadow-sm font-bold justify-center",
+                  })}
+                >
+                  <span>Explore Projects</span>
+                  <ArrowRight className="h-4 w-4" />
                 </Link>
-                <Link href="/signup">
-                  <Button variant="secondary" size="lg">
-                    Join as a Creator
-                  </Button>
+                <Link
+                  href="/signup"
+                  className={buttonVariants({
+                    variant: "secondary",
+                    size: "lg",
+                    className: "w-full sm:w-auto font-semibold justify-center",
+                  })}
+                >
+                  Join as a Creator
                 </Link>
               </motion.div>
 
@@ -280,18 +260,18 @@ export function HomeClient() {
                 initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.6, delay: shouldReduceMotion ? 0 : 0.48 }}
-                className="mt-10 pt-8 border-t border-[var(--border-neutral)] grid grid-cols-1 sm:grid-cols-3 gap-5"
+                className="mt-8 pt-8 border-t border-[var(--border-neutral)] grid grid-cols-1 sm:grid-cols-3 gap-6 w-full text-center sm:text-left"
               >
                 {FEATURE_POINTS.map((pt) => (
-                  <div key={pt.num} className="space-y-1.5">
-                    <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] px-2.5 py-0.5 text-[11px] font-mono font-bold tracking-wider">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#8DFF00]" />
+                  <div key={pt.num} className="space-y-2 flex flex-col items-center sm:items-start text-center sm:text-left">
+                    <div className="inline-flex items-center gap-2 rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] px-3 py-1 text-xs font-mono font-bold tracking-wider">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
                       <span>{pt.num}</span>
                     </div>
                     <div className="text-xs font-bold text-[var(--content-primary)]">
                       {pt.title}
                     </div>
-                    <p className="text-[11px] text-[var(--content-tertiary)] leading-normal">
+                    <p className="text-xs text-[var(--content-tertiary)] leading-normal">
                       {pt.desc}
                     </p>
                   </div>
@@ -300,9 +280,9 @@ export function HomeClient() {
             </div>
 
             {/* =================================================================== */}
-            {/* RIGHT COLUMN: Kinetic Dual-Column Creator Stream (5 cols)             */}
+            {/* RIGHT COLUMN: Kinetic Dual-Column Creator Stream (Desktop only)       */}
             {/* =================================================================== */}
-            <div className="lg:col-span-5 relative flex justify-center h-[460px] sm:h-[520px] overflow-hidden rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-elevated)]/60 backdrop-blur-md p-4 shadow-[0_20px_50px_rgba(9,12,9,0.06)]">
+            <div className="hidden lg:flex lg:col-span-5 relative justify-center h-[460px] sm:h-[520px] overflow-hidden rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-elevated)]/60 backdrop-blur-md p-4 shadow-[0_20px_50px_rgba(9,12,9,0.06)]">
               {/* Vertical Gradient Fade Masks (Top and Bottom) */}
               <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-[var(--bg-elevated)] to-transparent z-20" />
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[var(--bg-elevated)] to-transparent z-20" />
@@ -326,7 +306,7 @@ export function HomeClient() {
                     }}
                     className="flex flex-col gap-3.5"
                   >
-                    {[...STREAM_COLUMN_A, ...STREAM_COLUMN_A].map((item, idx) => (
+                    {[...streamColumnA, ...streamColumnA].map((item, idx) => (
                       <Link
                         key={idx}
                         href={`/u/${item.creator.username}`}
@@ -335,7 +315,7 @@ export function HomeClient() {
                         <div className="flex items-center gap-2.5 mb-2.5">
                           <div className="relative h-7 w-7 rounded-full overflow-hidden ring-1 ring-[var(--border-neutral)] shrink-0">
                             <Image
-                              src={item.creator.avatarUrl}
+                              src={getValidAvatarUrl(item.creator.avatarUrl)}
                               alt={item.creator.displayName}
                               fill
                               sizes="28px"
@@ -390,7 +370,7 @@ export function HomeClient() {
                     }}
                     className="flex flex-col gap-3.5"
                   >
-                    {[...STREAM_COLUMN_B, ...STREAM_COLUMN_B].map((item, idx) => (
+                    {[...streamColumnB, ...streamColumnB].map((item, idx) => (
                       <Link
                         key={idx}
                         href={`/u/${item.creator.username}`}
@@ -399,7 +379,7 @@ export function HomeClient() {
                         <div className="flex items-center gap-2.5 mb-2.5">
                           <div className="relative h-7 w-7 rounded-full overflow-hidden ring-1 ring-[var(--border-neutral)] shrink-0">
                             <Image
-                              src={item.creator.avatarUrl}
+                              src={getValidAvatarUrl(item.creator.avatarUrl)}
                               alt={item.creator.displayName}
                               fill
                               sizes="28px"
@@ -416,6 +396,7 @@ export function HomeClient() {
                             </div>
                           </div>
                         </div>
+
 
                         <div className="p-2 rounded-[10px] bg-[var(--bg-neutral)] text-left mb-2">
                           <span className="block text-[10px] font-mono uppercase text-[var(--content-tertiary)]">
@@ -477,7 +458,7 @@ export function HomeClient() {
             </div>
             <Link
               href="/explore"
-              className="hidden sm:inline-flex items-center gap-1.5 type-body-default font-medium text-[var(--content-link)] hover:text-[var(--content-link-hover)]"
+              className="inline-flex items-center gap-1.5 type-body-default font-medium text-[var(--content-link)] hover:text-[var(--content-link-hover)] shrink-0 text-xs sm:text-sm"
             >
               <span>View all</span>
               <ArrowRight className="h-3.5 w-3.5" />
@@ -521,7 +502,7 @@ export function HomeClient() {
             </div>
             <Link
               href="/explore?category=UI"
-              className="hidden sm:inline-flex items-center gap-1.5 type-body-default font-medium text-[var(--content-link)] hover:text-[var(--content-link-hover)]"
+              className="inline-flex items-center gap-1.5 type-body-default font-medium text-[var(--content-link)] hover:text-[var(--content-link-hover)] shrink-0 text-xs sm:text-sm"
             >
               <span>Explore UI</span>
               <ArrowRight className="h-3.5 w-3.5" />
@@ -565,7 +546,7 @@ export function HomeClient() {
             </div>
             <Link
               href="/explore?category=Brand"
-              className="hidden sm:inline-flex items-center gap-1.5 type-body-default font-medium text-[var(--content-link)] hover:text-[var(--content-link-hover)]"
+              className="inline-flex items-center gap-1.5 type-body-default font-medium text-[var(--content-link)] hover:text-[var(--content-link-hover)] shrink-0 text-xs sm:text-sm"
             >
               <span>Explore Branding</span>
               <ArrowRight className="h-3.5 w-3.5" />
@@ -609,7 +590,7 @@ export function HomeClient() {
             </div>
             <Link
               href="/explore?category=Architecture"
-              className="hidden sm:inline-flex items-center gap-1.5 type-body-default font-medium text-[var(--content-link)] hover:text-[var(--content-link-hover)]"
+              className="inline-flex items-center gap-1.5 type-body-default font-medium text-[var(--content-link)] hover:text-[var(--content-link-hover)] shrink-0 text-xs sm:text-sm"
             >
               <span>Explore Architecture</span>
               <ArrowRight className="h-3.5 w-3.5" />
@@ -630,7 +611,7 @@ export function HomeClient() {
       {/* HIGH-CONVERSION CREATOR CTA SECTION (2 Columns with Visual Card)          */}
       {/* ========================================================================= */}
       <ScrollRevealSection className="mx-auto max-w-[1580px] px-4 sm:px-6 w-full pt-4">
-        <div className="relative rounded-[32px] bg-[var(--base-dark)] text-white border border-white/10 p-8 sm:p-12 lg:p-14 overflow-hidden shadow-[0_24px_64px_rgba(9,12,9,0.18)]">
+        <div className="relative rounded-[32px] bg-[var(--base-dark)] text-white border border-white/10 p-8 sm:p-12 lg:p-14 overflow-hidden shadow-[0_24px_64px_rgba(9,12,9,0.18)] dark:shadow-none">
           {/* Ambient Glows */}
           <div className="pointer-events-none absolute -right-20 -top-20 h-96 w-96 rounded-full bg-[#8DFF00]/15 blur-[120px]" />
           <div className="pointer-events-none absolute -left-20 -bottom-20 h-96 w-96 rounded-full bg-[var(--primary-forest-green)]/40 blur-[120px]" />
@@ -680,24 +661,26 @@ export function HomeClient() {
 
               {/* CTA Buttons */}
               <div className="mt-8 flex flex-wrap items-center gap-4">
-                <Link href="/signup">
-                  <Button
-                    variant="accent"
-                    size="lg"
-                    className="gap-2 font-bold shadow-lg"
-                  >
-                    <span>Join as a Creator</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
+                <Link
+                  href="/signup"
+                  className={buttonVariants({
+                    variant: "accent",
+                    size: "lg",
+                    className: "gap-2 font-bold shadow-lg",
+                  })}
+                >
+                  <span>Join as a Creator</span>
+                  <ArrowRight className="h-4 w-4" />
                 </Link>
-                <Link href="/explore">
-                  <Button
-                    variant="secondary"
-                    size="lg"
-                    className="bg-white/10 hover:bg-white/20 text-white border-white/20"
-                  >
-                    Explore All Projects
-                  </Button>
+                <Link
+                  href="/explore"
+                  className={buttonVariants({
+                    variant: "secondary",
+                    size: "lg",
+                    className: "bg-white/10 hover:bg-white/20 text-white border-white/20 font-semibold",
+                  })}
+                >
+                  Explore All Projects
                 </Link>
               </div>
             </div>
@@ -705,84 +688,87 @@ export function HomeClient() {
             {/* Right Column: Visual Case Study Showcase Card & Creator Pile (5 cols) */}
             <div className="lg:col-span-5 relative flex flex-col items-center lg:items-end justify-center">
               {/* Main Floating Monograph Showcase Card */}
-              <div className="w-full max-w-md rounded-[24px] bg-white/10 backdrop-blur-xl border border-white/20 p-4 shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-transform hover:scale-[1.02] duration-300">
-                {/* Creator Header */}
-                <div className="flex items-center justify-between gap-3 mb-3 pb-3 border-b border-white/10">
-                  <div className="flex items-center gap-2.5">
-                    <div className="relative h-8 w-8 rounded-full overflow-hidden ring-1 ring-white/30 shrink-0">
-                      <Image
-                        src={mockUsers[0].avatarUrl}
-                        alt={mockUsers[0].displayName}
-                        fill
-                        sizes="32px"
-                        className="object-cover"
-                      />
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-white flex items-center gap-1">
-                        <span>{mockUsers[0].displayName}</span>
-                        <CheckCircle2 className="h-3 w-3 text-[#8DFF00]" />
-                      </div>
-                      <div className="text-[10px] text-white/70">
-                        {mockUsers[0].location}
-                      </div>
-                    </div>
-                  </div>
-
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#8DFF00]/20 text-[#8DFF00] px-2.5 py-0.5 text-[10px] font-mono font-bold border border-[#8DFF00]/30">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#8DFF00]" />
-                    Featured Monograph
-                  </span>
-                </div>
-
-                {/* Case Study Image Preview */}
-                <div className="relative w-full aspect-[16/10] rounded-[16px] overflow-hidden bg-black/40 mb-3 group">
-                  <Image
-                    src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop&q=80"
-                    alt="Sanctuary Monograph"
-                    fill
-                    sizes="400px"
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80" />
-                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-white">
-                    <span className="font-bold truncate">
-                      Sanctuary: Spatial Identity
-                    </span>
-                    <span className="text-[11px] text-[#8DFF00] font-mono shrink-0">
-                      ♥ 248
-                    </span>
-                  </div>
-                </div>
-
-                {/* Card Footer Stack & Community Stats */}
-                <div className="flex items-center justify-between pt-1 text-xs">
-                  <div className="flex items-center -space-x-2">
-                    {mockUsers.slice(0, 4).map((u) => (
-                      <div
-                        key={u.id}
-                        className="relative h-6 w-6 rounded-full overflow-hidden ring-2 ring-[var(--base-dark)]"
-                      >
+              {(featuredProjects[0] || publishedProjects[0]) && (
+                <div className="w-full max-w-md rounded-[24px] bg-white/10 backdrop-blur-xl border border-white/20 p-4 shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-transform hover:scale-[1.02] duration-300">
+                  {/* Creator Header */}
+                  <div className="flex items-center justify-between gap-3 mb-3 pb-3 border-b border-white/10">
+                    <div className="flex items-center gap-2.5">
+                      <div className="relative h-8 w-8 rounded-full overflow-hidden ring-1 ring-white/30 shrink-0">
                         <Image
-                          src={u.avatarUrl}
-                          alt={u.displayName}
+                          src={getValidAvatarUrl((featuredProjects[0] || publishedProjects[0]).creator.avatarUrl)}
+                          alt={(featuredProjects[0] || publishedProjects[0]).creator.displayName}
                           fill
-                          sizes="24px"
+                          sizes="32px"
                           className="object-cover"
                         />
                       </div>
-                    ))}
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#8DFF00] text-[9px] font-black text-[#090C09] ring-2 ring-[var(--base-dark)]">
-                      +1.2k
+                      <div>
+                        <div className="text-xs font-bold text-white flex items-center gap-1">
+                          <span>{(featuredProjects[0] || publishedProjects[0]).creator.displayName}</span>
+                          <CheckCircle2 className="h-3 w-3 text-[#8DFF00]" />
+                        </div>
+                        <div className="text-[10px] text-white/70">
+                          {(featuredProjects[0] || publishedProjects[0]).creator.location || (featuredProjects[0] || publishedProjects[0]).creator.city || "Earth"}
+                        </div>
+                      </div>
                     </div>
+
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#8DFF00]/20 text-[#8DFF00] px-2.5 py-0.5 text-[10px] font-mono font-bold border border-[#8DFF00]/30">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#8DFF00]" />
+                      Featured Monograph
+                    </span>
                   </div>
 
-                  <span className="text-[11px] text-white/80 font-medium">
-                    Verified Makers Worldwide
-                  </span>
+                  {/* Case Study Image Preview */}
+                  <Link href={`/project/${(featuredProjects[0] || publishedProjects[0]).slug}`} className="block relative w-full aspect-[16/10] rounded-[16px] overflow-hidden bg-black/40 mb-3 group">
+                    <Image
+                      src={(featuredProjects[0] || publishedProjects[0]).coverImage}
+                      alt={(featuredProjects[0] || publishedProjects[0]).title}
+                      fill
+                      sizes="400px"
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80" />
+                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-white">
+                      <span className="font-bold truncate">
+                        {(featuredProjects[0] || publishedProjects[0]).title}
+                      </span>
+                      <span className="text-[11px] text-[#8DFF00] font-mono shrink-0">
+                        ♥ {(featuredProjects[0] || publishedProjects[0]).appreciations}
+                      </span>
+                    </div>
+                  </Link>
+
+                  {/* Card Footer Stack & Community Stats */}
+                  <div className="flex items-center justify-between pt-1 text-xs">
+                    <div className="flex items-center -space-x-2">
+                      {creators.slice(0, 4).map((u) => (
+                        <div
+                          key={u.id}
+                          className="relative h-6 w-6 rounded-full overflow-hidden ring-2 ring-[var(--base-dark)]"
+                        >
+                          <Image
+                            src={getValidAvatarUrl(u.avatarUrl)}
+                            alt={u.displayName}
+                            fill
+                            sizes="24px"
+                            className="object-cover"
+                          />
+                        </div>
+                      ))}
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#8DFF00] text-[9px] font-black text-[#090C09] ring-2 ring-[var(--base-dark)]">
+                        +{creators.length > 0 ? creators.length : 1}
+                      </div>
+                    </div>
+
+                    <span className="text-[11px] text-white/80 font-medium">
+                      Verified Makers Worldwide
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
+
           </div>
         </div>
       </ScrollRevealSection>

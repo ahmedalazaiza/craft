@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { FadeIn } from "@/components/ui/motion-wrapper";
@@ -189,11 +189,15 @@ export function ForgotPasswordClient() {
                   )}
                 </Button>
 
-                <Link href="/login" className="block w-full">
-                  <Button variant="ghost" className="w-full font-semibold gap-2 text-xs">
-                    <ArrowLeft className="h-4 w-4" />
-                    <span>Return to log in</span>
-                  </Button>
+                <Link
+                  href="/login"
+                  className={buttonVariants({
+                    variant: "ghost",
+                    className: "w-full font-semibold gap-2 text-xs",
+                  })}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  <span>Return to log in</span>
                 </Link>
               </div>
             </CardContent>

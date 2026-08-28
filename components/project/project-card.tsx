@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Project } from "@/lib/mock";
+import { Project } from "@/lib/types";
 import { MotionCardWrapper } from "@/components/ui/motion-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { AppreciationButton } from "@/components/project/appreciation-button";
@@ -13,6 +13,7 @@ import { Share2, Edit3 } from "lucide-react";
 import { ShareModal } from "@/components/ui/share-modal";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { OnlineBadge } from "@/components/ui/online-badge";
+import { getValidAvatarUrl } from "@/lib/avatar";
 import { cn } from "@/lib/utils";
 
 interface ProjectCardProps {
@@ -54,7 +55,7 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
       <MotionCardWrapper className={className}>
         <div
           onClick={handleCardClick}
-          className="group flex flex-col h-full rounded-[20px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] overflow-hidden transition-all duration-200 hover:shadow-[0_8px_30px_rgba(14,15,12,0.06)] cursor-pointer select-none"
+          className="group flex flex-col h-full rounded-[20px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] overflow-hidden transition-all duration-200 hover:shadow-[0_8px_30px_rgba(14,15,12,0.06)] dark:hover:shadow-none dark:hover:border-[var(--content-primary)]/40 cursor-pointer select-none"
         >
           {/* Dominant 4:3 Cover Image */}
           <div className="relative aspect-[4/3] w-full overflow-hidden bg-[var(--bg-neutral)] block">
@@ -83,7 +84,7 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
                     e.stopPropagation();
                     router.push(`/me/projects/${liveProject.id}`);
                   }}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--bg-elevated)]/90 backdrop-blur-xs text-[var(--content-primary)] hover:bg-[var(--primary-forest-green)] hover:text-white transition-all shadow-xs cursor-pointer border border-[var(--border-neutral)]"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--bg-elevated)]/90 backdrop-blur-xs text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] transition-all shadow-xs cursor-pointer border border-[var(--border-neutral)]"
                   title="Edit case study"
                 >
                   <Edit3 className="h-3.5 w-3.5" />
@@ -108,7 +109,7 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
           </div>
 
           {/* Content Area */}
-          <div className="flex flex-1 flex-col justify-between p-4 sm:p-5">
+          <div className="flex flex-1 flex-col justify-between p-4 sm:p-6">
             <div>
               <h3 className="type-title-body line-clamp-1 text-[var(--content-primary)] group-hover:text-[var(--primary-forest-green)] transition-colors">
                 {liveProject.title}
@@ -126,13 +127,14 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
               >
                 <div className="relative h-7 w-7 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-1 ring-[var(--border-neutral)] shrink-0">
                   <Image
-                    src={liveProject.creator.avatarUrl}
+                    src={getValidAvatarUrl(liveProject.creator.avatarUrl)}
                     alt={liveProject.creator.displayName}
                     fill
                     sizes="28px"
                     className="object-cover"
                   />
-                  <OnlineBadge isOnline={liveProject.creator.isOnline} size="sm" className="absolute -bottom-0.5 -right-0.5 z-10" />
+                  <OnlineBadge userId={liveProject.creator.id} username={liveProject.creator.username} size="sm" className="absolute -bottom-0.5 -right-0.5 z-10" />
+
                 </div>
                 <div className="flex items-center gap-1 min-w-0">
                   <span className="type-title-group text-[var(--content-primary)] group-hover/creator:text-[var(--primary-forest-green)] transition-colors truncate max-w-[130px] sm:max-w-[150px]">

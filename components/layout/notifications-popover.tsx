@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "@/lib/session-context";
-import { NotificationType } from "@/lib/mock";
+import { NotificationType } from "@/lib/types";
 import {
   Bell,
   Check,
@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getValidAvatarUrl } from "@/lib/avatar";
 import { cn } from "@/lib/utils";
 
 export function NotificationsPopover() {
@@ -56,26 +57,26 @@ export function NotificationsPopover() {
   const getNotificationIcon = (type: NotificationType) => {
     switch (type) {
       case "appreciation":
-        return <Heart className="h-3 w-3 text-[#090C09] fill-[#090C09]" />;
+        return <Heart className="h-3 w-3 text-[var(--primary-forest-green)] fill-[var(--primary-forest-green)]" />;
       case "comment":
         return <MessageSquare className="h-3 w-3 text-white fill-white" />;
       case "follow":
-        return <UserPlus className="h-3 w-3 text-[#090C09]" />;
+        return <UserPlus className="h-3 w-3 text-[var(--primary-forest-green)]" />;
       case "publish":
-        return <Sparkles className="h-3 w-3 text-[#090C09]" />;
+        return <Sparkles className="h-3 w-3 text-[var(--primary-forest-green)]" />;
     }
   };
 
   const getNotificationIconBg = (type: NotificationType) => {
     switch (type) {
       case "appreciation":
-        return "bg-[#8DFF00]";
+        return "bg-[var(--accent)]";
       case "comment":
         return "bg-[var(--chip-bg)]";
       case "follow":
-        return "bg-[#8DFF00]";
+        return "bg-[var(--accent)]";
       case "publish":
-        return "bg-[#8DFF00]";
+        return "bg-[var(--accent)]";
     }
   };
 
@@ -96,7 +97,7 @@ export function NotificationsPopover() {
       >
         <Bell className="h-4 w-4" />
         {unreadNotificationsCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#8DFF00] px-1 text-[10px] font-black text-[#090C09] ring-2 ring-[var(--bg-screen)] shadow-xs">
+          <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--accent)] px-1 text-[10px] font-black text-[var(--primary-forest-green)] ring-2 ring-[var(--bg-screen)] shadow-xs">
             {unreadNotificationsCount}
           </span>
         )}
@@ -217,7 +218,7 @@ export function NotificationsPopover() {
                     <div className="relative shrink-0">
                       <div className="relative h-10 w-10 rounded-full overflow-hidden ring-1 ring-[var(--border-neutral)]">
                         <Image
-                          src={notif.actor.avatarUrl}
+                          src={getValidAvatarUrl(notif.actor.avatarUrl)}
                           alt={notif.actor.displayName}
                           fill
                           sizes="40px"
@@ -319,7 +320,7 @@ export function NotificationsPopover() {
 
                     {/* Unread indicator */}
                     {!notif.read && (
-                      <span className="h-2 w-2 rounded-full bg-[#8DFF00] shrink-0 self-center shadow-xs" />
+                      <span className="h-2 w-2 rounded-full bg-[var(--accent)] shrink-0 self-center shadow-xs" />
                     )}
                   </div>
                 ))

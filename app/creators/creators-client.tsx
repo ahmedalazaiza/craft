@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import { useSession } from "@/lib/session-context";
 import { bricolage } from "@/lib/fonts";
 import { CreatorListItem } from "@/components/creator/creator-list-item";
+import { CreatorGridSkeleton } from "@/components/creator/creator-grid-skeleton";
 import { SearchField } from "@/components/search/search-field";
 import { FilterDrawer, CreatorFilters } from "@/components/search/filter-drawer";
 import { FilterChip } from "@/components/ui/badge";
@@ -24,7 +25,8 @@ const QUICK_DISCIPLINES = [
 ];
 
 export function CreatorsClient() {
-  const { creators, projects } = useSession();
+  const { creators, projects, isLoadingDb } = useSession();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filters, setFilters] = useState<CreatorFilters>({
@@ -81,15 +83,45 @@ export function CreatorsClient() {
   // Distinct cities count for directory stats
   const uniqueCitiesCount = new Set(creators.map((u) => u.city)).size;
 
+  if (isLoadingDb && creators.length === 0) {
+    return (
+      <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-4 sm:py-6 space-y-6 animate-pulse">
+        <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Creators" }]} />
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-8 border-b border-[var(--border-neutral)] mb-8">
+          <div className="space-y-3 max-w-2xl">
+            <div className="h-6 w-36 rounded-full bg-[var(--bg-neutral)]" />
+            <div className="h-10 sm:h-12 w-80 max-w-full rounded-2xl bg-[var(--bg-neutral)]" />
+            <div className="h-4 w-full max-w-xl rounded-full bg-[var(--bg-neutral)]/70" />
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="h-14 w-36 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]" />
+            <div className="h-14 w-36 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]" />
+          </div>
+        </div>
+        <div className="space-y-4 mb-6">
+          <div className="h-12 w-full rounded-2xl bg-[var(--bg-neutral)]" />
+          <div className="flex items-center gap-2 overflow-hidden pb-3 border-b border-[var(--border-neutral)]">
+            {["w-14", "w-32", "w-28", "w-28", "w-24", "w-32", "w-28"].map((w, idx) => (
+              <div key={idx} className={`h-8 ${w} shrink-0 rounded-full bg-[var(--bg-neutral)]/70`} />
+            ))}
+          </div>
+        </div>
+        <CreatorGridSkeleton count={6} />
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-4 sm:py-6">
       <FadeIn>
         {/* Breadcrumbs Navigation */}
         <Breadcrumbs
           items={[
-            { label: "Creators Directory", isCurrent: true },
+            { label: "Home", href: "/" },
+            { label: "Creators" },
           ]}
         />
+
 
         {/* ========================================================================= */}
         {/* UNIFIED BALANCED HEADER (Title & Description on Left + Stats on Right)   */}

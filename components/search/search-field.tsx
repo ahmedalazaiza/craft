@@ -5,10 +5,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/session-context";
-import { mockUsers, Project, Creator } from "@/lib/mock";
+import { Project, Creator } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, SlidersHorizontal, ArrowRight, User, FolderKanban, X } from "lucide-react";
+import { getValidAvatarUrl } from "@/lib/avatar";
 import { cn } from "@/lib/utils";
 
 interface SearchFieldProps {
@@ -35,7 +36,7 @@ export function SearchField({
   autoFocus = false,
 }: SearchFieldProps) {
   const router = useRouter();
-  const { projects } = useSession();
+  const { projects, creators } = useSession();
 
   const [query, setQuery] = useState(initialQuery);
   const [isOpen, setIsOpen] = useState(false);
@@ -61,7 +62,7 @@ export function SearchField({
     : [];
 
   const matchedCreators: Creator[] = trimmed
-    ? mockUsers
+    ? creators
         .filter(
           (u) =>
             u.displayName.toLowerCase().includes(trimmed) ||
@@ -71,6 +72,7 @@ export function SearchField({
         )
         .slice(0, 3)
     : [];
+
 
   const flatSuggestions = [
     ...matchedProjects.map((p) => ({ type: "project" as const, item: p })),
@@ -147,7 +149,7 @@ export function SearchField({
         className={cn(
           "flex items-center gap-2 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-screen)] transition-all shadow-xs",
           isOpen && "ring-2 ring-[var(--btn-cta-bg)] border-[var(--btn-cta-bg)]",
-          compact ? "h-11 px-3" : "h-13 px-4"
+          compact ? "h-10 px-4" : "h-12 px-4"
         )}
       >
         <Search className="h-4 w-4 text-[var(--content-tertiary)] shrink-0" />
@@ -199,7 +201,7 @@ export function SearchField({
             <SlidersHorizontal className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Filter</span>
             {filterCount > 0 && (
-              <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--chip-bg)] px-1 text-[10px] font-black text-[var(--chip-fg)]">
+              <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--accent)] px-1 text-[10px] font-black text-[var(--primary-forest-green)] shadow-xs animate-in zoom-in-50">
                 {filterCount}
               </span>
             )}
@@ -211,7 +213,7 @@ export function SearchField({
           type="submit"
           variant="primary"
           size="sm"
-          className="h-8 px-3.5 text-xs shrink-0 bg-[#090C09] text-white dark:bg-white/20 dark:border dark:border-white/30 dark:text-white dark:hover:bg-white/30 hover:opacity-90 font-semibold transition-all shadow-xs"
+          className="h-8 px-4 text-xs shrink-0 font-semibold transition-all shadow-xs"
         >
           <span>Search</span>
         </Button>
@@ -298,7 +300,7 @@ export function SearchField({
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="relative h-9 w-9 rounded-full overflow-hidden bg-[var(--bg-neutral)] shrink-0 ring-1 ring-[var(--border-neutral)]">
                           <Image
-                            src={creator.avatarUrl}
+                            src={getValidAvatarUrl(creator.avatarUrl)}
                             alt={creator.displayName}
                             fill
                             sizes="36px"

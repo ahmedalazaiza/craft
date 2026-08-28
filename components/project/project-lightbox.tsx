@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface LightboxProps {
@@ -22,6 +22,15 @@ export function ProjectLightbox({
 }: LightboxProps) {
   const currentImage = images[currentIndex];
   const total = images.length;
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!currentImage?.url) return;
+    navigator.clipboard.writeText(currentImage.url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const handlePrev = useCallback(() => {
     onNavigate((currentIndex - 1 + total) % total);
@@ -55,12 +64,32 @@ export function ProjectLightbox({
     };
   }, [isOpen, onClose, handlePrev, handleNext]);
 
+  const [touchStartX, setTouchStartX] = React.useState<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX - touchEndX;
+    if (diff > 50) {
+      handleNext();
+    } else if (diff < -50) {
+      handlePrev();
+    }
+    setTouchStartX(null);
+  };
+
   if (!isOpen || !currentImage) return null;
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--base-dark)]/95 backdrop-blur-sm select-none animate-in fade-in duration-200"
       onClick={onClose}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       {/* Top Header Bar */}
       <div
@@ -76,13 +105,34 @@ export function ProjectLightbox({
           </span>
         </div>
 
-        <button
-          onClick={onClose}
-          className="rounded-full p-2.5 bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
-          title="Close (Esc)"
-        >
-          <X className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleCopyLink}
+            className="flex items-center gap-1.5 rounded-full px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors cursor-pointer"
+            title="Copy image direct link"
+          >
+            {copied ? (
+              <>
+                <Check className="h-4 w-4 text-[#8DFF00]" />
+                <span className="text-[#8DFF00]">Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="h-4 w-4" />
+                <span className="hidden sm:inline">Copy Link</span>
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={onClose}
+            className="rounded-full p-2.5 bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+            title="Close (Esc)"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       {/* Main Image Container */}

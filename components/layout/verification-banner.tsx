@@ -79,11 +79,11 @@ export function VerificationBanner() {
         initial={{ height: 0, opacity: 0 }}
         animate={{ height: "auto", opacity: 1 }}
         exit={{ height: 0, opacity: 0 }}
-        className="relative z-50 bg-[#090C09] text-white border-b border-white/10 px-4 py-2.5 sm:px-6 shadow-sm"
+        className="relative z-50 bg-[var(--chip-bg)] text-[var(--chip-fg)] border-b border-white/10 px-4 py-2.5 sm:px-6 shadow-sm"
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#8DFF00]/20 text-[#8DFF00]">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--accent)]/20 text-[var(--accent)]">
               <Mail className="h-3 w-3" />
             </span>
 
@@ -95,7 +95,7 @@ export function VerificationBanner() {
 
           <div className="flex items-center gap-3 shrink-0">
             {sendSuccess ? (
-              <span className="inline-flex items-center gap-1 text-[#8DFF00] font-semibold text-[11px]">
+              <span className="inline-flex items-center gap-1 text-[var(--accent)] font-semibold text-xs">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 <span>Link sent! Check inbox</span>
               </span>
@@ -104,7 +104,7 @@ export function VerificationBanner() {
                 type="button"
                 onClick={handleResend}
                 disabled={isSending || cooldown > 0}
-                className="font-bold text-[#8DFF00] hover:text-[#a8ff33] underline underline-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-[11px] inline-flex items-center gap-1"
+                className="font-bold text-[var(--accent)] hover:text-[var(--accent-hover)] underline underline-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-xs inline-flex items-center gap-1"
               >
                 {isSending ? (
                   "Sending..."

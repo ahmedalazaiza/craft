@@ -5,11 +5,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/session-context";
-import { Comment } from "@/lib/mock";
-import { Button } from "@/components/ui/button";
+import { Comment } from "@/lib/types";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { OnlineBadge } from "@/components/ui/online-badge";
+import { getValidAvatarUrl } from "@/lib/avatar";
 import { Send, MessageSquare } from "lucide-react";
 
 interface CommentSectionProps {
@@ -24,68 +25,59 @@ export function CommentSection({ projectId, comments }: CommentSectionProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-    if (!commentText.trim()) return;
-
+    if (!commentText.trim() || !user) return;
     addComment(projectId, commentText.trim());
     setCommentText("");
   };
 
   return (
-    <section className="mt-16 border-t border-[var(--border-neutral)] pt-12">
-      <div className="flex items-center gap-2 mb-8">
+    <section className="mt-8 border-t border-[var(--border-neutral)] pt-8">
+      <div className="flex items-center gap-2 mb-6">
         <MessageSquare className="h-5 w-5 text-[var(--primary-forest-green)]" />
-        <h2 className="type-title-section text-[var(--content-primary)]">
-          Discussion & Critique ({comments.length})
-        </h2>
+        <h3 className="type-title-subsection text-[var(--content-primary)]">
+          Feedback & Notes ({comments.length})
+        </h3>
       </div>
 
-      {/* Composer */}
-      <div className="mb-10 rounded-[20px] bg-[var(--bg-neutral)]/30 border border-[var(--border-neutral)] p-5 sm:p-6">
+      {/* Write Comment Form / Guest CTA */}
+      <div className="mb-8">
         {user ? (
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div className="flex items-center gap-3">
-              <div className="relative h-8 w-8 rounded-full overflow-hidden bg-[var(--bg-neutral)]">
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="relative h-9 w-9 rounded-full overflow-hidden border border-[var(--border-neutral)] shrink-0">
                 <Image
-                  src={user.avatarUrl}
+                  src={getValidAvatarUrl(user.avatarUrl)}
                   alt={user.displayName}
                   fill
-                  sizes="32px"
+                  sizes="36px"
                   className="object-cover"
                 />
-                <OnlineBadge isOnline={user.isOnline} size="sm" className="absolute bottom-0 right-0 z-10" />
               </div>
-              <span className="type-body-default-bold text-[var(--content-primary)] flex items-center gap-1.5">
-                <span>Commenting as {user.displayName}</span>
-                {user.isVerified !== false && <VerifiedBadge size="sm" />}
-              </span>
-            </div>
-
-            <Textarea
-              placeholder="Share thoughts, technical observations, or feedback..."
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              className="min-h-[90px]"
-            />
-
-            <div className="flex justify-end">
-              <Button
-                type="submit"
-                variant="primary"
-                size="sm"
-                disabled={!commentText.trim()}
-                className="gap-2"
-              >
-                <span>Post Comment</span>
-                <Send className="h-3.5 w-3.5" />
-              </Button>
+              <div className="flex-1 space-y-2">
+                <Textarea
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder="Leave design critique, questions, or appreciation..."
+                  rows={2}
+                  className="w-full text-sm resize-none rounded-[16px]"
+                />
+                <div className="flex justify-end">
+                  <Button
+                    type="submit"
+                    variant="accent"
+                    size="sm"
+                    disabled={!commentText.trim()}
+                    className="gap-1.5 font-bold shadow-xs"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                    <span>Post Comment</span>
+                  </Button>
+                </div>
+              </div>
             </div>
           </form>
         ) : (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 text-center sm:text-left">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-[20px] border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-4 sm:p-5 shadow-xs">
             <div>
               <p className="type-body-large-bold text-[var(--content-primary)]">
                 Join the conversation
@@ -94,10 +86,14 @@ export function CommentSection({ projectId, comments }: CommentSectionProps) {
                 Sign in to leave feedback and discuss craft with creators.
               </p>
             </div>
-            <Link href="/login">
-              <Button variant="accent" size="sm">
-                Log in to Comment
-              </Button>
+            <Link
+              href="/login"
+              className={buttonVariants({
+                variant: "accent",
+                size: "sm",
+              })}
+            >
+              Log in to Comment
             </Link>
           </div>
         )}
@@ -120,13 +116,14 @@ export function CommentSection({ projectId, comments }: CommentSectionProps) {
                 className="relative h-10 w-10 shrink-0 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-1 ring-[var(--border-neutral)]"
               >
                 <Image
-                  src={c.author.avatarUrl}
+                  src={getValidAvatarUrl(c.author.avatarUrl)}
                   alt={c.author.displayName}
                   fill
                   sizes="40px"
                   className="object-cover"
                 />
-                <OnlineBadge isOnline={c.author.isOnline} size="sm" className="absolute bottom-0 right-0 z-10" />
+                <OnlineBadge userId={c.author.id} username={c.author.username} size="sm" className="absolute bottom-0 right-0 z-10" />
+
               </Link>
               <div className="flex-1">
                 <div className="flex items-baseline justify-between gap-2">

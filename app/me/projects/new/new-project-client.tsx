@@ -6,7 +6,7 @@ import { useSession } from "@/lib/session-context";
 import { ProjectForm } from "@/components/project/project-form";
 import { FadeIn } from "@/components/ui/motion-wrapper";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Mail, ShieldAlert, CheckCircle2, ArrowRight } from "lucide-react";
 import { sendVerificationEmail } from "@/lib/resend-limiter";
@@ -35,7 +35,7 @@ export function NewProjectClient() {
     return <ProjectEditorSkeleton />;
   }
 
-  // Guest State
+  // Not logged in -> Show Auth Gate Screen
   if (!user) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-20 text-center">
@@ -47,11 +47,23 @@ export function NewProjectClient() {
             You must be signed in with a verified account to publish case studies and design projects.
           </p>
           <div className="mt-6 flex justify-center gap-3">
-            <Link href="/login">
-              <Button variant="accent" className="font-bold shadow-xs">Log in</Button>
+            <Link
+              href="/login"
+              className={buttonVariants({
+                variant: "accent",
+                className: "font-bold shadow-xs",
+              })}
+            >
+              Log in
             </Link>
-            <Link href="/signup">
-              <Button variant="secondary" className="font-semibold">Create account</Button>
+            <Link
+              href="/signup"
+              className={buttonVariants({
+                variant: "secondary",
+                className: "font-semibold",
+              })}
+            >
+              Create account
             </Link>
           </div>
         </Card>

@@ -8,7 +8,7 @@ import { useSession } from "@/lib/session-context";
 import { useTheme, Theme } from "./theme-provider";
 import {
   User,
-  Plus,
+  Settings,
   Sun,
   Moon,
   Laptop,
@@ -23,6 +23,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { OnlineBadge } from "@/components/ui/online-badge";
+import { getValidAvatarUrl } from "@/lib/avatar";
 
 export function ProfileDropdown() {
   const router = useRouter();
@@ -83,7 +84,7 @@ export function ProfileDropdown() {
         aria-label="User profile menu"
       >
         <Image
-          src={user.avatarUrl}
+          src={getValidAvatarUrl(user.avatarUrl)}
           alt={user.displayName}
           fill
           sizes="36px"
@@ -107,7 +108,7 @@ export function ProfileDropdown() {
             <div className="p-3.5 flex items-center gap-3">
               <div className="relative h-11 w-11 rounded-full overflow-hidden ring-1 ring-[var(--border-neutral)] shrink-0">
                 <Image
-                  src={user.avatarUrl}
+                  src={getValidAvatarUrl(user.avatarUrl)}
                   alt={user.displayName}
                   fill
                   sizes="44px"
@@ -146,17 +147,15 @@ export function ProfileDropdown() {
               </Link>
 
               <Link
-                href="/me/projects/new"
+                href="/settings"
                 onClick={() => setIsOpen(false)}
                 className="flex items-center justify-between gap-2.5 rounded-[12px] px-3 py-2 text-xs font-medium text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-colors"
               >
                 <div className="flex items-center gap-2.5">
-                  <Plus className="h-4 w-4 text-[var(--content-tertiary)]" />
-                  <span>Publish New Case Study</span>
+                  <Settings className="h-4 w-4 text-[var(--content-tertiary)]" />
+                  <span>Account Settings</span>
                 </div>
-                <span className="rounded-full bg-[#8DFF00] text-[#090C09] px-1.5 py-0.2 text-[9px] font-bold">
-                  NEW
-                </span>
+                <ChevronRight className="h-3.5 w-3.5 text-[var(--content-tertiary)]" />
               </Link>
             </div>
 

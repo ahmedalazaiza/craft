@@ -6,8 +6,11 @@ import { ThemeProvider } from "@/components/layout/theme-provider";
 import { Suspense } from "react";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { PageLoadingOverlay } from "@/components/layout/page-loading-overlay";
+import { TopLoader } from "@/components/layout/top-loader";
 import { NetworkStatusIndicator } from "@/components/layout/network-status-indicator";
+
 import { SITE_NAME, SITE_URL, defaultTitle, defaultDescription } from "@/lib/seo";
 
 export const metadata: Metadata = {
@@ -87,11 +90,14 @@ export default function RootLayout({
         <ThemeProvider>
           <SessionProvider>
             <Suspense fallback={null}>
+              <TopLoader />
               <PageLoadingOverlay />
             </Suspense>
+
             <SiteHeader />
-            <main className="flex-1">{children}</main>
+            <main className="flex-1 pb-20 md:pb-0">{children}</main>
             <SiteFooter />
+            <MobileBottomNav />
             <NetworkStatusIndicator />
           </SessionProvider>
         </ThemeProvider>

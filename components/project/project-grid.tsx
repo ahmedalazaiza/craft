@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Project } from "@/lib/mock";
+import { Project } from "@/lib/types";
 import { ProjectCard } from "./project-card";
 import { StaggerGridItem } from "@/components/ui/motion-wrapper";
 import { cn } from "@/lib/utils";

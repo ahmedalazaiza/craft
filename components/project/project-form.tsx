@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/session-context";
-import { Project, ProjectCategory, ProjectMedium } from "@/lib/mock";
+import { Project, ProjectCategory, ProjectMedium } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -82,6 +82,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     initialData ? initialData.published : true
   );
   const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [isDraggingCover, setIsDraggingCover] = useState(false);
   const [isDraggingGallery, setIsDraggingGallery] = useState(false);
   const [isProcessingFiles, setIsProcessingFiles] = useState(false);
@@ -180,30 +181,36 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const finalCover = coverImage || galleryImages[0];
-    if (!finalCover) {
-      alert("Please upload a cover image for your project before saving.");
-      return;
+    const defaultCover = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1400&auto=format&fit=crop&q=85";
+    const finalCover = coverImage || galleryImages[0] || defaultCover;
+    const finalGallery = galleryImages.length > 0 ? galleryImages : [finalCover];
+
+    setIsSaving(true);
+    try {
+      await saveProject({
+        id: initialData?.id,
+        title,
+        summary,
+        body,
+        category,
+        medium,
+        coverImage: finalCover,
+        galleryImages: finalGallery,
+        tags: tags.length > 0 ? tags : ["Design", "Identity"],
+        tools: tools.length > 0 ? tools : ["Figma"],
+        published,
+      });
+
+      setIsSaved(true);
+      setTimeout(() => {
+        router.push("/explore");
+      }, 500);
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : "Failed to publish project.";
+      console.warn("Project save notice:", errorMsg);
+    } finally {
+      setIsSaving(false);
     }
-
-    await saveProject({
-      id: initialData?.id,
-      title,
-      summary,
-      body,
-      category,
-      medium,
-      coverImage: finalCover,
-      galleryImages,
-      tags,
-      tools,
-      published,
-    });
-
-    setIsSaved(true);
-    setTimeout(() => {
-      router.push("/explore");
-    }, 600);
   };
 
   return (
@@ -234,8 +241,12 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
             </button>
           </div>
 
-          <Button type="submit" variant="accent" size="default" className="min-w-[140px]">
-            {isSaved ? (
+          <Button type="submit" variant="accent" size="default" disabled={isSaving} className="min-w-[140px]">
+            {isSaving ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> Saving...
+              </>
+            ) : isSaved ? (
               <>
                 <Check className="h-4 w-4 mr-1" /> Saved!
               </>
@@ -693,6 +704,47 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Mobile Sticky Bottom Publish Bar */}
+      <div className="fixed bottom-16 inset-x-0 z-40 md:hidden p-3 bg-[var(--bg-screen)]/95 backdrop-blur-md border-t border-[var(--border-neutral)] shadow-lg flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-[var(--content-tertiary)]">Status:</span>
+          <button
+            type="button"
+            onClick={() => setPublished(!published)}
+            className={cn(
+              "rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-colors",
+              published
+                ? "bg-[var(--primary-forest-green)] text-[var(--base-contrast)]"
+                : "bg-[var(--bg-neutral)] text-[var(--content-secondary)]"
+            )}
+          >
+            {published ? "Published" : "Draft"}
+          </button>
+        </div>
+
+        <Button
+          type="submit"
+          variant="accent"
+          size="sm"
+          disabled={isSaving}
+          className="flex-1 font-bold h-10 shadow-sm max-w-[200px]"
+        >
+          {isSaving ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> Saving...
+            </>
+          ) : isSaved ? (
+            <>
+              <Check className="h-4 w-4 mr-1" /> Saved!
+            </>
+          ) : mode === "new" ? (
+            "Publish Project"
+          ) : (
+            "Save Changes"
+          )}
+        </Button>
       </div>
     </form>
   );

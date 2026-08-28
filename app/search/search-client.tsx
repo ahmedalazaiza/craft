@@ -3,9 +3,10 @@
 import React, { useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "@/lib/session-context";
-import { mockUsers, ProjectCategory } from "@/lib/mock";
+import { ProjectCategory } from "@/lib/types";
 import { bricolage } from "@/lib/fonts";
 import { ProjectCard } from "@/components/project/project-card";
+import { ProjectGridSkeleton } from "@/components/project/project-grid-skeleton";
 import { CreatorListItem } from "@/components/creator/creator-list-item";
 import { SearchField } from "@/components/search/search-field";
 import { FilterDrawer, ProjectFilters } from "@/components/search/filter-drawer";
@@ -32,7 +33,9 @@ export function SearchClient() {
   const rawQ = searchParams?.get("q") || "";
   const q = rawQ.trim();
 
-  const { projects } = useSession();
+  const { projects, creators, isLoadingDb } = useSession();
+
+
 
   const [activeTab, setActiveTab] = useState<"all" | "projects" | "creators">("all");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -92,7 +95,8 @@ export function SearchClient() {
   const filteredCreators = useMemo(() => {
     const query = q.toLowerCase();
 
-    return mockUsers.filter((creator) => {
+    return creators.filter((creator) => {
+
       if (!query) return true;
       const matchName = creator.displayName.toLowerCase().includes(query);
       const matchUsername = creator.username.toLowerCase().includes(query);
@@ -111,6 +115,19 @@ export function SearchClient() {
     filters.tags.length +
     (filters.sortBy !== "newest" ? 1 : 0);
 
+  if (isLoadingDb && projects.length === 0) {
+    return (
+      <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-4 sm:py-6 space-y-6 animate-pulse">
+        <Breadcrumbs items={[{ label: "Search", href: "/search" }, { label: q ? `"${q}"` : "All Results" }]} />
+        <div className="max-w-3xl mb-8 space-y-3">
+          <div className="h-4 w-28 rounded-full bg-[var(--bg-neutral)]" />
+          <div className="h-12 w-full rounded-2xl bg-[var(--bg-neutral)]" />
+        </div>
+        <ProjectGridSkeleton count={8} columns={4} />
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-4 sm:py-6">
       <FadeIn>
@@ -121,6 +138,7 @@ export function SearchClient() {
             { label: q ? `"${q}"` : "All Results", isCurrent: true },
           ]}
         />
+
 
         {/* Header Search Field */}
         <div className="max-w-3xl mb-8">
@@ -161,12 +179,12 @@ export function SearchClient() {
           </div>
 
           {/* Tab Switcher: All / Projects / Creators */}
-          <div className="flex items-center gap-1.5 rounded-full bg-[var(--bg-neutral)] p-1">
+          <div className="flex items-center gap-1.5 rounded-full bg-[var(--bg-neutral)] p-1 w-full sm:w-auto overflow-x-auto">
             <button
               type="button"
               onClick={() => setActiveTab("all")}
               className={cn(
-                "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer",
+                "flex-1 sm:flex-initial rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer text-center",
                 activeTab === "all"
                   ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
                   : "text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
@@ -178,7 +196,7 @@ export function SearchClient() {
               type="button"
               onClick={() => setActiveTab("projects")}
               className={cn(
-                "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer",
+                "flex-1 sm:flex-initial rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer text-center",
                 activeTab === "projects"
                   ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
                   : "text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
@@ -190,7 +208,7 @@ export function SearchClient() {
               type="button"
               onClick={() => setActiveTab("creators")}
               className={cn(
-                "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer",
+                "flex-1 sm:flex-initial rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer text-center",
                 activeTab === "creators"
                   ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
                   : "text-[var(--content-secondary)] hover:text-[var(--content-primary)]"

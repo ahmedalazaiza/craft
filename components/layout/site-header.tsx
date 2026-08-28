@@ -4,18 +4,20 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "@/lib/session-context";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { SearchField } from "@/components/search/search-field";
 import { NotificationsPopover } from "@/components/layout/notifications-popover";
 import { ProfileDropdown } from "@/components/layout/profile-dropdown";
 import { VerificationBanner } from "@/components/layout/verification-banner";
-import { Plus, Search, X } from "lucide-react";
+import { Plus, Search, X, Sun, Moon } from "lucide-react";
+import { useTheme } from "@/components/layout/theme-provider";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export function SiteHeader() {
   const pathname = usePathname();
   const { user } = useSession();
+  const { resolvedTheme, setTheme } = useTheme();
 
   const [isMobileSearchExpanded, setIsMobileSearchExpanded] = useState(false);
   const [isScrolledPastHero, setIsScrolledPastHero] = useState(false);
@@ -60,38 +62,37 @@ export function SiteHeader() {
             </span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-1.5 bg-[var(--bg-neutral)]/40 p-1 rounded-full border border-[var(--border-neutral)]">
+          {/* Desktop Navigation Links */}
+          <nav className="hidden md:flex items-center gap-1">
             <Link
               href="/"
               className={cn(
-                "relative px-3.5 py-1.5 rounded-full text-xs transition-all duration-200",
+                "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
                 isHome
-                  ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] font-bold shadow-xs"
-                  : "text-[var(--content-secondary)] font-medium hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
+                  ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                  : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
               )}
             >
               Home
             </Link>
-
             <Link
               href="/explore"
               className={cn(
-                "relative px-3.5 py-1.5 rounded-full text-xs transition-all duration-200",
-                isExplore || pathname.startsWith("/project")
-                  ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] font-bold shadow-xs"
-                  : "text-[var(--content-secondary)] font-medium hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
+                "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                isExplore
+                  ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                  : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
               )}
             >
               Explore
             </Link>
-
             <Link
               href="/creators"
               className={cn(
-                "relative px-3.5 py-1.5 rounded-full text-xs transition-all duration-200",
-                isCreators || (pathname.startsWith("/u/") && !pathname.startsWith("/me"))
-                  ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] font-bold shadow-xs"
-                  : "text-[var(--content-secondary)] font-medium hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
+                "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                isCreators
+                  ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                  : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
               )}
             >
               Creators
@@ -99,44 +100,39 @@ export function SiteHeader() {
           </nav>
         </div>
 
-        {/* Middle: Desktop Search Bar (Full when at top, collapses to icon when scrolled) */}
+        {/* Center: Search Field */}
         <div className="hidden lg:flex flex-1 max-w-md mx-4 items-center justify-center">
           {!isScrolledPastHero ? (
-            /* Full Search Field at the Top */
-            <div className="w-full">
-              <SearchField
-                compact
-                showFilterButton={false}
-                placeholder="Search projects, creators, tools..."
-              />
-            </div>
+            <SearchField
+              compact
+              showFilterButton={false}
+              placeholder="Search projects, creators..."
+              className="w-full shadow-xs"
+            />
           ) : (
-            /* Collapsed Search Icon / Expanding Inline Search when Scrolled */
-            <div className="flex items-center justify-center w-full">
+            <div className="relative">
               <AnimatePresence mode="wait">
                 {isInlineSearchOpen ? (
                   <motion.div
-                    key="expanded-search"
-                    initial={{ opacity: 0, width: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, width: "100%", scale: 1 }}
-                    exit={{ opacity: 0, width: 0, scale: 0.95 }}
+                    key="expanded-input"
+                    initial={{ width: 44, opacity: 0 }}
+                    animate={{ width: 340, opacity: 1 }}
+                    exit={{ width: 44, opacity: 0 }}
                     transition={{ duration: 0.22, ease: "easeOut" }}
-                    className="w-full flex items-center gap-2"
+                    className="relative flex items-center"
                   >
-                    <div className="flex-1">
-                      <SearchField
-                        compact
-                        autoFocus
-                        showFilterButton={false}
-                        placeholder="Search projects, creators, tools..."
-                      />
-                    </div>
+                    <SearchField
+                      compact
+                      autoFocus
+                      showFilterButton={false}
+                      placeholder="Search projects, creators..."
+                      className="w-full shadow-md"
+                    />
                     <button
                       type="button"
                       onClick={() => setIsInlineSearchOpen(false)}
-                      className="h-9 w-9 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)] flex items-center justify-center text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-all cursor-pointer shrink-0 shadow-xs"
+                      className="absolute right-3 p-1 rounded-full text-[var(--content-tertiary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-colors cursor-pointer"
                       title="Close search"
-                      aria-label="Close search"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -165,12 +161,12 @@ export function SiteHeader() {
           )}
         </div>
 
-        {/* Right: Actions (New Project CTA + Notifications + Profile Dropdown for User; Login + Sign Up for Guest) */}
+        {/* Right: Actions */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
           {/* Mobile Search Toggle */}
           <button
             onClick={() => setIsMobileSearchExpanded(!isMobileSearchExpanded)}
-            className="lg:hidden h-9 w-9 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)] text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] flex items-center justify-center transition-all shadow-xs cursor-pointer"
+            className="lg:hidden h-12 w-12 min-h-[48px] min-w-[48px] rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)] text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] flex items-center justify-center transition-all shadow-xs cursor-pointer"
             title="Search"
             aria-label="Search"
           >
@@ -181,48 +177,66 @@ export function SiteHeader() {
             )}
           </button>
 
+          {/* Mobile Mode Switcher (Light / Dark) */}
+          <button
+            type="button"
+            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+            className="md:hidden h-12 w-12 min-h-[48px] min-w-[48px] rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)] text-[var(--content-primary)] flex items-center justify-center transition-all shadow-xs cursor-pointer"
+            title={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
+            aria-label="Toggle theme mode"
+            suppressHydrationWarning
+          >
+            {resolvedTheme === "dark" ? (
+              <Sun className="h-4 w-4 text-[var(--accent)]" />
+            ) : (
+              <Moon className="h-4 w-4 text-[var(--primary-forest-green)]" />
+            )}
+          </button>
+
           {user ? (
             <>
-              {/* Notifications Popover Dropdown (Logged in only) */}
+              {/* Notifications Popover Dropdown */}
               <NotificationsPopover />
 
-              {/* Primary Action: + New Project */}
-              <Link href="/me/projects/new">
-                <Button
-                  variant="accent"
-                  size="sm"
-                  className="hidden sm:inline-flex gap-1.5 h-9 px-3.5 shadow-xs font-bold"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>New project</span>
-                </Button>
-                <Button
-                  variant="accent"
-                  size="icon"
-                  className="sm:hidden h-9 w-9 rounded-full shadow-xs"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
+              {/* Primary Action: + New Project (Desktop Only) */}
+              <Link
+                href="/me/projects/new"
+                className={buttonVariants({
+                  variant: "accent",
+                  size: "sm",
+                  className: "hidden md:inline-flex gap-1.5 h-9 px-3.5 shadow-xs font-bold",
+                })}
+              >
+                <Plus className="h-4 w-4" />
+                <span>New project</span>
               </Link>
 
-              {/* User Profile Avatar Dropdown (Contains Profile, Theme Switcher & Logout) */}
-              <ProfileDropdown />
+              {/* User Profile Avatar Dropdown (Desktop Only) */}
+              <div className="hidden md:block">
+                <ProfileDropdown />
+              </div>
             </>
           ) : (
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <Link href="/login">
-                <Button variant="ghost" size="sm" className="h-9 px-3 text-xs sm:text-sm font-medium">
-                  Log in
-                </Button>
+            <div className="hidden md:flex items-center gap-1.5 sm:gap-2">
+              <Link
+                href="/login"
+                className={buttonVariants({
+                  variant: "ghost",
+                  size: "sm",
+                  className: "h-9 px-3 text-xs sm:text-sm font-medium",
+                })}
+              >
+                Log in
               </Link>
-              <Link href="/signup">
-                <Button
-                  variant="accent"
-                  size="sm"
-                  className="h-9 px-3.5 text-xs sm:text-sm font-bold shadow-xs"
-                >
-                  Join as Creator
-                </Button>
+              <Link
+                href="/signup"
+                className={buttonVariants({
+                  variant: "accent",
+                  size: "sm",
+                  className: "h-9 px-3.5 text-xs sm:text-sm font-bold shadow-xs",
+                })}
+              >
+                Join as Creator
               </Link>
             </div>
           )}

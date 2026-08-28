@@ -62,7 +62,7 @@ export function ShareModal({
           <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 24.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
         </svg>
       ),
-      bg: "bg-black text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200",
+      bg: "bg-[var(--chip-bg)] text-[var(--chip-fg)] hover:bg-[var(--chip-bg-hover)] border border-[var(--border-neutral)]",
       href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(url)}`,
     },
     {
@@ -90,7 +90,7 @@ export function ShareModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -106,7 +106,7 @@ export function ShareModal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 12 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="relative w-full max-w-md rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-screen)] p-6 sm:p-7 shadow-[0_24px_60px_rgba(0,0,0,0.25)] z-10 overflow-hidden"
+            className="relative w-full max-w-md rounded-t-[28px] sm:rounded-[28px] border-t sm:border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 sm:p-7 shadow-[0_24px_60px_rgba(0,0,0,0.18)] dark:shadow-none z-10 overflow-hidden pb-safe"
           >
             {/* Top Close Button */}
             <button
@@ -120,7 +120,7 @@ export function ShareModal({
             {/* Header */}
             <div className="flex items-center gap-3 mb-2">
               <div className="h-10 w-10 rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] flex items-center justify-center shadow-xs">
-                <Share2 className="h-5 w-5 text-[#8DFF00]" />
+                <Share2 className="h-5 w-5 text-[var(--accent)]" />
               </div>
               <div>
                 <h2
@@ -140,7 +140,7 @@ export function ShareModal({
 
             {/* Quick Social Share Buttons */}
             <div className="mb-6">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--content-tertiary)] block mb-2.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-[var(--content-tertiary)] block mb-2.5">
                 Share directly via
               </label>
               <div className="grid grid-cols-3 gap-2.5">
@@ -151,7 +151,7 @@ export function ShareModal({
                     target="_blank"
                     rel="noopener noreferrer"
                     className={cn(
-                      "flex flex-col items-center justify-center gap-2 py-3 px-2 rounded-2xl transition-all shadow-xs text-xs font-semibold select-none cursor-pointer",
+                      "flex flex-col items-center justify-center min-h-[48px] gap-2 py-3 px-2 rounded-2xl transition-all shadow-xs text-xs font-semibold select-none cursor-pointer",
                       item.bg
                     )}
                   >
@@ -164,7 +164,7 @@ export function ShareModal({
 
             {/* Copy Link Section */}
             <div>
-              <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--content-tertiary)] block mb-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-[var(--content-tertiary)] block mb-2">
                 Or copy direct public link
               </label>
               <div className="flex items-center gap-2 rounded-2xl border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-1.5 focus-within:ring-2 focus-within:ring-[var(--primary-forest-green)] transition-all">
@@ -177,15 +177,15 @@ export function ShareModal({
                   type="button"
                   onClick={handleCopy}
                   className={cn(
-                    "h-9 px-4 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer select-none",
+                    "h-10 min-h-[40px] px-4 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer select-none",
                     copied
-                      ? "bg-[#2F5711] text-white"
-                      : "bg-[var(--chip-bg)] text-[var(--chip-fg)] hover:opacity-90 active:scale-95"
+                      ? "bg-[var(--sentiment-positive-bg)] text-[var(--sentiment-positive-fg)]"
+                      : "bg-[var(--chip-bg)] text-[var(--chip-fg)] hover:bg-[var(--chip-bg-hover)] active:scale-95"
                   )}
                 >
                   {copied ? (
                     <>
-                      <Check className="h-3.5 w-3.5 text-[#8DFF00]" />
+                      <Check className="h-3.5 w-3.5 text-current" />
                       <span>Copied!</span>
                     </>
                   ) : (
