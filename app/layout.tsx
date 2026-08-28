@@ -7,7 +7,6 @@ import { Suspense } from "react";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
-import { PageLoadingOverlay } from "@/components/layout/page-loading-overlay";
 import { TopLoader } from "@/components/layout/top-loader";
 import { NetworkStatusIndicator } from "@/components/layout/network-status-indicator";
 
@@ -128,13 +127,12 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${inter.className} min-h-screen flex flex-col bg-[var(--bg-screen)] text-[var(--content-primary)] antialiased transition-colors duration-150`}
+        className={`${inter.className} min-h-screen flex flex-col bg-[var(--bg-screen)] text-[var(--content-primary)] antialiased`}
       >
         <ThemeProvider>
           <SessionProvider>
             <Suspense fallback={null}>
               <TopLoader />
-              <PageLoadingOverlay />
             </Suspense>
 
             <SiteHeader />

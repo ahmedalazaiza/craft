@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 
 export type Theme = "light" | "dark" | "system";
 
@@ -12,61 +12,64 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+function getSystemTheme(): "light" | "dark" {
+  if (typeof window === "undefined") return "dark";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("system");
-  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
-  const [mounted, setMounted] = useState(false);
+  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("dark");
 
-  // Initialize from localStorage or default to system
+  // Read initial theme synchronously on mount
   useEffect(() => {
     try {
       const stored = localStorage.getItem("craft-theme") as Theme | null;
-      if (stored === "light" || stored === "dark" || stored === "system") {
-        setThemeState(stored);
-      }
+      const initialTheme: Theme =
+        stored === "light" || stored === "dark" || stored === "system"
+          ? stored
+          : "system";
+      
+      const resolved = initialTheme === "system" ? getSystemTheme() : initialTheme;
+      setThemeState(initialTheme);
+      setResolvedTheme(resolved);
+      document.documentElement.setAttribute("data-theme", resolved);
     } catch {
       // ignore
     }
-    setMounted(true);
-  }, []);
-
-  // Update DOM and resolved theme
-  useEffect(() => {
-    if (!mounted) return;
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-
-    const getSystemTheme = (): "light" | "dark" => {
-      return mediaQuery.matches ? "dark" : "light";
-    };
-
-    const resolved = theme === "system" ? getSystemTheme() : theme;
-    setResolvedTheme(resolved);
-
-    // Apply to html element
-    document.documentElement.setAttribute("data-theme", resolved);
-
-    // Listener for system theme change
-    const handleChange = () => {
-      if (theme === "system") {
-        const sys = getSystemTheme();
+    const handleSystemChange = (e: MediaQueryListEvent) => {
+      const stored = localStorage.getItem("craft-theme");
+      if (!stored || stored === "system") {
+        const sys = e.matches ? "dark" : "light";
         setResolvedTheme(sys);
         document.documentElement.setAttribute("data-theme", sys);
       }
     };
 
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
-  }, [theme, mounted]);
+    mediaQuery.addEventListener("change", handleSystemChange);
+    return () => mediaQuery.removeEventListener("change", handleSystemChange);
+  }, []);
 
-  const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
+  // Instantaneous synchronous theme changer - 0ms latency
+  const setTheme = useCallback((newTheme: Theme) => {
+    const resolved = newTheme === "system" ? getSystemTheme() : newTheme;
+
+    // 1. Immediately apply to DOM (instant style recalculation with 0 frame drop)
+    document.documentElement.setAttribute("data-theme", resolved);
+
+    // 2. Persist in storage
     try {
       localStorage.setItem("craft-theme", newTheme);
     } catch {
       // ignore
     }
-  };
+
+    // 3. Update React context in single batch
+    setThemeState(newTheme);
+    setResolvedTheme(resolved);
+  }, []);
 
   return (
     <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>
