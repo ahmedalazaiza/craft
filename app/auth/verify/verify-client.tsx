@@ -65,19 +65,17 @@ export function VerifyClient() {
   useEffect(() => {
     if (!success) return;
 
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          router.push("/onboarding");
-          return 0;
-        }
-        return prev - 1;
-      });
+    if (countdown <= 0) {
+      router.push("/onboarding");
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setCountdown((prev) => prev - 1);
     }, 1000);
 
-    return () => clearInterval(timer);
-  }, [success, router]);
+    return () => clearTimeout(timer);
+  }, [success, countdown, router]);
 
   return (
     <div className="flex min-h-[calc(100vh-14rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
