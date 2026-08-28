@@ -149,7 +149,7 @@ export function HomeClient({
           >
             <span className="block w-full text-center overflow-hidden">
               <motion.span
-                className="inline-block text-[var(--primary-forest-green)] text-center"
+                className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--primary-forest-green)] text-center"
                 initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: "100%" }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{
@@ -158,7 +158,11 @@ export function HomeClient({
                   ease: MOTION_EASE,
                 }}
               >
-                Showcase your work<span className="text-[var(--accent)] font-black">.</span>
+                <span>Showcase your</span>
+                <span className="relative inline-flex items-center px-3.5 sm:px-5 py-0.5 sm:py-1 rounded-xl sm:rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] font-black text-3xl sm:text-4xl md:text-5xl lg:text-[76px] xl:text-[84px] shadow-sm border border-white/10 align-middle">
+                  <span>work</span>
+                  <span className="text-[var(--accent)] ml-0.5">.</span>
+                </span>
               </motion.span>
             </span>
 
