@@ -1,17 +1,27 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "@/lib/session-context";
 import { bricolage } from "@/lib/fonts";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { FadeIn } from "@/components/ui/motion-wrapper";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { VerifiedBadge } from "@/components/ui/verified-badge";
+import { OnlineBadge } from "@/components/ui/online-badge";
+import { LocationInput } from "@/components/ui/location-input";
+import { SkillsPicker } from "@/components/onboarding/skills-picker";
 import { DeleteAccountModal } from "@/components/settings/delete-account-modal";
 import { PasswordResetModal } from "@/components/settings/password-reset-modal";
 import { requestPasswordResetInDb } from "@/lib/supabase/queries";
+import { uploadMediaFile } from "@/lib/supabase/storage";
+import { DEFAULT_AVATAR_URL, getValidAvatarUrl } from "@/lib/avatar";
 import { supabase } from "@/lib/supabase/client";
 import {
   User,
@@ -26,17 +36,40 @@ import {
   Loader2,
   AlertTriangle,
   KeyRound,
+  Camera,
+  Check,
+  Globe,
+  MapPin,
+  Sparkles,
+  Layers,
+  Heart,
+  FolderKanban,
+  Settings,
+  Lock,
+  Eye,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type SettingsTab = "security" | "preferences" | "danger";
+type SettingsTab = "profile" | "security" | "preferences" | "danger";
 
 export function SettingsClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, isLoadingDb } = useSession();
+  const { user, projects, updateProfile, isLoadingDb } = useSession();
 
-  const [activeTab, setActiveTab] = useState<SettingsTab>("security");
+  const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
+
+  // Profile Edit State
+  const [displayName, setDisplayName] = useState(user?.displayName || "");
+  const [bio, setBio] = useState(user?.bio || "");
+  const [location, setLocation] = useState(user?.location || user?.city || "");
+  const [website, setWebsite] = useState(user?.website || "");
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || DEFAULT_AVATAR_URL);
+  const [skills, setSkills] = useState<string[]>(user?.skills || []);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileSavedSuccess, setProfileSavedSuccess] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const avatarFileInputRef = useRef<HTMLInputElement>(null);
 
   // Security / Password Reset State
   const [isSendingReset, setIsSendingReset] = useState(false);
@@ -52,7 +85,21 @@ export function SettingsClient() {
   const [emailNotifs, setEmailNotifs] = useState(true);
   const [commentNotifs, setCommentNotifs] = useState(true);
   const [appreciateNotifs, setAppreciateNotifs] = useState(true);
+  const [followerNotifs, setFollowerNotifs] = useState(true);
   const [directoryDiscoverable, setDirectoryDiscoverable] = useState(true);
+  const [preferencesSavedNotice, setPreferencesSavedNotice] = useState(false);
+
+  // Synchronize initial state when user session loads
+  useEffect(() => {
+    if (user) {
+      setDisplayName(user.displayName);
+      setBio(user.bio || "");
+      setLocation(user.location || user.city || "");
+      setWebsite(user.website || "");
+      setAvatarUrl(user.avatarUrl || DEFAULT_AVATAR_URL);
+      setSkills(user.skills || []);
+    }
+  }, [user]);
 
   // Check for password reset trigger from URL or Auth State
   useEffect(() => {
@@ -89,6 +136,54 @@ export function SettingsClient() {
     return () => clearInterval(timer);
   }, [resetCooldown]);
 
+  // Handle Avatar Upload
+  const handleAvatarFile = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload a valid image file (PNG, JPG, WebP).");
+      return;
+    }
+    setIsUploadingAvatar(true);
+    try {
+      const cdnUrl = await uploadMediaFile(file, "project-media", "avatars");
+      setAvatarUrl(cdnUrl);
+      // Auto-update profile avatar
+      await updateProfile({ avatarUrl: cdnUrl });
+    } catch (err) {
+      console.error("Avatar upload error:", err);
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  // Handle Save Profile
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!displayName.trim()) {
+      alert("Display name cannot be empty.");
+      return;
+    }
+
+    setIsSavingProfile(true);
+    setProfileSavedSuccess(false);
+    try {
+      await updateProfile({
+        displayName: displayName.trim(),
+        bio: bio.trim(),
+        location: location.trim(),
+        city: location.trim(),
+        website: website.trim() || undefined,
+        avatarUrl,
+        skills,
+      });
+      setProfileSavedSuccess(true);
+      setTimeout(() => setProfileSavedSuccess(false), 3000);
+    } catch (err) {
+      console.error("Failed to update profile:", err);
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
   // Handle Send Password Reset Email
   const handleSendPasswordReset = async () => {
     if (!user?.email || isSendingReset || resetCooldown > 0) return;
@@ -113,12 +208,24 @@ export function SettingsClient() {
     }
   };
 
+  const triggerPreferenceSave = () => {
+    setPreferencesSavedNotice(true);
+    setTimeout(() => setPreferencesSavedNotice(false), 2500);
+  };
+
+  // Projects stats for creator overview
+  const userProjects = user ? projects.filter((p) => p.creator.username.toLowerCase() === user.username.toLowerCase()) : [];
+  const publishedProjects = userProjects.filter((p) => p.published);
+  const totalAppreciations = userProjects.reduce((sum, p) => sum + p.appreciations, 0);
+
   if (isLoadingDb) {
     return (
       <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-12 flex items-center justify-center min-h-[50vh]">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-[var(--primary-forest-green)]" />
-          <span className="text-xs font-semibold text-[var(--content-tertiary)]">Loading Account Settings...</span>
+          <span className="text-xs font-semibold text-[var(--content-tertiary)]">
+            Loading Studio Settings...
+          </span>
         </div>
       </div>
     );
@@ -132,11 +239,11 @@ export function SettingsClient() {
           <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--bg-neutral)] border border-[var(--border-neutral)] mx-auto mb-4 text-[var(--primary-forest-green)]">
             <User className="h-8 w-8" />
           </div>
-          <h1 className="type-title-section text-[var(--content-primary)]">
+          <h1 className="type-title-section text-[var(--content-primary)] font-bold text-2xl">
             Account Settings Authentication Required
           </h1>
           <p className="mt-2 type-body-default text-[var(--content-secondary)]">
-            Please log in with your creator credentials to access and modify your studio security, preferences, and account configurations.
+            Please log in with your creator credentials to access and modify your studio profile, security, and account preferences.
           </p>
           <div className="mt-6 flex justify-center gap-3">
             <Link
@@ -174,49 +281,144 @@ export function SettingsClient() {
           ]}
         />
 
-        {/* Page Header */}
-        <div className="mt-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--border-neutral)] pb-6">
-          <div>
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip-bg)] px-3 py-1 text-xs font-semibold text-[var(--chip-fg)] mb-2">
-              <span>Account Hub</span>
-              <span>•</span>
-              <span>@{user.username}</span>
-            </div>
-            <h1
-              className={cn(
-                bricolage.className,
-                "text-3xl sm:text-4xl font-black text-[var(--primary-forest-green)] tracking-tight"
-              )}
-            >
-              Account Settings
-            </h1>
-            <p className="mt-1 text-sm text-[var(--content-secondary)] max-w-2xl">
-              Configure your credentials, security recovery, notifications, and account preferences.
-            </p>
-          </div>
+        {/* ========================================================================= */}
+        {/* TOP HERO: STUDIO IDENTITY & ACCOUNT OVERVIEW BANNER                       */}
+        {/* ========================================================================= */}
+        <div className="mt-6 rounded-[28px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] p-6 sm:p-8 shadow-xs relative overflow-hidden">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+            {/* User Identity Info */}
+            <div className="flex items-center gap-5">
+              {/* Avatar with Click-to-Upload */}
+              <div className="relative group">
+                <div
+                  onClick={() => avatarFileInputRef.current?.click()}
+                  className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-4 ring-[var(--border-neutral)] shadow-sm cursor-pointer hover:ring-[var(--primary-forest-green)] transition-all"
+                  title="Click to replace avatar photo"
+                >
+                  <Image
+                    src={getValidAvatarUrl(avatarUrl)}
+                    alt={displayName || user.displayName}
+                    fill
+                    sizes="96px"
+                    priority
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white gap-1">
+                    <Camera className="h-5 w-5" />
+                    <span className="text-[10px] font-bold">Change</span>
+                  </div>
+                  {isUploadingAvatar && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                      <Loader2 className="h-6 w-6 text-white animate-spin" />
+                    </div>
+                  )}
+                </div>
+                <OnlineBadge userId={user.id} username={user.username} size="lg" className="absolute bottom-0 right-0 z-10" />
+              </div>
 
-          {/* Quick Action: View Public Studio */}
-          <div className="flex items-center gap-3">
-            <Link
-              href={`/u/${user.username}`}
-              target="_blank"
-              className={buttonVariants({
-                variant: "secondary",
-                size: "sm",
-                className: "gap-1.5 font-bold shadow-xs",
-              })}
-            >
-              <span>View Public Studio</span>
-              <ExternalLink className="h-3.5 w-3.5" />
-            </Link>
+              {/* Text Info */}
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1
+                    className={cn(
+                      bricolage.className,
+                      "text-2xl sm:text-3xl font-black text-[var(--content-primary)] tracking-tight"
+                    )}
+                  >
+                    {displayName || user.displayName}
+                  </h1>
+                  {user.isVerified && <VerifiedBadge size="default" />}
+                </div>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--content-secondary)] font-mono">
+                  <span className="font-semibold text-[var(--content-primary)]">@{user.username}</span>
+                  <span>•</span>
+                  <span>{user.email}</span>
+                </div>
+                {location && (
+                  <div className="flex items-center gap-1 text-xs text-[var(--content-tertiary)] pt-0.5">
+                    <MapPin className="h-3 w-3" />
+                    <span>{location}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Quick Stats & Actions */}
+            <div className="flex flex-wrap items-center gap-3 pt-2 lg:pt-0 border-t lg:border-t-0 border-[var(--border-neutral)]">
+              <div className="flex items-center gap-2 rounded-2xl bg-[var(--bg-screen)] border border-[var(--border-neutral)] px-4 py-2 text-center shadow-xs">
+                <FolderKanban className="h-4 w-4 text-[var(--primary-forest-green)]" />
+                <div className="text-left">
+                  <span className="block text-xs font-bold text-[var(--content-primary)]">
+                    {publishedProjects.length} Works
+                  </span>
+                  <span className="text-[10px] text-[var(--content-tertiary)] uppercase font-mono">
+                    Published
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 rounded-2xl bg-[var(--bg-screen)] border border-[var(--border-neutral)] px-4 py-2 text-center shadow-xs">
+                <Heart className="h-4 w-4 text-[var(--primary-forest-green)]" />
+                <div className="text-left">
+                  <span className="block text-xs font-bold text-[var(--content-primary)]">
+                    {totalAppreciations} Hearts
+                  </span>
+                  <span className="text-[10px] text-[var(--content-tertiary)] uppercase font-mono">
+                    Received
+                  </span>
+                </div>
+              </div>
+
+              <Link
+                href={`/u/${user.username}`}
+                target="_blank"
+                className={buttonVariants({
+                  variant: "secondary",
+                  size: "default",
+                  className: "gap-1.5 font-bold shadow-xs",
+                })}
+              >
+                <span>View Public Studio</span>
+                <ExternalLink className="h-3.5 w-3.5" />
+              </Link>
+            </div>
           </div>
         </div>
 
-        {/* Layout Grid: Sidebar Navigation + Settings Content */}
+        {/* Hidden File Input for Avatar */}
+        <input
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          ref={avatarFileInputRef}
+          onChange={(e) => {
+            if (e.target.files && e.target.files[0]) {
+              handleAvatarFile(e.target.files[0]);
+            }
+          }}
+          className="hidden"
+        />
+
+        {/* ========================================================================= */}
+        {/* MAIN SETTINGS GRID: SIDEBAR TABS (Left) + TAB PANELS (Right)              */}
+        {/* ========================================================================= */}
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Navigation Tabs (Desktop Sidebar / Mobile Bar) */}
-          <div className="lg:col-span-3">
-            <nav className="flex lg:flex-col gap-1.5 overflow-x-auto pb-2 lg:pb-0 p-1.5 rounded-[20px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] shadow-xs">
+          {/* Navigation Sidebar */}
+          <aside className="lg:col-span-3 lg:sticky lg:top-24 space-y-3">
+            <nav className="flex lg:flex-col gap-1.5 overflow-x-auto p-1.5 rounded-[22px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] shadow-xs no-scrollbar">
+              <button
+                type="button"
+                onClick={() => setActiveTab("profile")}
+                className={cn(
+                  "flex items-center gap-3 rounded-[14px] px-4 py-3 text-xs font-bold transition-all whitespace-nowrap cursor-pointer text-left w-full",
+                  activeTab === "profile"
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                    : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
+                )}
+              >
+                <User className="h-4 w-4 shrink-0" />
+                <span>Profile & Studio Info</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => setActiveTab("security")}
@@ -242,7 +444,7 @@ export function SettingsClient() {
                 )}
               >
                 <Bell className="h-4 w-4 shrink-0" />
-                <span>Preferences & Privacy</span>
+                <span>Notifications & Privacy</span>
               </button>
 
               <button
@@ -259,28 +461,180 @@ export function SettingsClient() {
                 <span>Danger Zone</span>
               </button>
             </nav>
-          </div>
+
+            {/* Quick Context Card */}
+            <div className="hidden lg:block p-4 rounded-[20px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] text-xs text-[var(--content-secondary)] space-y-2">
+              <div className="flex items-center gap-1.5 font-bold text-[var(--content-primary)]">
+                <Lock className="h-3.5 w-3.5 text-[var(--primary-forest-green)]" />
+                <span>Encrypted Studio</span>
+              </div>
+              <p className="text-[11px] leading-relaxed text-[var(--content-tertiary)]">
+                Your portfolio data, custom media assets, and security credentials are authenticated through Supabase Row-Level Security.
+              </p>
+            </div>
+          </aside>
 
           {/* Settings Main Content Area */}
-          <div className="lg:col-span-9 space-y-6">
+          <main className="lg:col-span-9 space-y-6">
             {/* ============================================================= */}
-            {/* 1. SECURITY & CREDENTIALS TAB                                */}
+            {/* 1. PROFILE & STUDIO DETAILS TAB                               */}
+            {/* ============================================================= */}
+            {activeTab === "profile" && (
+              <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] p-6 sm:p-8 rounded-[28px] shadow-sm space-y-6">
+                <div>
+                  <h2 className="type-title-subsection text-[var(--content-primary)] font-bold text-xl">
+                    Profile & Studio Presence
+                  </h2>
+                  <p className="mt-1 text-xs text-[var(--content-secondary)]">
+                    Update your public display identity, biography manifesto, location, and creative disciplines.
+                  </p>
+                </div>
+
+                <form onSubmit={handleSaveProfile} className="space-y-6">
+                  {/* Display Name & Handle */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5 text-xs">
+                        Display Name
+                      </label>
+                      <Input
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
+                        placeholder="e.g. Elena Vance"
+                        required
+                        className="h-11 text-sm font-semibold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5 text-xs">
+                        Studio Username (@handle)
+                      </label>
+                      <Input
+                        value={`@${user.username}`}
+                        disabled
+                        className="h-11 text-sm font-mono bg-[var(--bg-neutral)]/50 text-[var(--content-secondary)] cursor-not-allowed"
+                      />
+                      <span className="text-[10px] text-[var(--content-tertiary)] mt-1 block">
+                        Unique handle assigned at registration.
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Bio / Design Manifesto */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="type-body-default-bold text-[var(--content-primary)] text-xs">
+                        About / Studio Manifesto
+                      </label>
+                      <span
+                        className={cn(
+                          "text-xs font-mono font-semibold",
+                          bio.length >= 280
+                            ? "text-[var(--negative)]"
+                            : bio.length >= 240
+                            ? "text-amber-500"
+                            : "text-[var(--content-tertiary)]"
+                        )}
+                      >
+                        {bio.length}/280 max
+                      </span>
+                    </div>
+                    <Textarea
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value.slice(0, 280))}
+                      maxLength={280}
+                      rows={3}
+                      placeholder="Tell the design community about your studio philosophy and design approach..."
+                      className="text-sm"
+                    />
+                  </div>
+
+                  {/* Location & Website */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <LocationInput
+                      value={location}
+                      onChange={setLocation}
+                      label="Location / Base"
+                      placeholder="e.g. Berlin, Germany"
+                      showPresets={false}
+                      enableAutoDetect={true}
+                    />
+
+                    <div>
+                      <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5 text-xs">
+                        Website or Portfolio URL
+                      </label>
+                      <Input
+                        type="url"
+                        value={website}
+                        onChange={(e) => setWebsite(e.target.value)}
+                        placeholder="https://studio.design"
+                        className="h-11 text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Disciplines & Specializations (SkillsPicker) */}
+                  <div className="pt-4 border-t border-[var(--border-neutral)]">
+                    <SkillsPicker
+                      selectedSkills={skills}
+                      onChange={setSkills}
+                    />
+                  </div>
+
+                  {/* Submit Button & Status Indicator */}
+                  <div className="flex items-center justify-between pt-4 border-t border-[var(--border-neutral)]">
+                    {profileSavedSuccess ? (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--sentiment-positive-bg)] dark:text-[var(--accent)] animate-scale-in">
+                        <Check className="h-4 w-4" />
+                        <span>Profile successfully updated!</span>
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-[var(--content-tertiary)]">
+                        Changes are immediately visible across your public studio.
+                      </span>
+                    )}
+
+                    <Button
+                      type="submit"
+                      variant="accent"
+                      size="default"
+                      disabled={isSavingProfile}
+                      className="gap-2 font-bold shadow-xs min-w-[140px]"
+                    >
+                      {isSavingProfile ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Saving...</span>
+                        </>
+                      ) : (
+                        <span>Save Changes</span>
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </Card>
+            )}
+
+            {/* ============================================================= */}
+            {/* 2. SECURITY & CREDENTIALS TAB                                */}
             {/* ============================================================= */}
             {activeTab === "security" && (
               <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] p-6 sm:p-8 rounded-[28px] shadow-sm space-y-6">
                 <div>
-                  <h2 className="type-title-subsection text-[var(--content-primary)]">
+                  <h2 className="type-title-subsection text-[var(--content-primary)] font-bold text-xl">
                     Security & Authentication
                   </h2>
                   <p className="mt-1 text-xs text-[var(--content-secondary)]">
-                    Manage your verified email address and single-session account password recovery.
+                    Manage your authenticated email credentials and dispatch password recovery links.
                   </p>
                 </div>
 
                 {/* Email Section */}
-                <div className="p-4 rounded-[20px] bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--bg-neutral)] text-[var(--primary-forest-green)] shrink-0">
+                <div className="p-5 rounded-[20px] bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--bg-screen)] border border-[var(--border-neutral)] text-[var(--primary-forest-green)] shrink-0 shadow-xs">
                       <Mail className="h-5 w-5" />
                     </div>
                     <div>
@@ -300,8 +654,8 @@ export function SettingsClient() {
                           </span>
                         )}
                       </div>
-                      <span className="text-[11px] text-[var(--content-tertiary)]">
-                        Primary email used for sign-in and security notifications.
+                      <span className="text-[11px] text-[var(--content-tertiary)] block mt-0.5">
+                        Primary email used for sign-in, multi-factor notifications, and account recovery.
                       </span>
                     </div>
                   </div>
@@ -309,9 +663,9 @@ export function SettingsClient() {
 
                 {/* Password Reset Dispatch Section */}
                 <div className="p-5 rounded-[20px] border border-[var(--border-neutral)] bg-[var(--bg-elevated)] space-y-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent)]/20 text-[var(--primary-forest-green)] shrink-0 mt-0.5">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                    <div className="flex items-start gap-3.5">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--accent)] text-[#090C09] shrink-0 mt-0.5 shadow-xs">
                         <KeyRound className="h-5 w-5" />
                       </div>
                       <div>
@@ -319,7 +673,7 @@ export function SettingsClient() {
                           Account Password
                         </h3>
                         <p className="text-xs text-[var(--content-secondary)] mt-0.5 max-w-md leading-relaxed">
-                          To change your password, request a secure single-use recovery link. Upon clicking the link in your inbox, a pop-up modal will allow you to define a new password.
+                          To update your password, request a secure single-use recovery link. Clicking the link in your inbox will securely open the password update modal.
                         </p>
                       </div>
                     </div>
@@ -352,10 +706,10 @@ export function SettingsClient() {
                   </div>
 
                   {resetSentSuccess && (
-                    <div className="rounded-xl border border-[var(--sentiment-positive-bg)]/30 bg-[var(--sentiment-positive-bg)]/10 p-3.5 text-xs text-[var(--sentiment-positive-bg)] dark:text-[var(--accent)] font-semibold flex items-center gap-2">
+                    <div className="rounded-xl border border-[var(--sentiment-positive-bg)]/30 bg-[var(--sentiment-positive-bg)]/10 p-3.5 text-xs text-[var(--sentiment-positive-bg)] dark:text-[var(--accent)] font-semibold flex items-center gap-2 animate-scale-in">
                       <CheckCircle2 className="h-4 w-4 shrink-0" />
                       <span>
-                        Password reset link successfully sent to <strong>{user.email}</strong>. Open the link to update your password in the single-use modal.
+                        Password reset link successfully dispatched to <strong>{user.email}</strong>. Open the link to update your credentials.
                       </span>
                     </div>
                   )}
@@ -371,18 +725,25 @@ export function SettingsClient() {
             )}
 
             {/* ============================================================= */}
-            {/* 2. PREFERENCES & PRIVACY TAB                                 */}
+            {/* 3. PREFERENCES & PRIVACY TAB                                 */}
             {/* ============================================================= */}
             {activeTab === "preferences" && (
               <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] p-6 sm:p-8 rounded-[28px] shadow-sm space-y-6">
                 <div>
-                  <h2 className="type-title-subsection text-[var(--content-primary)]">
+                  <h2 className="type-title-subsection text-[var(--content-primary)] font-bold text-xl">
                     Notification & Privacy Preferences
                   </h2>
                   <p className="mt-1 text-xs text-[var(--content-secondary)]">
-                    Control what notifications you receive and how your studio appears in the public creator directory.
+                    Control your activity notifications stream, discovery visibility, and communications.
                   </p>
                 </div>
+
+                {preferencesSavedNotice && (
+                  <div className="rounded-xl border border-[var(--sentiment-positive-bg)]/30 bg-[var(--sentiment-positive-bg)]/10 p-3 text-xs text-[var(--sentiment-positive-bg)] dark:text-[var(--accent)] font-semibold flex items-center gap-2 animate-scale-in">
+                    <Check className="h-4 w-4 shrink-0" />
+                    <span>Preferences updated successfully.</span>
+                  </div>
+                )}
 
                 <div className="space-y-4 divide-y divide-[var(--border-neutral)]">
                   {/* Public Directory Visibility */}
@@ -392,12 +753,15 @@ export function SettingsClient() {
                         Public Creator Directory Listing
                       </span>
                       <span className="text-[11px] text-[var(--content-secondary)] block">
-                        Display your studio in the global Creators discovery stream.
+                        Allow your studio and portfolio to be indexed in the global Creators directory.
                       </span>
                     </div>
                     <button
                       type="button"
-                      onClick={() => setDirectoryDiscoverable(!directoryDiscoverable)}
+                      onClick={() => {
+                        setDirectoryDiscoverable(!directoryDiscoverable);
+                        triggerPreferenceSave();
+                      }}
                       className={cn(
                         "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-none",
                         directoryDiscoverable ? "bg-[var(--primary-forest-green)]" : "bg-[var(--border-neutral)]"
@@ -420,12 +784,15 @@ export function SettingsClient() {
                         Peer Appreciations (Likes)
                       </span>
                       <span className="text-[11px] text-[var(--content-secondary)] block">
-                        Receive activity notifications when creators appreciate your monographs.
+                        Receive activity notifications when peers appreciate your published works.
                       </span>
                     </div>
                     <button
                       type="button"
-                      onClick={() => setAppreciateNotifs(!appreciateNotifs)}
+                      onClick={() => {
+                        setAppreciateNotifs(!appreciateNotifs);
+                        triggerPreferenceSave();
+                      }}
                       className={cn(
                         "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-none",
                         appreciateNotifs ? "bg-[var(--primary-forest-green)]" : "bg-[var(--border-neutral)]"
@@ -441,19 +808,22 @@ export function SettingsClient() {
                     </button>
                   </div>
 
-                  {/* Comment & Feedback Notifications */}
+                  {/* Critique & Feedback Notifications */}
                   <div className="flex items-center justify-between pt-4">
                     <div>
                       <span className="text-xs font-bold text-[var(--content-primary)] block">
                         Critiques & Discussion Notes
                       </span>
                       <span className="text-[11px] text-[var(--content-secondary)] block">
-                        Get notified when peers leave feedback on your published case studies.
+                        Get notified when peers leave feedback and critiques on your case studies.
                       </span>
                     </div>
                     <button
                       type="button"
-                      onClick={() => setCommentNotifs(!commentNotifs)}
+                      onClick={() => {
+                        setCommentNotifs(!commentNotifs);
+                        triggerPreferenceSave();
+                      }}
                       className={cn(
                         "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-none",
                         commentNotifs ? "bg-[var(--primary-forest-green)]" : "bg-[var(--border-neutral)]"
@@ -468,12 +838,43 @@ export function SettingsClient() {
                       />
                     </button>
                   </div>
+
+                  {/* Follower Notifications */}
+                  <div className="flex items-center justify-between pt-4">
+                    <div>
+                      <span className="text-xs font-bold text-[var(--content-primary)] block">
+                        New Followers
+                      </span>
+                      <span className="text-[11px] text-[var(--content-secondary)] block">
+                        Receive instant alerts when new designers follow your creative studio.
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFollowerNotifs(!followerNotifs);
+                        triggerPreferenceSave();
+                      }}
+                      className={cn(
+                        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-none",
+                        followerNotifs ? "bg-[var(--primary-forest-green)]" : "bg-[var(--border-neutral)]"
+                      )}
+                      aria-label="Toggle follower notifications"
+                    >
+                      <span
+                        className={cn(
+                          "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out",
+                          followerNotifs ? "translate-x-5" : "translate-x-0"
+                        )}
+                      />
+                    </button>
+                  </div>
                 </div>
               </Card>
             )}
 
             {/* ============================================================= */}
-            {/* 3. DANGER ZONE TAB                                           */}
+            {/* 4. DANGER ZONE TAB                                           */}
             {/* ============================================================= */}
             {activeTab === "danger" && (
               <Card elevated className="border border-rose-500/30 bg-rose-500/5 p-6 sm:p-8 rounded-[28px] shadow-sm space-y-6">
@@ -486,7 +887,7 @@ export function SettingsClient() {
                       Danger Zone
                     </h2>
                     <p className="mt-1 text-xs text-[var(--content-secondary)] leading-relaxed max-w-xl">
-                      Actions in this section are irreversible. Deleting your account will completely purge all your published case studies, uploaded gallery spreads, peer feedback, appreciations, and studio profile from the database.
+                      Actions in this section are permanent and irreversible. Deleting your account will completely purge all your published case studies, uploaded gallery spreads, peer feedback, appreciations, and studio profile from the database.
                     </p>
                   </div>
                 </div>
@@ -497,7 +898,7 @@ export function SettingsClient() {
                       Permanently Delete Account
                     </div>
                     <div className="text-xs text-[var(--content-secondary)] mt-0.5">
-                      Once deleted, your studio username and data cannot be recovered.
+                      Once deleted, your studio handle @{user.username} and all records cannot be recovered.
                     </div>
                   </div>
 
@@ -512,7 +913,7 @@ export function SettingsClient() {
                 </div>
               </Card>
             )}
-          </div>
+          </main>
         </div>
       </FadeIn>
 
