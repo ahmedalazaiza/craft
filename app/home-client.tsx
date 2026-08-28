@@ -144,12 +144,12 @@ export function HomeClient({
           <h1
             className={cn(
               bricolage.className,
-              "text-[44px] sm:text-6xl md:text-7xl lg:text-[84px] xl:text-[92px] font-black tracking-[-0.04em] leading-[1.02] sm:leading-[0.96] text-[var(--primary-forest-green)] text-center w-full flex flex-col items-center justify-center max-w-4xl"
+              "text-[44px] sm:text-6xl md:text-7xl lg:text-[84px] xl:text-[92px] font-black tracking-[-0.04em] leading-[1.02] sm:leading-[0.96] text-[var(--primary-forest-green)] dark:text-white text-center w-full flex flex-col items-center justify-center max-w-4xl"
             )}
           >
             <span className="block w-full text-center overflow-hidden">
               <motion.span
-                className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--primary-forest-green)] text-center"
+                className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--primary-forest-green)] dark:text-white text-center"
                 initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: "100%" }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{
@@ -159,16 +159,16 @@ export function HomeClient({
                 }}
               >
                 <span>Showcase your</span>
-                <span className="relative inline-flex items-center px-3.5 sm:px-5 py-0.5 sm:py-1 rounded-xl sm:rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] font-black text-3xl sm:text-4xl md:text-5xl lg:text-[76px] xl:text-[84px] shadow-sm border border-white/10 align-middle">
+                <span className="relative inline-flex items-center px-3.5 sm:px-5 py-0.5 sm:py-1 rounded-xl sm:rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[var(--accent)] dark:text-[#090C09] font-black text-3xl sm:text-4xl md:text-5xl lg:text-[76px] xl:text-[84px] shadow-sm border border-white/10 dark:border-[var(--accent)] align-middle">
                   <span>work</span>
-                  <span className="text-[var(--accent)] ml-0.5">.</span>
+                  <span className="text-[var(--accent)] dark:text-[#090C09] ml-0.5">.</span>
                 </span>
               </motion.span>
             </span>
 
             <span className="flex items-center justify-center w-full overflow-hidden mt-1.5 sm:mt-3">
               <motion.span
-                className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--content-primary)] text-center"
+                className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--content-primary)] dark:text-white text-center"
                 initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: "100%" }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{
@@ -178,9 +178,9 @@ export function HomeClient({
                 }}
               >
                 <span>Connect with</span>
-                <span className="relative inline-flex items-center px-3.5 sm:px-5 py-0.5 sm:py-1 rounded-xl sm:rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] font-black text-3xl sm:text-4xl md:text-5xl lg:text-[76px] xl:text-[84px] shadow-sm border border-white/10 align-middle">
+                <span className="relative inline-flex items-center px-3.5 sm:px-5 py-0.5 sm:py-1 rounded-xl sm:rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[var(--accent)] dark:text-[#090C09] font-black text-3xl sm:text-4xl md:text-5xl lg:text-[76px] xl:text-[84px] shadow-sm border border-white/10 dark:border-[var(--accent)] align-middle">
                   <span>makers</span>
-                  <span className="text-[var(--accent)] ml-0.5">.</span>
+                  <span className="text-[var(--accent)] dark:text-[#090C09] ml-0.5">.</span>
                 </span>
               </motion.span>
             </span>
