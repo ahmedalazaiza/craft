@@ -221,12 +221,75 @@ DROP POLICY IF EXISTS "Allow all comment mutations" ON public.comments;
 CREATE POLICY "Allow all comment mutations" ON public.comments FOR ALL USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Allow all follow mutations" ON public.follows;
-CREATE POLICY "Allow all follow mutations" ON public.follows FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Public profiles read" ON public.profiles;
+CREATE POLICY "Public profiles read" ON public.profiles FOR SELECT USING (true);
 
-DROP POLICY IF EXISTS "Allow all notification mutations" ON public.notifications;
-CREATE POLICY "Allow all notification mutations" ON public.notifications FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Users can insert their own profile" ON public.profiles;
+CREATE POLICY "Users can insert their own profile" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
 
--- Storage bucket access
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
+CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Users can delete own profile" ON public.profiles;
+CREATE POLICY "Users can delete own profile" ON public.profiles FOR DELETE USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Public projects read" ON public.projects;
+CREATE POLICY "Public projects read" ON public.projects FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Users can insert own projects" ON public.projects;
+CREATE POLICY "Users can insert own projects" ON public.projects FOR INSERT WITH CHECK (auth.uid() = creator_id);
+
+DROP POLICY IF EXISTS "Users can update own projects" ON public.projects;
+CREATE POLICY "Users can update own projects" ON public.projects FOR UPDATE USING (auth.uid() = creator_id);
+
+DROP POLICY IF EXISTS "Users can delete own projects" ON public.projects;
+CREATE POLICY "Users can delete own projects" ON public.projects FOR DELETE USING (auth.uid() = creator_id);
+
+DROP POLICY IF EXISTS "Public appreciations read" ON public.appreciations;
+CREATE POLICY "Public appreciations read" ON public.appreciations FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Users can insert appreciations" ON public.appreciations;
+CREATE POLICY "Users can insert appreciations" ON public.appreciations FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete appreciations" ON public.appreciations;
+CREATE POLICY "Users can delete appreciations" ON public.appreciations FOR DELETE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Public comments read" ON public.comments;
+CREATE POLICY "Public comments read" ON public.comments FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Users can insert comments" ON public.comments;
+CREATE POLICY "Users can insert comments" ON public.comments FOR INSERT WITH CHECK (auth.uid() = author_id);
+
+DROP POLICY IF EXISTS "Public follows read" ON public.follows;
+CREATE POLICY "Public follows read" ON public.follows FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Users can insert follows" ON public.follows;
+CREATE POLICY "Users can insert follows" ON public.follows FOR INSERT WITH CHECK (auth.uid() = follower_id);
+
+DROP POLICY IF EXISTS "Users can delete follows" ON public.follows;
+CREATE POLICY "Users can delete follows" ON public.follows FOR DELETE USING (auth.uid() = follower_id);
+
+DROP POLICY IF EXISTS "Users can read own notifications" ON public.notifications;
+CREATE POLICY "Users can read own notifications" ON public.notifications FOR SELECT USING (auth.uid() = recipient_id);
+
+DROP POLICY IF EXISTS "Users can insert notifications" ON public.notifications;
+CREATE POLICY "Users can insert notifications" ON public.notifications FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Users can update own notifications" ON public.notifications;
+CREATE POLICY "Users can update own notifications" ON public.notifications FOR UPDATE USING (auth.uid() = recipient_id);
+
+-- =============================================================================
+-- 8. STORAGE BUCKETS & POLICIES
+-- =============================================================================
+
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('project-media', 'project-media', true)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('avatars', 'avatars', true)
+ON CONFLICT (id) DO NOTHING;
+
 DROP POLICY IF EXISTS "Public storage read" ON storage.objects;
 CREATE POLICY "Public storage read" ON storage.objects FOR SELECT USING (bucket_id IN ('project-media', 'avatars'));
 
@@ -248,7 +311,7 @@ VALUES
     'Berlin, Germany',
     'Berlin',
     'https://elenavance.design',
-    ARRAY['Brand Systems', 'Typography', 'Art Direction', 'Motion'],
+    ARRAY['Brand Identity', 'Type Design & Lettering', 'Motion Design', 'Typography Scale'],
     true,
     true,
     0
@@ -262,7 +325,7 @@ VALUES
     'Tokyo, Japan',
     'Tokyo',
     'https://sato.works',
-    ARRAY['UI Systems', 'Creative Code', 'Interaction', 'Next.js'],
+    ARRAY['User Interface Design (UI)', 'User Experience Design (UX)', 'Design Systems', 'Prototyping'],
     true,
     true,
     0
@@ -276,7 +339,7 @@ VALUES
     'London, United Kingdom',
     'London',
     'https://mayalin.studio',
-    ARRAY['Photography', '3D Rendering', 'CGI', 'Editorial'],
+    ARRAY['3D Design', 'AR/VR & Spatial Design', '3D Rendering', 'Architectural Visualization'],
     true,
     false,
     0
@@ -290,7 +353,7 @@ VALUES
     'Zurich, Switzerland',
     'Zurich',
     'https://keller-editions.ch',
-    ARRAY['Editorial', 'Print', 'Book Design', 'Identity'],
+    ARRAY['Graphic Design', 'Print Design', 'Editorial & Magazine Design', 'Book Design'],
     true,
     true,
     0
@@ -304,7 +367,7 @@ VALUES
     'New York, USA',
     'New York',
     'https://sophiachen.audio',
-    ARRAY['Industrial Design', 'Hardware UI', 'Machining', 'CAD'],
+    ARRAY['Industrial & Physical Product Design', 'Consumer Electronics', 'Rapid Prototyping', 'CMF (Color, Materials, Finish)'],
     false,
     false,
     0
@@ -318,7 +381,7 @@ VALUES
     'Stockholm, Sweden',
     'Stockholm',
     'https://nordstrom-ark.se',
-    ARRAY['Architecture', 'Spatial Design', 'Timber Craft', 'Structures'],
+    ARRAY['3D Design', 'AR/VR & Spatial Design', 'Environment Design', 'Spatial Interfaces'],
     true,
     false,
     0
@@ -328,6 +391,7 @@ ON CONFLICT (id) DO UPDATE SET
     display_name = EXCLUDED.display_name,
     avatar_url = EXCLUDED.avatar_url,
     bio = EXCLUDED.bio,
+    skills = EXCLUDED.skills,
     is_verified = EXCLUDED.is_verified,
     is_online = EXCLUDED.is_online;
 
@@ -335,7 +399,7 @@ ON CONFLICT (id) DO UPDATE SET
 -- INITIAL LIVE SEED DATA (ALL 16 PROJECTS)
 -- =============================================================================
 
-INSERT INTO public.projects (id, slug, title, summary, body, cover_image, gallery_images, category, medium, tags, tools, published, featured, creator_id, appreciations_count, published_at)
+INSERT INTO public.projects (id, slug, title, summary, body, cover_image, gallery_images, category, sub_category, medium, tags, tools, published, featured, creator_id, appreciations_count, published_at)
 VALUES
 (
     'b0000001-0000-4000-8000-000000000001',
@@ -350,10 +414,11 @@ VALUES
         'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?w=1400&auto=format&fit=crop&q=85',
         'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1400&auto=format&fit=crop&q=85'
     ],
-    'Brand',
+    'Brand Identity',
+    'Brand Guidelines',
     'PDF/Case study',
-    ARRAY['Brand', 'Editorial', 'Typography', 'Architecture'],
-    ARRAY['InDesign', 'Figma', 'Glyphs', 'Film Photography'],
+    ARRAY['Brand Marks', 'Style Guides', 'Color Palettes', 'Typography Hierarchy'],
+    ARRAY['Adobe Illustrator', 'Adobe InDesign', 'Figma', 'Glyphs'],
     true,
     true,
     'a0000001-0000-4000-8000-000000000001',
@@ -372,10 +437,11 @@ VALUES
         'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1400&auto=format&fit=crop&q=85',
         'https://images.unsplash.com/photo-1558655146-d09347e92766?w=1400&auto=format&fit=crop&q=85'
     ],
-    'UI',
+    'User Interface Design (UI)',
+    'Dashboard & SaaS Design',
     'Prototype',
-    ARRAY['UI', 'Systems', 'Interaction', 'Design Engineering'],
-    ARRAY['Figma', 'TypeScript', 'WebGL', 'Rust'],
+    ARRAY['Design Tokens', 'Auto-layout', 'Component Architecture', 'Dark Mode', 'Micro-interactions'],
+    ARRAY['Figma', 'Framer', 'VS Code', 'Zeplin'],
     true,
     true,
     'a0000002-0000-4000-8000-000000000002',
@@ -393,10 +459,11 @@ VALUES
         'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400&auto=format&fit=crop&q=85',
         'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1400&auto=format&fit=crop&q=85'
     ],
-    'Photo',
+    '3D Design',
+    'Architectural Visualization',
     'Image',
-    ARRAY['Photography', 'Architecture', 'Editorial', 'Monochrome'],
-    ARRAY['Hasselblad H6D', 'Phase One', 'Capture One'],
+    ARRAY['Lighting', 'Texturing', 'Photorealism', 'PBR Materials'],
+    ARRAY['Blender', 'Cinema 4D', 'OctaneRender', 'V-Ray'],
     true,
     true,
     'a0000003-0000-4000-8000-000000000003',
@@ -413,10 +480,11 @@ VALUES
     ARRAY[
         'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=1400&auto=format&fit=crop&q=85'
     ],
-    'Editorial',
+    'Graphic Design',
+    'Editorial & Magazine Design',
     'PDF/Case study',
-    ARRAY['Editorial', 'Print', 'Risograph', 'Typography'],
-    ARRAY['InDesign', 'Risograph GR3750', 'Hand Binding'],
+    ARRAY['Grid Systems', 'Layout Composition', 'Print Production', 'Visual Hierarchy'],
+    ARRAY['Adobe InDesign', 'Adobe Illustrator', 'Adobe Photoshop'],
     true,
     false,
     'a0000004-0000-4000-8000-000000000004',
@@ -433,10 +501,11 @@ VALUES
     ARRAY[
         'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=1400&auto=format&fit=crop&q=85'
     ],
-    'Product',
+    'Industrial & Physical Product Design',
+    'Consumer Electronics',
     '3D',
-    ARRAY['Product', 'Industrial Design', 'Hardware', 'Audio'],
-    ARRAY['Fusion 360', 'SolidWorks', 'CNC Milling', 'Altium'],
+    ARRAY['CMF (Color, Materials, Finish)', 'Ergonomics', 'Rapid Prototyping', 'User-Centered Hardware'],
+    ARRAY['SolidWorks', 'Fusion 360', 'KeyShot', 'Rhino'],
     true,
     false,
     'a0000005-0000-4000-8000-000000000005',
@@ -453,10 +522,11 @@ VALUES
     ARRAY[
         'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400&auto=format&fit=crop&q=85'
     ],
-    'Architecture',
+    '3D Design',
+    'Environment Design',
     'PDF/Case study',
-    ARRAY['Architecture', 'Spatial', 'Woodwork', 'Sustainability'],
-    ARRAY['Rhino', 'Grasshopper', 'Timber Framing'],
+    ARRAY['3D Modeling', 'Photorealism', 'Shading', 'ArchViz'],
+    ARRAY['Rhino', 'Blender', 'KeyShot', 'AutoCAD'],
     true,
     false,
     'a0000006-0000-4000-8000-000000000006',
@@ -473,10 +543,11 @@ VALUES
     ARRAY[
         'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=1400&auto=format&fit=crop&q=85'
     ],
-    'Type',
+    'Type Design & Lettering',
+    'Font Creation',
     'Prototype',
-    ARRAY['Type', 'Typography', 'Variable Font', 'Creative Code'],
-    ARRAY['Glyphs 3', 'Python', 'RoboFont'],
+    ARRAY['Variable Fonts', 'Kerning', 'Ligatures', 'Glyphs', 'Typographic Scales'],
+    ARRAY['Glyphs', 'FontForge', 'RoboFont', 'FontLab'],
     true,
     false,
     'a0000001-0000-4000-8000-000000000001',
@@ -493,10 +564,11 @@ VALUES
     ARRAY[
         'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=1400&auto=format&fit=crop&q=85'
     ],
-    'Editorial',
+    'Graphic Design',
+    'Print Design',
     'PDF/Case study',
-    ARRAY['Brand', 'Editorial', 'Print', 'Typography'],
-    ARRAY['InDesign', 'Screen Printing', 'Figma'],
+    ARRAY['Layout Composition', 'Grid Systems', 'Visual Hierarchy', 'Die-cut'],
+    ARRAY['Adobe InDesign', 'Adobe Illustrator', 'Adobe Photoshop'],
     true,
     false,
     'a0000004-0000-4000-8000-000000000004',
@@ -513,10 +585,11 @@ VALUES
     ARRAY[
         'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1400&auto=format&fit=crop&q=85'
     ],
-    'UI',
+    'User Interface Design (UI)',
+    'Web Design',
     'Prototype',
-    ARRAY['UI', 'Creative Code', 'Interaction', 'Shaders'],
-    ARRAY['WebGL', 'GLSL', 'TypeScript', 'Three.js'],
+    ARRAY['Auto-layout', 'Design Tokens', 'Micro-interactions', 'Dark Mode'],
+    ARRAY['Figma', 'VS Code', 'Framer'],
     true,
     true,
     'a0000002-0000-4000-8000-000000000002',
@@ -533,10 +606,11 @@ VALUES
     ARRAY[
         'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400&auto=format&fit=crop&q=85'
     ],
-    'Architecture',
+    '3D Design',
+    '3D Modeling',
     'PDF/Case study',
-    ARRAY['Architecture', 'Timber Craft', 'Structures', 'Design'],
-    ARRAY['Rhino', 'Hand Joinery', 'Film'],
+    ARRAY['Hard Surface Modeling', 'Texturing', 'UV Mapping', 'ArchViz'],
+    ARRAY['Rhino', 'Blender', 'KeyShot'],
     true,
     false,
     'a0000006-0000-4000-8000-000000000006',
@@ -553,10 +627,11 @@ VALUES
     ARRAY[
         'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1400&auto=format&fit=crop&q=85'
     ],
-    'UI',
+    'User Interface Design (UI)',
+    'Design Systems',
     'Prototype',
-    ARRAY['UI', 'Design Systems', 'Tokens', 'Interaction'],
-    ARRAY['Figma', 'Tokens Studio', 'TypeScript'],
+    ARRAY['Design Tokens', 'Component Architecture', '8-Point Grid', 'Auto-layout'],
+    ARRAY['Figma', 'VS Code', 'Relume'],
     true,
     false,
     'a0000002-0000-4000-8000-000000000002',
@@ -573,10 +648,11 @@ VALUES
     ARRAY[
         'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1400&auto=format&fit=crop&q=85'
     ],
-    'UI',
+    'Motion Design',
+    'UI Animation',
     'Prototype',
-    ARRAY['UI', 'Creative Code', 'Shaders', 'WebGL'],
-    ARRAY['WebGPU', 'GLSL', 'React'],
+    ARRAY['Transitions', 'Easing Curves', 'Compositing', 'Dynamic Graphics'],
+    ARRAY['Cinema 4D', 'Rive', 'Spline', 'After Effects'],
     true,
     false,
     'a0000002-0000-4000-8000-000000000002',
@@ -593,10 +669,11 @@ VALUES
     ARRAY[
         'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=1400&auto=format&fit=crop&q=85'
     ],
-    'Brand',
+    'Brand Identity',
+    'Visual Strategy',
     'Image',
-    ARRAY['Brand', 'Typography', 'Motion', 'Poster'],
-    ARRAY['After Effects', 'Glyphs', 'Illustrator'],
+    ARRAY['Brand Marks', 'Tone of Voice', 'Visual Language', 'Pattern Design'],
+    ARRAY['Adobe Illustrator', 'Adobe After Effects', 'Glyphs'],
     true,
     false,
     'a0000001-0000-4000-8000-000000000001',
@@ -613,10 +690,11 @@ VALUES
     ARRAY[
         'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=1400&auto=format&fit=crop&q=85'
     ],
-    'Editorial',
+    'Graphic Design',
+    'Book Design',
     'PDF/Case study',
-    ARRAY['Editorial', 'Print', 'Monograph', 'Publishing'],
-    ARRAY['InDesign', 'Letterpress', 'Foil Stamping'],
+    ARRAY['Layout Composition', 'Grid Systems', 'Pre-press', 'Typography Hierarchy'],
+    ARRAY['Adobe InDesign', 'Adobe Illustrator', 'Affinity Designer'],
     true,
     false,
     'a0000004-0000-4000-8000-000000000004',
@@ -633,10 +711,11 @@ VALUES
     ARRAY[
         'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400&auto=format&fit=crop&q=85'
     ],
-    'Architecture',
+    'AR/VR & Spatial Design',
+    'Spatial Interfaces',
     'PDF/Case study',
-    ARRAY['Architecture', 'Spatial', 'Woodwork', 'Acoustics'],
-    ARRAY['Rhino', 'Karamba3D', 'Timber Framing'],
+    ARRAY['Spatial Computing', '360 Environments', 'Immersive Experience'],
+    ARRAY['Unity', 'Spline', 'ShapesXR', 'Unreal Engine'],
     true,
     false,
     'a0000006-0000-4000-8000-000000000006',
@@ -648,15 +727,16 @@ VALUES
     'concrete-forms-photobook',
     'Forms in Shadow: Post-War Concrete Monoliths Photobook',
     'Monochrome medium-format film documentation of forgotten concrete monuments and architectural scale.',
-    'Captured across 8 cities over 3 years on Kodak Tri-X 400 film, curated into an unvarnished hardbound volume.',
+    'A hardbound 200-page monograph documenting brutalist monuments throughout Eastern Europe.',
     'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400&auto=format&fit=crop&q=85',
     ARRAY[
-        'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=1400&auto=format&fit=crop&q=85'
+        'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1400&auto=format&fit=crop&q=85'
     ],
-    'Photo',
+    'Graphic Design',
+    'Poster Design',
     'Image',
-    ARRAY['Photo', 'Architecture', 'Monochrome', 'Film'],
-    ARRAY['Hasselblad 500C/M', 'Darkroom Printing'],
+    ARRAY['Layout Composition', 'Color Theory', 'Print Production'],
+    ARRAY['Adobe InDesign', 'Adobe Photoshop', 'Capture One'],
     true,
     false,
     'a0000003-0000-4000-8000-000000000003',

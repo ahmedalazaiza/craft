@@ -11,19 +11,9 @@ import { FilterChip } from "@/components/ui/badge";
 import { FadeIn, StaggerGridItem } from "@/components/ui/motion-wrapper";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Creator } from "@/lib/types";
+import { MASTER_TAXONOMY, normalizeCategory, getCategoryTaxonomy } from "@/lib/taxonomy";
 import { Sparkles, Users, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const QUICK_DISCIPLINES = [
-  "All",
-  "Brand Systems",
-  "Typography",
-  "UI Systems",
-  "Photography",
-  "Editorial",
-  "Industrial Design",
-  "Creative Code",
-];
 
 interface CreatorsClientProps {
   initialCreators?: Creator[];
@@ -56,9 +46,20 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
         }
       }
 
-      // Discipline filter
-      if (filters.discipline && filters.discipline !== "All") {
-        const matchDiscipline = creator.skills.includes(filters.discipline);
+      // Discipline filter matching (checks exact skill or normalized category match)
+      const activeDiscipline = filters.discipline;
+      if (activeDiscipline && activeDiscipline !== "All") {
+        const targetTax = getCategoryTaxonomy(activeDiscipline);
+        const matchDiscipline = creator.skills.some((skill) => {
+          if (skill.toLowerCase() === activeDiscipline.toLowerCase()) return true;
+          if (targetTax) {
+            if (skill.toLowerCase() === targetTax.name.toLowerCase()) return true;
+            if (skill.toLowerCase() === targetTax.shortName.toLowerCase()) return true;
+            if (targetTax.subCategories.some((sub) => sub.toLowerCase() === skill.toLowerCase())) return true;
+            if (targetTax.tags.some((tag) => tag.toLowerCase() === skill.toLowerCase())) return true;
+          }
+          return false;
+        });
         if (!matchDiscipline) return false;
       }
 
@@ -128,7 +129,6 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
           ]}
         />
 
-
         {/* ========================================================================= */}
         {/* UNIFIED BALANCED HEADER (Title & Description on Left + Stats on Right)   */}
         {/* ========================================================================= */}
@@ -144,35 +144,35 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
                 "text-3xl sm:text-4xl lg:text-[42px] font-bold text-[var(--primary-forest-green)] leading-tight tracking-tight"
               )}
             >
-              Discover Creators & Designers
+              Discover Global Creators
             </h1>
             <p className="mt-2 type-body-large text-[var(--content-secondary)] leading-relaxed">
-              Explore portfolios, follow designers, and connect with creative talent worldwide.
+              Explore independent designers, art directors, typographers, and creative engineers publishing on Craft worldwide.
             </p>
           </div>
 
-          {/* Right-aligned Directory Quick Metrics */}
+          {/* Right-aligned Directory Stats Cards */}
           <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-            <div className="flex items-center gap-2.5 rounded-2xl bg-[var(--bg-neutral)]/50 border border-[var(--border-neutral)] px-4 py-2.5">
+            <div className="flex items-center gap-2.5 rounded-2xl bg-[var(--bg-neutral)]/50 border border-[var(--border-neutral)] px-4 py-2.5 shadow-xs">
               <Users className="h-4 w-4 text-[var(--primary-forest-green)]" />
               <div className="text-left">
                 <span className="block text-xs font-bold text-[var(--content-primary)]">
                   {creators.length} Creators
                 </span>
                 <span className="text-[10px] text-[var(--content-tertiary)] uppercase font-mono">
-                  Verified Creators
+                  {MASTER_TAXONOMY.length} Disciplines
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 rounded-2xl bg-[var(--bg-neutral)]/50 border border-[var(--border-neutral)] px-4 py-2.5">
+            <div className="flex items-center gap-2.5 rounded-2xl bg-[var(--bg-neutral)]/50 border border-[var(--border-neutral)] px-4 py-2.5 shadow-xs">
               <Globe className="h-4 w-4 text-[var(--primary-forest-green)]" />
               <div className="text-left">
                 <span className="block text-xs font-bold text-[var(--content-primary)]">
                   {uniqueCitiesCount} Cities
                 </span>
                 <span className="text-[10px] text-[var(--content-tertiary)] uppercase font-mono">
-                  Global Network
+                  Worldwide
                 </span>
               </div>
             </div>
@@ -180,44 +180,67 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
         </div>
 
         {/* ========================================================================= */}
-        {/* SEARCH & DISCIPLINE FILTER BAR (Clean & Unified)                         */}
+        {/* UNIFIED INTERACTIVE SEARCH & DISCIPLINE FILTER TOOLBAR                    */}
         {/* ========================================================================= */}
         <div className="space-y-4 mb-8">
-          {/* Full-Width SearchField */}
-          <SearchField
-            placeholder="Search creators by name, discipline, bio, or city..."
-            initialQuery={searchQuery}
-            onOpenFilter={() => setIsFilterOpen(true)}
-            hasActiveFilters={activeFilterCount > 0}
-            filterCount={activeFilterCount}
-          />
+          {/* Main Search Input */}
+          <div className="w-full">
+            <SearchField
+              placeholder="Search creators by name, username, bio, discipline, or city..."
+              initialQuery={searchQuery}
+              onOpenFilter={() => setIsFilterOpen(true)}
+              hasActiveFilters={activeFilterCount > 0}
+              filterCount={activeFilterCount}
+              className="w-full"
+            />
+          </div>
 
-          {/* Discipline Chips Filter Row + Live Count in One Balanced Strip */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
-            <div className="flex flex-wrap items-center gap-2 overflow-x-auto pb-1">
-              {QUICK_DISCIPLINES.map((disc) => (
-                <FilterChip
-                  key={disc}
-                  active={filters.discipline === disc}
-                  onClick={() => setFilters({ ...filters, discipline: disc })}
+          {/* Quick Discipline Pills Strip (13 Categories) */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 pt-1 no-scrollbar border-b border-[var(--border-neutral)]">
+            <button
+              type="button"
+              onClick={() => setFilters({ ...filters, discipline: "All" })}
+              className={cn(
+                "rounded-full px-3.5 py-1.5 text-xs transition-all shrink-0 cursor-pointer font-semibold select-none",
+                filters.discipline === "All"
+                  ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                  : "bg-[var(--bg-neutral)]/70 text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
+              )}
+            >
+              All
+            </button>
+            {MASTER_TAXONOMY.map((cat) => {
+              const isSelected =
+                filters.discipline === cat.name || filters.discipline === cat.shortName;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setFilters({ ...filters, discipline: cat.name })}
+                  className={cn(
+                    "rounded-full px-3.5 py-1.5 text-xs transition-all shrink-0 cursor-pointer font-medium select-none",
+                    isSelected
+                      ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] font-bold shadow-xs"
+                      : "bg-[var(--bg-neutral)]/70 text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
+                  )}
+                  title={cat.name}
                 >
-                  {disc}
-                </FilterChip>
-              ))}
-            </div>
-
-            <span className="text-xs font-semibold text-[var(--content-tertiary)] shrink-0 self-start sm:self-center">
-              Showing <strong className="text-[var(--content-primary)] font-bold">{filteredCreators.length}</strong> creator{filteredCreators.length === 1 ? "" : "s"}
-            </span>
+                  {cat.shortName}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Active Filters Pill Bar (if any applied) */}
+        {/* ========================================================================= */}
+        {/* ACTIVE FILTERS PILL BAR (If any active)                                   */}
+        {/* ========================================================================= */}
         {activeFilterCount > 0 && (
-          <div className="flex flex-wrap items-center gap-2 mb-8 p-3.5 rounded-[16px] bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
-            <span className="type-label font-semibold text-[var(--content-tertiary)] mr-1">
-              Active Filters:
+          <div className="flex flex-wrap items-center gap-2 mb-8 p-3 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
+            <span className="text-xs font-semibold text-[var(--content-secondary)] mr-1">
+              Active filters:
             </span>
+
             {filters.discipline !== "All" && (
               <FilterChip
                 active
@@ -226,6 +249,7 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
                 Discipline: {filters.discipline}
               </FilterChip>
             )}
+
             {filters.city !== "All" && (
               <FilterChip
                 active
@@ -234,17 +258,18 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
                 City: {filters.city}
               </FilterChip>
             )}
+
             {filters.hasPublishedOnly && (
               <FilterChip
                 active
-                onRemove={() =>
-                  setFilters({ ...filters, hasPublishedOnly: false })
-                }
+                onRemove={() => setFilters({ ...filters, hasPublishedOnly: false })}
               >
-                With Published Work
+                With Published Works
               </FilterChip>
             )}
+
             <button
+              type="button"
               onClick={() =>
                 setFilters({
                   discipline: "All",
@@ -252,27 +277,38 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
                   hasPublishedOnly: false,
                 })
               }
-              className="type-label font-semibold text-[var(--negative)] hover:underline ml-auto cursor-pointer"
+              className="text-xs text-[var(--content-link)] hover:underline ml-auto font-semibold cursor-pointer"
             >
-              Clear All
+              Clear all
             </button>
           </div>
         )}
 
         {/* ========================================================================= */}
-        {/* CREATORS GRID                                                             */}
+        {/* CREATORS GRID DISPLAY                                                     */}
         {/* ========================================================================= */}
         {filteredCreators.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-[24px] border border-dashed border-[var(--border-neutral)] bg-[var(--bg-neutral)]/30 p-12 text-center my-8">
-            <div className="h-12 w-12 rounded-full bg-[var(--bg-neutral)] flex items-center justify-center text-[var(--content-tertiary)] mb-4">
-              <Users className="h-6 w-6" />
-            </div>
-            <h3 className="type-title-subsection text-[var(--content-primary)]">
-              No creators found
-            </h3>
-            <p className="mt-1.5 type-body-default text-[var(--content-secondary)] max-w-sm">
-              No creators matched your search or filter criteria. Try resetting the filters.
+          <div className="rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-12 text-center my-8">
+            <p className="type-title-subsection text-[var(--content-primary)] font-bold text-lg">
+              No matching creators found
             </p>
+            <p className="type-body-default text-[var(--content-secondary)] mt-2 max-w-md mx-auto text-sm">
+              Try adjusting your search query, changing the discipline pill, or resetting filters.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery("");
+                setFilters({
+                  discipline: "All",
+                  city: "All",
+                  hasPublishedOnly: false,
+                });
+              }}
+              className="mt-5 inline-flex items-center gap-2 rounded-full font-bold bg-[var(--accent)] text-[#090C09] hover:bg-[var(--accent-hover)] px-5 py-2 text-xs shadow-xs transition-all cursor-pointer"
+            >
+              Reset All Filters
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -283,16 +319,16 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
             ))}
           </div>
         )}
-
-        {/* Filter Drawer */}
-        <FilterDrawer
-          isOpen={isFilterOpen}
-          onClose={() => setIsFilterOpen(false)}
-          mode="creators"
-          creatorFilters={filters}
-          onCreatorFiltersChange={setFilters}
-        />
       </FadeIn>
+
+      {/* Filter Drawer for deeper multi-faceted filtering */}
+      <FilterDrawer
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        mode="creators"
+        creatorFilters={filters}
+        onCreatorFiltersChange={setFilters}
+      />
     </div>
   );
 }

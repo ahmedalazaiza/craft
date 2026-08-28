@@ -81,6 +81,7 @@ export function mapProjectRow(row: any, currentUserId?: string): Project {
     tags: row.tags || [],
     tools: row.tools || [],
     category: row.category,
+    subCategory: row.sub_category || undefined,
     medium: row.medium,
     published: row.published ?? true,
     publishedAt: formatTimeAgo(new Date(row.published_at || row.created_at || Date.now())),
@@ -474,7 +475,8 @@ export async function insertProject(project: Partial<Project> & { creatorId?: st
       body: project.body || "",
       cover_image: finalCover,
       gallery_images: finalGallery.length > 0 ? finalGallery : [finalCover],
-      category: project.category || "UI",
+      category: project.category || "User Interface Design (UI)",
+      sub_category: project.subCategory || null,
       medium: project.medium || "Image",
       tags: project.tags && project.tags.length > 0 ? project.tags : ["Design"],
       tools: project.tools && project.tools.length > 0 ? project.tools : ["Figma"],
@@ -547,6 +549,7 @@ export async function updateProjectInDb(id: string, updates: Partial<Project>): 
     if (updates.coverImage !== undefined) payload.cover_image = updates.coverImage;
     if (updates.galleryImages !== undefined) payload.gallery_images = updates.galleryImages;
     if (updates.category !== undefined) payload.category = updates.category;
+    if (updates.subCategory !== undefined) payload.sub_category = updates.subCategory;
     if (updates.medium !== undefined) payload.medium = updates.medium;
     if (updates.tags !== undefined) payload.tags = updates.tags;
     if (updates.tools !== undefined) payload.tools = updates.tools;

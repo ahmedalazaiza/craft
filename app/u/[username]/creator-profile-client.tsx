@@ -36,6 +36,7 @@ import { OnlineBadge } from "@/components/ui/online-badge";
 import { uploadMediaFile } from "@/lib/supabase/storage";
 import { DEFAULT_AVATAR_URL, getValidAvatarUrl } from "@/lib/avatar";
 import { LocationInput } from "@/components/ui/location-input";
+import { SkillsPicker } from "@/components/onboarding/skills-picker";
 
 export function CreatorProfileClient({ initialCreator }: { initialCreator: Creator }) {
   const {
@@ -70,6 +71,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
   const [editLocation, setEditLocation] = useState(creator.location || creator.city || "");
   const [editWebsite, setEditWebsite] = useState(creator.website || "");
   const [editAvatarUrl, setEditAvatarUrl] = useState(creator.avatarUrl);
+  const [editSkills, setEditSkills] = useState<string[]>(creator.skills || []);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -82,6 +84,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
       setEditLocation(creator.location || creator.city || "");
       setEditWebsite(creator.website || "");
       setEditAvatarUrl(creator.avatarUrl);
+      setEditSkills(creator.skills || []);
     }
   }, [creator]);
 
@@ -112,6 +115,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
         city: editLocation,
         website: editWebsite,
         avatarUrl: editAvatarUrl,
+        skills: editSkills,
       });
       setIsEditingProfile(false);
     } catch (err) {
@@ -649,6 +653,14 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                       placeholder="https://studio.design"
                     />
                   </div>
+                </div>
+
+                {/* 5. Disciplines & Specializations */}
+                <div className="pt-2 border-t border-[var(--border-neutral)]">
+                  <SkillsPicker
+                    selectedSkills={editSkills}
+                    onChange={setEditSkills}
+                  />
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-[var(--border-neutral)] mt-6">

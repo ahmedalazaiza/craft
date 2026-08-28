@@ -1,27 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
-import { Plus, X, Check, Sparkles } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { Plus, X, Check, Sparkles, Layers, Tag, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const CURATED_DISCIPLINES = [
-  "Brand Identity",
-  "UI/UX Design",
-  "Typography & Type",
-  "3D & Spatial Design",
-  "Motion & Animation",
-  "Editorial Design",
-  "Design Systems",
-  "Creative Direction",
-  "Product Design",
-  "Photography",
-  "Architecture",
-  "Art Direction",
-  "Packaging",
-  "Interaction Design",
-  "Visual Design",
-  "Figma",
-];
+import { MASTER_TAXONOMY, ALL_SUB_CATEGORIES } from "@/lib/taxonomy";
 
 interface SkillsPickerProps {
   selectedSkills: string[];
@@ -30,13 +12,14 @@ interface SkillsPickerProps {
 
 export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
   const [customInput, setCustomInput] = useState("");
+  const [selectedCategoryTab, setSelectedCategoryTab] = useState<string>("All");
 
   const toggleSkill = (skill: string) => {
     if (selectedSkills.includes(skill)) {
       onChange(selectedSkills.filter((s) => s !== skill));
     } else {
-      if (selectedSkills.length >= 10) {
-        alert("You can select up to 10 key disciplines.");
+      if (selectedSkills.length >= 12) {
+        alert("You can select up to 12 key disciplines & specialties.");
         return;
       }
       onChange([...selectedSkills, skill]);
@@ -53,8 +36,8 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
       return;
     }
 
-    if (selectedSkills.length >= 10) {
-      alert("You can select up to 10 key disciplines.");
+    if (selectedSkills.length >= 12) {
+      alert("You can select up to 12 key disciplines.");
       return;
     }
 
@@ -62,15 +45,26 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
     setCustomInput("");
   };
 
+  const visibleDisciplines = useMemo(() => {
+    if (selectedCategoryTab === "All") {
+      // 13 Master Categories + Top Subcategories
+      const mainNames = MASTER_TAXONOMY.map((c) => c.name);
+      const topSubs = MASTER_TAXONOMY.flatMap((c) => c.subCategories.slice(0, 2));
+      return Array.from(new Set([...mainNames, ...topSubs]));
+    }
+    const match = MASTER_TAXONOMY.find((c) => c.name === selectedCategoryTab);
+    return match ? [match.name, ...match.subCategories] : [];
+  }, [selectedCategoryTab]);
+
   return (
     <div className="space-y-6">
       {/* Selected Tags Showcase */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <label className="text-xs font-semibold text-[var(--content-primary)] flex items-center gap-1.5">
-            <span>Selected Disciplines</span>
-            <span className="text-[11px] font-mono text-[var(--content-tertiary)]">
-              ({selectedSkills.length}/10)
+          <label className="text-xs font-semibold text-[var(--content-primary)] flex items-center gap-1.5 font-mono uppercase tracking-wider">
+            <span>Your Disciplines & Specializations</span>
+            <span className="text-[11px] text-[var(--content-tertiary)]">
+              ({selectedSkills.length}/12)
             </span>
           </label>
           {selectedSkills.length > 0 && (
@@ -109,15 +103,52 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
         </div>
       </div>
 
-      {/* Curated Disciplines Grid */}
+      {/* Category Tabs for Fast Browsing */}
       <div className="space-y-3">
-        <label className="text-xs font-semibold text-[var(--content-secondary)] flex items-center gap-1.5">
-          <Sparkles className="h-3.5 w-3.5 text-[#8DFF00]" />
-          <span>Popular Craft Domains</span>
-        </label>
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-semibold text-[var(--content-secondary)] flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-[#8DFF00]" />
+            <span>Browse by Discipline ({MASTER_TAXONOMY.length} Domains)</span>
+          </label>
+        </div>
 
-        <div className="flex flex-wrap gap-2">
-          {CURATED_DISCIPLINES.map((discipline) => {
+        {/* Tab Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+          <button
+            type="button"
+            onClick={() => setSelectedCategoryTab("All")}
+            className={cn(
+              "rounded-full px-3 py-1 text-xs font-semibold shrink-0 cursor-pointer transition-all",
+              selectedCategoryTab === "All"
+                ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:bg-[var(--bg-neutral)]/80"
+            )}
+          >
+            All Disciplines
+          </button>
+          {MASTER_TAXONOMY.map((cat) => {
+            const isTabActive = selectedCategoryTab === cat.name;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setSelectedCategoryTab(cat.name)}
+                className={cn(
+                  "rounded-full px-3 py-1 text-xs font-semibold shrink-0 cursor-pointer transition-all",
+                  isTabActive
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                    : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:bg-[var(--bg-neutral)]/80"
+                )}
+              >
+                {cat.shortName}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Disciplines & Sub-categories Grid */}
+        <div className="flex flex-wrap gap-1.5 max-h-56 overflow-y-auto p-1 border border-[var(--border-neutral)] rounded-2xl bg-[var(--bg-screen)]">
+          {visibleDisciplines.map((discipline) => {
             const isSelected = selectedSkills.includes(discipline);
             return (
               <button
@@ -125,10 +156,10 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
                 type="button"
                 onClick={() => toggleSkill(discipline)}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all cursor-pointer",
+                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all cursor-pointer border",
                   isSelected
-                    ? "bg-[#8DFF00] text-[#090C09] font-bold shadow-xs scale-105"
-                    : "border border-[var(--border-neutral)] bg-[var(--bg-screen)] text-[var(--content-secondary)] hover:border-[var(--content-secondary)] hover:text-[var(--content-primary)]"
+                    ? "bg-[var(--accent)] text-[#090C09] font-bold border-transparent shadow-xs scale-102"
+                    : "border-[var(--border-neutral)] bg-[var(--bg-screen)] text-[var(--content-secondary)] hover:border-[var(--content-secondary)] hover:text-[var(--content-primary)]"
                 )}
               >
                 {isSelected ? (
@@ -149,7 +180,7 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
           type="text"
           value={customInput}
           onChange={(e) => setCustomInput(e.target.value)}
-          placeholder="Add custom specialty (e.g. Generative AI, Spatial Audio)..."
+          placeholder="Add custom specialization or skill (e.g. Design Systems, Spatial Audio)..."
           className="flex-1 rounded-xl border border-[var(--border-neutral)] bg-[var(--bg-screen)] px-3.5 py-2 text-xs text-[var(--content-primary)] placeholder-[var(--content-tertiary)] focus:border-[var(--input-focus-border)] focus:ring-2 focus:ring-[var(--input-focus-ring)] focus:outline-hidden"
         />
         <button
