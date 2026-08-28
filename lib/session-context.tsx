@@ -19,6 +19,10 @@ import {
   fetchUserFollows,
   toggleFollowInDb,
   deleteUserAccountInDb,
+  fetchUserNotifications,
+  insertNotificationInDb,
+  markNotificationReadInDb,
+  markAllNotificationsReadInDb,
 } from "./supabase/queries";
 import {
   signInWithEmail,
@@ -57,9 +61,6 @@ interface SessionContextType {
   isFollowingCreator: (creatorId: string) => boolean;
   markNotificationAsRead: (id: string) => void;
   markAllNotificationsAsRead: () => void;
-  addNotification: (
-    notif: Omit<Notification, "id" | "createdAt" | "read">
-  ) => void;
   addComment: (projectId: string, content: string) => Promise<void>;
   saveProject: (projectData: Partial<Project> & { title: string }) => Promise<Project>;
   deleteProject: (id: string) => Promise<boolean>;
@@ -162,6 +163,27 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         }
       });
 
+    // Subscribe to realtime notifications specifically for this logged-in recipient
+    let notifChannel: ReturnType<typeof supabase.channel> | null = null;
+    if (user) {
+      notifChannel = supabase
+        .channel(`notifications-recipient-${user.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "notifications",
+            filter: `recipient_id=eq.${user.id}`,
+          },
+          async () => {
+            const freshNotifs = await fetchUserNotifications(user.id);
+            setNotifications(freshNotifs);
+          }
+        )
+        .subscribe();
+    }
+
     const handleBeforeUnload = () => {
       if (user) {
         presenceChannel.untrack().catch(() => {});
@@ -178,6 +200,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         updateProfileInDb(user.id, { isOnline: false }).catch(() => {});
       }
       supabase.removeChannel(presenceChannel);
+      if (notifChannel) {
+        supabase.removeChannel(notifChannel);
+      }
     };
   }, [user]);
 
@@ -200,8 +225,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
       if (activeAuthUser) {
         setUser(activeAuthUser);
-        const userFollows = await fetchUserFollows(activeAuthUser.id);
+        const [userFollows, userNotifs] = await Promise.all([
+          fetchUserFollows(activeAuthUser.id),
+          fetchUserNotifications(activeAuthUser.id),
+        ]);
         setFollowingCreatorIds(new Set(userFollows));
+        setNotifications(userNotifs);
       } else {
         setUser(null);
         setNotifications([]);
@@ -236,8 +265,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         const profile = await getCurrentAuthUser();
         if (profile) {
           setUser(profile);
-          const userFollows = await fetchUserFollows(profile.id);
+          const [userFollows, userNotifs] = await Promise.all([
+            fetchUserFollows(profile.id),
+            fetchUserNotifications(profile.id),
+          ]);
           setFollowingCreatorIds(new Set(userFollows));
+          setNotifications(userNotifs);
         }
       } else if (event === "SIGNED_OUT" || !session) {
         setUser(null);
@@ -305,22 +338,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
+    markNotificationReadInDb(id).catch(console.error);
   };
 
   const markAllNotificationsAsRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  };
-
-  const addNotification = (
-    notif: Omit<Notification, "id" | "createdAt" | "read">
-  ) => {
-    const newNotification: Notification = {
-      ...notif,
-      id: `notif-${Date.now()}`,
-      createdAt: "Just now",
-      read: false,
-    };
-    setNotifications((prev) => [newNotification, ...prev]);
+    if (user?.id) {
+      markAllNotificationsReadInDb(user.id).catch(console.error);
+    }
   };
 
   // GATED ACTION: Follow Creator (Strictly Verified Only)
@@ -342,12 +367,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         next.delete(creatorId);
       } else {
         next.add(creatorId);
+        // Strictly send notification only to the target creator in DB (never to the actor)
         if (targetCreator && targetCreator.id !== user.id) {
-          addNotification({
+          insertNotificationInDb({
+            recipientId: targetCreator.id,
+            actorId: user.id,
             type: "follow",
-            actor: user,
-            content: `You started following ${targetCreator.displayName}`,
-          });
+            content: `${user.displayName} started following your studio`,
+          }).catch(console.error);
         }
       }
       return next;
@@ -406,17 +433,15 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         next.delete(projectId);
       } else {
         next.add(projectId);
-        // Only notify the creator if the liker is NOT the creator themselves
+        // Strictly send notification only to the project creator in DB (never to the actor)
         if (targetProject && targetProject.creator && targetProject.creator.id !== user.id) {
-          addNotification({
+          insertNotificationInDb({
+            recipientId: targetProject.creator.id,
+            actorId: user.id,
             type: "appreciation",
-            actor: user,
-            project: {
-              id: targetProject.id,
-              slug: targetProject.slug,
-              title: targetProject.title,
-            },
-          });
+            projectId: targetProject.id,
+            content: `${user.displayName} appreciated your project "${targetProject.title}"`,
+          }).catch(console.error);
         }
       }
       return next;
@@ -471,18 +496,15 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       })
     );
 
-    // Only notify the creator if the commenter is NOT the creator themselves
+    // Strictly notify the project creator in Supabase (never the actor)
     if (targetProject && targetProject.creator && targetProject.creator.id !== user.id) {
-      addNotification({
+      insertNotificationInDb({
+        recipientId: targetProject.creator.id,
+        actorId: user.id,
         type: "comment",
-        actor: user,
-        project: {
-          id: targetProject.id,
-          slug: targetProject.slug,
-          title: targetProject.title,
-        },
-        content,
-      });
+        projectId: targetProject.id,
+        content: `${user.displayName} commented on "${targetProject.title}": "${content}"`,
+      }).catch(console.error);
     }
 
     // Persist to Supabase
@@ -636,7 +658,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         isFollowingCreator,
         markNotificationAsRead,
         markAllNotificationsAsRead,
-        addNotification,
         addComment,
         saveProject,
         deleteProject,

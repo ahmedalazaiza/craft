@@ -1,5 +1,5 @@
 import { supabase } from "./client";
-import { Project, Creator, Comment } from "@/lib/types";
+import { Project, Creator, Comment, Notification, NotificationType } from "@/lib/types";
 import { DEFAULT_AVATAR_URL } from "@/lib/avatar";
 
 // =============================================================================
@@ -87,6 +87,25 @@ export function mapProjectRow(row: any, currentUserId?: string): Project {
     appreciations: liveAppreciations,
     comments,
     featured: row.featured ?? false,
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function mapNotificationRow(row: any): Notification {
+  return {
+    id: row.id,
+    type: (row.type as NotificationType) || "appreciation",
+    actor: mapProfileToCreator(row.actor || {}),
+    project: row.project
+      ? {
+          id: row.project.id,
+          slug: row.project.slug,
+          title: row.project.title,
+        }
+      : undefined,
+    content: row.content || undefined,
+    createdAt: row.created_at ? formatTimeAgo(new Date(row.created_at)) : "Just now",
+    read: !!row.read,
   };
 }
 
@@ -768,4 +787,120 @@ export async function requestPasswordResetInDb(email: string): Promise<{ success
     return { success: false, error: errorMsg };
   }
 }
+
+// =============================================================================
+// NOTIFICATIONS QUERIES & MUTATIONS (STRICT RECIPIENT LOGIC)
+// =============================================================================
+
+/**
+ * Fetch notifications for a specific recipient user from Supabase
+ */
+export async function fetchUserNotifications(userId: string): Promise<Notification[]> {
+  if (!userId) return [];
+  try {
+    const { data, error } = await supabase
+      .from("notifications")
+      .select(`
+        *,
+        actor:profiles!actor_id(*),
+        project:projects!project_id(id, slug, title)
+      `)
+      .eq("recipient_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (error || !data) {
+      if (error && (error.message || Object.keys(error).length > 0)) {
+        console.error("Error fetching notifications from Supabase:", error.message || error);
+      }
+      return [];
+    }
+
+    return data.map(mapNotificationRow);
+  } catch (err: unknown) {
+    const errorObj = err as { name?: string; message?: string };
+    if (errorObj?.name !== "AbortError") {
+      console.error("Error in fetchUserNotifications:", errorObj?.message || err);
+    }
+    return [];
+  }
+}
+
+/**
+ * Dispatch a notification directly to the RECIPIENT in Supabase
+ * STRICT BUSINESS RULE:
+ * 1. actorId must NOT equal recipientId (no self-notifications).
+ * 2. Stored for the recipient only.
+ */
+export async function insertNotificationInDb(payload: {
+  recipientId: string;
+  actorId: string;
+  type: NotificationType;
+  projectId?: string;
+  content?: string;
+}): Promise<void> {
+  try {
+    const { recipientId, actorId, type, projectId, content } = payload;
+
+    // Strict Self-Action Guard: Never notify a user about their own actions
+    if (!recipientId || !actorId || recipientId === actorId) {
+      return;
+    }
+
+    const { error } = await supabase.from("notifications").insert({
+      recipient_id: recipientId,
+      actor_id: actorId,
+      type,
+      project_id: projectId || null,
+      content: content || null,
+      read: false,
+    });
+
+    if (error) {
+      console.error("Error inserting notification in Supabase:", error.message || error);
+    }
+  } catch (err) {
+    console.error("Failed to dispatch notification to Supabase:", err);
+  }
+}
+
+/**
+ * Mark a single notification as read in Supabase
+ */
+export async function markNotificationReadInDb(notificationId: string): Promise<void> {
+  try {
+    if (!notificationId) return;
+    const { error } = await supabase
+      .from("notifications")
+      .update({ read: true })
+      .eq("id", notificationId);
+
+    if (error) {
+      console.error("Error marking notification as read in Supabase:", error.message || error);
+    }
+  } catch (err) {
+    console.error("Failed to mark notification as read:", err);
+  }
+}
+
+/**
+ * Mark all notifications as read for a recipient in Supabase
+ */
+export async function markAllNotificationsReadInDb(recipientId: string): Promise<void> {
+  try {
+    if (!recipientId) return;
+    const { error } = await supabase
+      .from("notifications")
+      .update({ read: true })
+      .eq("recipient_id", recipientId)
+      .eq("read", false);
+
+    if (error) {
+      console.error("Error marking all notifications as read in Supabase:", error.message || error);
+    }
+  } catch (err) {
+    console.error("Failed to mark all notifications as read:", err);
+  }
+}
+
 
