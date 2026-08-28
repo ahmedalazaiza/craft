@@ -22,7 +22,6 @@ import {
   UploadCloud,
   Check,
   ArrowLeft,
-  ArrowRight,
   Plus,
   X,
   Upload,
@@ -34,14 +33,14 @@ import {
   Layers,
   FileText,
   Trash2,
-  ArrowUp,
-  ArrowDown,
+  ArrowLeft as ArrowLeftIcon,
+  ArrowRight as ArrowRightIcon,
   Star,
   Eye,
   CheckCircle2,
-  FolderKanban,
   Save,
   Send,
+  ChevronDown,
 } from "lucide-react";
 
 interface ProjectFormProps {
@@ -53,22 +52,19 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const router = useRouter();
   const { saveProject } = useSession();
 
-  // Wizard Step (1: Media Spreads & Cover Selection, 2: Specifications & Customization)
-  const [step, setStep] = useState<1 | 2>(1);
-
   const galleryFileInputRef = useRef<HTMLInputElement>(null);
 
   // Form State
   const [title, setTitle] = useState(initialData?.title || "");
-  const [summary, setSummary] = useState(initialData?.summary || "");
-  const [body, setBody] = useState(initialData?.body || "");
+  const [body, setBody] = useState(
+    initialData?.body || initialData?.summary || ""
+  );
   const [category, setCategory] = useState<string>(
     initialData?.category ? normalizeCategory(initialData.category) : MASTER_TAXONOMY[0].name
   );
   const [subCategory, setSubCategory] = useState<string>(
     initialData?.subCategory || ""
   );
-  const medium: ProjectMedium = initialData?.medium || "Image";
   const [galleryImages, setGalleryImages] = useState<string[]>(
     initialData?.galleryImages || (initialData?.coverImage ? [initialData.coverImage] : [])
   );
@@ -90,7 +86,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const [isProcessingFiles, setIsProcessingFiles] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
 
-  // Taxonomy helpers for active category
+  // Active Taxonomy
   const activeTaxonomy = useMemo(() => {
     return getCategoryTaxonomy(category);
   }, [category]);
@@ -107,7 +103,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     return activeTaxonomy?.tools || [];
   }, [activeTaxonomy]);
 
-  const handleCategorySelect = (catName: string) => {
+  const handleCategoryChange = (catName: string) => {
     setCategory(catName);
     const tax = getCategoryTaxonomy(catName);
     if (tax && tax.subCategories.length > 0) {
@@ -117,66 +113,8 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     }
   };
 
-  const handleAddTag = (e: React.KeyboardEvent | React.MouseEvent) => {
-    if (("key" in e && e.key === "Enter") || e.type === "click") {
-      e.preventDefault();
-      const cleaned = newTag.trim().replace(/^#/, "");
-      if (tags.length >= 20) {
-        alert("You can add a maximum of 20 tags.");
-        return;
-      }
-      if (cleaned && !tags.includes(cleaned)) {
-        setTags([...tags, cleaned]);
-        setNewTag("");
-      }
-    }
-  };
-
-  const handleQuickAddTag = (tagToAdd: string) => {
-    if (tags.length >= 20) {
-      alert("You can add a maximum of 20 tags.");
-      return;
-    }
-    if (!tags.includes(tagToAdd)) {
-      setTags([...tags, tagToAdd]);
-    }
-  };
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter((t) => t !== tagToRemove));
-  };
-
-  const handleAddTool = (e: React.KeyboardEvent | React.MouseEvent) => {
-    if (("key" in e && e.key === "Enter") || e.type === "click") {
-      e.preventDefault();
-      const cleaned = newTool.trim();
-      if (tools.length >= 10) {
-        alert("You can add a maximum of 10 tools & technologies.");
-        return;
-      }
-      if (cleaned && !tools.includes(cleaned)) {
-        setTools([...tools, cleaned]);
-        setNewTool("");
-      }
-    }
-  };
-
-  const handleQuickAddTool = (toolToAdd: string) => {
-    if (tools.length >= 10) {
-      alert("You can add a maximum of 10 tools & technologies.");
-      return;
-    }
-    if (!tools.includes(toolToAdd)) {
-      setTools([...tools, toolToAdd]);
-    }
-  };
-
-  const handleRemoveTool = (toolToRemove: string) => {
-    setTools(tools.filter((t) => t !== toolToRemove));
-  };
-
   // Reorder & Manipulate Gallery Spreads
-  const handleMoveGalleryImage = (fromIdx: number, toIdx: number) => {
+  const handleMoveImage = (fromIdx: number, toIdx: number) => {
     if (toIdx < 0 || toIdx >= galleryImages.length) return;
     const updated = [...galleryImages];
     const item = updated.splice(fromIdx, 1)[0];
@@ -188,11 +126,10 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     setCoverImage(url);
   };
 
-  const handleRemoveGalleryImage = (idxToRemove: number) => {
+  const handleRemoveImage = (idxToRemove: number) => {
     const removedUrl = galleryImages[idxToRemove];
     const updated = galleryImages.filter((_, idx) => idx !== idxToRemove);
     setGalleryImages(updated);
-    // If the removed image was the active cover, reassign to the first available image
     if (coverImage === removedUrl) {
       setCoverImage(updated[0] || "");
     }
@@ -214,7 +151,6 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
       if (cdnUrls.length > 0) {
         setGalleryImages((prev) => {
           const nextGallery = [...prev, ...cdnUrls];
-          // If no cover image exists, automatically set the first image as cover
           if (!coverImage && nextGallery.length > 0) {
             setCoverImage(nextGallery[0]);
           }
@@ -229,36 +165,72 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     }
   };
 
-  // Step 1 Validation -> Proceed to Step 2
-  const handleProceedToStep2 = () => {
-    if (galleryImages.length === 0) {
-      alert("Please upload at least one image plate for your project.");
-      return;
+  // Tags & Tools handlers
+  const handleAddTag = (e: React.KeyboardEvent | React.MouseEvent) => {
+    if (("key" in e && e.key === "Enter") || e.type === "click") {
+      e.preventDefault();
+      const cleaned = newTag.trim().replace(/^#/, "");
+      if (tags.length >= 20) {
+        alert("Maximum 20 tags allowed.");
+        return;
+      }
+      if (cleaned && !tags.includes(cleaned)) {
+        setTags([...tags, cleaned]);
+        setNewTag("");
+      }
     }
-    if (!coverImage && galleryImages.length > 0) {
-      setCoverImage(galleryImages[0]);
-    }
-    setStep(2);
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Submit Handler (Draft vs Publish)
+  const handleQuickAddTag = (tagToAdd: string) => {
+    if (tags.length >= 20) return;
+    if (!tags.includes(tagToAdd)) {
+      setTags([...tags, tagToAdd]);
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTags(tags.filter((t) => t !== tagToRemove));
+  };
+
+  const handleAddTool = (e: React.KeyboardEvent | React.MouseEvent) => {
+    if (("key" in e && e.key === "Enter") || e.type === "click") {
+      e.preventDefault();
+      const cleaned = newTool.trim();
+      if (tools.length >= 10) {
+        alert("Maximum 10 tools allowed.");
+        return;
+      }
+      if (cleaned && !tools.includes(cleaned)) {
+        setTools([...tools, cleaned]);
+        setNewTool("");
+      }
+    }
+  };
+
+  const handleQuickAddTool = (toolToAdd: string) => {
+    if (tools.length >= 10) return;
+    if (!tools.includes(toolToAdd)) {
+      setTools([...tools, toolToAdd]);
+    }
+  };
+
+  const handleRemoveTool = (toolToRemove: string) => {
+    setTools(tools.filter((t) => t !== toolToRemove));
+  };
+
+  // Submit Handler
   const handleSave = async (isPublish: boolean) => {
     if (!title.trim()) {
-      alert("Please provide a Project Title.");
-      setStep(2);
+      alert("Please provide a project title.");
       return;
     }
 
     if (galleryImages.length === 0) {
-      alert("Please upload at least one project image in Step 1.");
-      setStep(1);
+      alert("Please upload at least one image for your project.");
       return;
     }
 
     const finalCover = coverImage || galleryImages[0];
-    const finalGallery = galleryImages;
-
     const combinedTags = subCategory && !tags.includes(subCategory)
       ? [subCategory, ...tags]
       : tags;
@@ -268,13 +240,13 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
       await saveProject({
         id: initialData?.id,
         title: title.trim(),
-        summary: summary.trim() || title.trim(),
-        body: body.trim() || "Visual case study monograph.",
+        summary: body.trim().slice(0, 200) || title.trim(),
+        body: body.trim() || "Visual design case study.",
         category,
         subCategory: subCategory || undefined,
-        medium,
+        medium: "Image",
         coverImage: finalCover,
-        galleryImages: finalGallery,
+        galleryImages,
         tags: combinedTags,
         tools,
         published: isPublish,
@@ -296,745 +268,519 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const activeCoverUrl = coverImage || galleryImages[0];
 
   return (
-    <div className="space-y-8">
-      {/* ========================================================================= */}
-      {/* 2-STEP STUDIO WIZARD NAVIGATION BAR                                       */}
-      {/* ========================================================================= */}
-      <div className="rounded-[24px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
-        {/* Step Switcher Tabs */}
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <button
-            type="button"
-            onClick={() => setStep(1)}
-            className={cn(
-              "flex items-center gap-2.5 rounded-full px-4 py-2 text-xs font-bold transition-all cursor-pointer",
-              step === 1
-                ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
-                : "bg-[var(--bg-screen)] text-[var(--content-secondary)] hover:text-[var(--content-primary)] border border-[var(--border-neutral)]"
-            )}
-          >
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--accent)] text-[#090C09] text-[10px] font-black">
-              1
-            </span>
-            <span>1. Visual Media & Spreads</span>
-            {galleryImages.length > 0 && (
-              <Check className="h-3.5 w-3.5 text-[var(--sentiment-positive-bg)] dark:text-[var(--accent)] ml-0.5" />
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              if (galleryImages.length > 0) {
-                setStep(2);
-              } else {
-                alert("Please upload at least one image in Step 1 first.");
-              }
-            }}
-            className={cn(
-              "flex items-center gap-2.5 rounded-full px-4 py-2 text-xs font-bold transition-all cursor-pointer",
-              step === 2
-                ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
-                : "bg-[var(--bg-screen)] text-[var(--content-secondary)] hover:text-[var(--content-primary)] border border-[var(--border-neutral)]"
-            )}
-          >
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] text-[10px] font-black">
-              2
-            </span>
-            <span>2. Details & Specifications</span>
-          </button>
+    <div className="max-w-5xl mx-auto space-y-8 pb-16">
+      {/* Top Header & Sticky Publishing Action Bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[var(--border-neutral)]">
+        <div>
+          <h1 className={cn(bricolage.className, "text-2xl sm:text-3xl font-black text-[var(--content-primary)] tracking-tight")}>
+            {mode === "new" ? "New Project" : "Edit Project"}
+          </h1>
+          <p className="text-xs text-[var(--content-secondary)] mt-0.5">
+            Upload images, title your work, and publish live in seconds.
+          </p>
         </div>
 
-        {/* Global Status & Quick Controls */}
-        <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-          {step === 1 ? (
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+          <Button
+            type="button"
+            variant="secondary"
+            size="default"
+            disabled={isSaving}
+            onClick={() => handleSave(false)}
+            className="gap-1.5 font-semibold text-xs shadow-xs"
+          >
+            <Save className="h-3.5 w-3.5" />
+            <span>Save Draft</span>
+          </Button>
+
+          <Button
+            type="button"
+            variant="accent"
+            size="default"
+            disabled={isSaving}
+            onClick={() => handleSave(true)}
+            className="gap-2 font-bold shadow-xs min-w-[130px]"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Publishing...</span>
+              </>
+            ) : (
+              <>
+                <Send className="h-4 w-4" />
+                <span>Publish Project</span>
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 1. VISUAL MEDIA DROPZONE & SPREADS STRIP                                  */}
+      {/* ========================================================================= */}
+      <div className="space-y-4">
+        {/* Hidden File Input */}
+        <input
+          type="file"
+          multiple
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          ref={galleryFileInputRef}
+          onChange={(e) => {
+            if (e.target.files && e.target.files.length > 0) {
+              handleGalleryFiles(e.target.files);
+            }
+          }}
+          className="hidden"
+        />
+
+        {/* Upload Dropzone */}
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDraggingGallery(true);
+          }}
+          onDragLeave={() => setIsDraggingGallery(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setIsDraggingGallery(false);
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+              handleGalleryFiles(e.dataTransfer.files);
+            }
+          }}
+          onClick={() => galleryFileInputRef.current?.click()}
+          className={cn(
+            "rounded-[24px] bg-[var(--bg-screen)] border-2 border-dashed p-8 text-center group cursor-pointer transition-all",
+            isDraggingGallery
+              ? "border-[var(--primary-forest-green)] bg-[var(--bg-neutral)]/60 scale-[0.99]"
+              : "border-[var(--border-neutral)] hover:border-[var(--primary-forest-green)]"
+          )}
+        >
+          {isProcessingFiles ? (
+            <div className="flex flex-col items-center py-4">
+              <Loader2 className="h-8 w-8 animate-spin text-[var(--primary-forest-green)] mb-2" />
+              <span className="text-xs font-bold text-[var(--content-primary)]">
+                Uploading images ({uploadProgress?.current || 0}/{uploadProgress?.total || 0})...
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center py-3">
+              <div className="h-12 w-12 rounded-full bg-[var(--bg-neutral)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-tertiary)] mb-2.5 group-hover:text-[var(--primary-forest-green)] group-hover:border-[var(--primary-forest-green)] transition-colors shadow-xs">
+                <UploadCloud className="h-6 w-6 group-hover:scale-110 transition-transform" />
+              </div>
+              <span className="type-body-default-bold text-[var(--content-primary)] text-sm font-bold">
+                Drop project images here, or browse files
+              </span>
+              <span className="type-label text-[var(--content-tertiary)] text-xs mt-0.5">
+                PNG, JPG, WebP — multiple uploads supported
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Uploaded Images Horizontal / Grid Tiles Strip */}
+        {galleryImages.length > 0 && (
+          <div className="space-y-2 pt-2">
+            <div className="flex items-center justify-between text-xs font-mono text-[var(--content-secondary)]">
+              <span>{galleryImages.length} Image{galleryImages.length === 1 ? "" : "s"} uploaded</span>
+              <span>Click ⭐ on any tile to set as cover</span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {galleryImages.map((url, idx) => {
+                const isCurrentCover = activeCoverUrl === url;
+
+                return (
+                  <div
+                    key={idx}
+                    className={cn(
+                      "group relative aspect-[16/10] rounded-[16px] overflow-hidden bg-[var(--bg-neutral)] border transition-all",
+                      isCurrentCover
+                        ? "border-[var(--primary-forest-green)] ring-2 ring-[var(--primary-forest-green)]/30"
+                        : "border-[var(--border-neutral)] hover:border-[var(--border-neutral-hover)]"
+                    )}
+                  >
+                    <Image
+                      src={url}
+                      alt={`Image ${idx + 1}`}
+                      fill
+                      sizes="280px"
+                      className="object-cover"
+                    />
+
+                    {/* Top Plate & Cover Badge */}
+                    <div className="absolute top-2 left-2 flex items-center gap-1 z-10">
+                      <span className="rounded-md bg-black/70 backdrop-blur-xs text-white px-2 py-0.5 text-[10px] font-mono font-bold">
+                        #{idx + 1}
+                      </span>
+                      {isCurrentCover && (
+                        <span className="rounded-md bg-[var(--accent)] text-[#090C09] px-2 py-0.5 text-[10px] font-bold shadow-xs">
+                          Cover
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Hover Overlay Controls */}
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 p-2">
+                      <button
+                        type="button"
+                        disabled={idx === 0}
+                        onClick={() => handleMoveImage(idx, idx - 1)}
+                        className="h-7 w-7 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center disabled:opacity-20 cursor-pointer"
+                        title="Move left"
+                      >
+                        <ArrowLeftIcon className="h-3.5 w-3.5" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleSetAsCover(url)}
+                        className={cn(
+                          "h-7 px-2.5 rounded-full text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-transform hover:scale-105",
+                          isCurrentCover
+                            ? "bg-[var(--accent)] text-[#090C09]"
+                            : "bg-white text-black"
+                        )}
+                        title="Set as Project Cover"
+                      >
+                        <Star className="h-3 w-3 fill-current" />
+                        <span>{isCurrentCover ? "Cover" : "Set Cover"}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={idx === galleryImages.length - 1}
+                        onClick={() => handleMoveImage(idx, idx + 1)}
+                        className="h-7 w-7 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center disabled:opacity-20 cursor-pointer"
+                        title="Move right"
+                      >
+                        <ArrowRightIcon className="h-3.5 w-3.5" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(idx)}
+                        className="h-7 w-7 rounded-full bg-rose-600 text-white flex items-center justify-center hover:bg-rose-700 cursor-pointer ml-1"
+                        title="Delete image"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Quick Add More Tile */}
+              <button
+                type="button"
+                onClick={() => galleryFileInputRef.current?.click()}
+                className="aspect-[16/10] rounded-[16px] border-2 border-dashed border-[var(--border-neutral)] hover:border-[var(--primary-forest-green)] bg-[var(--bg-neutral)]/30 flex flex-col items-center justify-center gap-1 text-[var(--content-tertiary)] hover:text-[var(--primary-forest-green)] transition-all cursor-pointer"
+              >
+                <Plus className="h-5 w-5" />
+                <span className="text-[11px] font-bold">Add More</span>
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 2. PROJECT TITLE & STORY (Expressive Clean Inputs)                         */}
+      {/* ========================================================================= */}
+      <div className="rounded-[28px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 sm:p-8 shadow-xs space-y-6">
+        {/* Title Input */}
+        <div>
+          <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] block mb-1.5">
+            Project Title
+          </label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Give your project a title..."
+            className={cn(
+              bricolage.className,
+              "w-full text-2xl sm:text-3xl font-black text-[var(--content-primary)] bg-transparent border-0 border-b border-[var(--border-neutral)] pb-3 focus:outline-none focus:border-[var(--primary-forest-green)] transition-colors placeholder:text-[var(--content-tertiary)]"
+            )}
+          />
+        </div>
+
+        {/* Category & Subcategory Selectors (Compact Dropdown + Chips) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+          {/* Category Dropdown */}
+          <div>
+            <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] block mb-1.5">
+              Category
+            </label>
+            <div className="relative">
+              <select
+                value={category}
+                onChange={(e) => handleCategoryChange(e.target.value)}
+                className="w-full h-11 rounded-[14px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] px-3.5 pr-8 text-xs font-bold text-[var(--content-primary)] focus:outline-none focus:border-[var(--primary-forest-green)] appearance-none cursor-pointer"
+              >
+                {MASTER_TAXONOMY.map((cat) => (
+                  <option key={cat.id} value={cat.name}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-[var(--content-tertiary)] pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Subcategory Pills */}
+          {availableSubCategories.length > 0 && (
+            <div>
+              <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] block mb-1.5">
+                Specialization ({availableSubCategories.length})
+              </label>
+              <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-0.5">
+                {availableSubCategories.map((sub) => {
+                  const isSelected = subCategory === sub;
+                  return (
+                    <button
+                      key={sub}
+                      type="button"
+                      onClick={() => setSubCategory(sub)}
+                      className={cn(
+                        "rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all border",
+                        isSelected
+                          ? "bg-[var(--primary-forest-green)] text-white dark:bg-[var(--accent)] dark:text-[#090C09] border-transparent shadow-xs"
+                          : "bg-[var(--bg-elevated)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)]"
+                      )}
+                    >
+                      {sub}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Narrative / Case Study Story */}
+        <div>
+          <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] block mb-1.5">
+            About the Project & Process
+          </label>
+          <Textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="Share the design narrative, creative decisions, materials, or context behind this project..."
+            rows={5}
+            className="text-sm bg-[var(--bg-elevated)]"
+          />
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 3. TAGS & TOOLS (1-Click Suggestions)                                     */}
+      {/* ========================================================================= */}
+      <div className="rounded-[28px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 sm:p-8 shadow-xs grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Tags */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
+              Tags ({tags.length}/20)
+            </label>
+          </div>
+
+          <div className="flex gap-2">
+            <Input
+              value={newTag}
+              onChange={(e) => setNewTag(e.target.value)}
+              onKeyDown={handleAddTag}
+              placeholder="Add tag (Press Enter)..."
+              disabled={tags.length >= 20}
+              className="h-9 text-xs"
+            />
             <Button
               type="button"
-              variant="accent"
-              size="default"
-              onClick={handleProceedToStep2}
-              className="gap-2 font-bold shadow-xs"
+              variant="secondary"
+              size="sm"
+              onClick={handleAddTag}
+              disabled={tags.length >= 20}
+              className="h-9 text-xs"
             >
-              <span>Next: Project Details</span>
-              <ArrowRight className="h-4 w-4" />
+              Add
             </Button>
-          ) : (
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                size="default"
-                onClick={() => setStep(1)}
-                className="gap-1.5 font-semibold text-xs"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                <span>Back to Media</span>
-              </Button>
+          </div>
 
-              <Button
-                type="button"
-                variant="secondary"
-                size="default"
-                disabled={isSaving}
-                onClick={() => handleSave(false)}
-                className="gap-1.5 font-semibold text-xs"
-              >
-                <Save className="h-3.5 w-3.5" />
-                <span>Save Draft</span>
-              </Button>
+          {tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center gap-1 bg-[var(--chip-bg)] text-[var(--chip-fg)] px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                >
+                  #{tag}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveTag(tag)}
+                    className="hover:text-rose-500 ml-0.5 cursor-pointer"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
 
-              <Button
-                type="button"
-                variant="accent"
-                size="default"
-                disabled={isSaving}
-                onClick={() => handleSave(true)}
-                className="gap-2 font-bold shadow-xs"
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Publishing...</span>
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4" />
-                    <span>Publish Live</span>
-                  </>
-                )}
-              </Button>
+          {suggestedTags.length > 0 && (
+            <div className="pt-2">
+              <span className="text-[10px] font-mono text-[var(--content-tertiary)] uppercase block mb-1.5">
+                Suggested tags:
+              </span>
+              <div className="flex flex-wrap gap-1">
+                {suggestedTags.slice(0, 8).map((sTag) => {
+                  const isAdded = tags.includes(sTag);
+                  return (
+                    <button
+                      key={sTag}
+                      type="button"
+                      disabled={isAdded}
+                      onClick={() => handleQuickAddTag(sTag)}
+                      className={cn(
+                        "rounded-full px-2 py-0.5 text-[11px] transition-all cursor-pointer",
+                        isAdded
+                          ? "bg-[var(--bg-neutral)] text-[var(--content-tertiary)] opacity-40 cursor-not-allowed"
+                          : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:bg-[var(--accent)] hover:text-[#090C09]"
+                      )}
+                    >
+                      +{sTag}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Tools */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
+              Tools Stack ({tools.length}/10)
+            </label>
+          </div>
+
+          <div className="flex gap-2">
+            <Input
+              value={newTool}
+              onChange={(e) => setNewTool(e.target.value)}
+              onKeyDown={handleAddTool}
+              placeholder="e.g. Figma, Blender..."
+              disabled={tools.length >= 10}
+              className="h-9 text-xs"
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={handleAddTool}
+              disabled={tools.length >= 10}
+              className="h-9 text-xs"
+            >
+              Add
+            </Button>
+          </div>
+
+          {tools.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {tools.map((tool) => (
+                <span
+                  key={tool}
+                  className="inline-flex items-center gap-1 bg-[var(--accent)] text-[#090C09] px-2.5 py-0.5 rounded-full text-xs font-bold"
+                >
+                  {tool}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveTool(tool)}
+                    className="hover:text-rose-700 ml-0.5 cursor-pointer"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {suggestedTools.length > 0 && (
+            <div className="pt-2">
+              <span className="text-[10px] font-mono text-[var(--content-tertiary)] uppercase block mb-1.5">
+                Suggested tools:
+              </span>
+              <div className="flex flex-wrap gap-1">
+                {suggestedTools.slice(0, 8).map((sTool) => {
+                  const isAdded = tools.includes(sTool);
+                  return (
+                    <button
+                      key={sTool}
+                      type="button"
+                      disabled={isAdded}
+                      onClick={() => handleQuickAddTool(sTool)}
+                      className={cn(
+                        "rounded-full px-2 py-0.5 text-[11px] transition-all cursor-pointer",
+                        isAdded
+                          ? "bg-[var(--bg-neutral)] text-[var(--content-tertiary)] opacity-40 cursor-not-allowed"
+                          : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:bg-[var(--accent)] hover:text-[#090C09]"
+                      )}
+                    >
+                      +{sTool}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* ========================================================================= */}
-      {/* STEP 1: VISUAL MEDIA UPLOADER & STACKED EXHIBITION SPREADS               */}
-      {/* ========================================================================= */}
-      {step === 1 && (
-        <div className="space-y-8 animate-scale-in">
-          {/* Header Note */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[var(--border-neutral)]">
-            <div>
-              <h2 className={cn(bricolage.className, "text-2xl font-bold text-[var(--content-primary)]")}>
-                Upload Project Media & Spreads
-              </h2>
-              <p className="text-xs text-[var(--content-secondary)] mt-0.5">
-                Upload your high-resolution images below. Click <strong>&ldquo;Set Cover&rdquo;</strong> on any image to designate it as the hero visual.
-              </p>
-            </div>
-            <span className="text-xs font-mono font-bold text-[var(--content-tertiary)] uppercase tracking-wider">
-              Step 1 of 2
-            </span>
-          </div>
+      {/* Bottom Sticky Actions */}
+      <div className="flex items-center justify-between pt-4 border-t border-[var(--border-neutral)]">
+        <Link
+          href="/me"
+          className="text-xs font-semibold text-[var(--content-tertiary)] hover:text-[var(--content-primary)] transition-colors"
+        >
+          Cancel & Return to Studio
+        </Link>
 
-          {/* Unified Batch Media Upload Dropzone */}
-          <div className="rounded-[28px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 sm:p-8 shadow-xs space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--accent)] text-[#090C09]">
-                  <Layers className="h-4 w-4" />
-                </div>
-                <div>
-                  <label className="type-body-default-bold text-[var(--content-primary)] block font-bold text-sm">
-                    Project Images & Spreads ({galleryImages.length})
-                  </label>
-                  <p className="type-label text-[var(--content-tertiary)] text-xs">
-                    Drop PNG, JPG, or WebP files. The first plate or your selected plate will serve as the project cover.
-                  </p>
-                </div>
-              </div>
+        <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            variant="secondary"
+            size="lg"
+            disabled={isSaving}
+            onClick={() => handleSave(false)}
+            className="gap-2 font-semibold text-xs shadow-xs"
+          >
+            <Save className="h-4 w-4" />
+            <span>Save as Draft</span>
+          </Button>
 
-              {galleryImages.length > 0 && (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => galleryFileInputRef.current?.click()}
-                  className="gap-1.5 text-xs font-semibold shrink-0"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>Add More Images</span>
-                </Button>
-              )}
-            </div>
-
-            {/* Multiple Files Upload Dropzone */}
-            <input
-              type="file"
-              multiple
-              accept="image/png,image/jpeg,image/webp,image/gif"
-              ref={galleryFileInputRef}
-              onChange={(e) => {
-                if (e.target.files && e.target.files.length > 0) {
-                  handleGalleryFiles(e.target.files);
-                }
-              }}
-              className="hidden"
-            />
-
-            <div
-              onDragOver={(e) => {
-                e.preventDefault();
-                setIsDraggingGallery(true);
-              }}
-              onDragLeave={() => setIsDraggingGallery(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setIsDraggingGallery(false);
-                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                  handleGalleryFiles(e.dataTransfer.files);
-                }
-              }}
-              onClick={() => galleryFileInputRef.current?.click()}
-              className={cn(
-                "rounded-[22px] bg-[var(--bg-neutral)]/30 border-2 border-dashed p-8 text-center group cursor-pointer transition-all",
-                isDraggingGallery
-                  ? "border-[var(--primary-forest-green)] bg-[var(--bg-neutral)]/80 scale-[0.99]"
-                  : "border-[var(--border-neutral)] hover:border-[var(--primary-forest-green)]"
-              )}
-            >
-              {isProcessingFiles ? (
-                <div className="flex flex-col items-center py-8">
-                  <Loader2 className="h-9 w-9 animate-spin text-[var(--primary-forest-green)] mb-3" />
-                  <span className="text-sm font-bold text-[var(--content-primary)]">
-                    Uploading & optimizing images ({uploadProgress?.current || 0}/{uploadProgress?.total || 0})...
-                  </span>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center py-6">
-                  <div className="h-14 w-14 rounded-full bg-[var(--bg-screen)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-tertiary)] mb-3 group-hover:text-[var(--primary-forest-green)] group-hover:border-[var(--primary-forest-green)] transition-colors shadow-xs">
-                    <UploadCloud className="h-7 w-7 group-hover:scale-110 transition-transform" />
-                  </div>
-                  <span className="type-body-default-bold text-[var(--content-primary)] text-base font-bold">
-                    Drop project images here or click to batch upload
-                  </span>
-                  <span className="type-label text-[var(--content-tertiary)] text-xs mt-1 max-w-sm">
-                    Select multiple high-resolution spreads (PNG, JPG, WebP up to 15MB each)
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Vertical Stacked Exhibition Spreads List */}
-            {galleryImages.length > 0 && (
-              <div className="space-y-6 pt-4 border-t border-[var(--border-neutral)]">
-                <div className="flex items-center justify-between text-xs font-mono font-semibold text-[var(--content-secondary)]">
-                  <span>PROJECT SPREADS STACK ({galleryImages.length})</span>
-                  <span>Use arrows to reorder • Click &ldquo;Set Cover&rdquo; to choose hero visual</span>
-                </div>
-
-                <div className="space-y-6">
-                  {galleryImages.map((url, idx) => {
-                    const isCurrentCover = activeCoverUrl === url;
-
-                    return (
-                      <div
-                        key={idx}
-                        className={cn(
-                          "rounded-[22px] bg-[var(--bg-elevated)] border p-4 sm:p-5 shadow-xs space-y-3 transition-all",
-                          isCurrentCover
-                            ? "border-[var(--primary-forest-green)] ring-2 ring-[var(--primary-forest-green)]/20"
-                            : "border-[var(--border-neutral)] hover:border-[var(--border-neutral-hover)]"
-                        )}
-                      >
-                        {/* Plate Controls Header */}
-                        <div className="flex items-center justify-between gap-3 text-xs">
-                          <div className="flex items-center gap-2">
-                            <span className="inline-flex items-center rounded-lg bg-[var(--chip-bg)] text-[var(--chip-fg)] px-2.5 py-1 text-xs font-mono font-bold">
-                              Plate {String(idx + 1).padStart(2, "0")}
-                            </span>
-                            {isCurrentCover && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--accent)] text-[#090C09] px-2.5 py-0.5 text-[10px] font-bold shadow-xs">
-                                <Star className="h-3 w-3 fill-current" />
-                                Project Cover Visual
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Actions: Reorder, Set as Cover, Delete */}
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              disabled={idx === 0}
-                              onClick={() => handleMoveGalleryImage(idx, idx - 1)}
-                              className="h-8 w-8 rounded-lg bg-[var(--bg-screen)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-secondary)] hover:text-[var(--content-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                              title="Move Up"
-                            >
-                              <ArrowUp className="h-3.5 w-3.5" />
-                            </button>
-
-                            <button
-                              type="button"
-                              disabled={idx === galleryImages.length - 1}
-                              onClick={() => handleMoveGalleryImage(idx, idx + 1)}
-                              className="h-8 w-8 rounded-lg bg-[var(--bg-screen)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-secondary)] hover:text-[var(--content-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                              title="Move Down"
-                            >
-                              <ArrowDown className="h-3.5 w-3.5" />
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => handleSetAsCover(url)}
-                              className={cn(
-                                "h-8 px-2.5 rounded-lg border flex items-center gap-1 text-[11px] font-semibold transition-colors cursor-pointer",
-                                isCurrentCover
-                                  ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent"
-                                  : "bg-[var(--bg-screen)] border-[var(--border-neutral)] text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
-                              )}
-                              title="Set as Hero Cover"
-                            >
-                              <Star className={cn("h-3 w-3", isCurrentCover && "fill-current")} />
-                              <span>{isCurrentCover ? "Cover" : "Set Cover"}</span>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveGalleryImage(idx)}
-                              className="h-8 w-8 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 flex items-center justify-center transition-colors cursor-pointer ml-1"
-                              title="Remove Plate"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Full-Width Spread Image Display */}
-                        <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full rounded-[16px] overflow-hidden bg-[var(--bg-neutral)] border border-[var(--border-neutral)]">
-                          <Image
-                            src={url}
-                            alt={`Plate ${idx + 1}`}
-                            fill
-                            sizes="(max-width: 768px) 100vw, 1200px"
-                            className="object-cover"
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+          <Button
+            type="button"
+            variant="accent"
+            size="lg"
+            disabled={isSaving}
+            onClick={() => handleSave(true)}
+            className="gap-2 font-bold shadow-md px-8"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Publishing...</span>
+              </>
+            ) : (
+              <>
+                <Send className="h-4 w-4" />
+                <span>Publish Project Live</span>
+              </>
             )}
-          </div>
-
-          {/* Bottom Action to Step 2 */}
-          <div className="flex items-center justify-between pt-4">
-            <span className="text-xs text-[var(--content-tertiary)]">
-              {galleryImages.length > 0
-                ? `${galleryImages.length} plate${galleryImages.length === 1 ? "" : "s"} ready for case study narrative.`
-                : "Upload images above to proceed to project details."}
-            </span>
-            <Button
-              type="button"
-              variant="accent"
-              size="lg"
-              onClick={handleProceedToStep2}
-              className="gap-2 font-bold shadow-md px-8"
-            >
-              <span>Continue to Specifications</span>
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </div>
+          </Button>
         </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* STEP 2: PROJECT SPECIFICATIONS, STORY, TAXONOMY & METADATA               */}
-      {/* ========================================================================= */}
-      {step === 2 && (
-        <div className="space-y-8 animate-scale-in">
-          {/* Header Note */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[var(--border-neutral)]">
-            <div>
-              <h2 className={cn(bricolage.className, "text-2xl font-bold text-[var(--content-primary)]")}>
-                Project Specifications & Narrative
-              </h2>
-              <p className="text-xs text-[var(--content-secondary)] mt-0.5">
-                Provide the design title, category focus, project narrative, tags, and tools stack.
-              </p>
-            </div>
-            <span className="text-xs font-mono font-bold text-[var(--content-tertiary)] uppercase tracking-wider">
-              Step 2 of 2
-            </span>
-          </div>
-
-          {/* Title */}
-          <div className="rounded-[24px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 sm:p-8 shadow-xs space-y-2">
-            <label className="type-title-subsection text-[var(--content-primary)] block font-bold text-base">
-              Project Title
-            </label>
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Sanctuary: Architectural Monograph & Spatial Identity"
-              required
-              className="text-base h-14 font-semibold"
-            />
-            <p className="text-[11px] text-[var(--content-tertiary)] font-mono">
-              Direct permanent link: craft.design/project/
-              {title ? title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") : "project-slug"}
-            </p>
-          </div>
-
-          {/* Primary Category & Sub-Category (Side by Side) */}
-          <div className="rounded-[24px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] p-6 sm:p-8 shadow-xs">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-              {/* Left Column: Primary Category (13 Master Categories) */}
-              <div className="md:col-span-7 space-y-3.5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="type-body-default-bold text-[var(--content-primary)] block font-bold text-sm">
-                      Primary Category ({MASTER_TAXONOMY.length})
-                    </label>
-                    <p className="type-label text-[var(--content-tertiary)] text-xs mt-0.5">
-                      Select the main creative discipline that best represents this project.
-                    </p>
-                  </div>
-                  <span className="text-xs font-mono font-semibold px-2.5 py-1 rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] shrink-0">
-                    {activeTaxonomy?.shortName || "UI"}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                  {MASTER_TAXONOMY.map((cat) => {
-                    const isSelected = category === cat.name;
-                    return (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => handleCategorySelect(cat.name)}
-                        className={cn(
-                          "flex items-center justify-between gap-2 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-left transition-all cursor-pointer border",
-                          isSelected
-                            ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-xs"
-                            : "bg-[var(--bg-screen)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)] hover:text-[var(--content-primary)]"
-                        )}
-                      >
-                        <span className="truncate">{cat.name}</span>
-                        {isSelected && <Check className="h-3.5 w-3.5 text-[var(--chip-fg)] shrink-0" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Right Column: Sub-Category Selection */}
-              <div className="md:col-span-5 space-y-3.5 md:border-l md:border-[var(--border-neutral)] md:pl-6 pt-4 md:pt-0 border-t md:border-t-0 border-[var(--border-neutral)]">
-                <div>
-                  <div className="flex items-center justify-between">
-                    <label className="type-body-default-bold text-[var(--content-primary)] block font-bold text-sm">
-                      Sub-Category ({availableSubCategories.length})
-                    </label>
-                    {subCategory && (
-                      <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--primary-forest-green)] dark:text-[var(--accent)]">
-                        Active
-                      </span>
-                    )}
-                  </div>
-                  <p className="type-label text-[var(--content-tertiary)] text-xs mt-0.5">
-                    Refine discipline focus in {activeTaxonomy?.shortName || "category"}.
-                  </p>
-                </div>
-
-                {availableSubCategories.length > 0 ? (
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {availableSubCategories.map((sub) => {
-                      const isSelected = subCategory === sub;
-                      return (
-                        <button
-                          key={sub}
-                          type="button"
-                          onClick={() => setSubCategory(sub)}
-                          className={cn(
-                            "rounded-full px-3 py-1.5 text-xs font-semibold cursor-pointer transition-all border text-left",
-                            isSelected
-                              ? "bg-[var(--primary-forest-green)] text-white dark:bg-[var(--accent)] dark:text-[#090C09] border-transparent shadow-xs"
-                              : "bg-[var(--bg-screen)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)] hover:text-[var(--content-primary)]"
-                          )}
-                        >
-                          {sub}
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="p-4 rounded-xl bg-[var(--bg-neutral)]/40 border border-dashed border-[var(--border-neutral)] text-center text-xs text-[var(--content-tertiary)]">
-                    No sub-categories available for this discipline.
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-
-
-          {/* Summary & Narrative Body */}
-          <div className="rounded-[24px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 sm:p-8 shadow-xs space-y-6">
-            <div>
-              <label className="type-body-default-bold text-[var(--content-primary)] block mb-1 font-bold text-sm">
-                Brief Summary (One or two lines)
-              </label>
-              <p className="type-label text-[var(--content-tertiary)] mb-2 text-xs">
-                Shown on search result cards, discover feeds, and project headers.
-              </p>
-              <Input
-                value={summary}
-                onChange={(e) => setSummary(e.target.value)}
-                placeholder="A tactile spatial monograph celebrating raw timber and poured concrete..."
-                required
-              />
-            </div>
-
-            <div>
-              <label className="type-body-default-bold text-[var(--content-primary)] block mb-1 font-bold text-sm">
-                Project Case Study / Narrative
-              </label>
-              <p className="type-label text-[var(--content-tertiary)] mb-2 text-xs">
-                Detail your creative methodology, typography scale, visual tension, and artistic rationale.
-              </p>
-              <Textarea
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                placeholder="Detail the materials, design philosophy, optical weights, and architectural context..."
-                rows={8}
-                required
-              />
-            </div>
-          </div>
-
-          {/* Tags & Stack (2 Columns) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Tags & Methodology */}
-            <div className="rounded-[24px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 shadow-xs space-y-4">
-              <div className="flex items-center justify-between">
-                <label className="type-body-default-bold text-[var(--content-primary)] block font-bold text-sm">
-                  Tags & Methodology
-                </label>
-                <span className={cn(
-                  "text-xs font-mono font-semibold",
-                  tags.length >= 20 ? "text-[var(--negative)]" : "text-[var(--content-tertiary)]"
-                )}>
-                  {tags.length}/20 max
-                </span>
-              </div>
-
-              {/* Custom Input */}
-              <div className="flex gap-2">
-                <Input
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  onKeyDown={handleAddTag}
-                  placeholder={tags.length >= 20 ? "Maximum tags reached" : "Add custom tag (Press Enter)..."}
-                  disabled={tags.length >= 20}
-                  className="h-10 text-xs"
-                />
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleAddTag}
-                  disabled={tags.length >= 20}
-                >
-                  Add
-                </Button>
-              </div>
-
-              {/* Selected Tags */}
-              {tags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="inline-flex items-center gap-1 bg-[var(--chip-bg)] text-[var(--chip-fg)] px-2.5 py-1 rounded-full text-xs font-semibold"
-                    >
-                      #{tag}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveTag(tag)}
-                        className="hover:text-[var(--negative)] ml-0.5 cursor-pointer"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {/* Suggested Tags */}
-              {suggestedTags.length > 0 && (
-                <div className="pt-3 border-t border-[var(--border-neutral)]">
-                  <span className="text-[11px] font-mono font-semibold text-[var(--content-tertiary)] uppercase tracking-wider block mb-2">
-                    Suggested for {activeTaxonomy?.shortName}:
-                  </span>
-                  <div className="flex flex-wrap gap-1">
-                    {suggestedTags.slice(0, 10).map((sTag) => {
-                      const isAdded = tags.includes(sTag);
-                      return (
-                        <button
-                          key={sTag}
-                          type="button"
-                          disabled={isAdded}
-                          onClick={() => handleQuickAddTag(sTag)}
-                          className={cn(
-                            "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] transition-all cursor-pointer",
-                            isAdded
-                              ? "bg-[var(--bg-neutral)] text-[var(--content-tertiary)] opacity-60 cursor-not-allowed"
-                              : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:bg-[var(--accent)] hover:text-[#090C09]"
-                          )}
-                        >
-                          {!isAdded && <Plus className="h-2.5 w-2.5" />}
-                          <span>{sTag}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Tools & Tech Stack */}
-            <div className="rounded-[24px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 shadow-xs space-y-4">
-              <div className="flex items-center justify-between">
-                <label className="type-body-default-bold text-[var(--content-primary)] block font-bold text-sm">
-                  Tools & Technologies
-                </label>
-                <span className={cn(
-                  "text-xs font-mono font-semibold",
-                  tools.length >= 10 ? "text-[var(--negative)]" : "text-[var(--content-tertiary)]"
-                )}>
-                  {tools.length}/10 max
-                </span>
-              </div>
-
-              {/* Custom Input */}
-              <div className="flex gap-2">
-                <Input
-                  value={newTool}
-                  onChange={(e) => setNewTool(e.target.value)}
-                  onKeyDown={handleAddTool}
-                  placeholder={tools.length >= 10 ? "Maximum tools reached" : "e.g. Figma, Blender, Unity..."}
-                  disabled={tools.length >= 10}
-                  className="h-10 text-xs"
-                />
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleAddTool}
-                  disabled={tools.length >= 10}
-                >
-                  Add
-                </Button>
-              </div>
-
-              {/* Selected Tools */}
-              {tools.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {tools.map((tool) => (
-                    <span
-                      key={tool}
-                      className="inline-flex items-center gap-1 bg-[var(--accent)] text-[#090C09] px-2.5 py-1 rounded-full text-xs font-bold"
-                    >
-                      {tool}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveTool(tool)}
-                        className="hover:text-red-700 ml-0.5 cursor-pointer"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {/* Suggested Tools */}
-              {suggestedTools.length > 0 && (
-                <div className="pt-3 border-t border-[var(--border-neutral)]">
-                  <span className="text-[11px] font-mono font-semibold text-[var(--content-tertiary)] uppercase tracking-wider block mb-2">
-                    Common Tools for {activeTaxonomy?.shortName}:
-                  </span>
-                  <div className="flex flex-wrap gap-1">
-                    {suggestedTools.map((sTool) => {
-                      const isAdded = tools.includes(sTool);
-                      return (
-                        <button
-                          key={sTool}
-                          type="button"
-                          disabled={isAdded}
-                          onClick={() => handleQuickAddTool(sTool)}
-                          className={cn(
-                            "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] transition-all cursor-pointer",
-                            isAdded
-                              ? "bg-[var(--bg-neutral)] text-[var(--content-tertiary)] opacity-60 cursor-not-allowed"
-                              : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:bg-[var(--accent)] hover:text-[#090C09]"
-                          )}
-                        >
-                          {!isAdded && <Plus className="h-2.5 w-2.5" />}
-                          <span>{sTool}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Bottom Action Footer for Step 2 */}
-          <div className="rounded-[24px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] p-6 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
-            <Button
-              type="button"
-              variant="secondary"
-              size="lg"
-              onClick={() => {
-                setStep(1);
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-              className="gap-2 font-semibold w-full sm:w-auto"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Back to Visual Media</span>
-            </Button>
-
-            <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-              <Button
-                type="button"
-                variant="secondary"
-                size="lg"
-                disabled={isSaving}
-                onClick={() => handleSave(false)}
-                className="gap-2 font-semibold shadow-xs w-full sm:w-auto"
-              >
-                <Save className="h-4 w-4" />
-                <span>Save as Draft</span>
-              </Button>
-
-              <Button
-                type="button"
-                variant="accent"
-                size="lg"
-                disabled={isSaving}
-                onClick={() => handleSave(true)}
-                className="gap-2 font-bold shadow-md w-full sm:w-auto px-8"
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Publishing Project...</span>
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4" />
-                    <span>Publish Project Live</span>
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }
