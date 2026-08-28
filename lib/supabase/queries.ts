@@ -159,7 +159,9 @@ export async function fetchProjects(options: FetchProjectsOptions = {}): Promise
     const { data, error } = await query;
 
     if (error || !data) {
-      if (error) console.error("Error fetching projects from Supabase:", error);
+      if (error && (error.message || Object.keys(error).length > 0)) {
+        console.error("Error fetching projects from Supabase:", error.message || error.details || error);
+      }
       return [];
     }
 
@@ -185,8 +187,11 @@ export async function fetchProjects(options: FetchProjectsOptions = {}): Promise
     }
 
     return projects;
-  } catch (err) {
-    console.error("Error fetching projects from Supabase:", err);
+  } catch (err: unknown) {
+    const errorObj = err as { name?: string; message?: string };
+    if (errorObj?.name !== "AbortError") {
+      console.error("Error fetching projects from Supabase:", errorObj?.message || err);
+    }
     return [];
   }
 }

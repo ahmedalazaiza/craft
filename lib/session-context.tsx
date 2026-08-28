@@ -191,8 +191,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         getCurrentAuthUser(),
       ]);
 
-      setProjects(dbProjects || []);
-      setCreators(dbCreators || []);
+      if (dbProjects && dbProjects.length > 0) {
+        setProjects(dbProjects);
+      }
+      if (dbCreators && dbCreators.length > 0) {
+        setCreators(dbCreators);
+      }
 
       if (activeAuthUser) {
         setUser(activeAuthUser);
@@ -203,8 +207,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         setNotifications([]);
         setFollowingCreatorIds(new Set());
       }
-    } catch (err) {
-      console.error("Failed to load initial data from Supabase:", err);
+    } catch (err: unknown) {
+      const errorObj = err as { name?: string; message?: string };
+      if (errorObj?.name !== "AbortError") {
+        console.error("Failed to load initial data from Supabase:", errorObj?.message || err);
+      }
     } finally {
       setIsLoadingDb(false);
     }
