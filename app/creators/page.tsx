@@ -2,6 +2,9 @@ import React, { Suspense } from "react";
 import type { Metadata } from "next";
 import { CreatorsClient } from "./creators-client";
 import { constructMetadata, generateCollectionJsonLd, generateBreadcrumbJsonLd } from "@/lib/seo";
+import { fetchCreators } from "@/lib/supabase/queries";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = constructMetadata({
   title: "Directory of Independent Creators & Design Studios",
@@ -19,7 +22,9 @@ export const metadata: Metadata = constructMetadata({
   ],
 });
 
-export default function CreatorsPage() {
+export default async function CreatorsPage() {
+  const initialCreators = await fetchCreators();
+
   const collectionJsonLd = generateCollectionJsonLd({
     name: "Directory of Independent Creators & Design Studios",
     description:
@@ -54,7 +59,7 @@ export default function CreatorsPage() {
           </div>
         }
       >
-        <CreatorsClient />
+        <CreatorsClient initialCreators={initialCreators || []} />
       </Suspense>
     </>
   );

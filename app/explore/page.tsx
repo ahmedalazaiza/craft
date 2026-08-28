@@ -2,6 +2,9 @@ import React, { Suspense } from "react";
 import type { Metadata } from "next";
 import { ExploreClient } from "./explore-client";
 import { constructMetadata, generateCollectionJsonLd, generateBreadcrumbJsonLd } from "@/lib/seo";
+import { fetchProjects } from "@/lib/supabase/queries";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = constructMetadata({
   title: "Explore Curated Projects & Monographs",
@@ -19,7 +22,9 @@ export const metadata: Metadata = constructMetadata({
   ],
 });
 
-export default function ExplorePage() {
+export default async function ExplorePage() {
+  const initialProjects = await fetchProjects({ publishedOnly: true });
+
   const collectionJsonLd = generateCollectionJsonLd({
     name: "Explore Curated Projects & Monographs",
     description:
@@ -61,7 +66,7 @@ export default function ExplorePage() {
           </div>
         }
       >
-        <ExploreClient />
+        <ExploreClient initialProjects={initialProjects || []} />
       </Suspense>
     </>
   );

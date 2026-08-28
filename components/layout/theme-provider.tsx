@@ -17,6 +17,48 @@ function getSystemTheme(): "light" | "dark" {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
+/**
+ * Freeze all CSS transitions on all elements during theme toggle
+ * to ensure 100% 0ms instantaneous repaint with zero frame drops or stutter.
+ */
+function applyThemeInstantly(resolved: "light" | "dark") {
+  if (typeof document === "undefined") return;
+
+  const css = document.createElement("style");
+  css.id = "craft-theme-freeze";
+  css.appendChild(
+    document.createTextNode(
+      `*, *::before, *::after {
+        -webkit-transition: none !important;
+        -moz-transition: none !important;
+        -o-transition: none !important;
+        -ms-transition: none !important;
+        transition: none !important;
+      }`
+    )
+  );
+  document.head.appendChild(css);
+
+  // Set the attribute synchronously
+  document.documentElement.setAttribute("data-theme", resolved);
+
+  // Force layout flush so the new theme colors apply immediately without transition
+  if (typeof window !== "undefined") {
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    window.getComputedStyle(document.documentElement).opacity;
+  }
+
+  // Remove the transition blocker on the next frame so normal hover transitions resume cleanly
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      const el = document.getElementById("craft-theme-freeze");
+      if (el && el.parentNode) {
+        el.parentNode.removeChild(el);
+      }
+    });
+  });
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("system");
   const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("dark");
@@ -29,7 +71,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         stored === "light" || stored === "dark" || stored === "system"
           ? stored
           : "system";
-      
+
       const resolved = initialTheme === "system" ? getSystemTheme() : initialTheme;
       setThemeState(initialTheme);
       setResolvedTheme(resolved);
@@ -44,7 +86,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       if (!stored || stored === "system") {
         const sys = e.matches ? "dark" : "light";
         setResolvedTheme(sys);
-        document.documentElement.setAttribute("data-theme", sys);
+        applyThemeInstantly(sys);
       }
     };
 
@@ -52,12 +94,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => mediaQuery.removeEventListener("change", handleSystemChange);
   }, []);
 
-  // Instantaneous synchronous theme changer - 0ms latency
+  // Instantaneous theme changer with zero-latency transition freezing
   const setTheme = useCallback((newTheme: Theme) => {
     const resolved = newTheme === "system" ? getSystemTheme() : newTheme;
 
-    // 1. Immediately apply to DOM (instant style recalculation with 0 frame drop)
-    document.documentElement.setAttribute("data-theme", resolved);
+    // 1. Immediately apply to DOM without CSS transition congestion
+    applyThemeInstantly(resolved);
 
     // 2. Persist in storage
     try {

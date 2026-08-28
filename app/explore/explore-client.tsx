@@ -10,10 +10,7 @@ import { FilterDrawer, ProjectFilters } from "@/components/search/filter-drawer"
 import { FilterChip } from "@/components/ui/badge";
 import { FadeIn, StaggerGridItem } from "@/components/ui/motion-wrapper";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
-import { ProjectCategory } from "@/lib/types";
-
-
-
+import { ProjectCategory, Project } from "@/lib/types";
 import {
   FolderKanban,
   Sparkles,
@@ -36,8 +33,13 @@ const QUICK_CATEGORIES: (ProjectCategory | "All")[] = [
   "Type",
 ];
 
-export function ExploreClient() {
-  const { projects, isLoadingDb } = useSession();
+interface ExploreClientProps {
+  initialProjects?: Project[];
+}
+
+export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
+  const { projects: contextProjects, isLoadingDb } = useSession();
+  const projects = contextProjects.length > 0 ? contextProjects : initialProjects;
 
 
   const [searchQuery, setSearchQuery] = useState("");

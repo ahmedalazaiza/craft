@@ -10,6 +10,7 @@ import { FilterDrawer, CreatorFilters } from "@/components/search/filter-drawer"
 import { FilterChip } from "@/components/ui/badge";
 import { FadeIn, StaggerGridItem } from "@/components/ui/motion-wrapper";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { Creator } from "@/lib/types";
 import { Sparkles, Users, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -24,8 +25,13 @@ const QUICK_DISCIPLINES = [
   "Creative Code",
 ];
 
-export function CreatorsClient() {
-  const { creators, projects, isLoadingDb } = useSession();
+interface CreatorsClientProps {
+  initialCreators?: Creator[];
+}
+
+export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
+  const { creators: contextCreators, projects, isLoadingDb } = useSession();
+  const creators = contextCreators.length > 0 ? contextCreators : initialCreators;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);

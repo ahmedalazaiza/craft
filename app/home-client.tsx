@@ -4,6 +4,7 @@ import React, { useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "@/lib/session-context";
+import { Project, Creator } from "@/lib/types";
 import { bricolage } from "@/lib/fonts";
 import { ProjectCard } from "@/components/project/project-card";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -46,9 +47,21 @@ const FEATURE_POINTS = [
   },
 ];
 
-export function HomeClient() {
-  const { projects, creators } = useSession();
+interface HomeClientProps {
+  initialProjects?: Project[];
+  initialCreators?: Creator[];
+}
+
+export function HomeClient({
+  initialProjects = [],
+  initialCreators = [],
+}: HomeClientProps) {
+  const { projects: contextProjects, creators: contextCreators } = useSession();
   const shouldReduceMotion = useReducedMotion();
+
+  // Instant SSR hydration: prioritize context if updated by user action, otherwise use SSR initial data
+  const projects = contextProjects.length > 0 ? contextProjects : initialProjects;
+  const creators = contextCreators.length > 0 ? contextCreators : initialCreators;
 
   const publishedProjects = useMemo(() => {
     return projects.filter((p) => p.published);
@@ -308,9 +321,9 @@ export function HomeClient() {
                   >
                     {[...streamColumnA, ...streamColumnA].map((item, idx) => (
                       <Link
-                        key={idx}
+                        key={`${item.creator.id || item.creator.username}-${idx}`}
                         href={`/u/${item.creator.username}`}
-                        className="group p-3.5 rounded-[18px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] hover:border-[var(--content-primary)] hover:shadow-lg dark:hover:border-white/30 transition-all cursor-pointer block"
+                        className="group p-3.5 rounded-[18px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] hover:border-[var(--content-primary)] hover:shadow-lg dark:hover:border-white/30 transition-colors cursor-pointer block"
                       >
                         <div className="flex items-center gap-2.5 mb-2.5">
                           <div className="relative h-7 w-7 rounded-full overflow-hidden ring-1 ring-[var(--border-neutral)] shrink-0">
@@ -372,9 +385,9 @@ export function HomeClient() {
                   >
                     {[...streamColumnB, ...streamColumnB].map((item, idx) => (
                       <Link
-                        key={idx}
+                        key={`${item.creator.id || item.creator.username}-${idx}`}
                         href={`/u/${item.creator.username}`}
-                        className="group p-3.5 rounded-[18px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] hover:border-[var(--content-primary)] hover:shadow-lg dark:hover:border-white/30 transition-all cursor-pointer block"
+                        className="group p-3.5 rounded-[18px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] hover:border-[var(--content-primary)] hover:shadow-lg dark:hover:border-white/30 transition-colors cursor-pointer block"
                       >
                         <div className="flex items-center gap-2.5 mb-2.5">
                           <div className="relative h-7 w-7 rounded-full overflow-hidden ring-1 ring-[var(--border-neutral)] shrink-0">
