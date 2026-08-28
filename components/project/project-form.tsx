@@ -41,6 +41,7 @@ import {
   Save,
   Send,
   ChevronDown,
+  Wand2,
 } from "lucide-react";
 
 interface ProjectFormProps {
@@ -85,6 +86,10 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const [isDraggingGallery, setIsDraggingGallery] = useState(false);
   const [isProcessingFiles, setIsProcessingFiles] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
+
+  // AI Visual Auto-Fill State
+  const [isAnalyzingAI, setIsAnalyzingAI] = useState(false);
+  const [aiSuccessMessage, setAiSuccessMessage] = useState<string | null>(null);
 
   // Active Taxonomy
   const activeTaxonomy = useMemo(() => {
@@ -135,6 +140,55 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     }
   };
 
+  // AI Visual Analysis & Auto-Drafting Engine
+  const triggerAIAnalysis = async (imagesToAnalyze: string[], forceOverwrite = false) => {
+    if (imagesToAnalyze.length === 0) return;
+
+    setIsAnalyzingAI(true);
+    setAiSuccessMessage(null);
+
+    try {
+      const res = await fetch("/api/ai/analyze-project", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrls: imagesToAnalyze }),
+      });
+
+      if (!res.ok) throw new Error("AI analysis response was not ok");
+
+      const json = await res.json();
+      if (json.success && json.data) {
+        const { title: aiTitle, category: aiCategory, subCategory: aiSubCategory, body: aiBody, tags: aiTags, tools: aiTools } = json.data;
+
+        if (forceOverwrite || !title.trim()) {
+          setTitle(aiTitle);
+        }
+        if (aiCategory) {
+          setCategory(aiCategory);
+        }
+        if (aiSubCategory) {
+          setSubCategory(aiSubCategory);
+        }
+        if (forceOverwrite || !body.trim()) {
+          setBody(aiBody);
+        }
+        if (Array.isArray(aiTags) && aiTags.length > 0) {
+          setTags(aiTags);
+        }
+        if (Array.isArray(aiTools) && aiTools.length > 0) {
+          setTools(aiTools);
+        }
+
+        setAiSuccessMessage("✨ AI analyzed your images and drafted project details! Feel free to customize anything.");
+        setTimeout(() => setAiSuccessMessage(null), 8000);
+      }
+    } catch (err) {
+      console.warn("AI Visual Analysis error:", err);
+    } finally {
+      setIsAnalyzingAI(false);
+    }
+  };
+
   // Batch Media Upload Handler
   const handleGalleryFiles = async (files: FileList | File[]) => {
     const fileList = Array.from(files).filter((f) => f.type.startsWith("image/"));
@@ -149,13 +203,14 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
         (current, total) => setUploadProgress({ current, total })
       );
       if (cdnUrls.length > 0) {
-        setGalleryImages((prev) => {
-          const nextGallery = [...prev, ...cdnUrls];
-          if (!coverImage && nextGallery.length > 0) {
-            setCoverImage(nextGallery[0]);
-          }
-          return nextGallery;
-        });
+        const nextGallery = [...galleryImages, ...cdnUrls];
+        setGalleryImages(nextGallery);
+        if (!coverImage && nextGallery.length > 0) {
+          setCoverImage(nextGallery[0]);
+        }
+
+        // Trigger AI Auto-Fill based on newly uploaded visual spreads
+        triggerAIAnalysis(nextGallery, mode === "new" && !title.trim());
       }
     } catch (err) {
       console.error("Gallery files upload error:", err);
@@ -272,16 +327,46 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
       {/* Top Header & Sticky Publishing Action Bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[var(--border-neutral)]">
         <div>
-          <h1 className={cn(bricolage.className, "text-2xl sm:text-3xl font-black text-[var(--content-primary)] tracking-tight")}>
-            {mode === "new" ? "New Project" : "Edit Project"}
-          </h1>
+          <div className="flex items-center gap-2.5">
+            <h1 className={cn(bricolage.className, "text-2xl sm:text-3xl font-black text-[var(--content-primary)] tracking-tight")}>
+              {mode === "new" ? "New Project" : "Edit Project"}
+            </h1>
+            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--accent)] text-[#090C09] px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider shadow-xs">
+              <Sparkles className="h-3 w-3 fill-current" />
+              AI Vision Enabled
+            </span>
+          </div>
           <p className="text-xs text-[var(--content-secondary)] mt-0.5">
-            Upload images, title your work, and publish live in seconds.
+            Upload images, let Craft AI draft the story, and publish live in seconds.
           </p>
         </div>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+          {galleryImages.length > 0 && (
+            <Button
+              type="button"
+              variant="secondary"
+              size="default"
+              disabled={isAnalyzingAI || isProcessingFiles}
+              onClick={() => triggerAIAnalysis(galleryImages, true)}
+              className="gap-1.5 font-bold text-xs shadow-xs text-[var(--primary-forest-green)] dark:text-[var(--accent)] border-[var(--primary-forest-green)]/30 hover:bg-[var(--primary-forest-green)]/10"
+              title="Re-analyze uploaded visuals and auto-fill fields"
+            >
+              {isAnalyzingAI ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>AI Analyzing...</span>
+                </>
+              ) : (
+                <>
+                  <Wand2 className="h-3.5 w-3.5" />
+                  <span>Auto-Fill with AI</span>
+                </>
+              )}
+            </Button>
+          )}
+
           <Button
             type="button"
             variant="secondary"
@@ -316,6 +401,42 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           </Button>
         </div>
       </div>
+
+      {/* AI Analyzing Status Banner */}
+      {isAnalyzingAI && (
+        <div className="rounded-[20px] bg-[var(--accent)]/15 border border-[var(--accent)]/40 p-4 flex items-center gap-3 animate-pulse shadow-xs">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--accent)] text-[#090C09] shrink-0">
+            <Sparkles className="h-4 w-4 fill-current animate-spin" />
+          </div>
+          <div>
+            <h4 className="text-xs font-bold text-[var(--content-primary)]">
+              Craft Vision AI is inspecting your visual spreads...
+            </h4>
+            <p className="text-[11px] text-[var(--content-secondary)]">
+              Detecting design discipline, typography scale, palette, and drafting a bespoke case study narrative.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* AI Success Toast Banner */}
+      {aiSuccessMessage && (
+        <div className="rounded-[20px] bg-emerald-500/10 border border-emerald-500/30 p-3.5 flex items-center justify-between gap-3 animate-scale-in">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span className="text-xs font-semibold text-emerald-800 dark:text-emerald-200">
+              {aiSuccessMessage}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setAiSuccessMessage(null)}
+            className="text-xs text-[var(--content-tertiary)] hover:text-[var(--content-primary)] cursor-pointer"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* ========================================================================= */}
       {/* 1. VISUAL MEDIA DROPZONE & SPREADS STRIP                                  */}
@@ -373,7 +494,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                 Drop project images here, or browse files
               </span>
               <span className="type-label text-[var(--content-tertiary)] text-xs mt-0.5">
-                PNG, JPG, WebP — multiple uploads supported
+                PNG, JPG, WebP — AI will inspect images and auto-fill project details
               </span>
             </div>
           )}
@@ -491,14 +612,21 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
       <div className="rounded-[28px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 sm:p-8 shadow-xs space-y-6">
         {/* Title Input */}
         <div>
-          <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] block mb-1.5">
-            Project Title
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
+              Project Title
+            </label>
+            {title && (
+              <span className="text-[10px] font-mono text-[var(--primary-forest-green)] dark:text-[var(--accent)] font-bold">
+                ✓ Ready
+              </span>
+            )}
+          </div>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Give your project a title..."
+            placeholder="Give your project a title (or drop images to auto-generate)..."
             className={cn(
               bricolage.className,
               "w-full text-2xl sm:text-3xl font-black text-[var(--content-primary)] bg-transparent border-0 border-b border-[var(--border-neutral)] pb-3 focus:outline-none focus:border-[var(--primary-forest-green)] transition-colors placeholder:text-[var(--content-tertiary)]"
@@ -569,7 +697,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
             onChange={(e) => setBody(e.target.value)}
             placeholder="Share the design narrative, creative decisions, materials, or context behind this project..."
             rows={5}
-            className="text-sm bg-[var(--bg-elevated)]"
+            className="text-sm bg-[var(--bg-elevated)] leading-relaxed"
           />
         </div>
       </div>
