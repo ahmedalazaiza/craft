@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { uploadMediaFile, uploadMultipleMediaFiles } from "@/lib/supabase/storage";
+import { uploadMultipleMediaFiles } from "@/lib/supabase/storage";
 import {
   UploadCloud,
   Check,
@@ -61,10 +61,9 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const router = useRouter();
   const { saveProject } = useSession();
 
-  // Wizard Step (1: Media & Cover, 2: Specifications & Customization)
+  // Wizard Step (1: Media Spreads & Cover Selection, 2: Specifications & Customization)
   const [step, setStep] = useState<1 | 2>(1);
 
-  const coverFileInputRef = useRef<HTMLInputElement>(null);
   const galleryFileInputRef = useRef<HTMLInputElement>(null);
 
   // Form State
@@ -80,12 +79,13 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const [medium, setMedium] = useState<ProjectMedium>(
     initialData?.medium || "Image"
   );
-  const [coverImage, setCoverImage] = useState(
-    initialData?.coverImage || ""
-  );
   const [galleryImages, setGalleryImages] = useState<string[]>(
-    initialData?.galleryImages || []
+    initialData?.galleryImages || (initialData?.coverImage ? [initialData.coverImage] : [])
   );
+  const [coverImage, setCoverImage] = useState(
+    initialData?.coverImage || (initialData?.galleryImages?.[0] || "")
+  );
+
   const [tags, setTags] = useState<string[]>(
     initialData?.tags || ["Design Systems", "Auto-layout", "Figma"]
   );
@@ -96,10 +96,8 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const [newTool, setNewTool] = useState("");
 
   const [isSaving, setIsSaving] = useState(false);
-  const [isDraggingCover, setIsDraggingCover] = useState(false);
   const [isDraggingGallery, setIsDraggingGallery] = useState(false);
   const [isProcessingFiles, setIsProcessingFiles] = useState(false);
-  const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
 
   // Taxonomy helpers for active category
@@ -201,26 +199,16 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   };
 
   const handleRemoveGalleryImage = (idxToRemove: number) => {
-    setGalleryImages((prev) => prev.filter((_, idx) => idx !== idxToRemove));
-  };
-
-  // Direct File Upload Handlers
-  const handleCoverFile = async (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      alert("Please upload a valid image file (PNG, JPG, WebP).");
-      return;
-    }
-    setIsUploadingCover(true);
-    try {
-      const cdnUrl = await uploadMediaFile(file, "project-media", "covers");
-      setCoverImage(cdnUrl);
-    } catch (err) {
-      console.error("Cover upload error:", err);
-    } finally {
-      setIsUploadingCover(false);
+    const removedUrl = galleryImages[idxToRemove];
+    const updated = galleryImages.filter((_, idx) => idx !== idxToRemove);
+    setGalleryImages(updated);
+    // If the removed image was the active cover, reassign to the first available image
+    if (coverImage === removedUrl) {
+      setCoverImage(updated[0] || "");
     }
   };
 
+  // Batch Media Upload Handler
   const handleGalleryFiles = async (files: FileList | File[]) => {
     const fileList = Array.from(files).filter((f) => f.type.startsWith("image/"));
     if (fileList.length === 0) return;
@@ -234,11 +222,14 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
         (current, total) => setUploadProgress({ current, total })
       );
       if (cdnUrls.length > 0) {
-        setGalleryImages((prev) => [...prev, ...cdnUrls]);
-        // If no cover image exists yet, auto-assign first uploaded plate
-        if (!coverImage) {
-          setCoverImage(cdnUrls[0]);
-        }
+        setGalleryImages((prev) => {
+          const nextGallery = [...prev, ...cdnUrls];
+          // If no cover image exists, automatically set the first image as cover
+          if (!coverImage && nextGallery.length > 0) {
+            setCoverImage(nextGallery[0]);
+          }
+          return nextGallery;
+        });
       }
     } catch (err) {
       console.error("Gallery files upload error:", err);
@@ -250,8 +241,8 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
   // Step 1 Validation -> Proceed to Step 2
   const handleProceedToStep2 = () => {
-    if (!coverImage && galleryImages.length === 0) {
-      alert("Please upload at least a Cover Image or one Gallery Plate to proceed.");
+    if (galleryImages.length === 0) {
+      alert("Please upload at least one image plate for your project.");
       return;
     }
     if (!coverImage && galleryImages.length > 0) {
@@ -269,9 +260,14 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
       return;
     }
 
-    const defaultCover = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1400&auto=format&fit=crop&q=85";
-    const finalCover = coverImage || galleryImages[0] || defaultCover;
-    const finalGallery = galleryImages.length > 0 ? galleryImages : [finalCover];
+    if (galleryImages.length === 0) {
+      alert("Please upload at least one project image in Step 1.");
+      setStep(1);
+      return;
+    }
+
+    const finalCover = coverImage || galleryImages[0];
+    const finalGallery = galleryImages;
 
     const combinedTags = subCategory && !tags.includes(subCategory)
       ? [subCategory, ...tags]
@@ -307,6 +303,8 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     }
   };
 
+  const activeCoverUrl = coverImage || galleryImages[0];
+
   return (
     <div className="space-y-8">
       {/* ========================================================================= */}
@@ -329,7 +327,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
               1
             </span>
             <span>1. Visual Media & Spreads</span>
-            {(coverImage || galleryImages.length > 0) && (
+            {galleryImages.length > 0 && (
               <Check className="h-3.5 w-3.5 text-[var(--sentiment-positive-bg)] dark:text-[var(--accent)] ml-0.5" />
             )}
           </button>
@@ -337,10 +335,10 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           <button
             type="button"
             onClick={() => {
-              if (coverImage || galleryImages.length > 0) {
+              if (galleryImages.length > 0) {
                 setStep(2);
               } else {
-                alert("Please upload visual media in Step 1 first.");
+                alert("Please upload at least one image in Step 1 first.");
               }
             }}
             className={cn(
@@ -421,7 +419,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
       </div>
 
       {/* ========================================================================= */}
-      {/* STEP 1: VISUAL MEDIA & COVER UPLOADER (Stacked Vertical List)             */}
+      {/* STEP 1: VISUAL MEDIA UPLOADER & STACKED EXHIBITION SPREADS               */}
       {/* ========================================================================= */}
       {step === 1 && (
         <div className="space-y-8 animate-scale-in">
@@ -432,7 +430,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                 Upload Project Media & Spreads
               </h2>
               <p className="text-xs text-[var(--content-secondary)] mt-0.5">
-                Upload your hero cover image and exhibition plates. All images are rendered in crystal clear, uncompressed quality.
+                Upload your high-resolution images below. Click <strong>&ldquo;Set Cover&rdquo;</strong> on any image to designate it as the hero visual.
               </p>
             </div>
             <span className="text-xs font-mono font-bold text-[var(--content-tertiary)] uppercase tracking-wider">
@@ -440,136 +438,35 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
             </span>
           </div>
 
-          {/* Section 1: Hero Cover Dropzone */}
-          <div className="rounded-[28px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 sm:p-8 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--accent)] text-[#090C09]">
-                  <Star className="h-4 w-4 fill-current" />
-                </div>
-                <div>
-                  <label className="type-body-default-bold text-[var(--content-primary)] block font-bold text-sm">
-                    Hero Cover Visual
-                  </label>
-                  <p className="type-label text-[var(--content-tertiary)] text-xs">
-                    Primary visual displayed across explore grids, hero showcase, and project cards.
-                  </p>
-                </div>
-              </div>
-
-              {coverImage && (
-                <button
-                  type="button"
-                  onClick={() => setCoverImage("")}
-                  className="text-xs text-rose-600 dark:text-rose-400 hover:underline font-semibold cursor-pointer flex items-center gap-1"
-                >
-                  <X className="h-3 w-3" />
-                  <span>Remove Cover</span>
-                </button>
-              )}
-            </div>
-
-            <input
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              ref={coverFileInputRef}
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  handleCoverFile(e.target.files[0]);
-                }
-              }}
-              className="hidden"
-            />
-
-            {/* Visual Cover Dropzone Preview */}
-            <div
-              onDragOver={(e) => {
-                e.preventDefault();
-                setIsDraggingCover(true);
-              }}
-              onDragLeave={() => setIsDraggingCover(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setIsDraggingCover(false);
-                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                  handleCoverFile(e.dataTransfer.files[0]);
-                }
-              }}
-              onClick={() => coverFileInputRef.current?.click()}
-              className={cn(
-                "relative aspect-[16/9] max-h-[420px] w-full rounded-[22px] overflow-hidden bg-[var(--bg-neutral)]/40 border-2 border-dashed flex flex-col items-center justify-center p-6 text-center group cursor-pointer transition-all",
-                isDraggingCover
-                  ? "border-[var(--primary-forest-green)] bg-[var(--bg-neutral)]/80 scale-[0.99]"
-                  : "border-[var(--border-neutral)] hover:border-[var(--primary-forest-green)]"
-              )}
-            >
-              {isUploadingCover ? (
-                <div className="flex flex-col items-center py-8">
-                  <Loader2 className="h-10 w-10 animate-spin text-[var(--primary-forest-green)] mb-3" />
-                  <span className="text-sm font-bold text-[var(--content-primary)]">
-                    Uploading & optimizing cover image...
-                  </span>
-                </div>
-              ) : coverImage ? (
-                <>
-                  <Image
-                    src={coverImage}
-                    alt="Cover preview"
-                    fill
-                    sizes="1200px"
-                    priority
-                    className="object-cover group-hover:scale-102 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-4">
-                    <Upload className="h-8 w-8 text-white" />
-                    <span className="text-xs font-bold text-white bg-black/60 px-4 py-2 rounded-full backdrop-blur-xs shadow-md">
-                      Click or drop new file to replace cover
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <div className="flex flex-col items-center py-10">
-                  <div className="h-14 w-14 rounded-full bg-[var(--bg-screen)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-tertiary)] mb-3 group-hover:text-[var(--primary-forest-green)] group-hover:border-[var(--primary-forest-green)] transition-colors shadow-xs">
-                    <UploadCloud className="h-7 w-7 group-hover:scale-110 transition-transform" />
-                  </div>
-                  <span className="type-body-default-bold text-[var(--content-primary)] text-base font-bold">
-                    Upload Hero Cover Image
-                  </span>
-                  <span className="type-label text-[var(--content-tertiary)] mt-1 max-w-sm text-xs">
-                    Drag and drop your hero visual here, or click to browse (PNG, JPG, WebP up to 15MB)
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Section 2: Exhibition Plates / Gallery Spreads (Stacked Vertical List) */}
+          {/* Unified Batch Media Upload Dropzone */}
           <div className="rounded-[28px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 sm:p-8 shadow-xs space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--bg-neutral)] text-[var(--primary-forest-green)]">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--accent)] text-[#090C09]">
                   <Layers className="h-4 w-4" />
                 </div>
                 <div>
                   <label className="type-body-default-bold text-[var(--content-primary)] block font-bold text-sm">
-                    Project Plates & Spreads ({galleryImages.length})
+                    Project Images & Spreads ({galleryImages.length})
                   </label>
                   <p className="type-label text-[var(--content-tertiary)] text-xs">
-                    Detailed spreads, design breakdowns, and gallery plates rendered vertically stacked below.
+                    Drop PNG, JPG, or WebP files. The first plate or your selected plate will serve as the project cover.
                   </p>
                 </div>
               </div>
 
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => galleryFileInputRef.current?.click()}
-                className="gap-1.5 text-xs font-semibold shrink-0"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                <span>Add More Plates</span>
-              </Button>
+              {galleryImages.length > 0 && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => galleryFileInputRef.current?.click()}
+                  className="gap-1.5 text-xs font-semibold shrink-0"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>Add More Images</span>
+                </Button>
+              )}
             </div>
 
             {/* Multiple Files Upload Dropzone */}
@@ -608,22 +505,22 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
               )}
             >
               {isProcessingFiles ? (
-                <div className="flex flex-col items-center py-6">
-                  <Loader2 className="h-8 w-8 animate-spin text-[var(--primary-forest-green)] mb-3" />
+                <div className="flex flex-col items-center py-8">
+                  <Loader2 className="h-9 w-9 animate-spin text-[var(--primary-forest-green)] mb-3" />
                   <span className="text-sm font-bold text-[var(--content-primary)]">
-                    Uploading & optimizing gallery plates ({uploadProgress?.current || 0}/{uploadProgress?.total || 0})...
+                    Uploading & optimizing images ({uploadProgress?.current || 0}/{uploadProgress?.total || 0})...
                   </span>
                 </div>
               ) : (
-                <div className="flex flex-col items-center">
-                  <div className="h-12 w-12 rounded-full bg-[var(--bg-screen)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-tertiary)] mb-2 group-hover:text-[var(--primary-forest-green)] group-hover:border-[var(--primary-forest-green)] transition-colors shadow-xs">
-                    <ImageIcon className="h-6 w-6 group-hover:scale-110 transition-transform" />
+                <div className="flex flex-col items-center py-6">
+                  <div className="h-14 w-14 rounded-full bg-[var(--bg-screen)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-tertiary)] mb-3 group-hover:text-[var(--primary-forest-green)] group-hover:border-[var(--primary-forest-green)] transition-colors shadow-xs">
+                    <UploadCloud className="h-7 w-7 group-hover:scale-110 transition-transform" />
                   </div>
-                  <span className="type-body-default-bold text-[var(--content-primary)] text-sm font-bold">
-                    Drop exhibition plates here or click to batch upload
+                  <span className="type-body-default-bold text-[var(--content-primary)] text-base font-bold">
+                    Drop project images here or click to batch upload
                   </span>
-                  <span className="type-label text-[var(--content-tertiary)] text-xs mt-0.5">
-                    Select multiple high-resolution images to form the full project case study story
+                  <span className="type-label text-[var(--content-tertiary)] text-xs mt-1 max-w-sm">
+                    Select multiple high-resolution spreads (PNG, JPG, WebP up to 15MB each)
                   </span>
                 </div>
               )}
@@ -633,90 +530,99 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
             {galleryImages.length > 0 && (
               <div className="space-y-6 pt-4 border-t border-[var(--border-neutral)]">
                 <div className="flex items-center justify-between text-xs font-mono font-semibold text-[var(--content-secondary)]">
-                  <span>EXHIBITION SPREADS STACK ({galleryImages.length})</span>
-                  <span>Drag or use arrows to reorder sequence</span>
+                  <span>PROJECT SPREADS STACK ({galleryImages.length})</span>
+                  <span>Use arrows to reorder • Click &ldquo;Set Cover&rdquo; to choose hero visual</span>
                 </div>
 
                 <div className="space-y-6">
-                  {galleryImages.map((url, idx) => (
-                    <div
-                      key={idx}
-                      className="rounded-[22px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] p-4 sm:p-5 shadow-xs space-y-3 transition-all hover:border-[var(--border-neutral-hover)]"
-                    >
-                      {/* Plate Controls Header */}
-                      <div className="flex items-center justify-between gap-3 text-xs">
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center rounded-lg bg-[var(--chip-bg)] text-[var(--chip-fg)] px-2.5 py-1 text-xs font-mono font-bold">
-                            Plate {String(idx + 1).padStart(2, "0")}
-                          </span>
-                          {coverImage === url && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--accent)] text-[#090C09] px-2.5 py-0.5 text-[10px] font-bold">
-                              <Star className="h-3 w-3 fill-current" />
-                              Active Cover
+                  {galleryImages.map((url, idx) => {
+                    const isCurrentCover = activeCoverUrl === url;
+
+                    return (
+                      <div
+                        key={idx}
+                        className={cn(
+                          "rounded-[22px] bg-[var(--bg-elevated)] border p-4 sm:p-5 shadow-xs space-y-3 transition-all",
+                          isCurrentCover
+                            ? "border-[var(--primary-forest-green)] ring-2 ring-[var(--primary-forest-green)]/20"
+                            : "border-[var(--border-neutral)] hover:border-[var(--border-neutral-hover)]"
+                        )}
+                      >
+                        {/* Plate Controls Header */}
+                        <div className="flex items-center justify-between gap-3 text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center rounded-lg bg-[var(--chip-bg)] text-[var(--chip-fg)] px-2.5 py-1 text-xs font-mono font-bold">
+                              Plate {String(idx + 1).padStart(2, "0")}
                             </span>
-                          )}
-                        </div>
-
-                        {/* Actions: Reorder, Set as Cover, Delete */}
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            disabled={idx === 0}
-                            onClick={() => handleMoveGalleryImage(idx, idx - 1)}
-                            className="h-8 w-8 rounded-lg bg-[var(--bg-screen)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-secondary)] hover:text-[var(--content-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                            title="Move Up"
-                          >
-                            <ArrowUp className="h-3.5 w-3.5" />
-                          </button>
-
-                          <button
-                            type="button"
-                            disabled={idx === galleryImages.length - 1}
-                            onClick={() => handleMoveGalleryImage(idx, idx + 1)}
-                            className="h-8 w-8 rounded-lg bg-[var(--bg-screen)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-secondary)] hover:text-[var(--content-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                            title="Move Down"
-                          >
-                            <ArrowDown className="h-3.5 w-3.5" />
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => handleSetAsCover(url)}
-                            className={cn(
-                              "h-8 px-2.5 rounded-lg border flex items-center gap-1 text-[11px] font-semibold transition-colors cursor-pointer",
-                              coverImage === url
-                                ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent"
-                                : "bg-[var(--bg-screen)] border-[var(--border-neutral)] text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
+                            {isCurrentCover && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--accent)] text-[#090C09] px-2.5 py-0.5 text-[10px] font-bold shadow-xs">
+                                <Star className="h-3 w-3 fill-current" />
+                                Project Cover Visual
+                              </span>
                             )}
-                            title="Set as Hero Cover"
-                          >
-                            <Star className="h-3 w-3" />
-                            <span>Set Cover</span>
-                          </button>
+                          </div>
 
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveGalleryImage(idx)}
-                            className="h-8 w-8 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 flex items-center justify-center transition-colors cursor-pointer ml-1"
-                            title="Remove Plate"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                          {/* Actions: Reorder, Set as Cover, Delete */}
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              disabled={idx === 0}
+                              onClick={() => handleMoveGalleryImage(idx, idx - 1)}
+                              className="h-8 w-8 rounded-lg bg-[var(--bg-screen)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-secondary)] hover:text-[var(--content-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                              title="Move Up"
+                            >
+                              <ArrowUp className="h-3.5 w-3.5" />
+                            </button>
+
+                            <button
+                              type="button"
+                              disabled={idx === galleryImages.length - 1}
+                              onClick={() => handleMoveGalleryImage(idx, idx + 1)}
+                              className="h-8 w-8 rounded-lg bg-[var(--bg-screen)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-secondary)] hover:text-[var(--content-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                              title="Move Down"
+                            >
+                              <ArrowDown className="h-3.5 w-3.5" />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleSetAsCover(url)}
+                              className={cn(
+                                "h-8 px-2.5 rounded-lg border flex items-center gap-1 text-[11px] font-semibold transition-colors cursor-pointer",
+                                isCurrentCover
+                                  ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent"
+                                  : "bg-[var(--bg-screen)] border-[var(--border-neutral)] text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
+                              )}
+                              title="Set as Hero Cover"
+                            >
+                              <Star className={cn("h-3 w-3", isCurrentCover && "fill-current")} />
+                              <span>{isCurrentCover ? "Cover" : "Set Cover"}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveGalleryImage(idx)}
+                              className="h-8 w-8 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 flex items-center justify-center transition-colors cursor-pointer ml-1"
+                              title="Remove Plate"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Full-Width Spread Image Display */}
+                        <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full rounded-[16px] overflow-hidden bg-[var(--bg-neutral)] border border-[var(--border-neutral)]">
+                          <Image
+                            src={url}
+                            alt={`Plate ${idx + 1}`}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 1200px"
+                            className="object-cover"
+                          />
                         </div>
                       </div>
-
-                      {/* Full-Width Spread Image Display */}
-                      <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full rounded-[16px] overflow-hidden bg-[var(--bg-neutral)] border border-[var(--border-neutral)]">
-                        <Image
-                          src={url}
-                          alt={`Plate ${idx + 1}`}
-                          fill
-                          sizes="(max-width: 768px) 100vw, 1200px"
-                          className="object-cover"
-                        />
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -725,7 +631,9 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           {/* Bottom Action to Step 2 */}
           <div className="flex items-center justify-between pt-4">
             <span className="text-xs text-[var(--content-tertiary)]">
-              Images uploaded here will be preserved while you edit project specifications.
+              {galleryImages.length > 0
+                ? `${galleryImages.length} plate${galleryImages.length === 1 ? "" : "s"} ready for case study narrative.`
+                : "Upload images above to proceed to project details."}
             </span>
             <Button
               type="button"
