@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { constructMetadata } from "@/lib/seo";
+import { constructMetadata, generateBreadcrumbJsonLd } from "@/lib/seo";
 import { bricolage } from "@/lib/fonts";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { ShieldCheck, HeartHandshake, Award, Sparkles, CheckCircle2 } from "lucide-react";
@@ -16,8 +16,17 @@ export const metadata: Metadata = constructMetadata({
 export const revalidate = 86400;
 
 export default function GuidelinesPage() {
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd([
+    { name: "Home", url: "/" },
+    { name: "Community Guidelines", url: "/guidelines" },
+  ]);
+
   return (
     <div className="mx-auto max-w-[1100px] px-4 sm:px-6 py-6 sm:py-10 space-y-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {/* Breadcrumbs */}
       <Breadcrumbs
         items={[

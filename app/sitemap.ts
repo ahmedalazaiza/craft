@@ -25,6 +25,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 0.9,
     },
+    {
+      url: absoluteUrl("/about"),
+      lastModified: currentDate,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      url: absoluteUrl("/team"),
+      lastModified: currentDate,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      url: absoluteUrl("/guidelines"),
+      lastModified: currentDate,
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
+    {
+      url: absoluteUrl("/terms"),
+      lastModified: currentDate,
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
+    {
+      url: absoluteUrl("/privacy"),
+      lastModified: currentDate,
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
   ];
 
   // Curated category corridors for topical authority

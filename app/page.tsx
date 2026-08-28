@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { HomeClient } from "./home-client";
-import { constructMetadata } from "@/lib/seo";
+import { constructMetadata, generateWebSiteJsonLd, generateOrganizationJsonLd } from "@/lib/seo";
 import { fetchProjects, fetchCreators } from "@/lib/supabase/queries";
 
 export const metadata: Metadata = constructMetadata({
@@ -15,10 +15,23 @@ export default async function HomePage() {
     fetchCreators(),
   ]);
 
+  const webSiteJsonLd = generateWebSiteJsonLd();
+  const organizationJsonLd = generateOrganizationJsonLd();
+
   return (
-    <HomeClient
-      initialProjects={projects || []}
-      initialCreators={creators || []}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+      />
+      <HomeClient
+        initialProjects={projects || []}
+        initialCreators={creators || []}
+      />
+    </>
   );
 }

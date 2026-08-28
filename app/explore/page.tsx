@@ -26,20 +26,15 @@ export default async function ExplorePage() {
   const initialProjects = await fetchProjects({ publishedOnly: true });
 
   const collectionJsonLd = generateCollectionJsonLd({
-    name: "Explore Curated Projects & Monographs",
+    name: "Explore Curated Projects & Case Studies",
     description:
-      "Browse architectural monographs, UI systems, type specimens, brand identity systems, and spatial design projects from independent creators worldwide.",
+      "Browse UI systems, typography, brand identities, and 3D design projects from independent creators worldwide.",
     url: "/explore",
-    items: [
-      { name: "Brand Identity", url: "/explore?category=Brand" },
-      { name: "UI & Digital Systems", url: "/explore?category=UI" },
-      { name: "Editorial & Publishing", url: "/explore?category=Editorial" },
-      { name: "Typography", url: "/explore?category=Type" },
-      { name: "Architecture & Spatial", url: "/explore?category=Architecture" },
-      { name: "3D & Motion", url: "/explore?category=3D%20%26%20Motion" },
-      { name: "Photography", url: "/explore?category=Photo" },
-      { name: "Product Design", url: "/explore?category=Product" },
-    ],
+    items: initialProjects.map((p) => ({
+      name: p.title,
+      url: `/project/${p.slug}`,
+      image: p.coverImage,
+    })),
   });
 
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([

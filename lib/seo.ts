@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { Project, Creator } from "./types";
 
 export const SITE_NAME = "Craft";
-export const SITE_TAGLINE = "Showcase Your Work & Connect with Creators";
+export const SITE_TAGLINE = "The Portfolio Platform for Designers & Creators";
 
 export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://craftplatform.com";
 
 export function absoluteUrl(path: string = ""): string {
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
@@ -14,23 +14,25 @@ export function absoluteUrl(path: string = ""): string {
 
 export const defaultTitle = `${SITE_NAME} — ${SITE_TAGLINE}`;
 export const defaultDescription =
-  "A modern portfolio platform for designers, art directors, and makers to publish projects, build their studio profile, and discover inspiring work from creators worldwide.";
+  "Discover standout design portfolios, detailed UI & brand case studies, and connect with independent designers, art directors, and creative studios worldwide.";
 
 export const PRIMARY_KEYWORDS = [
-  "portfolio platform",
-  "design portfolio",
-  "UI UX design",
+  "design portfolio platform",
+  "UI UX design portfolio",
+  "graphic design case studies",
   "brand identity showcase",
-  "typography specimens",
-  "architectural monographs",
-  "creative directory",
-  "design case studies",
-  "creative direction",
-  "independent designers",
-  "visual arts showcase",
-  "product design",
-  "art direction",
+  "best designer portfolios 2026",
+  "3D motion design portfolios",
+  "typography and layout inspiration",
+  "creative director portfolio",
+  "independent designer directory",
+  "digital product design case studies",
+  "architectural design showcase",
+  "creative studios portfolio",
+  "freelance designer portfolio",
   "craft design platform",
+  "hire top UI UX designers",
+  "design case study platform",
 ];
 
 export function constructMetadata({
@@ -63,10 +65,10 @@ export function constructMetadata({
     description,
     keywords,
     applicationName: SITE_NAME,
-    authors: [{ name: SITE_NAME, url: SITE_URL }],
+    authors: [{ name: "Craft Creators", url: SITE_URL }],
     creator: SITE_NAME,
-    publisher: SITE_NAME,
-    category: "Design & Creative Portfolio",
+    publisher: "Craft Platforms Inc.",
+    category: "Design Portfolio & Creative Case Studies",
     metadataBase: new URL(SITE_URL),
     alternates: {
       canonical: canonicalUrl,
@@ -120,20 +122,23 @@ export function constructMetadata({
 
 export function getProjectMetadata(project: Project): Metadata {
   const title = project.title;
-  const description = project.summary || `A case study in ${project.category} crafted by ${project.creator.displayName} on ${SITE_NAME}.`;
+  const description =
+    project.summary ||
+    `Explore ${project.title} by ${project.creator.displayName} — a ${project.category} case study in ${project.medium} on ${SITE_NAME}.`;
   const canonicalUrl = absoluteUrl(`/project/${project.slug}`);
 
   return {
     title,
     description,
     keywords: [
+      project.title,
       project.category,
       project.medium,
       ...project.tags,
       ...project.tools,
       project.creator.displayName,
-      "case study",
-      "portfolio project",
+      `${project.category} case study`,
+      "design portfolio project",
     ],
     authors: [{ name: project.creator.displayName, url: absoluteUrl(`/u/${project.creator.username}`) }],
     creator: project.creator.displayName,
@@ -179,10 +184,10 @@ export function getProjectMetadata(project: Project): Metadata {
 }
 
 export function getProfileMetadata(creator: Creator): Metadata {
-  const title = `${creator.displayName} (@${creator.username}) — Portfolio & Studio`;
+  const title = `${creator.displayName} (@${creator.username}) — Design Portfolio`;
   const description =
     creator.bio ||
-    `Explore the creative portfolio, monographs, and craft disciplines of ${creator.displayName} (@${creator.username}) on ${SITE_NAME}.`;
+    `View the design portfolio, case studies, and creative work of ${creator.displayName} (@${creator.username}) on ${SITE_NAME}.`;
   const canonicalUrl = absoluteUrl(`/u/${creator.username}`);
 
   return {
@@ -191,10 +196,12 @@ export function getProfileMetadata(creator: Creator): Metadata {
     keywords: [
       creator.displayName,
       creator.username,
-      creator.city || creator.location,
+      creator.city || creator.location || "Global",
       ...creator.skills,
       "designer portfolio",
-      "creative director",
+      "creative studio portfolio",
+      "UI UX designer",
+      "art director",
     ],
     alternates: {
       canonical: canonicalUrl,
@@ -263,7 +270,7 @@ export function generateOrganizationJsonLd() {
     "@type": "Organization",
     name: SITE_NAME,
     url: SITE_URL,
-    logo: absoluteUrl("/default-avatar.svg"),
+    logo: absoluteUrl("/og-image.png"),
     sameAs: [
       "https://twitter.com/craftplatform",
       "https://github.com/ahmedalazaiza/craft",
@@ -301,7 +308,7 @@ export function generateProjectJsonLd(project: Project) {
       name: project.creator.displayName,
       alternateName: project.creator.username,
       url: absoluteUrl(`/u/${project.creator.username}`),
-      jobTitle: project.creator.bio || "Creator",
+      jobTitle: project.creator.bio || "Designer",
       image: project.creator.avatarUrl,
     },
     publisher: {
@@ -310,7 +317,7 @@ export function generateProjectJsonLd(project: Project) {
       url: SITE_URL,
       logo: {
         "@type": "ImageObject",
-        url: absoluteUrl("/default-avatar.svg"),
+        url: absoluteUrl("/og-image.png"),
       },
     },
     genre: project.category,
@@ -349,7 +356,6 @@ export function generateProfileJsonLd(creator: Creator) {
         addressLocality: creator.city || creator.location || "Worldwide",
       },
       url: absoluteUrl(`/u/${creator.username}`),
-      sameAs: creator.website ? [creator.website] : [],
       knowsAbout: creator.skills,
     },
   };
@@ -366,16 +372,24 @@ export function generateCollectionJsonLd({
   url: string;
   items: { name: string; url: string; image?: string }[];
 }) {
+  return generateCollectionPageJsonLd(name, description, url, items);
+}
+
+export function generateCollectionPageJsonLd(
+  title: string,
+  description: string,
+  url: string,
+  items: { name: string; url: string; image?: string }[]
+) {
   return {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name,
-    description,
+    name: title,
+    description: description,
     url: absoluteUrl(url),
     mainEntity: {
       "@type": "ItemList",
-      numberOfItems: items.length,
-      itemListElement: items.map((item, index) => ({
+      itemListElement: items.slice(0, 20).map((item, index) => ({
         "@type": "ListItem",
         position: index + 1,
         name: item.name,

@@ -24,7 +24,7 @@ export function SiteFooter() {
             </Link>
 
             <p className="type-body-default text-[var(--content-secondary)] text-xs sm:text-sm leading-relaxed max-w-sm">
-              Curated digital monographs, high-DPI case studies, and studio portfolios for independent designers and art directors worldwide.
+              The portfolio platform for designers, art directors, and creative studios to showcase their work and connect with peers worldwide.
             </p>
 
             {/* Live Operational Badge */}

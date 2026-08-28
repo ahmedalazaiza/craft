@@ -32,18 +32,18 @@ import { cn } from "@/lib/utils";
 const FEATURE_POINTS = [
   {
     num: "01",
-    title: "Living Case Studies",
-    desc: "Multi-image vertical spreads in native intrinsic resolution.",
+    title: "Detailed Case Studies",
+    desc: "Showcase high-resolution images, design rationale, and your creative process without compression.",
   },
   {
     num: "02",
     title: "Creator Profiles",
-    desc: "Showcase your studio identity, disciplines, and stack.",
+    desc: "Build your online portfolio with your bio, location, disciplines, and tools.",
   },
   {
     num: "03",
-    title: "Zero Algorithmic Noise",
-    desc: "Pure focus on singular craft, typography, and peer appreciation.",
+    title: "Clean & Ad-Free",
+    desc: "No ads, feeds, or distractions. Just great design and authentic peer feedback.",
   },
 ];
 
@@ -269,7 +269,7 @@ export function HomeClient({
               <div className="flex items-center gap-2 mb-1">
                 <span className="h-2 w-2 rounded-full bg-[#8DFF00]" />
                 <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
-                  Hand-Curated Selection
+                  Hand-Curated
                 </span>
               </div>
               <h2
@@ -278,10 +278,10 @@ export function HomeClient({
                   "text-2xl sm:text-3xl font-bold text-[var(--content-primary)]"
                 )}
               >
-                Featured Works
+                Featured Work
               </h2>
               <p className="type-body-default text-[var(--content-secondary)] mt-1">
-                Exemplary monographs, brand systems, and hardware interfaces hand-picked by our curators.
+                Standout case studies and design projects hand-picked by our curators.
               </p>
             </div>
             <Link
@@ -313,7 +313,7 @@ export function HomeClient({
               <div className="flex items-center gap-2 mb-1">
                 <LayoutGrid className="h-3.5 w-3.5 text-[var(--content-tertiary)]" />
                 <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
-                  Interaction & Systems
+                  UI & Apps
                 </span>
               </div>
               <h2
@@ -322,10 +322,10 @@ export function HomeClient({
                   "text-2xl sm:text-3xl font-bold text-[var(--content-primary)]"
                 )}
               >
-                Latest in UI & Interaction Design
+                UI & Interaction Design
               </h2>
               <p className="type-body-default text-[var(--content-secondary)] mt-1">
-                High-density operating interfaces, creative shader tools, and production design systems.
+                Explore clean dashboards, mobile applications, and interactive web design.
               </p>
             </div>
             <Link
@@ -357,7 +357,7 @@ export function HomeClient({
               <div className="flex items-center gap-2 mb-1">
                 <BookOpen className="h-3.5 w-3.5 text-[var(--content-tertiary)]" />
                 <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
-                  Identity & Typography
+                  Brand & Type
                 </span>
               </div>
               <h2
@@ -366,10 +366,10 @@ export function HomeClient({
                   "text-2xl sm:text-3xl font-bold text-[var(--content-primary)]"
                 )}
               >
-                Latest in Brand & Editorial Craft
+                Brand & Visual Identity
               </h2>
               <p className="type-body-default text-[var(--content-secondary)] mt-1">
-                Risograph monographs, variable typographic specimens, and minimal identity systems.
+                Timeless logos, visual identities, typography specimens, and packaging design.
               </p>
             </div>
             <Link
@@ -401,7 +401,7 @@ export function HomeClient({
               <div className="flex items-center gap-2 mb-1">
                 <Building2 className="h-3.5 w-3.5 text-[var(--content-tertiary)]" />
                 <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
-                  Physical & Spatial
+                  3D & Spaces
                 </span>
               </div>
               <h2
@@ -410,10 +410,10 @@ export function HomeClient({
                   "text-2xl sm:text-3xl font-bold text-[var(--content-primary)]"
                 )}
               >
-                Latest in Architecture & Spatial Design
+                Architecture & 3D Design
               </h2>
               <p className="type-body-default text-[var(--content-secondary)] mt-1">
-                Timber joinery observatories, monolithic brutalist photography, and tactile hardware.
+                Inspiring interior spaces, 3D motion graphics, and industrial product design.
               </p>
             </div>
             <Link
@@ -451,7 +451,7 @@ export function HomeClient({
               {/* Eyebrow Pill */}
               <div className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-md px-3.5 py-1 text-xs font-semibold text-white mb-5 border border-white/15 w-fit">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#8DFF00]" />
-                <span>Independent Creator Collective</span>
+                <span>Global Designer Community</span>
               </div>
 
               {/* Monumental 2-Line Headline */}
@@ -461,29 +461,29 @@ export function HomeClient({
                   "text-3xl sm:text-4xl lg:text-[46px] xl:text-[52px] font-black tracking-tight text-white leading-[1.04]"
                 )}
               >
-                <span className="block">Ready to showcase your craft?</span>
+                <span className="block">Ready to showcase your work?</span>
                 <span className="block text-[#8DFF00]">
-                  Join the creator collective.
+                  Join creators worldwide.
                 </span>
               </h2>
 
               <p className="mt-4 text-base sm:text-lg text-white/80 leading-relaxed max-w-xl font-normal">
-                Publish living monographs, build your studio presence, and connect with fellow designers, art directors, and creative engineers.
+                Publish detailed case studies, build your portfolio, and connect with designers, art directors, and creative studios.
               </p>
 
               {/* Value Checkmarks */}
               <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2.5 text-xs sm:text-sm text-white/90">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-[#8DFF00]" />
-                  <span>Zero algorithmic noise</span>
+                  <span>100% Creator Ownership</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-[#8DFF00]" />
-                  <span>Intrinsic resolution spreads</span>
+                  <span>High-resolution images</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-[#8DFF00]" />
-                  <span>Direct peer appreciation</span>
+                  <span>Direct peer feedback</span>
                 </div>
               </div>
 
@@ -497,7 +497,7 @@ export function HomeClient({
                     className: "gap-2 font-bold shadow-lg",
                   })}
                 >
-                  <span>Join as a Creator</span>
+                  <span>Sign Up Free</span>
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link

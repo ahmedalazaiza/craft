@@ -30,9 +30,11 @@ export default async function CreatorsPage() {
     description:
       "Discover world-class independent designers, typographers, art directors, product architects, and creative studios.",
     url: "/creators",
-    items: [
-      { name: "Creators & Studios Directory", url: "/creators" },
-    ],
+    items: initialCreators.map((c) => ({
+      name: `${c.displayName} (@${c.username})`,
+      url: `/u/${c.username}`,
+      image: c.avatarUrl,
+    })),
   });
 
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([

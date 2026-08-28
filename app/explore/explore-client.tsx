@@ -168,7 +168,7 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
               <Sparkles className="h-3 w-3 text-[#8DFF00]" />
               <span>Project Showcase</span>
               <span className="text-[var(--content-tertiary)]">•</span>
-              <span className="font-normal text-[var(--chip-fg)]">Living Case Studies</span>
+              <span className="font-normal text-[var(--chip-fg)]">Design Case Studies</span>
             </div>
             <h1
               className={cn(
@@ -179,7 +179,7 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
               Explore Projects
             </h1>
             <p className="mt-2 type-body-large text-[var(--content-secondary)] leading-relaxed">
-              Discover standout design systems, branding monographs, UI interfaces, and visual craft published worldwide.
+              Discover standout UI designs, brand identities, typography, and creative projects published worldwide.
             </p>
           </div>
 
@@ -189,10 +189,10 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
               <FolderKanban className="h-4 w-4 text-[var(--primary-forest-green)]" />
               <div className="text-left">
                 <span className="block text-xs font-bold text-[var(--content-primary)]">
-                  {publishedProjects.length} Case Studies
+                  {publishedProjects.length} Projects
                 </span>
                 <span className="text-[10px] text-[var(--content-tertiary)] uppercase font-mono">
-                  {distinctCategoriesCount} Disciplines
+                  {distinctCategoriesCount} Categories
                 </span>
               </div>
             </div>
