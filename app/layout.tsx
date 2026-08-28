@@ -11,7 +11,15 @@ import { PageLoadingOverlay } from "@/components/layout/page-loading-overlay";
 import { TopLoader } from "@/components/layout/top-loader";
 import { NetworkStatusIndicator } from "@/components/layout/network-status-indicator";
 
-import { SITE_NAME, SITE_URL, defaultTitle, defaultDescription } from "@/lib/seo";
+import {
+  SITE_NAME,
+  SITE_URL,
+  defaultTitle,
+  defaultDescription,
+  PRIMARY_KEYWORDS,
+  generateWebSiteJsonLd,
+  generateOrganizationJsonLd,
+} from "@/lib/seo";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -20,7 +28,15 @@ export const metadata: Metadata = {
     template: `%s · ${SITE_NAME}`,
   },
   description: defaultDescription,
+  keywords: PRIMARY_KEYWORDS,
   applicationName: SITE_NAME,
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  category: "Design & Creative Portfolio",
+  alternates: {
+    canonical: SITE_URL,
+  },
   robots: {
     index: true,
     follow: true,
@@ -39,11 +55,21 @@ export const metadata: Metadata = {
     url: SITE_URL,
     type: "website",
     locale: "en_US",
+    images: [
+      {
+        url: `${SITE_URL}/default-avatar.svg`,
+        width: 1200,
+        height: 630,
+        alt: `${SITE_NAME} — Showcase Your Work & Connect with Creators`,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: defaultTitle,
     description: defaultDescription,
+    creator: "@craftplatform",
+    site: "@craftplatform",
   },
 };
 
@@ -61,6 +87,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const websiteSchema = generateWebSiteJsonLd();
+  const organizationSchema = generateOrganizationJsonLd();
+
   return (
     <html
       lang="en"
@@ -68,6 +97,20 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        {/* Preconnect & DNS-Prefetch for Speed & LCP Core Web Vitals */}
+        <link rel="preconnect" href="https://ttjobsgglwgyioqlldqj.supabase.co" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+
+        {/* Global Schema.org JSON-LD Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+
         {/* Blocking theme script to prevent any flash of unstyled theme */}
         <script
           dangerouslySetInnerHTML={{

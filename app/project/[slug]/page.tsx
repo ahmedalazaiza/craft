@@ -2,7 +2,7 @@ import React from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { fetchProjectBySlug, fetchProjects } from "@/lib/supabase/queries";
-import { getProjectMetadata, generateProjectJsonLd } from "@/lib/seo";
+import { getProjectMetadata, generateProjectJsonLd, generateBreadcrumbJsonLd } from "@/lib/seo";
 import { ProjectDetailClient } from "./project-detail-client";
 
 export const dynamic = "force-dynamic";
@@ -44,13 +44,23 @@ export default async function ProjectPage({ params }: PageProps) {
     notFound();
   }
 
-  const jsonLd = generateProjectJsonLd(project);
+  const projectJsonLd = generateProjectJsonLd(project);
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd([
+    { name: "Home", url: "/" },
+    { name: "Explore", url: "/explore" },
+    { name: project.category, url: `/explore?category=${encodeURIComponent(project.category)}` },
+    { name: project.title, url: `/project/${project.slug}` },
+  ]);
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(projectJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
       <ProjectDetailClient initialProject={project} />
     </>

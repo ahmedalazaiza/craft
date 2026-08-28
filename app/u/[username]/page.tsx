@@ -2,7 +2,7 @@ import React from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { fetchCreatorByUsername, fetchCreators } from "@/lib/supabase/queries";
-import { getProfileMetadata, generateProfileJsonLd } from "@/lib/seo";
+import { getProfileMetadata, generateProfileJsonLd, generateBreadcrumbJsonLd } from "@/lib/seo";
 import { CreatorProfileClient } from "./creator-profile-client";
 
 export const dynamic = "force-dynamic";
@@ -44,13 +44,22 @@ export default async function UserProfilePage({ params }: PageProps) {
     notFound();
   }
 
-  const jsonLd = generateProfileJsonLd(creator);
+  const profileJsonLd = generateProfileJsonLd(creator);
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd([
+    { name: "Home", url: "/" },
+    { name: "Creators", url: "/creators" },
+    { name: creator.displayName, url: `/u/${creator.username}` },
+  ]);
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(profileJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
       <CreatorProfileClient initialCreator={creator} />
     </>
