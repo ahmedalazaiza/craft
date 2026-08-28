@@ -13,6 +13,8 @@ import { FilterDrawer, ProjectFilters } from "@/components/search/filter-drawer"
 import { FilterChip } from "@/components/ui/badge";
 import { FadeIn, StaggerGridItem } from "@/components/ui/motion-wrapper";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { EmptyState3D } from "@/components/ui/empty-state";
+import Link from "next/link";
 import { Search, FolderKanban, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -234,17 +236,23 @@ export function SearchClient() {
 
         {/* Empty State */}
         {totalResults === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-[24px] border border-dashed border-[var(--border-neutral)] bg-[var(--bg-neutral)]/30 p-12 text-center my-8">
-            <div className="h-12 w-12 rounded-full bg-[var(--bg-neutral)] flex items-center justify-center text-[var(--content-tertiary)] mb-4">
-              <Search className="h-6 w-6" />
-            </div>
-            <h3 className="type-title-subsection text-[var(--content-primary)]">
-              No matching projects or creators
-            </h3>
-            <p className="mt-1.5 type-body-default text-[var(--content-secondary)] max-w-sm">
-              We couldn&apos;t find anything matching &ldquo;{q}&rdquo;. Try broader keywords or explore all projects.
-            </p>
-          </div>
+          <EmptyState3D
+            type="search"
+            title="No matching projects or creators"
+            description={
+              q
+                ? `We couldn't find anything matching "${q}". Try searching with broader keywords or explore all disciplines.`
+                : "No search results match your active category filters. Try resetting the category."
+            }
+            action={
+              <Link
+                href="/explore"
+                className="inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-xs font-bold bg-[var(--btn-cta-bg)] text-[var(--btn-cta-fg)] hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
+              >
+                Explore All Projects
+              </Link>
+            }
+          />
         ) : (
           <div className="space-y-14">
             {/* Projects Section */}

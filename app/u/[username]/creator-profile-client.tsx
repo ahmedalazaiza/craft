@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { EmptyState3D } from "@/components/ui/empty-state";
 import { FadeIn, StaggerGridItem } from "@/components/ui/motion-wrapper";
 import {
   MapPin,
@@ -472,41 +473,38 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
 
             {/* Projects Grid / Empty State */}
             {displayedProjects.length === 0 ? (
-              <div className="flex min-h-[340px] flex-col items-center justify-center rounded-[28px] border border-dashed border-[var(--border-neutral)] bg-[var(--bg-screen)] p-10 text-center my-6">
-                <div className="h-14 w-14 rounded-full bg-[var(--bg-neutral)] flex items-center justify-center text-[var(--content-tertiary)] mb-4">
-                  <FolderKanban className="h-7 w-7" />
-                </div>
-
-                <h3 className="type-title-subsection text-[var(--content-primary)]">
-                  {isCurrentUser
+              <EmptyState3D
+                type={activeTab === "drafts" ? "drafts" : "projects"}
+                title={
+                  isCurrentUser
                     ? activeTab === "published"
                       ? "No published projects yet"
                       : "No draft projects"
-                    : "No public projects yet"}
-                </h3>
-
-                <p className="mt-2 type-body-default text-[var(--content-secondary)] max-w-md">
-                  {isCurrentUser
+                    : "No public projects yet"
+                }
+                description={
+                  isCurrentUser
                     ? activeTab === "published"
                       ? "Publish your first monograph or design case study to showcase your visual craft to the community."
                       : "You don't have any saved drafts. Start a new project to save your progress."
-                    : `${creator.displayName} has not published any public case studies yet.`}
-                </p>
-
-                {isCurrentUser && (
-                  <Link
-                    href="/me/projects/new"
-                    className={buttonVariants({
-                      variant: "accent",
-                      size: "default",
-                      className: "mt-6 gap-2 font-bold shadow-xs",
-                    })}
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>{activeTab === "published" ? "Create First Project" : "Start New Draft"}</span>
-                  </Link>
-                )}
-              </div>
+                    : `${creator.displayName} has not published any public case studies yet.`
+                }
+                action={
+                  isCurrentUser ? (
+                    <Link
+                      href="/me/projects/new"
+                      className={buttonVariants({
+                        variant: "accent",
+                        size: "default",
+                        className: "gap-2 font-bold shadow-xs",
+                      })}
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span>{activeTab === "published" ? "Create First Project" : "Start New Draft"}</span>
+                    </Link>
+                  ) : undefined
+                }
+              />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                 {displayedProjects.map((project, idx) => (
