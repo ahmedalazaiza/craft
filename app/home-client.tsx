@@ -8,6 +8,7 @@ import { Project, Creator } from "@/lib/types";
 import { bricolage } from "@/lib/fonts";
 import { ProjectCard } from "@/components/project/project-card";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Hero3DArtifact } from "@/components/home/hero-3d-artifact";
 import { DEFAULT_AVATAR_URL, getValidAvatarUrl } from "@/lib/avatar";
 import {
   ScrollRevealSection,
@@ -66,39 +67,6 @@ export function HomeClient({
   const publishedProjects = useMemo(() => {
     return projects.filter((p) => p.published);
   }, [projects]);
-
-  const streamColumnA = useMemo(() => {
-    if (creators.length === 0) return [];
-    const half = Math.max(1, Math.ceil(creators.length / 2));
-    const subset = creators.slice(0, half);
-    return subset.map((c) => {
-      const topProj = projects.find((p) => p.creator.id === c.id || p.creator.username === c.username);
-      return {
-        creator: c,
-        tag: c.skills[0] || "Brand Systems",
-        city: c.city || c.location || "Earth",
-        artifact: topProj?.title || `${c.displayName}'s Studio`,
-        stat: `${projects.filter((p) => p.creator.id === c.id || p.creator.username === c.username).length} Works`,
-      };
-    });
-  }, [creators, projects]);
-
-  const streamColumnB = useMemo(() => {
-    if (creators.length === 0) return [];
-    const half = Math.max(1, Math.ceil(creators.length / 2));
-    const subset = creators.length > 1 ? creators.slice(half) : creators;
-    return subset.map((c) => {
-      const topProj = projects.find((p) => p.creator.id === c.id || p.creator.username === c.username);
-      return {
-        creator: c,
-        tag: c.skills[0] || "UI Interfaces",
-        city: c.city || c.location || "Earth",
-        artifact: topProj?.title || `${c.displayName}'s Studio`,
-        stat: `${projects.filter((p) => p.creator.id === c.id || p.creator.username === c.username).length} Works`,
-      };
-    });
-  }, [creators, projects]);
-
 
   // Curated Featured (4 items)
   const featuredProjects = useMemo(() => {
@@ -293,152 +261,10 @@ export function HomeClient({
             </div>
 
             {/* =================================================================== */}
-            {/* RIGHT COLUMN: Kinetic Dual-Column Creator Stream (Desktop only)       */}
+            {/* RIGHT COLUMN: 3D Interactive Spatial Monolith Canvas              */}
             {/* =================================================================== */}
-            <div className="hidden lg:flex lg:col-span-5 relative justify-center h-[460px] sm:h-[520px] overflow-hidden rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-elevated)]/60 backdrop-blur-md p-4 shadow-[0_20px_50px_rgba(9,12,9,0.06)]">
-              {/* Vertical Gradient Fade Masks (Top and Bottom) */}
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-[var(--bg-elevated)] to-transparent z-20" />
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[var(--bg-elevated)] to-transparent z-20" />
-
-              {/* Dual Sliding Streams */}
-              <div className="grid grid-cols-2 gap-3.5 w-full h-full">
-                {/* Stream Column 1: Gliding Upward */}
-                <div className="flex flex-col gap-3.5 overflow-hidden">
-                  <motion.div
-                    animate={
-                      shouldReduceMotion
-                        ? {}
-                        : {
-                            y: ["0%", "-50%"],
-                          }
-                    }
-                    transition={{
-                      duration: 18,
-                      repeat: Infinity,
-                      ease: "linear",
-                    }}
-                    className="flex flex-col gap-3.5"
-                  >
-                    {[...streamColumnA, ...streamColumnA].map((item, idx) => (
-                      <Link
-                        key={`${item.creator.id || item.creator.username}-${idx}`}
-                        href={`/u/${item.creator.username}`}
-                        className="group p-3.5 rounded-[18px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] hover:border-[var(--content-primary)] hover:shadow-lg dark:hover:border-white/30 transition-colors cursor-pointer block"
-                      >
-                        <div className="flex items-center gap-2.5 mb-2.5">
-                          <div className="relative h-7 w-7 rounded-full overflow-hidden ring-1 ring-[var(--border-neutral)] shrink-0">
-                            <Image
-                              src={getValidAvatarUrl(item.creator.avatarUrl)}
-                              alt={item.creator.displayName}
-                              fill
-                              sizes="28px"
-                              className="object-cover"
-                            />
-                          </div>
-                          <div className="overflow-hidden">
-                            <div className="text-xs font-bold text-[var(--content-primary)] truncate transition-colors">
-                              {item.creator.displayName}
-                            </div>
-                            <div className="text-[10px] text-[var(--content-tertiary)] flex items-center gap-1">
-                              <MapPin className="h-2.5 w-2.5" />
-                              <span>{item.city}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="p-2 rounded-[10px] bg-[var(--bg-neutral)] text-left mb-2">
-                          <span className="block text-[10px] font-mono uppercase text-[var(--content-tertiary)]">
-                            Focus:
-                          </span>
-                          <span className="text-xs font-semibold text-[var(--content-primary)] truncate block">
-                            {item.artifact}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between text-[11px] font-medium text-[var(--content-secondary)]">
-                          <span className="rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] px-2 py-0.5 text-[10px]">
-                            {item.tag}
-                          </span>
-                          <ArrowUpRight className="h-3.5 w-3.5 text-[var(--content-primary)] opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                      </Link>
-                    ))}
-                  </motion.div>
-                </div>
-
-                {/* Stream Column 2: Gliding Downward */}
-                <div className="flex flex-col gap-3.5 overflow-hidden">
-                  <motion.div
-                    animate={
-                      shouldReduceMotion
-                        ? {}
-                        : {
-                            y: ["-50%", "0%"],
-                          }
-                    }
-                    transition={{
-                      duration: 22,
-                      repeat: Infinity,
-                      ease: "linear",
-                    }}
-                    className="flex flex-col gap-3.5"
-                  >
-                    {[...streamColumnB, ...streamColumnB].map((item, idx) => (
-                      <Link
-                        key={`${item.creator.id || item.creator.username}-${idx}`}
-                        href={`/u/${item.creator.username}`}
-                        className="group p-3.5 rounded-[18px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] hover:border-[var(--content-primary)] hover:shadow-lg dark:hover:border-white/30 transition-colors cursor-pointer block"
-                      >
-                        <div className="flex items-center gap-2.5 mb-2.5">
-                          <div className="relative h-7 w-7 rounded-full overflow-hidden ring-1 ring-[var(--border-neutral)] shrink-0">
-                            <Image
-                              src={getValidAvatarUrl(item.creator.avatarUrl)}
-                              alt={item.creator.displayName}
-                              fill
-                              sizes="28px"
-                              className="object-cover"
-                            />
-                          </div>
-                          <div className="overflow-hidden">
-                            <div className="text-xs font-bold text-[var(--content-primary)] truncate transition-colors">
-                              {item.creator.displayName}
-                            </div>
-                            <div className="text-[10px] text-[var(--content-tertiary)] flex items-center gap-1">
-                              <MapPin className="h-2.5 w-2.5" />
-                              <span>{item.city}</span>
-                            </div>
-                          </div>
-                        </div>
-
-
-                        <div className="p-2 rounded-[10px] bg-[var(--bg-neutral)] text-left mb-2">
-                          <span className="block text-[10px] font-mono uppercase text-[var(--content-tertiary)]">
-                            Focus:
-                          </span>
-                          <span className="text-xs font-semibold text-[var(--content-primary)] truncate block">
-                            {item.artifact}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between text-[11px] font-medium text-[var(--content-secondary)]">
-                          <span className="rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] px-2 py-0.5 text-[10px]">
-                            {item.tag}
-                          </span>
-                          <ArrowUpRight className="h-3.5 w-3.5 text-[var(--content-primary)] opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                      </Link>
-                    ))}
-                  </motion.div>
-                </div>
-              </div>
-
-              {/* Floating Studio Badge on Center Bottom of Marquee */}
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--base-dark)]/90 backdrop-blur-md px-3.5 py-1 text-[11px] font-semibold text-white shadow-md border border-white/10">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#8DFF00]" />
-                  <span>Live Studio Directory</span>
-                </span>
-              </div>
+            <div className="w-full lg:col-span-5 flex items-center justify-center">
+              <Hero3DArtifact />
             </div>
           </div>
         </div>
