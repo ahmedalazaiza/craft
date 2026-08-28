@@ -8,7 +8,6 @@ import { Project, Creator } from "@/lib/types";
 import { bricolage } from "@/lib/fonts";
 import { ProjectCard } from "@/components/project/project-card";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Hero3DArtifact } from "@/components/home/hero-3d-artifact";
 import { DEFAULT_AVATAR_URL, getValidAvatarUrl } from "@/lib/avatar";
 import {
   ScrollRevealSection,
@@ -109,9 +108,9 @@ export function HomeClient({
   return (
     <div className="flex flex-col gap-12 sm:gap-14 pb-14">
       {/* ========================================================================= */}
-      {/* 2-COLUMN KINETIC STUDIO STREAM HERO                                       */}
+      {/* CENTERED MONUMENTAL HERO SECTION                                          */}
       {/* ========================================================================= */}
-      <section className="relative border-b border-[var(--border-neutral)] bg-gradient-to-b from-[var(--bg-neutral)]/20 via-[var(--bg-screen)] to-[var(--bg-screen)] min-h-[calc(100vh-64px)] flex items-center pt-5 pb-6 sm:pt-6 sm:pb-8 lg:py-8 overflow-hidden">
+      <section className="relative border-b border-[var(--border-neutral)] bg-gradient-to-b from-[var(--bg-neutral)]/20 via-[var(--bg-screen)] to-[var(--bg-screen)] min-h-[calc(100vh-64px)] flex items-center justify-center pt-10 pb-12 sm:pt-14 sm:pb-16 lg:py-20 overflow-hidden text-center">
         {/* Ambient Radial Lime Glow */}
         <div
           className="absolute inset-0 pointer-events-none select-none overflow-hidden flex items-center justify-center -z-10"
@@ -121,152 +120,138 @@ export function HomeClient({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1.2, ease: "easeOut" }}
-            className="absolute w-[700px] h-[450px] sm:w-[950px] sm:h-[600px] rounded-full bg-[#8DFF00]/10 blur-[150px] top-1/4 right-0 sm:right-1/4"
+            className="absolute w-[600px] h-[400px] sm:w-[900px] sm:h-[550px] rounded-full bg-[#8DFF00]/10 blur-[140px] top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2"
           />
           {/* Architectural Dot Grid Matrix */}
           <div className="absolute inset-0 bg-[radial-gradient(var(--border-neutral)_1px,transparent_1px)] [background-size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-40 dark:opacity-20" />
         </div>
 
-        <div className="mx-auto max-w-[1580px] px-4 sm:px-6 w-full z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-14 items-center">
-            {/* =================================================================== */}
-            {/* LEFT COLUMN: Editorial Typography & Manifesto (7 cols on desktop)     */}
-            {/* =================================================================== */}
-            <div className="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left justify-center max-w-2xl mx-auto lg:mx-0 w-full">
-              {/* Eyebrow Pill */}
-              <motion.div
-                initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease: MOTION_EASE }}
-                className="inline-flex items-center gap-2 rounded-full bg-[var(--chip-bg)] px-3.5 py-1 text-xs font-semibold text-[var(--chip-fg)] mb-6 sm:mb-8 w-fit shadow-xs border border-white/10 mx-auto lg:mx-0 select-none"
-              >
-                <Sparkles className="h-3.5 w-3.5 text-[#8DFF00]" />
-                <span>Craft Platform</span>
-                <span className="text-[var(--content-tertiary)]">•</span>
-                <span className="text-[var(--chip-fg)] font-normal">Independent Creators</span>
-              </motion.div>
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 w-full z-10 flex flex-col items-center justify-center text-center">
+          {/* Eyebrow Pill */}
+          <motion.div
+            initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: MOTION_EASE }}
+            className="inline-flex items-center gap-2 rounded-full bg-[var(--chip-bg)] px-4 py-1.5 text-xs font-semibold text-[var(--chip-fg)] mb-6 sm:mb-8 shadow-xs border border-white/10 select-none mx-auto"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-[#8DFF00]" />
+            <span>Craft Platform</span>
+            <span className="text-[var(--content-tertiary)]">•</span>
+            <span className="text-[var(--chip-fg)] font-normal">Independent Creators</span>
+          </motion.div>
 
-              {/* Monumental Editorial Headline with Typographic Interplay */}
-              <h1
-                className={cn(
-                  bricolage.className,
-                  "text-[40px] sm:text-6xl md:text-7xl lg:text-[72px] xl:text-[80px] font-black tracking-[-0.04em] leading-[1.02] sm:leading-[0.98] text-[var(--primary-forest-green)] text-center lg:text-left w-full flex flex-col items-center lg:items-start"
-                )}
-              >
-                <span className="block w-full text-center lg:text-left overflow-hidden">
-                  <motion.span
-                    className="inline-block text-[var(--primary-forest-green)] text-center lg:text-left"
-                    initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: "100%" }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      duration: 0.6,
-                      delay: shouldReduceMotion ? 0 : 0.08,
-                      ease: MOTION_EASE,
-                    }}
-                  >
-                    Showcase your work<span className="text-[var(--accent)] font-black">.</span>
-                  </motion.span>
-                </span>
-
-                <span className="flex items-center justify-center lg:justify-start w-full overflow-hidden mt-1 sm:mt-2.5">
-                  <motion.span
-                    className="inline-flex flex-wrap items-baseline justify-center lg:justify-start gap-2 sm:gap-3.5 text-[var(--content-primary)] text-center lg:text-left"
-                    initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: "100%" }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      duration: 0.6,
-                      delay: shouldReduceMotion ? 0 : 0.18,
-                      ease: MOTION_EASE,
-                    }}
-                  >
-                    <span>Connect with</span>
-                    <span className="relative inline-flex items-center px-3 sm:px-4 py-0.5 sm:py-1 rounded-xl sm:rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] font-black text-3xl sm:text-4xl md:text-5xl lg:text-[68px] xl:text-[78px] shadow-sm border border-white/10 align-middle">
-                      <span>makers</span>
-                      <span className="text-[var(--accent)] ml-0.5">.</span>
-                    </span>
-                  </motion.span>
-                </span>
-              </h1>
-
-              {/* Punchy Subline */}
-              <motion.p
-                initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+          {/* Monumental Centered Headline */}
+          <h1
+            className={cn(
+              bricolage.className,
+              "text-[44px] sm:text-6xl md:text-7xl lg:text-[84px] xl:text-[92px] font-black tracking-[-0.04em] leading-[1.02] sm:leading-[0.96] text-[var(--primary-forest-green)] text-center w-full flex flex-col items-center justify-center max-w-4xl"
+            )}
+          >
+            <span className="block w-full text-center overflow-hidden">
+              <motion.span
+                className="inline-block text-[var(--primary-forest-green)] text-center"
+                initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: "100%" }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{
-                  duration: 0.5,
-                  delay: shouldReduceMotion ? 0 : 0.28,
+                  duration: 0.6,
+                  delay: shouldReduceMotion ? 0 : 0.08,
                   ease: MOTION_EASE,
                 }}
-                className="mt-6 sm:mt-8 text-base sm:text-xl text-[var(--content-secondary)] max-w-xl leading-relaxed font-normal text-center lg:text-left mx-auto lg:mx-0"
               >
-                A modern portfolio platform to publish your projects, build your studio profile, and discover inspiring work from designers worldwide.
-              </motion.p>
+                Showcase your work<span className="text-[var(--accent)] font-black">.</span>
+              </motion.span>
+            </span>
 
-              {/* Action Buttons */}
-              <motion.div
-                initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+            <span className="flex items-center justify-center w-full overflow-hidden mt-1.5 sm:mt-3">
+              <motion.span
+                className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--content-primary)] text-center"
+                initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: "100%" }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{
-                  duration: 0.5,
-                  delay: shouldReduceMotion ? 0 : 0.38,
+                  duration: 0.6,
+                  delay: shouldReduceMotion ? 0 : 0.18,
                   ease: MOTION_EASE,
                 }}
-                className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 w-full sm:w-auto mx-auto lg:mx-0 max-w-md sm:max-w-none"
               >
-                <Link
-                  href="/explore"
-                  className={buttonVariants({
-                    variant: "accent",
-                    size: "lg",
-                    className: "w-full sm:w-auto gap-2 shadow-sm font-bold justify-center",
-                  })}
-                >
-                  <span>Explore Projects</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-                <Link
-                  href="/signup"
-                  className={buttonVariants({
-                    variant: "secondary",
-                    size: "lg",
-                    className: "w-full sm:w-auto font-semibold justify-center",
-                  })}
-                >
-                  Join as a Creator
-                </Link>
-              </motion.div>
+                <span>Connect with</span>
+                <span className="relative inline-flex items-center px-3.5 sm:px-5 py-0.5 sm:py-1 rounded-xl sm:rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] font-black text-3xl sm:text-4xl md:text-5xl lg:text-[76px] xl:text-[84px] shadow-sm border border-white/10 align-middle">
+                  <span>makers</span>
+                  <span className="text-[var(--accent)] ml-0.5">.</span>
+                </span>
+              </motion.span>
+            </span>
+          </h1>
 
-              {/* Minimalist 3-Point Value Manifesto (High-Contrast Clean Numbers) */}
-              <motion.div
-                initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: shouldReduceMotion ? 0 : 0.48 }}
-                className="mt-8 pt-8 border-t border-[var(--border-neutral)] grid grid-cols-1 sm:grid-cols-3 gap-6 w-full text-center sm:text-left"
-              >
-                {FEATURE_POINTS.map((pt) => (
-                  <div key={pt.num} className="space-y-2 flex flex-col items-center sm:items-start text-center sm:text-left">
-                    <div className="inline-flex items-center gap-2 rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] px-3 py-1 text-xs font-mono font-bold tracking-wider">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-                      <span>{pt.num}</span>
-                    </div>
-                    <div className="text-xs font-bold text-[var(--content-primary)]">
-                      {pt.title}
-                    </div>
-                    <p className="text-xs text-[var(--content-tertiary)] leading-normal">
-                      {pt.desc}
-                    </p>
-                  </div>
-                ))}
-              </motion.div>
-            </div>
+          {/* Punchy Subline */}
+          <motion.p
+            initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.5,
+              delay: shouldReduceMotion ? 0 : 0.28,
+              ease: MOTION_EASE,
+            }}
+            className="mt-6 sm:mt-8 text-base sm:text-xl text-[var(--content-secondary)] max-w-2xl leading-relaxed font-normal text-center mx-auto"
+          >
+            A modern portfolio platform to publish your projects, build your studio profile, and discover inspiring work from designers worldwide.
+          </motion.p>
 
-            {/* =================================================================== */}
-            {/* RIGHT COLUMN: 3D Interactive Spatial Monolith Canvas              */}
-            {/* =================================================================== */}
-            <div className="w-full lg:col-span-5 flex items-center justify-center">
-              <Hero3DArtifact />
-            </div>
-          </div>
+          {/* Action Buttons */}
+          <motion.div
+            initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.5,
+              delay: shouldReduceMotion ? 0 : 0.38,
+              ease: MOTION_EASE,
+            }}
+            className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto mx-auto max-w-md sm:max-w-none"
+          >
+            <Link
+              href="/explore"
+              className={buttonVariants({
+                variant: "accent",
+                size: "lg",
+                className: "w-full sm:w-auto gap-2 shadow-sm font-bold justify-center px-8",
+              })}
+            >
+              <span>Explore Projects</span>
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/signup"
+              className={buttonVariants({
+                variant: "secondary",
+                size: "lg",
+                className: "w-full sm:w-auto font-semibold justify-center px-8",
+              })}
+            >
+              Join as a Creator
+            </Link>
+          </motion.div>
+
+          {/* Minimalist 3-Point Value Manifesto (Centered Balanced Grid) */}
+          <motion.div
+            initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: shouldReduceMotion ? 0 : 0.48 }}
+            className="mt-12 sm:mt-14 pt-10 sm:pt-12 border-t border-[var(--border-neutral)] grid grid-cols-1 sm:grid-cols-3 gap-8 w-full max-w-4xl text-center"
+          >
+            {FEATURE_POINTS.map((pt) => (
+              <div key={pt.num} className="space-y-2.5 flex flex-col items-center text-center">
+                <div className="inline-flex items-center gap-2 rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] px-3 py-1 text-xs font-mono font-bold tracking-wider">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
+                  <span>{pt.num}</span>
+                </div>
+                <div className="text-sm font-bold text-[var(--content-primary)]">
+                  {pt.title}
+                </div>
+                <p className="text-xs text-[var(--content-tertiary)] leading-relaxed max-w-xs">
+                  {pt.desc}
+                </p>
+              </div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
