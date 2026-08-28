@@ -1,15 +1,27 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { ProjectCategory, ProjectMedium } from "@/lib/types";
+import {
+  MASTER_TAXONOMY,
+  ALL_TAGS,
+  ALL_TOOLS,
+  ALL_SUB_CATEGORIES,
+  getCategoryTaxonomy,
+  getTagsForCategory,
+  getToolsForCategory,
+  getSubCategoriesForCategory,
+} from "@/lib/taxonomy";
 import { Button } from "@/components/ui/button";
 import { Badge, FilterChip } from "@/components/ui/badge";
-import { SlidersHorizontal, X, RotateCcw, Check } from "lucide-react";
+import { SlidersHorizontal, X, RotateCcw, Check, Wrench, Tag, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface ProjectFilters {
   category?: ProjectCategory | "All";
+  subCategory?: string | "All";
   tags: string[];
+  tools?: string[];
   medium?: ProjectMedium | "All";
   sortBy: "newest" | "appreciated";
 }
@@ -30,18 +42,6 @@ interface FilterDrawerProps {
   onCreatorFiltersChange?: (filters: CreatorFilters) => void;
 }
 
-const CATEGORIES: (ProjectCategory | "All")[] = [
-  "All",
-  "UI",
-  "Brand",
-  "Photo",
-  "Editorial",
-  "3D & Motion",
-  "Product",
-  "Architecture",
-  "Type",
-];
-
 const MEDIUMS: (ProjectMedium | "All")[] = [
   "All",
   "Image",
@@ -49,35 +49,6 @@ const MEDIUMS: (ProjectMedium | "All")[] = [
   "PDF/Case study",
   "Prototype",
   "3D",
-];
-
-const ALL_TAGS = [
-  "Typography",
-  "Architecture",
-  "Systems",
-  "Interaction",
-  "Design Engineering",
-  "Minimalism",
-  "Print",
-  "CGI",
-  "Generative",
-  "Tokens",
-  "Hardware",
-  "Audio",
-  "Spatial Design",
-  "Timber",
-];
-
-const DISCIPLINES = [
-  "All",
-  "Brand Systems",
-  "Typography",
-  "UI Systems",
-  "Photography",
-  "Editorial",
-  "Industrial Design",
-  "Architecture",
-  "Creative Code",
 ];
 
 const CITIES = [
@@ -88,6 +59,8 @@ const CITIES = [
   "Zurich",
   "New York",
   "Stockholm",
+  "San Francisco",
+  "Paris",
 ];
 
 export function FilterDrawer({
@@ -101,6 +74,32 @@ export function FilterDrawer({
 }: FilterDrawerProps) {
   if (!isOpen) return null;
 
+  const currentCategoryTaxonomy = useMemo(() => {
+    if (!projectFilters?.category || projectFilters.category === "All") return null;
+    return getCategoryTaxonomy(projectFilters.category);
+  }, [projectFilters?.category]);
+
+  const availableSubCategories = useMemo(() => {
+    if (currentCategoryTaxonomy) {
+      return ["All", ...currentCategoryTaxonomy.subCategories];
+    }
+    return ["All", ...ALL_SUB_CATEGORIES.slice(0, 18)];
+  }, [currentCategoryTaxonomy]);
+
+  const availableTags = useMemo(() => {
+    if (currentCategoryTaxonomy) {
+      return currentCategoryTaxonomy.tags;
+    }
+    return ALL_TAGS.slice(0, 30);
+  }, [currentCategoryTaxonomy]);
+
+  const availableTools = useMemo(() => {
+    if (currentCategoryTaxonomy) {
+      return currentCategoryTaxonomy.tools;
+    }
+    return ALL_TOOLS.slice(0, 24);
+  }, [currentCategoryTaxonomy]);
+
   const handleToggleTag = (tag: string) => {
     if (!projectFilters || !onProjectFiltersChange) return;
     const exists = projectFilters.tags.includes(tag);
@@ -110,11 +109,23 @@ export function FilterDrawer({
     onProjectFiltersChange({ ...projectFilters, tags: newTags });
   };
 
+  const handleToggleTool = (tool: string) => {
+    if (!projectFilters || !onProjectFiltersChange) return;
+    const currentTools = projectFilters.tools || [];
+    const exists = currentTools.includes(tool);
+    const newTools = exists
+      ? currentTools.filter((t) => t !== tool)
+      : [...currentTools, tool];
+    onProjectFiltersChange({ ...projectFilters, tools: newTools });
+  };
+
   const handleResetProjects = () => {
     if (!onProjectFiltersChange) return;
     onProjectFiltersChange({
       category: "All",
+      subCategory: "All",
       tags: [],
+      tools: [],
       medium: "All",
       sortBy: "newest",
     });
@@ -135,7 +146,7 @@ export function FilterDrawer({
       onClick={onClose}
     >
       <div
-        className="relative flex max-h-[88vh] sm:max-h-full h-auto sm:h-full w-full max-w-md flex-col rounded-t-[28px] sm:rounded-none bg-[var(--bg-screen)] border-t sm:border-t-0 sm:border-l border-[var(--border-neutral)] shadow-2xl p-5 sm:p-8 overflow-y-auto pb-safe"
+        className="relative flex max-h-[90vh] sm:max-h-full h-auto sm:h-full w-full max-w-lg flex-col rounded-t-[28px] sm:rounded-none bg-[var(--bg-screen)] border-t sm:border-t-0 sm:border-l border-[var(--border-neutral)] shadow-2xl p-5 sm:p-8 overflow-y-auto pb-safe"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Mobile Pull Handle Indicator */}
@@ -145,7 +156,7 @@ export function FilterDrawer({
         <div className="flex items-center justify-between pb-4 sm:pb-5 border-b border-[var(--border-neutral)] shrink-0">
           <div className="flex items-center gap-2.5">
             <SlidersHorizontal className="h-5 w-5 text-[var(--primary-forest-green)]" />
-            <h2 className="type-title-subsection text-[var(--content-primary)]">
+            <h2 className="type-title-subsection text-[var(--content-primary)] font-bold text-base sm:text-lg">
               {mode === "projects" ? "Filter Projects" : "Filter Creators"}
             </h2>
           </div>
@@ -163,7 +174,7 @@ export function FilterDrawer({
             <>
               {/* Sort Order */}
               <div>
-                <label className="type-body-default-bold text-[var(--content-primary)] block mb-2.5">
+                <label className="type-body-default-bold text-[var(--content-primary)] block mb-2.5 text-xs uppercase tracking-wider font-mono">
                   Sort Order
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -201,47 +212,101 @@ export function FilterDrawer({
                 </div>
               </div>
 
-              {/* Primary Category */}
+              {/* Primary Category (13 Master Categories) */}
               <div>
-                <label className="type-body-default-bold text-[var(--content-primary)] block mb-2.5">
-                  Primary Category
-                </label>
-                <div className="flex flex-wrap gap-1.5">
-                  {CATEGORIES.map((cat) => (
-                    <FilterChip
-                      key={cat}
-                      active={projectFilters.category === cat}
+                <div className="flex items-center justify-between mb-2.5">
+                  <label className="type-body-default-bold text-[var(--content-primary)] block text-xs uppercase tracking-wider font-mono">
+                    Category ({MASTER_TAXONOMY.length})
+                  </label>
+                  {projectFilters.category && projectFilters.category !== "All" && (
+                    <button
+                      type="button"
                       onClick={() =>
                         onProjectFiltersChange({
                           ...projectFilters,
-                          category: cat,
+                          category: "All",
+                          subCategory: "All",
                         })
                       }
+                      className="text-[11px] text-[var(--content-link)] hover:underline"
                     >
-                      {cat}
-                    </FilterChip>
-                  ))}
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto p-1">
+                  <FilterChip
+                    active={!projectFilters.category || projectFilters.category === "All"}
+                    onClick={() =>
+                      onProjectFiltersChange({
+                        ...projectFilters,
+                        category: "All",
+                        subCategory: "All",
+                      })
+                    }
+                  >
+                    All Categories
+                  </FilterChip>
+                  {MASTER_TAXONOMY.map((cat) => {
+                    const isSelected =
+                      projectFilters.category === cat.name ||
+                      projectFilters.category === cat.shortName;
+                    return (
+                      <FilterChip
+                        key={cat.id}
+                        active={isSelected}
+                        onClick={() =>
+                          onProjectFiltersChange({
+                            ...projectFilters,
+                            category: cat.name,
+                            subCategory: "All",
+                          })
+                        }
+                      >
+                        {cat.name}
+                      </FilterChip>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Medium / Artifact Format */}
+              {/* Sub-Categories */}
               <div>
-                <label className="type-body-default-bold text-[var(--content-primary)] block mb-2.5">
-                  Medium / Artifact Type
-                </label>
-                <div className="flex flex-wrap gap-1.5">
-                  {MEDIUMS.map((med) => (
-                    <FilterChip
-                      key={med}
-                      active={projectFilters.medium === med}
+                <div className="flex items-center justify-between mb-2.5">
+                  <label className="type-body-default-bold text-[var(--content-primary)] block text-xs uppercase tracking-wider font-mono">
+                    Sub-Category
+                  </label>
+                  {projectFilters.subCategory && projectFilters.subCategory !== "All" && (
+                    <button
+                      type="button"
                       onClick={() =>
                         onProjectFiltersChange({
                           ...projectFilters,
-                          medium: med,
+                          subCategory: "All",
+                        })
+                      }
+                      className="text-[11px] text-[var(--content-link)] hover:underline"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-1">
+                  {availableSubCategories.map((sub) => (
+                    <FilterChip
+                      key={sub}
+                      active={
+                        (!projectFilters.subCategory && sub === "All") ||
+                        projectFilters.subCategory === sub
+                      }
+                      onClick={() =>
+                        onProjectFiltersChange({
+                          ...projectFilters,
+                          subCategory: sub,
                         })
                       }
                     >
-                      {med}
+                      {sub}
                     </FilterChip>
                   ))}
                 </div>
@@ -249,14 +314,30 @@ export function FilterDrawer({
 
               {/* Secondary Tags Multi-select */}
               <div>
-                <label className="type-body-default-bold text-[var(--content-primary)] block mb-1">
-                  Disciplines & Tags (Multi-select)
-                </label>
-                <p className="type-label text-[var(--content-tertiary)] mb-2.5">
-                  Filter by specific techniques and materials.
+                <div className="flex items-center justify-between mb-1">
+                  <label className="type-body-default-bold text-[var(--content-primary)] block text-xs uppercase tracking-wider font-mono">
+                    Tags ({projectFilters.tags.length} selected)
+                  </label>
+                  {projectFilters.tags.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onProjectFiltersChange({
+                          ...projectFilters,
+                          tags: [],
+                        })
+                      }
+                      className="text-[11px] text-[var(--content-link)] hover:underline"
+                    >
+                      Clear ({projectFilters.tags.length})
+                    </button>
+                  )}
+                </div>
+                <p className="type-label text-[var(--content-tertiary)] mb-2.5 text-xs">
+                  Filter by design principles, styles, and methodologies.
                 </p>
                 <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto p-1">
-                  {ALL_TAGS.map((tag) => {
+                  {availableTags.map((tag) => {
                     const isSelected = projectFilters.tags.includes(tag);
                     return (
                       <button
@@ -277,56 +358,137 @@ export function FilterDrawer({
                   })}
                 </div>
               </div>
+
+              {/* Tools & Software Multi-select */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="type-body-default-bold text-[var(--content-primary)] block text-xs uppercase tracking-wider font-mono">
+                    Tools & Stack ({projectFilters.tools?.length || 0} selected)
+                  </label>
+                  {projectFilters.tools && projectFilters.tools.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onProjectFiltersChange({
+                          ...projectFilters,
+                          tools: [],
+                        })
+                      }
+                      className="text-[11px] text-[var(--content-link)] hover:underline"
+                    >
+                      Clear ({projectFilters.tools.length})
+                    </button>
+                  )}
+                </div>
+                <p className="type-label text-[var(--content-tertiary)] mb-2.5 text-xs">
+                  Filter by creative software and production engines.
+                </p>
+                <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-1">
+                  {availableTools.map((tool) => {
+                    const isSelected = (projectFilters.tools || []).includes(tool);
+                    return (
+                      <button
+                        key={tool}
+                        type="button"
+                        onClick={() => handleToggleTool(tool)}
+                        className={cn(
+                          "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-all cursor-pointer",
+                          isSelected
+                            ? "bg-[var(--accent)] text-[#090C09] ring-1 ring-[var(--accent)] font-bold"
+                            : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:bg-[var(--bg-neutral-hover)]"
+                        )}
+                      >
+                        {isSelected && <Check className="h-3 w-3 text-[#090C09]" />}
+                        <span>{tool}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Medium / Artifact Format */}
+              <div>
+                <label className="type-body-default-bold text-[var(--content-primary)] block mb-2.5 text-xs uppercase tracking-wider font-mono">
+                  Medium / Artifact Type
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {MEDIUMS.map((med) => (
+                    <FilterChip
+                      key={med}
+                      active={projectFilters.medium === med}
+                      onClick={() =>
+                        onProjectFiltersChange({
+                          ...projectFilters,
+                          medium: med,
+                        })
+                      }
+                    >
+                      {med}
+                    </FilterChip>
+                  ))}
+                </div>
+              </div>
             </>
           ) : mode === "creators" && creatorFilters && onCreatorFiltersChange ? (
             <>
               {/* Creator Discipline */}
               <div>
-                <label className="type-body-default-bold text-[var(--content-primary)] block mb-2.5">
-                  Discipline / Focus
+                <label className="type-body-default-bold text-[var(--content-primary)] block mb-2.5 text-xs uppercase tracking-wider font-mono">
+                  Discipline / Specialization
                 </label>
-                <div className="flex flex-wrap gap-1.5">
-                  {DISCIPLINES.map((disc) => (
+                <div className="flex flex-wrap gap-1.5 max-h-56 overflow-y-auto p-1">
+                  <FilterChip
+                    active={!creatorFilters.discipline || creatorFilters.discipline === "All"}
+                    onClick={() =>
+                      onCreatorFiltersChange({
+                        ...creatorFilters,
+                        discipline: "All",
+                      })
+                    }
+                  >
+                    All Disciplines
+                  </FilterChip>
+                  {MASTER_TAXONOMY.map((cat) => (
                     <FilterChip
-                      key={disc}
-                      active={creatorFilters.discipline === disc}
+                      key={cat.id}
+                      active={creatorFilters.discipline === cat.name || creatorFilters.discipline === cat.shortName}
                       onClick={() =>
                         onCreatorFiltersChange({
                           ...creatorFilters,
-                          discipline: disc,
+                          discipline: cat.name,
                         })
                       }
                     >
-                      {disc}
+                      {cat.name}
                     </FilterChip>
                   ))}
                 </div>
               </div>
 
-              {/* Creator City */}
+              {/* City Filter */}
               <div>
-                <label className="type-body-default-bold text-[var(--content-primary)] block mb-2.5">
-                  City / Region
+                <label className="type-body-default-bold text-[var(--content-primary)] block mb-2.5 text-xs uppercase tracking-wider font-mono">
+                  Hub / Location
                 </label>
                 <div className="flex flex-wrap gap-1.5">
-                  {CITIES.map((c) => (
+                  {CITIES.map((city) => (
                     <FilterChip
-                      key={c}
-                      active={creatorFilters.city === c}
+                      key={city}
+                      active={creatorFilters.city === city}
                       onClick={() =>
                         onCreatorFiltersChange({
                           ...creatorFilters,
-                          city: c,
+                          city: city,
                         })
                       }
                     >
-                      {c}
+                      {city}
                     </FilterChip>
                   ))}
                 </div>
               </div>
 
-              {/* Has published work toggle */}
+              {/* Published Projects Only */}
               <div className="pt-2">
                 <label className="flex items-center gap-3 cursor-pointer select-none">
                   <input
@@ -338,10 +500,10 @@ export function FilterDrawer({
                         hasPublishedOnly: e.target.checked,
                       })
                     }
-                    className="h-4 w-4 rounded accent-[var(--btn-cta-bg)]"
+                    className="h-4 w-4 rounded-[4px] border-[var(--border-neutral)] text-[var(--primary-forest-green)] focus:ring-[var(--primary-forest-green)] accent-[var(--primary-forest-green)]"
                   />
-                  <span className="type-body-default font-medium text-[var(--content-primary)]">
-                    Only show creators with published monographs
+                  <span className="type-body-default text-[var(--content-primary)] font-medium text-xs sm:text-sm">
+                    Only show creators with published work
                   </span>
                 </label>
               </div>
@@ -350,20 +512,25 @@ export function FilterDrawer({
         </div>
 
         {/* Footer Actions */}
-        <div className="pt-4 border-t border-[var(--border-neutral)] flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 pt-5 border-t border-[var(--border-neutral)] shrink-0">
           <Button
             type="button"
-            variant="ghost"
-            size="sm"
+            variant="secondary"
+            size="default"
             onClick={mode === "projects" ? handleResetProjects : handleResetCreators}
-            className="gap-1.5 text-xs"
+            className="flex-1 gap-2 font-semibold"
           >
-            <RotateCcw className="h-3.5 w-3.5" />
-            <span>Reset All</span>
+            <RotateCcw className="h-4 w-4" />
+            <span>Reset</span>
           </Button>
-
-          <Button type="button" variant="accent" size="default" onClick={onClose}>
-            Apply Filters
+          <Button
+            type="button"
+            variant="accent"
+            size="default"
+            onClick={onClose}
+            className="flex-1 font-bold shadow-xs"
+          >
+            <span>Apply Filters</span>
           </Button>
         </div>
       </div>

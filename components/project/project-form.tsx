@@ -1,11 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/session-context";
 import { Project, ProjectCategory, ProjectMedium } from "@/lib/types";
+import {
+  MASTER_TAXONOMY,
+  getCategoryTaxonomy,
+  getTagsForCategory,
+  getToolsForCategory,
+  getSubCategoriesForCategory,
+  normalizeCategory,
+} from "@/lib/taxonomy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,23 +29,16 @@ import {
   Upload,
   Image as ImageIcon,
   Loader2,
+  Sparkles,
+  Tag,
+  Wrench,
+  Layers,
 } from "lucide-react";
 
 interface ProjectFormProps {
   initialData?: Project;
   mode: "new" | "edit";
 }
-
-const CATEGORIES: ProjectCategory[] = [
-  "UI",
-  "Brand",
-  "Photo",
-  "Editorial",
-  "3D & Motion",
-  "Product",
-  "Architecture",
-  "Type",
-];
 
 const MEDIUMS: ProjectMedium[] = [
   "Image",
@@ -57,8 +58,11 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const [title, setTitle] = useState(initialData?.title || "");
   const [summary, setSummary] = useState(initialData?.summary || "");
   const [body, setBody] = useState(initialData?.body || "");
-  const [category, setCategory] = useState<ProjectCategory>(
-    initialData?.category || "Brand"
+  const [category, setCategory] = useState<string>(
+    initialData?.category ? normalizeCategory(initialData.category) : MASTER_TAXONOMY[0].name
+  );
+  const [subCategory, setSubCategory] = useState<string>(
+    initialData?.subCategory || ""
   );
   const [medium, setMedium] = useState<ProjectMedium>(
     initialData?.medium || "Image"
@@ -71,11 +75,11 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   );
   const [newGalleryUrl, setNewGalleryUrl] = useState("");
   const [tags, setTags] = useState<string[]>(
-    initialData?.tags || ["Brand", "Identity", "Design"]
+    initialData?.tags || ["Design Systems", "Auto-layout", "Figma"]
   );
   const [newTag, setNewTag] = useState("");
   const [tools, setTools] = useState<string[]>(
-    initialData?.tools || ["Figma", "InDesign"]
+    initialData?.tools || ["Figma", "Webflow"]
   );
   const [newTool, setNewTool] = useState("");
   const [published, setPublished] = useState(
@@ -89,18 +93,55 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
 
+  // Taxonomy helpers for active category
+  const activeTaxonomy = useMemo(() => {
+    return getCategoryTaxonomy(category);
+  }, [category]);
+
+  const availableSubCategories = useMemo(() => {
+    return activeTaxonomy?.subCategories || [];
+  }, [activeTaxonomy]);
+
+  const suggestedTags = useMemo(() => {
+    return activeTaxonomy?.tags || [];
+  }, [activeTaxonomy]);
+
+  const suggestedTools = useMemo(() => {
+    return activeTaxonomy?.tools || [];
+  }, [activeTaxonomy]);
+
+  const handleCategorySelect = (catName: string) => {
+    setCategory(catName);
+    const tax = getCategoryTaxonomy(catName);
+    if (tax && tax.subCategories.length > 0) {
+      setSubCategory(tax.subCategories[0]);
+    } else {
+      setSubCategory("");
+    }
+  };
+
   const handleAddTag = (e: React.KeyboardEvent | React.MouseEvent) => {
     if (("key" in e && e.key === "Enter") || e.type === "click") {
       e.preventDefault();
       const cleaned = newTag.trim().replace(/^#/, "");
-      if (tags.length >= 15) {
-        alert("You can add a maximum of 15 categories & tags.");
+      if (tags.length >= 20) {
+        alert("You can add a maximum of 20 tags.");
         return;
       }
       if (cleaned && !tags.includes(cleaned)) {
         setTags([...tags, cleaned]);
         setNewTag("");
       }
+    }
+  };
+
+  const handleQuickAddTag = (tagToAdd: string) => {
+    if (tags.length >= 20) {
+      alert("You can add a maximum of 20 tags.");
+      return;
+    }
+    if (!tags.includes(tagToAdd)) {
+      setTags([...tags, tagToAdd]);
     }
   };
 
@@ -112,14 +153,24 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     if (("key" in e && e.key === "Enter") || e.type === "click") {
       e.preventDefault();
       const cleaned = newTool.trim();
-      if (tools.length >= 5) {
-        alert("You can add a maximum of 5 tools & technologies.");
+      if (tools.length >= 10) {
+        alert("You can add a maximum of 10 tools & technologies.");
         return;
       }
       if (cleaned && !tools.includes(cleaned)) {
         setTools([...tools, cleaned]);
         setNewTool("");
       }
+    }
+  };
+
+  const handleQuickAddTool = (toolToAdd: string) => {
+    if (tools.length >= 10) {
+      alert("You can add a maximum of 10 tools & technologies.");
+      return;
+    }
+    if (!tools.includes(toolToAdd)) {
+      setTools([...tools, toolToAdd]);
     }
   };
 
@@ -139,7 +190,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     setGalleryImages((prev) => prev.filter((_, idx) => idx !== idxToRemove));
   };
 
-  // Direct File Upload Handlers (with Supabase Storage + Fast Compression)
+  // Direct File Upload Handlers
   const handleCoverFile = async (file: File) => {
     if (!file.type.startsWith("image/")) {
       alert("Please upload a valid image file (PNG, JPG, WebP).");
@@ -185,6 +236,11 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     const finalCover = coverImage || galleryImages[0] || defaultCover;
     const finalGallery = galleryImages.length > 0 ? galleryImages : [finalCover];
 
+    // Combine subCategory into tags if not already present
+    const combinedTags = subCategory && !tags.includes(subCategory)
+      ? [subCategory, ...tags]
+      : tags;
+
     setIsSaving(true);
     try {
       await saveProject({
@@ -193,10 +249,11 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
         summary,
         body,
         category,
+        subCategory,
         medium,
         coverImage: finalCover,
         galleryImages: finalGallery,
-        tags: tags.length > 0 ? tags : ["Design", "Identity"],
+        tags: combinedTags.length > 0 ? combinedTags : ["Design", "Case Study"],
         tools: tools.length > 0 ? tools : ["Figma"],
         published,
       });
@@ -264,7 +321,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
         <div className="lg:col-span-2 space-y-8">
           {/* Title */}
           <div>
-            <label className="type-title-subsection text-[var(--content-primary)] block mb-2">
+            <label className="type-title-subsection text-[var(--content-primary)] block mb-2 font-bold">
               Project Title
             </label>
             <Input
@@ -276,32 +333,77 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
             />
           </div>
 
-          {/* Primary Category */}
-          <div>
-            <label className="type-body-default-bold text-[var(--content-primary)] block mb-2">
-              Primary Category
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setCategory(cat)}
-                  className={`rounded-full px-4 py-2 text-xs font-semibold cursor-pointer transition-all ${
-                    category === cat
-                      ? "bg-[var(--primary-forest-green)] text-[var(--base-contrast)] shadow-sm"
-                      : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:bg-[var(--bg-neutral-hover)]"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
+          {/* Primary Category (13 Master Categories) */}
+          <div className="rounded-[24px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="type-body-default-bold text-[var(--content-primary)] block font-bold">
+                  Primary Category ({MASTER_TAXONOMY.length})
+                </label>
+                <p className="type-label text-[var(--content-tertiary)] text-xs mt-0.5">
+                  Select the main creative discipline that best represents this project.
+                </p>
+              </div>
+              <span className="text-xs font-mono font-semibold px-2.5 py-1 rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)]">
+                {activeTaxonomy?.shortName || "UI"}
+              </span>
             </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-1">
+              {MASTER_TAXONOMY.map((cat) => {
+                const isSelected = category === cat.name;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => handleCategorySelect(cat.name)}
+                    className={cn(
+                      "flex items-center justify-between gap-2 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-left transition-all cursor-pointer border",
+                      isSelected
+                        ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-xs"
+                        : "bg-[var(--bg-screen)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)] hover:text-[var(--content-primary)]"
+                    )}
+                  >
+                    <span className="truncate">{cat.name}</span>
+                    {isSelected && <Check className="h-3.5 w-3.5 text-[var(--chip-fg)] shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Dynamic Sub-Category Selection */}
+            {availableSubCategories.length > 0 && (
+              <div className="pt-4 border-t border-[var(--border-neutral)] space-y-2.5">
+                <label className="type-body-default-bold text-[var(--content-primary)] block text-xs font-bold uppercase tracking-wider font-mono">
+                  Sub-Category ({availableSubCategories.length})
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {availableSubCategories.map((sub) => {
+                    const isSelected = subCategory === sub;
+                    return (
+                      <button
+                        key={sub}
+                        type="button"
+                        onClick={() => setSubCategory(sub)}
+                        className={cn(
+                          "rounded-full px-3 py-1.5 text-xs font-semibold cursor-pointer transition-all border",
+                          isSelected
+                            ? "bg-[var(--primary-forest-green)] text-white dark:bg-[var(--accent)] dark:text-[#090C09] border-transparent shadow-xs"
+                            : "bg-[var(--bg-screen)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)]"
+                        )}
+                      >
+                        {sub}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Medium */}
           <div>
-            <label className="type-body-default-bold text-[var(--content-primary)] block mb-2">
+            <label className="type-body-default-bold text-[var(--content-primary)] block mb-2 font-bold">
               Medium / Artifact Format
             </label>
             <div className="flex flex-wrap gap-2">
@@ -324,11 +426,11 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
           {/* Summary */}
           <div>
-            <label className="type-body-default-bold text-[var(--content-primary)] block mb-1">
+            <label className="type-body-default-bold text-[var(--content-primary)] block mb-1 font-bold">
               Brief Summary (One or two lines)
             </label>
-            <p className="type-label text-[var(--content-tertiary)] mb-2">
-              Shown on cards and the project header.
+            <p className="type-label text-[var(--content-tertiary)] mb-2 text-xs">
+              Shown on search result cards and project headers.
             </p>
             <Input
               value={summary}
@@ -340,11 +442,11 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
           {/* Body */}
           <div>
-            <label className="type-body-default-bold text-[var(--content-primary)] block mb-1">
+            <label className="type-body-default-bold text-[var(--content-primary)] block mb-1 font-bold">
               Project Case Study / Narrative
             </label>
-            <p className="type-label text-[var(--content-tertiary)] mb-2">
-              Supports multi-paragraph descriptions of your research, typography choices, and technical craft.
+            <p className="type-label text-[var(--content-tertiary)] mb-2 text-xs">
+              Detail your research, typography choices, optical balance, and creative process.
             </p>
             <Textarea
               value={body}
@@ -359,11 +461,11 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <label className="type-body-default-bold text-[var(--content-primary)] block">
+                <label className="type-body-default-bold text-[var(--content-primary)] block font-bold">
                   Exhibition Plates & Gallery Images
                 </label>
-                <p className="type-label text-[var(--content-tertiary)]">
-                  Add high-fidelity spreads, closeups, and photography plates (rendered in intrinsic scale).
+                <p className="type-label text-[var(--content-tertiary)] text-xs">
+                  Add high-fidelity spreads, closeups, and photography plates (rendered in full resolution).
                 </p>
               </div>
               <span className="text-xs font-mono font-semibold text-[var(--content-tertiary)]">
@@ -400,102 +502,54 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
               }}
               onClick={() => galleryFileInputRef.current?.click()}
               className={cn(
-                "relative rounded-[20px] border-2 border-dashed p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 group",
+                "rounded-[20px] bg-[var(--bg-neutral)]/40 border-2 border-dashed p-6 text-center group cursor-pointer transition-all",
                 isDraggingGallery
-                  ? "border-[var(--primary-forest-green)] bg-[var(--bg-neutral)]/60 scale-[0.99]"
-                  : "border-[var(--border-neutral)] bg-[var(--bg-elevated)]/60 hover:bg-[var(--bg-neutral)]/40 hover:border-[var(--primary-forest-green)]/60"
+                  ? "border-[var(--primary-forest-green)] bg-[var(--bg-neutral)]/80 scale-[0.99]"
+                  : "border-[var(--border-neutral)] hover:border-[var(--primary-forest-green)]"
               )}
             >
               {isProcessingFiles ? (
-                <div className="flex flex-col items-center py-4 space-y-2 w-full max-w-xs mx-auto">
-                  <Loader2 className="h-7 w-7 animate-spin text-[var(--primary-forest-green)] mb-1" />
-                  <span className="text-sm font-bold text-[var(--content-primary)]">
-                    {uploadProgress
-                      ? `Uploading & optimizing ${uploadProgress.current} of ${uploadProgress.total} plates...`
-                      : "Processing images..."}
-                  </span>
-                  {uploadProgress && (
-                    <div className="w-full h-1.5 bg-[var(--bg-neutral)] rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-[var(--primary-forest-green)] transition-all duration-300 rounded-full"
-                        style={{
-                          width: `${Math.round((uploadProgress.current / uploadProgress.total) * 100)}%`,
-                        }}
-                      />
-                    </div>
-                  )}
-                  <span className="text-[11px] text-[var(--content-tertiary)]">
-                    Compressing & storing in Supabase CDN
+                <div className="flex flex-col items-center py-4">
+                  <Loader2 className="h-7 w-7 animate-spin text-[var(--primary-forest-green)] mb-2" />
+                  <span className="text-xs font-bold text-[var(--content-primary)]">
+                    Uploading & optimizing gallery plates ({uploadProgress?.current || 0}/{uploadProgress?.total || 0})...
                   </span>
                 </div>
               ) : (
-                <>
-                  <div className="h-12 w-12 rounded-full bg-[var(--bg-neutral)] flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Upload className="h-5 w-5 text-[var(--content-primary)]" />
+                <div className="flex flex-col items-center">
+                  <div className="h-10 w-10 rounded-full bg-[var(--bg-screen)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-tertiary)] mb-2 group-hover:text-[var(--primary-forest-green)] group-hover:border-[var(--primary-forest-green)] transition-colors shadow-xs">
+                    <ImageIcon className="h-5 w-5 group-hover:scale-110 transition-transform" />
                   </div>
-                  <div className="space-y-0.5">
-                    <p className="text-sm font-bold text-[var(--content-primary)]">
-                      Drop image files here, or <span className="text-[var(--content-link)] underline">browse from your computer</span>
-                    </p>
-                    <p className="text-xs text-[var(--content-tertiary)]">
-                      Select multiple PNG, JPG, or WebP files at once (automatically optimized)
-                    </p>
-                  </div>
-                </>
+                  <span className="type-body-default-bold text-[var(--content-primary)] text-sm">
+                    Drop high-res plates here or click to browse
+                  </span>
+                  <span className="type-label text-[var(--content-tertiary)] text-xs mt-0.5">
+                    PNG, JPG, WebP — multiple uploads supported
+                  </span>
+                </div>
               )}
             </div>
 
-            {/* URL Input Strip for External CDNs */}
-            <div className="flex gap-2 pt-1">
-              <Input
-                type="url"
-                value={newGalleryUrl}
-                onChange={(e) => setNewGalleryUrl(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddGalleryImage();
-                  }
-                }}
-                placeholder="Or paste an image URL (Unsplash, Behance, Cloudinary...)"
-                className="text-xs h-11"
-              />
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => handleAddGalleryImage()}
-                className="shrink-0 font-semibold h-11"
-              >
-                <Plus className="h-4 w-4 mr-1" /> Add URL
-              </Button>
-            </div>
-
-            {/* Gallery Images Grid Preview */}
+            {/* Gallery Image Grid */}
             {galleryImages.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-3">
                 {galleryImages.map((url, idx) => (
                   <div
                     key={idx}
-                    className="group relative aspect-[4/3] rounded-[16px] overflow-hidden bg-[var(--bg-neutral)] border border-[var(--border-neutral)] shadow-xs"
+                    className="relative aspect-[4/3] rounded-xl overflow-hidden bg-[var(--bg-neutral)] border border-[var(--border-neutral)] group"
                   >
                     <Image
                       src={url}
                       alt={`Gallery ${idx + 1}`}
                       fill
-                      sizes="220px"
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      sizes="240px"
+                      className="object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-2.5">
-                      <span className="text-[10px] font-mono font-bold text-white bg-black/50 px-2 py-0.5 rounded-full">
-                        Plate #{idx + 1}
-                      </span>
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <button
                         type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveGalleryImage(idx);
-                        }}
-                        className="rounded-full bg-[var(--negative)] text-white p-1 hover:scale-110 transition-transform cursor-pointer shadow-sm"
+                        onClick={() => handleRemoveGalleryImage(idx)}
+                        className="rounded-full bg-red-600/90 text-white p-2 hover:bg-red-700 transition-colors shadow-sm"
                         title="Remove plate"
                       >
                         <X className="h-3.5 w-3.5" />
@@ -513,8 +567,8 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           {/* Dedicated Cover Image Uploader */}
           <div className="rounded-[24px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 shadow-xs">
             <div className="flex items-center justify-between mb-1">
-              <label className="type-body-default-bold text-[var(--content-primary)] block">
-                Cover Image (Dominant Visual)
+              <label className="type-body-default-bold text-[var(--content-primary)] block font-bold">
+                Cover Image (Hero Visual)
               </label>
               {coverImage && (
                 <button
@@ -527,7 +581,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                 </button>
               )}
             </div>
-            <p className="type-label text-[var(--content-tertiary)] mb-4">
+            <p className="type-label text-[var(--content-tertiary)] mb-4 text-xs">
               Click dropzone or drag & drop to upload cover visual (PNG, JPG, WebP).
             </p>
 
@@ -591,10 +645,10 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                   <div className="h-12 w-12 rounded-full bg-[var(--bg-screen)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-tertiary)] mb-3 group-hover:text-[var(--primary-forest-green)] group-hover:border-[var(--primary-forest-green)] transition-colors shadow-xs">
                     <UploadCloud className="h-6 w-6 group-hover:scale-110 transition-transform" />
                   </div>
-                  <span className="type-body-default-bold text-[var(--content-primary)]">
+                  <span className="type-body-default-bold text-[var(--content-primary)] text-sm">
                     Upload Cover Image
                   </span>
-                  <span className="type-label text-[var(--content-tertiary)] mt-1 max-w-[220px]">
+                  <span className="type-label text-[var(--content-tertiary)] mt-1 max-w-[220px] text-xs">
                     Click to browse or drop high-resolution image
                   </span>
                 </div>
@@ -603,25 +657,27 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           </div>
 
           {/* Tags & Disciplines */}
-          <div className="rounded-[20px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 shadow-xs">
-            <div className="flex items-center justify-between mb-1">
-              <label className="type-body-default-bold text-[var(--content-primary)] block">
-                Categories & Tags
+          <div className="rounded-[20px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="type-body-default-bold text-[var(--content-primary)] block font-bold">
+                Tags & Methodology
               </label>
               <span className={cn(
                 "text-xs font-mono font-semibold",
-                tags.length >= 15 ? "text-[var(--negative)]" : "text-[var(--content-tertiary)]"
+                tags.length >= 20 ? "text-[var(--negative)]" : "text-[var(--content-tertiary)]"
               )}>
-                {tags.length}/15 max
+                {tags.length}/20 max
               </span>
             </div>
-            <div className="flex gap-2 mt-2 mb-3">
+
+            {/* Custom Input */}
+            <div className="flex gap-2">
               <Input
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
                 onKeyDown={handleAddTag}
-                placeholder={tags.length >= 15 ? "Maximum 15 tags reached" : "Add tag (Press Enter)..."}
-                disabled={tags.length >= 15}
+                placeholder={tags.length >= 20 ? "Maximum tags reached" : "Add custom tag (Press Enter)..."}
+                disabled={tags.length >= 20}
                 className="h-10 text-xs"
               />
               <Button
@@ -629,50 +685,87 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                 variant="secondary"
                 size="sm"
                 onClick={handleAddTag}
-                disabled={tags.length >= 15}
+                disabled={tags.length >= 20}
               >
                 Add
               </Button>
             </div>
-            <div className="flex flex-wrap gap-1.5">
-              {tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center gap-1 bg-[var(--bg-neutral)] text-[var(--content-primary)] px-2.5 py-1 rounded-full text-xs font-semibold"
-                >
-                  #{tag}
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveTag(tag)}
-                    className="hover:text-[var(--negative)] ml-0.5 cursor-pointer"
+
+            {/* Selected Tags */}
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center gap-1 bg-[var(--chip-bg)] text-[var(--chip-fg)] px-2.5 py-1 rounded-full text-xs font-semibold"
                   >
-                    <X className="h-3 w-3" />
-                  </button>
+                    #{tag}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(tag)}
+                      className="hover:text-[var(--negative)] ml-0.5 cursor-pointer"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Suggested Tags based on chosen Category */}
+            {suggestedTags.length > 0 && (
+              <div className="pt-3 border-t border-[var(--border-neutral)]">
+                <span className="text-[11px] font-mono font-semibold text-[var(--content-tertiary)] uppercase tracking-wider block mb-2">
+                  Suggested for {activeTaxonomy?.shortName}:
                 </span>
-              ))}
-            </div>
+                <div className="flex flex-wrap gap-1">
+                  {suggestedTags.slice(0, 12).map((sTag) => {
+                    const isAdded = tags.includes(sTag);
+                    return (
+                      <button
+                        key={sTag}
+                        type="button"
+                        disabled={isAdded}
+                        onClick={() => handleQuickAddTag(sTag)}
+                        className={cn(
+                          "inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] transition-all cursor-pointer",
+                          isAdded
+                            ? "bg-[var(--bg-neutral)] text-[var(--content-tertiary)] opacity-60 cursor-not-allowed"
+                            : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:bg-[var(--accent)] hover:text-[#090C09]"
+                        )}
+                      >
+                        {!isAdded && <Plus className="h-2.5 w-2.5" />}
+                        <span>{sTag}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Tools & Mediums */}
-          <div className="rounded-[20px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 shadow-xs">
-            <div className="flex items-center justify-between mb-1">
-              <label className="type-body-default-bold text-[var(--content-primary)] block">
-                Tools & Technologies
+          {/* Tools & Technologies */}
+          <div className="rounded-[20px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="type-body-default-bold text-[var(--content-primary)] block font-bold">
+                Tools & Stack
               </label>
               <span className={cn(
                 "text-xs font-mono font-semibold",
-                tools.length >= 5 ? "text-[var(--negative)]" : "text-[var(--content-tertiary)]"
+                tools.length >= 10 ? "text-[var(--negative)]" : "text-[var(--content-tertiary)]"
               )}>
-                {tools.length}/5 max
+                {tools.length}/10 max
               </span>
             </div>
-            <div className="flex gap-2 mt-2 mb-3">
+
+            {/* Custom Input */}
+            <div className="flex gap-2">
               <Input
                 value={newTool}
                 onChange={(e) => setNewTool(e.target.value)}
                 onKeyDown={handleAddTool}
-                placeholder={tools.length >= 5 ? "Maximum 5 tools reached" : "e.g. Figma, Blender, InDesign..."}
-                disabled={tools.length >= 5}
+                placeholder={tools.length >= 10 ? "Maximum tools reached" : "e.g. Figma, Blender, Unity..."}
+                disabled={tools.length >= 10}
                 className="h-10 text-xs"
               />
               <Button
@@ -680,71 +773,65 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                 variant="secondary"
                 size="sm"
                 onClick={handleAddTool}
-                disabled={tools.length >= 5}
+                disabled={tools.length >= 10}
               >
                 Add
               </Button>
             </div>
-            <div className="flex flex-wrap gap-1.5">
-              {tools.map((tool) => (
-                <span
-                  key={tool}
-                  className="inline-flex items-center gap-1 bg-[var(--accent)] text-[var(--primary-forest-green)] px-2.5 py-1 rounded-full text-xs font-semibold"
-                >
-                  {tool}
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveTool(tool)}
-                    className="hover:text-[var(--negative)] ml-0.5 cursor-pointer"
+
+            {/* Selected Tools */}
+            {tools.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {tools.map((tool) => (
+                  <span
+                    key={tool}
+                    className="inline-flex items-center gap-1 bg-[var(--accent)] text-[#090C09] px-2.5 py-1 rounded-full text-xs font-bold"
                   >
-                    <X className="h-3 w-3" />
-                  </button>
+                    {tool}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTool(tool)}
+                      className="hover:text-red-700 ml-0.5 cursor-pointer"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Suggested Tools for Category */}
+            {suggestedTools.length > 0 && (
+              <div className="pt-3 border-t border-[var(--border-neutral)]">
+                <span className="text-[11px] font-mono font-semibold text-[var(--content-tertiary)] uppercase tracking-wider block mb-2">
+                  Common Tools for {activeTaxonomy?.shortName}:
                 </span>
-              ))}
-            </div>
+                <div className="flex flex-wrap gap-1">
+                  {suggestedTools.map((sTool) => {
+                    const isAdded = tools.includes(sTool);
+                    return (
+                      <button
+                        key={sTool}
+                        type="button"
+                        disabled={isAdded}
+                        onClick={() => handleQuickAddTool(sTool)}
+                        className={cn(
+                          "inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] transition-all cursor-pointer",
+                          isAdded
+                            ? "bg-[var(--bg-neutral)] text-[var(--content-tertiary)] opacity-60 cursor-not-allowed"
+                            : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:bg-[var(--accent)] hover:text-[#090C09]"
+                        )}
+                      >
+                        {!isAdded && <Plus className="h-2.5 w-2.5" />}
+                        <span>{sTool}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      </div>
-
-      {/* Mobile Sticky Bottom Publish Bar */}
-      <div className="fixed bottom-16 inset-x-0 z-40 md:hidden p-3 bg-[var(--bg-screen)]/95 backdrop-blur-md border-t border-[var(--border-neutral)] shadow-lg flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-[var(--content-tertiary)]">Status:</span>
-          <button
-            type="button"
-            onClick={() => setPublished(!published)}
-            className={cn(
-              "rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-colors",
-              published
-                ? "bg-[var(--primary-forest-green)] text-[var(--base-contrast)]"
-                : "bg-[var(--bg-neutral)] text-[var(--content-secondary)]"
-            )}
-          >
-            {published ? "Published" : "Draft"}
-          </button>
-        </div>
-
-        <Button
-          type="submit"
-          variant="accent"
-          size="sm"
-          disabled={isSaving}
-          className="flex-1 font-bold h-10 shadow-sm max-w-[200px]"
-        >
-          {isSaving ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> Saving...
-            </>
-          ) : isSaved ? (
-            <>
-              <Check className="h-4 w-4 mr-1" /> Saved!
-            </>
-          ) : mode === "new" ? (
-            "Publish Project"
-          ) : (
-            "Save Changes"
-          )}
-        </Button>
       </div>
     </form>
   );

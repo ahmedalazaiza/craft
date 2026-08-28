@@ -1,6 +1,7 @@
 import { MetadataRoute } from "next";
 import { fetchProjects, fetchCreators } from "@/lib/supabase/queries";
 import { absoluteUrl } from "@/lib/seo";
+import { ALL_CATEGORY_NAMES } from "@/lib/taxonomy";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const currentDate = new Date().toISOString();
@@ -57,19 +58,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Curated category corridors for topical authority
-  const categories = [
-    "Brand",
-    "UI",
-    "Editorial",
-    "Type",
-    "Architecture",
-    "3D & Motion",
-    "Photo",
-    "Product",
-  ];
-
-  const categoryRoutes: MetadataRoute.Sitemap = categories.map((cat) => ({
+  // Curated category corridors for topical authority across all 13 Master Categories
+  const categoryRoutes: MetadataRoute.Sitemap = ALL_CATEGORY_NAMES.map((cat) => ({
     url: absoluteUrl(`/explore?category=${encodeURIComponent(cat)}`),
     lastModified: currentDate,
     changeFrequency: "weekly",
