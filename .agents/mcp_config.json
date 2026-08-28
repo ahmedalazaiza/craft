@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "iconscout": {
+      "serverUrl": "https://mcp.iconscout.com/mcp",
+      "url": "https://mcp.iconscout.com/mcp",
+      "type": "streamable-http"
+    }
+  }
+}
