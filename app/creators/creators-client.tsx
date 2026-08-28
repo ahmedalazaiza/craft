@@ -10,7 +10,6 @@ import { FilterDrawer, CreatorFilters } from "@/components/search/filter-drawer"
 import { FilterChip } from "@/components/ui/badge";
 import { FadeIn, StaggerGridItem } from "@/components/ui/motion-wrapper";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
-import { EmptyState3D } from "@/components/ui/empty-state";
 import { Creator } from "@/lib/types";
 import { Sparkles, Users, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -264,26 +263,17 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
         {/* CREATORS GRID                                                             */}
         {/* ========================================================================= */}
         {filteredCreators.length === 0 ? (
-          <EmptyState3D
-            type="creators"
-            title="No creators found"
-            description="No creators matched your search or filter criteria. Try resetting the filters or exploring other design disciplines."
-            action={
-              <button
-                type="button"
-                onClick={() =>
-                  setFilters({
-                    discipline: "All",
-                    city: "All",
-                    hasPublishedOnly: false,
-                  })
-                }
-                className="inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-xs font-bold bg-[var(--btn-cta-bg)] text-[var(--btn-cta-fg)] hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
-              >
-                Reset All Filters
-              </button>
-            }
-          />
+          <div className="flex flex-col items-center justify-center rounded-[24px] border border-dashed border-[var(--border-neutral)] bg-[var(--bg-neutral)]/30 p-12 text-center my-8">
+            <div className="h-12 w-12 rounded-full bg-[var(--bg-neutral)] flex items-center justify-center text-[var(--content-tertiary)] mb-4">
+              <Users className="h-6 w-6" />
+            </div>
+            <h3 className="type-title-subsection text-[var(--content-primary)]">
+              No creators found
+            </h3>
+            <p className="mt-1.5 type-body-default text-[var(--content-secondary)] max-w-sm">
+              No creators matched your search or filter criteria. Try resetting the filters.
+            </p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCreators.map((creator, idx) => (

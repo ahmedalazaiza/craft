@@ -10,7 +10,6 @@ import { FilterDrawer, ProjectFilters } from "@/components/search/filter-drawer"
 import { FilterChip } from "@/components/ui/badge";
 import { FadeIn, StaggerGridItem } from "@/components/ui/motion-wrapper";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
-import { EmptyState3D } from "@/components/ui/empty-state";
 import { ProjectCategory, Project } from "@/lib/types";
 import {
   FolderKanban,
@@ -355,27 +354,17 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
         {/* 4-COLUMN RESPONSIVE PROJECT GRID                                         */}
         {/* ========================================================================= */}
         {filteredProjects.length === 0 ? (
-          <EmptyState3D
-            type="projects"
-            title="No projects found"
-            description="No projects matched your active filters or search query. Try adjusting or resetting your filters."
-            action={
-              <button
-                type="button"
-                onClick={() =>
-                  setFilters({
-                    category: "All",
-                    medium: "All",
-                    tags: [],
-                    sortBy: "newest",
-                  })
-                }
-                className="inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-xs font-bold bg-[var(--btn-cta-bg)] text-[var(--btn-cta-fg)] hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
-              >
-                Reset All Filters
-              </button>
-            }
-          />
+          <div className="flex flex-col items-center justify-center rounded-[24px] border border-dashed border-[var(--border-neutral)] bg-[var(--bg-neutral)]/30 p-12 text-center my-8">
+            <div className="h-12 w-12 rounded-full bg-[var(--bg-neutral)] flex items-center justify-center text-[var(--content-tertiary)] mb-4">
+              <FolderKanban className="h-6 w-6" />
+            </div>
+            <h3 className="type-title-subsection text-[var(--content-primary)]">
+              No projects found
+            </h3>
+            <p className="mt-1.5 type-body-default text-[var(--content-secondary)] max-w-sm">
+              No projects matched your active filters or search query. Try resetting your filters.
+            </p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {filteredProjects.map((project, idx) => (

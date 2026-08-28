@@ -11,7 +11,6 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { EmptyState3D } from "@/components/ui/empty-state";
 import { FadeIn, StaggerGridItem } from "@/components/ui/motion-wrapper";
 import {
   Plus,
@@ -378,24 +377,28 @@ export function MeClient() {
             {/* Tab Content */}
             {activeTab === "published" ? (
               publishedProjects.length === 0 ? (
-                <EmptyState3D
-                  type="projects"
-                  title="No published projects yet"
-                  description="Publish your first case study or design monograph to showcase your work to the community."
-                  action={
-                    <Link
-                      href="/me/projects/new"
-                      className={buttonVariants({
-                        variant: "accent",
-                        size: "default",
-                        className: "gap-2 font-bold shadow-xs",
-                      })}
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>Create First Project</span>
-                    </Link>
-                  }
-                />
+                <div className="flex min-h-[320px] flex-col items-center justify-center rounded-[24px] border border-dashed border-[var(--border-neutral)] bg-[var(--bg-neutral)]/30 p-10 text-center">
+                  <div className="h-12 w-12 rounded-full bg-[var(--accent)]/30 flex items-center justify-center text-[#090C09] mb-4">
+                    <FolderKanban className="h-6 w-6" />
+                  </div>
+                  <h3 className="type-title-subsection text-[var(--content-primary)]">
+                    No published projects yet
+                  </h3>
+                  <p className="mt-1.5 type-body-default text-[var(--content-secondary)] max-w-sm">
+                    Publish your first case study or design monograph to showcase your work to the community.
+                  </p>
+                  <Link
+                    href="/me/projects/new"
+                    className={buttonVariants({
+                      variant: "accent",
+                      size: "default",
+                      className: "mt-6 gap-2 font-bold shadow-xs",
+                    })}
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Create First Project</span>
+                  </Link>
+                </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                   {publishedProjects.map((project, idx) => (
@@ -419,24 +422,28 @@ export function MeClient() {
                 </div>
               )
             ) : draftProjects.length === 0 ? (
-              <EmptyState3D
-                type="drafts"
-                title="No draft projects"
-                description="Unpublished monographs and works in progress will be saved here safely."
-                action={
-                  <Link
-                    href="/me/projects/new"
-                    className={buttonVariants({
-                      variant: "secondary",
-                      size: "default",
-                      className: "gap-2 font-semibold",
-                    })}
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>Start a Draft</span>
-                  </Link>
-                }
-              />
+              <div className="flex min-h-[320px] flex-col items-center justify-center rounded-[24px] border border-dashed border-[var(--border-neutral)] bg-[var(--bg-neutral)]/30 p-10 text-center">
+                <div className="h-12 w-12 rounded-full bg-[var(--bg-neutral)] flex items-center justify-center text-[var(--content-tertiary)] mb-4">
+                  <Clock className="h-6 w-6" />
+                </div>
+                <h3 className="type-title-subsection text-[var(--content-primary)]">
+                  No draft projects
+                </h3>
+                <p className="mt-1.5 type-body-default text-[var(--content-secondary)] max-w-sm">
+                  Unpublished monographs and works in progress will be saved here safely.
+                </p>
+                <Link
+                  href="/me/projects/new"
+                  className={buttonVariants({
+                    variant: "secondary",
+                    size: "default",
+                    className: "mt-6 gap-2 font-semibold",
+                  })}
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Start a Draft</span>
+                </Link>
+              </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                 {draftProjects.map((project, idx) => (
