@@ -333,72 +333,94 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
             />
           </div>
 
-          {/* Primary Category (13 Master Categories) */}
-          <div className="rounded-[24px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <label className="type-body-default-bold text-[var(--content-primary)] block font-bold">
-                  Primary Category ({MASTER_TAXONOMY.length})
-                </label>
-                <p className="type-label text-[var(--content-tertiary)] text-xs mt-0.5">
-                  Select the main creative discipline that best represents this project.
-                </p>
-              </div>
-              <span className="text-xs font-mono font-semibold px-2.5 py-1 rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)]">
-                {activeTaxonomy?.shortName || "UI"}
-              </span>
-            </div>
+          {/* Primary Category & Sub-Category (Side by Side) */}
+          <div className="rounded-[24px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] p-6 shadow-xs">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+              {/* Left Column: Primary Category (13 Master Categories) */}
+              <div className="md:col-span-7 space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="type-body-default-bold text-[var(--content-primary)] block font-bold text-sm">
+                      Primary Category ({MASTER_TAXONOMY.length})
+                    </label>
+                    <p className="type-label text-[var(--content-tertiary)] text-xs mt-0.5">
+                      Select the main creative discipline that best represents this project.
+                    </p>
+                  </div>
+                  <span className="text-xs font-mono font-semibold px-2.5 py-1 rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] shrink-0">
+                    {activeTaxonomy?.shortName || "UI"}
+                  </span>
+                </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-1">
-              {MASTER_TAXONOMY.map((cat) => {
-                const isSelected = category === cat.name;
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => handleCategorySelect(cat.name)}
-                    className={cn(
-                      "flex items-center justify-between gap-2 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-left transition-all cursor-pointer border",
-                      isSelected
-                        ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-xs"
-                        : "bg-[var(--bg-screen)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)] hover:text-[var(--content-primary)]"
-                    )}
-                  >
-                    <span className="truncate">{cat.name}</span>
-                    {isSelected && <Check className="h-3.5 w-3.5 text-[var(--chip-fg)] shrink-0" />}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Dynamic Sub-Category Selection */}
-            {availableSubCategories.length > 0 && (
-              <div className="pt-4 border-t border-[var(--border-neutral)] space-y-2.5">
-                <label className="type-body-default-bold text-[var(--content-primary)] block text-xs font-bold uppercase tracking-wider font-mono">
-                  Sub-Category ({availableSubCategories.length})
-                </label>
-                <div className="flex flex-wrap gap-1.5">
-                  {availableSubCategories.map((sub) => {
-                    const isSelected = subCategory === sub;
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                  {MASTER_TAXONOMY.map((cat) => {
+                    const isSelected = category === cat.name;
                     return (
                       <button
-                        key={sub}
+                        key={cat.id}
                         type="button"
-                        onClick={() => setSubCategory(sub)}
+                        onClick={() => handleCategorySelect(cat.name)}
                         className={cn(
-                          "rounded-full px-3 py-1.5 text-xs font-semibold cursor-pointer transition-all border",
+                          "flex items-center justify-between gap-2 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-left transition-all cursor-pointer border",
                           isSelected
-                            ? "bg-[var(--primary-forest-green)] text-white dark:bg-[var(--accent)] dark:text-[#090C09] border-transparent shadow-xs"
-                            : "bg-[var(--bg-screen)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)]"
+                            ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-xs"
+                            : "bg-[var(--bg-screen)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)] hover:text-[var(--content-primary)]"
                         )}
                       >
-                        {sub}
+                        <span className="truncate">{cat.name}</span>
+                        {isSelected && <Check className="h-3.5 w-3.5 text-[var(--chip-fg)] shrink-0" />}
                       </button>
                     );
                   })}
                 </div>
               </div>
-            )}
+
+              {/* Right Column: Sub-Category Selection */}
+              <div className="md:col-span-5 space-y-3.5 md:border-l md:border-[var(--border-neutral)] md:pl-6 pt-4 md:pt-0 border-t md:border-t-0 border-[var(--border-neutral)]">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <label className="type-body-default-bold text-[var(--content-primary)] block font-bold text-sm">
+                      Sub-Category ({availableSubCategories.length})
+                    </label>
+                    {subCategory && (
+                      <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--primary-forest-green)] dark:text-[var(--accent)]">
+                        Active
+                      </span>
+                    )}
+                  </div>
+                  <p className="type-label text-[var(--content-tertiary)] text-xs mt-0.5">
+                    Refine discipline focus in {activeTaxonomy?.shortName || "category"}.
+                  </p>
+                </div>
+
+                {availableSubCategories.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {availableSubCategories.map((sub) => {
+                      const isSelected = subCategory === sub;
+                      return (
+                        <button
+                          key={sub}
+                          type="button"
+                          onClick={() => setSubCategory(sub)}
+                          className={cn(
+                            "rounded-full px-3 py-1.5 text-xs font-semibold cursor-pointer transition-all border text-left",
+                            isSelected
+                              ? "bg-[var(--primary-forest-green)] text-white dark:bg-[var(--accent)] dark:text-[#090C09] border-transparent shadow-xs"
+                              : "bg-[var(--bg-screen)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)] hover:text-[var(--content-primary)]"
+                          )}
+                        >
+                          {sub}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-xl bg-[var(--bg-neutral)]/40 border border-dashed border-[var(--border-neutral)] text-center text-xs text-[var(--content-tertiary)]">
+                    No sub-categories available for this discipline.
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Medium */}
