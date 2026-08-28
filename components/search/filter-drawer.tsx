@@ -406,28 +406,7 @@ export function FilterDrawer({
                 </div>
               </div>
 
-              {/* Medium / Artifact Format */}
-              <div>
-                <label className="type-body-default-bold text-[var(--content-primary)] block mb-2.5 text-xs uppercase tracking-wider font-mono">
-                  Medium / Artifact Type
-                </label>
-                <div className="flex flex-wrap gap-1.5">
-                  {MEDIUMS.map((med) => (
-                    <FilterChip
-                      key={med}
-                      active={projectFilters.medium === med}
-                      onClick={() =>
-                        onProjectFiltersChange({
-                          ...projectFilters,
-                          medium: med,
-                        })
-                      }
-                    >
-                      {med}
-                    </FilterChip>
-                  ))}
-                </div>
-              </div>
+
             </>
           ) : mode === "creators" && creatorFilters && onCreatorFiltersChange ? (
             <>

@@ -38,15 +38,7 @@ export function ProjectEditorSkeleton() {
             </div>
           </div>
 
-          {/* Medium Pills Skeleton */}
-          <div className="space-y-2">
-            <div className="h-4 w-36 rounded-full bg-[var(--bg-neutral)]" />
-            <div className="flex flex-wrap gap-2">
-              {["w-20", "w-20", "w-32", "w-24", "w-16"].map((w, idx) => (
-                <div key={idx} className={`h-8 ${w} rounded-full bg-[var(--bg-neutral)]/70`} />
-              ))}
-            </div>
-          </div>
+
 
           {/* Summary Field Skeleton */}
           <div className="space-y-2">

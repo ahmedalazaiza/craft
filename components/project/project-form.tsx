@@ -49,14 +49,6 @@ interface ProjectFormProps {
   mode: "new" | "edit";
 }
 
-const MEDIUMS: ProjectMedium[] = [
-  "Image",
-  "Video",
-  "PDF/Case study",
-  "Prototype",
-  "3D",
-];
-
 export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const router = useRouter();
   const { saveProject } = useSession();
@@ -76,9 +68,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const [subCategory, setSubCategory] = useState<string>(
     initialData?.subCategory || ""
   );
-  const [medium, setMedium] = useState<ProjectMedium>(
-    initialData?.medium || "Image"
-  );
+  const medium: ProjectMedium = initialData?.medium || "Image";
   const [galleryImages, setGalleryImages] = useState<string[]>(
     initialData?.galleryImages || (initialData?.coverImage ? [initialData.coverImage] : [])
   );
@@ -777,28 +767,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
             </div>
           </div>
 
-          {/* Medium / Format */}
-          <div className="rounded-[24px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 sm:p-8 shadow-xs space-y-3">
-            <label className="type-body-default-bold text-[var(--content-primary)] block font-bold text-sm">
-              Medium / Artifact Format
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {MEDIUMS.map((med) => (
-                <button
-                  key={med}
-                  type="button"
-                  onClick={() => setMedium(med)}
-                  className={`rounded-full px-4 py-2 text-xs font-semibold cursor-pointer transition-all ${
-                    medium === med
-                      ? "bg-[var(--primary-forest-green)] text-[var(--base-contrast)] shadow-sm"
-                      : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:bg-[var(--bg-neutral-hover)]"
-                  }`}
-                >
-                  {med}
-                </button>
-              ))}
-            </div>
-          </div>
+
 
           {/* Summary & Narrative Body */}
           <div className="rounded-[24px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 sm:p-8 shadow-xs space-y-6">
