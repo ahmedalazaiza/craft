@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const { user } = useSession();
+  const { user, isAuthReady } = useSession();
   const { resolvedTheme, setTheme } = useTheme();
 
   const [isMobileSearchExpanded, setIsMobileSearchExpanded] = useState(false);
@@ -193,7 +193,12 @@ export function SiteHeader() {
             )}
           </button>
 
-          {user ? (
+          {!isAuthReady ? (
+            <div className="hidden md:flex items-center gap-2 h-9">
+              <div className="h-9 w-24 rounded-full bg-[var(--bg-neutral)]/40 animate-pulse" />
+              <div className="h-9 w-9 rounded-full bg-[var(--bg-neutral)]/40 animate-pulse" />
+            </div>
+          ) : user ? (
             <>
               {/* Notifications Popover Dropdown */}
               <NotificationsPopover />

@@ -39,6 +39,7 @@ interface SessionContextType {
   projects: Project[];
   creators: Creator[];
   isLoadingDb: boolean;
+  isAuthReady: boolean;
   appreciatedProjectIds: Set<string>;
   followingCreatorIds: Set<string>;
   onlineUserIds: Set<string>;
@@ -54,7 +55,7 @@ interface SessionContextType {
   signup: (email: string, password: string, displayName: string, customUsername?: string) => Promise<AuthResponse>;
   logout: () => Promise<void>;
   refreshFromDb: () => Promise<void>;
-  setUser: (user: Creator | null) => void;
+  setUser: (user: Creator | null | ((prev: Creator | null) => Creator | null)) => void;
   toggleAppreciation: (projectId: string) => boolean;
   isProjectAppreciated: (projectId: string) => boolean;
   toggleFollowCreator: (creatorId: string) => boolean;
@@ -71,8 +72,45 @@ interface SessionContextType {
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
-  // Guest by default (user === null)
-  const [user, setUser] = useState<Creator | null>(null);
+  // Instant synchronous hydration from client localStorage cache to eliminate FOUS (Flash of Unauthenticated State)
+  const [user, setUserState] = useState<Creator | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("craft_cached_profile");
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed && parsed.id) return parsed;
+        }
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+  const [isAuthReady, setIsAuthReady] = useState<boolean>(false);
+
+  // Synchronize user state updates to localStorage
+  const setUser = useCallback(
+    (action: Creator | null | ((prev: Creator | null) => Creator | null)) => {
+      setUserState((prev) => {
+        const nextUser = typeof action === "function" ? action(prev) : action;
+        if (typeof window !== "undefined") {
+          try {
+            if (nextUser) {
+              localStorage.setItem("craft_cached_profile", JSON.stringify(nextUser));
+            } else {
+              localStorage.removeItem("craft_cached_profile");
+            }
+          } catch {
+            // Ignore quota/security errors
+          }
+        }
+        return nextUser;
+      });
+    },
+    []
+  );
+
   const [projects, setProjects] = useState<Project[]>([]);
   const [creators, setCreators] = useState<Creator[]>([]);
   const [isLoadingDb, setIsLoadingDb] = useState<boolean>(true);
@@ -635,6 +673,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         projects,
         creators,
         isLoadingDb,
+        isAuthReady,
         appreciatedProjectIds,
         followingCreatorIds,
         onlineUserIds,
