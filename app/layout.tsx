@@ -8,6 +8,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { TopLoader } from "@/components/layout/top-loader";
+import { PageLoadingOverlay } from "@/components/layout/page-loading-overlay";
 import { NetworkStatusIndicator } from "@/components/layout/network-status-indicator";
 
 import {
@@ -133,6 +134,7 @@ export default function RootLayout({
           <SessionProvider>
             <Suspense fallback={null}>
               <TopLoader />
+              <PageLoadingOverlay />
             </Suspense>
 
             <SiteHeader />
