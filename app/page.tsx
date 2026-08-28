@@ -7,7 +7,7 @@ export const metadata: Metadata = constructMetadata({
   path: "/",
 });
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function HomePage() {
   const [projects, creators] = await Promise.all([

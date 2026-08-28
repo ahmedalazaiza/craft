@@ -4,7 +4,7 @@ import { CreatorsClient } from "./creators-client";
 import { constructMetadata, generateCollectionJsonLd, generateBreadcrumbJsonLd } from "@/lib/seo";
 import { fetchCreators } from "@/lib/supabase/queries";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = constructMetadata({
   title: "Directory of Independent Creators & Design Studios",

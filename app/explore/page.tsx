@@ -4,7 +4,7 @@ import { ExploreClient } from "./explore-client";
 import { constructMetadata, generateCollectionJsonLd, generateBreadcrumbJsonLd } from "@/lib/seo";
 import { fetchProjects } from "@/lib/supabase/queries";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = constructMetadata({
   title: "Explore Curated Projects & Monographs",

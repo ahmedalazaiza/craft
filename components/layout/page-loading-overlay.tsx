@@ -17,40 +17,8 @@ export function PageLoadingOverlay() {
     setLoadingText(undefined);
   }, [pathname, searchParams]);
 
-  // Listen to navigation clicks and explicit custom events
+  // Listen to explicit custom events only (e.g. saving large project, auth operations)
   useEffect(() => {
-    const handleAnchorClick = (e: MouseEvent) => {
-      // Don't intercept modified clicks (Cmd/Ctrl + click for new tab)
-      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-
-      const target = (e.target as HTMLElement).closest("a");
-      if (!target) return;
-
-      const href = target.getAttribute("href");
-      if (
-        href &&
-        href.startsWith("/") &&
-        !href.startsWith("#") &&
-        !target.hasAttribute("download") &&
-        target.getAttribute("target") !== "_blank"
-      ) {
-        const currentPath = window.location.pathname + window.location.search;
-        if (href !== currentPath) {
-          // Determine contextual loading text based on target route
-          let text = "Loading...";
-          if (href.startsWith("/project/")) text = "Loading case study...";
-          else if (href.startsWith("/u/")) text = "Opening creator studio...";
-          else if (href.startsWith("/explore")) text = "Loading gallery...";
-          else if (href.startsWith("/creators")) text = "Loading creators directory...";
-          else if (href.startsWith("/me/projects/new")) text = "Opening project studio...";
-          else if (href.startsWith("/settings")) text = "Loading account settings...";
-          
-          setLoadingText(text);
-          setIsLoading(true);
-        }
-      }
-    };
-
     const handleStartLoading = (e: Event) => {
       const customEvent = e as CustomEvent<{ text?: string }>;
       setIsLoading(true);
@@ -64,12 +32,10 @@ export function PageLoadingOverlay() {
       setLoadingText(undefined);
     };
 
-    document.addEventListener("click", handleAnchorClick, { capture: true });
     window.addEventListener("craft:start-page-loading", handleStartLoading);
     window.addEventListener("craft:stop-page-loading", handleStopLoading);
 
     return () => {
-      document.removeEventListener("click", handleAnchorClick, { capture: true });
       window.removeEventListener("craft:start-page-loading", handleStartLoading);
       window.removeEventListener("craft:stop-page-loading", handleStopLoading);
     };
