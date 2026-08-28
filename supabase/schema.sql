@@ -118,9 +118,13 @@ CREATE INDEX IF NOT EXISTS idx_projects_category ON public.projects(category);
 CREATE INDEX IF NOT EXISTS idx_projects_published ON public.projects(published);
 CREATE INDEX IF NOT EXISTS idx_projects_published_at ON public.projects(published_at DESC);
 CREATE INDEX IF NOT EXISTS idx_profiles_username ON public.profiles(username);
-CREATE INDEX IF NOT EXISTS idx_comments_project_id ON public.comments(project_id);
+CREATE INDEX IF NOT EXISTS idx_comments_project_id ON public.comments(project_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_appreciations_project ON public.appreciations(project_id);
+CREATE INDEX IF NOT EXISTS idx_appreciations_user_id ON public.appreciations(user_id);
 CREATE INDEX IF NOT EXISTS idx_follows_following ON public.follows(following_id);
+CREATE INDEX IF NOT EXISTS idx_follows_follower_id ON public.follows(follower_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_recipient ON public.notifications(recipient_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notifications_unread ON public.notifications(recipient_id, read);
 
 -- =============================================================================
 -- AUTOMATED TRIGGERS FOR METRICS
