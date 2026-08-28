@@ -56,7 +56,7 @@ export function HomeClient({
   initialProjects = [],
   initialCreators = [],
 }: HomeClientProps) {
-  const { projects: contextProjects, creators: contextCreators } = useSession();
+  const { projects: contextProjects, creators: contextCreators, user } = useSession();
   const shouldReduceMotion = useReducedMotion();
 
   // Instant SSR hydration: prioritize context if updated by user action, otherwise use SSR initial data
@@ -222,16 +222,30 @@ export function HomeClient({
               <span>Explore Projects</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link
-              href="/signup"
-              className={buttonVariants({
-                variant: "secondary",
-                size: "lg",
-                className: "w-full sm:w-auto font-semibold justify-center px-8",
-              })}
-            >
-              Join as a Creator
-            </Link>
+            {user ? (
+              <Link
+                href="/creators"
+                className={buttonVariants({
+                  variant: "secondary",
+                  size: "lg",
+                  className: "w-full sm:w-auto gap-2 font-semibold justify-center px-8",
+                })}
+              >
+                <Users className="h-4 w-4 text-[var(--primary-forest-green)]" />
+                <span>Explore Creators</span>
+              </Link>
+            ) : (
+              <Link
+                href="/signup"
+                className={buttonVariants({
+                  variant: "secondary",
+                  size: "lg",
+                  className: "w-full sm:w-auto font-semibold justify-center px-8",
+                })}
+              >
+                Join as a Creator
+              </Link>
+            )}
           </motion.div>
 
           {/* Minimalist 3-Point Value Manifesto (Centered Balanced Grid) */}
@@ -489,27 +503,56 @@ export function HomeClient({
 
               {/* CTA Buttons */}
               <div className="mt-8 flex flex-wrap items-center gap-4">
-                <Link
-                  href="/signup"
-                  className={buttonVariants({
-                    variant: "accent",
-                    size: "lg",
-                    className: "gap-2 font-bold shadow-lg",
-                  })}
-                >
-                  <span>Sign Up Free</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-                <Link
-                  href="/explore"
-                  className={buttonVariants({
-                    variant: "secondary",
-                    size: "lg",
-                    className: "bg-white/10 hover:bg-white/20 text-white border-white/20 font-semibold",
-                  })}
-                >
-                  Explore All Projects
-                </Link>
+                {user ? (
+                  <>
+                    <Link
+                      href="/me/projects/new"
+                      className={buttonVariants({
+                        variant: "accent",
+                        size: "lg",
+                        className: "gap-2 font-bold shadow-lg",
+                      })}
+                    >
+                      <span>Publish New Project</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                    <Link
+                      href="/creators"
+                      className={buttonVariants({
+                        variant: "secondary",
+                        size: "lg",
+                        className: "bg-white/10 hover:bg-white/20 text-white border-white/20 font-semibold gap-2",
+                      })}
+                    >
+                      <Users className="h-4 w-4 text-[#8DFF00]" />
+                      <span>Browse Creators</span>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/signup"
+                      className={buttonVariants({
+                        variant: "accent",
+                        size: "lg",
+                        className: "gap-2 font-bold shadow-lg",
+                      })}
+                    >
+                      <span>Sign Up Free</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                    <Link
+                      href="/explore"
+                      className={buttonVariants({
+                        variant: "secondary",
+                        size: "lg",
+                        className: "bg-white/10 hover:bg-white/20 text-white border-white/20 font-semibold",
+                      })}
+                    >
+                      Explore All Projects
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
 

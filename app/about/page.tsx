@@ -75,11 +75,11 @@ export default function AboutPage() {
             <span>Explore Projects</span>
           </Link>
           <Link
-            href="/signup"
+            href="/creators"
             prefetch={true}
             className="inline-flex items-center justify-center gap-2 rounded-full font-semibold bg-[var(--bg-neutral)] text-[var(--content-primary)] hover:bg-[var(--bg-elevated)] border border-[var(--border-neutral)] px-6 py-3 text-sm transition-all"
           >
-            <span>Sign Up Free</span>
+            <span>Discover Creators</span>
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
