@@ -123,8 +123,31 @@ function formatTimeAgo(date: Date): string {
 }
 
 // =============================================================================
-// DATABASE QUERIES
+// DATABASE QUERIES (WITH INSTANT IN-MEMORY SERVER CACHE)
 // =============================================================================
+
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
+
+const memoryCache = new Map<string, CacheEntry<unknown>>();
+
+function getFromCache<T>(key: string, ttlMs = 30000): T | null {
+  const entry = memoryCache.get(key);
+  if (entry && Date.now() - entry.timestamp < ttlMs) {
+    return entry.data as T;
+  }
+  return null;
+}
+
+function setToCache<T>(key: string, data: T): void {
+  memoryCache.set(key, { data, timestamp: Date.now() });
+}
+
+export function invalidateAppCache(): void {
+  memoryCache.clear();
+}
 
 export interface FetchProjectsOptions {
   category?: string;
@@ -137,9 +160,15 @@ export interface FetchProjectsOptions {
 }
 
 /**
- * Fetch all projects from Supabase with relations
+ * Fetch all projects from Supabase with relations (Instant Memory Cache)
  */
 export async function fetchProjects(options: FetchProjectsOptions = {}): Promise<Project[]> {
+  const cacheKey = `projects:${JSON.stringify(options)}`;
+  const cached = getFromCache<Project[]>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   try {
     let query = supabase
       .from("projects")
@@ -205,6 +234,7 @@ export async function fetchProjects(options: FetchProjectsOptions = {}): Promise
       );
     }
 
+    setToCache(cacheKey, projects);
     return projects;
   } catch (err: unknown) {
     const errorObj = err as { name?: string; message?: string };
@@ -270,9 +300,15 @@ export async function fetchProjectById(id: string): Promise<Project | null> {
 }
 
 /**
- * Fetch all creators from Supabase
+ * Fetch all creators from Supabase (Instant Memory Cache)
  */
 export async function fetchCreators(): Promise<Creator[]> {
+  const cacheKey = "creators:all";
+  const cached = getFromCache<Creator[]>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   try {
     const { data, error } = await supabase
       .from("profiles")
@@ -286,7 +322,9 @@ export async function fetchCreators(): Promise<Creator[]> {
       return [];
     }
 
-    return data.map((row) => mapProfileToCreator(row));
+    const creators = data.map((row) => mapProfileToCreator(row));
+    setToCache(cacheKey, creators);
+    return creators;
   } catch (err) {
     console.error("Error fetching creators from Supabase:", err);
     return [];
@@ -489,6 +527,7 @@ export async function insertProject(project: Partial<Project> & { creatorId?: st
       return null;
     }
 
+    invalidateAppCache();
     return mapProjectRow(data);
   } catch (err) {
     console.warn("Supabase insert project exception:", err);
@@ -522,6 +561,7 @@ export async function updateProjectInDb(id: string, updates: Partial<Project>): 
       console.error("Error updating project:", error);
       return false;
     }
+    invalidateAppCache();
     return true;
   } catch (err) {
     console.error("Error updating project in Supabase:", err);
@@ -539,6 +579,9 @@ export async function deleteProjectFromDb(id: string): Promise<boolean> {
       .delete()
       .eq("id", id);
 
+    if (!error) {
+      invalidateAppCache();
+    }
     return !error;
   } catch (err) {
     console.error("Error deleting project:", err);
@@ -566,6 +609,7 @@ export async function insertComment(projectId: string, authorId: string, content
       return null;
     }
 
+    invalidateAppCache();
     return mapCommentRow(data);
   } catch (err) {
     console.error("Error adding comment in Supabase:", err);
@@ -601,6 +645,7 @@ export async function toggleAppreciationInDb(projectId: string, userId: string):
         .update({ appreciations_count: count ?? 0 })
         .eq("id", projectId);
 
+      invalidateAppCache();
       return false;
     } else {
       // Add appreciation
@@ -617,6 +662,7 @@ export async function toggleAppreciationInDb(projectId: string, userId: string):
         .update({ appreciations_count: count ?? 1 })
         .eq("id", projectId);
 
+      invalidateAppCache();
       return true;
     }
   } catch (err) {
@@ -646,6 +692,9 @@ export async function updateProfileInDb(id: string, updates: Partial<Creator>): 
       .update(payload)
       .eq("id", id);
 
+    if (!error) {
+      invalidateAppCache();
+    }
     return !error;
   } catch (err) {
     console.error("Error updating profile in Supabase:", err);
@@ -656,6 +705,21 @@ export async function updateProfileInDb(id: string, updates: Partial<Creator>): 
 /**
  * Fetch list of creator IDs that a user follows
  */
+export async function fetchFollowingIds(userId: string): Promise<Set<string>> {
+  try {
+    const { data, error } = await supabase
+      .from("follows")
+      .select("following_id")
+      .eq("follower_id", userId);
+
+    if (error || !data) return new Set();
+
+    return new Set(data.map((row) => row.following_id));
+  } catch {
+    return new Set();
+  }
+}
+
 export async function fetchUserFollows(userId: string): Promise<string[]> {
   try {
     const { data, error } = await supabase
@@ -672,7 +736,7 @@ export async function fetchUserFollows(userId: string): Promise<string[]> {
 }
 
 /**
- * Toggle follow status between two creators in Supabase
+ * Toggle follow/unfollow a creator
  */
 export async function toggleFollowInDb(followerId: string, followingId: string): Promise<boolean> {
   try {
@@ -699,6 +763,7 @@ export async function toggleFollowInDb(followerId: string, followingId: string):
         .update({ followers_count: count ?? 0 })
         .eq("id", followingId);
 
+      invalidateAppCache();
       return false; // Not following anymore
     } else {
       // Follow: insert row
@@ -718,6 +783,7 @@ export async function toggleFollowInDb(followerId: string, followingId: string):
         .update({ followers_count: count ?? 1 })
         .eq("id", followingId);
 
+      invalidateAppCache();
       return true; // Now following
     }
   } catch (err) {

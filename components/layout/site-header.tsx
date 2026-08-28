@@ -55,50 +55,54 @@ export function SiteHeader() {
           <div className="flex items-center gap-8 shrink-0">
             <Link
               href="/"
-            className="flex items-center gap-1.5 text-xl font-bold tracking-tight text-[var(--primary-forest-green)] select-none hover:opacity-90 transition-opacity"
-          >
-            <span className="font-semibold tracking-[-0.04em] text-[22px]">
-              Craft<span className="text-[var(--accent)] font-black">.</span>
-            </span>
-          </Link>
+              prefetch={true}
+              className="flex items-center gap-1.5 text-xl font-bold tracking-tight text-[var(--primary-forest-green)] select-none hover:opacity-90 transition-opacity"
+            >
+              <span className="font-semibold tracking-[-0.04em] text-[22px]">
+                Craft<span className="text-[var(--accent)] font-black">.</span>
+              </span>
+            </Link>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1">
-            <Link
-              href="/"
-              className={cn(
-                "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
-                isHome
-                  ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
-                  : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
-              )}
-            >
-              Home
-            </Link>
-            <Link
-              href="/explore"
-              className={cn(
-                "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
-                isExplore
-                  ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
-                  : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
-              )}
-            >
-              Explore
-            </Link>
-            <Link
-              href="/creators"
-              className={cn(
-                "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
-                isCreators
-                  ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
-                  : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
-              )}
-            >
-              Creators
-            </Link>
-          </nav>
-        </div>
+            {/* Desktop Navigation Links */}
+            <nav className="hidden md:flex items-center gap-1">
+              <Link
+                href="/"
+                prefetch={true}
+                className={cn(
+                  "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                  isHome
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                    : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
+                )}
+              >
+                Home
+              </Link>
+              <Link
+                href="/explore"
+                prefetch={true}
+                className={cn(
+                  "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                  isExplore
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                    : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
+                )}
+              >
+                Explore
+              </Link>
+              <Link
+                href="/creators"
+                prefetch={true}
+                className={cn(
+                  "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                  isCreators
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                    : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
+                )}
+              >
+                Creators
+              </Link>
+            </nav>
+          </div>
 
         {/* Center: Search Field */}
         <div className="hidden lg:flex flex-1 max-w-md mx-4 items-center justify-center">

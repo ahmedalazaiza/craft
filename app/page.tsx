@@ -11,7 +11,7 @@ export const revalidate = 60;
 
 export default async function HomePage() {
   const [projects, creators] = await Promise.all([
-    fetchProjects({ publishedOnly: false }),
+    fetchProjects({ publishedOnly: true }),
     fetchCreators(),
   ]);
 

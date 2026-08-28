@@ -30,6 +30,7 @@ export function MobileBottomNav() {
         {/* 1. Home */}
         <Link
           href="/"
+          prefetch={true}
           className={cn(
             "relative flex flex-col items-center justify-center min-h-[48px] min-w-[48px] w-12 h-12 rounded-full transition-all duration-200",
             isHome
@@ -51,6 +52,7 @@ export function MobileBottomNav() {
         {/* 2. Explore */}
         <Link
           href="/explore"
+          prefetch={true}
           className={cn(
             "relative flex flex-col items-center justify-center min-h-[48px] min-w-[48px] w-12 h-12 rounded-full transition-all duration-200",
             isExplore
@@ -72,6 +74,7 @@ export function MobileBottomNav() {
         {/* 3. Center CTA: + Publish New Project */}
         <Link
           href={user ? "/me/projects/new" : "/login"}
+          prefetch={true}
           className="relative -top-2 flex items-center justify-center min-h-[48px] min-w-[48px]"
           title="Publish Project"
         >
@@ -86,6 +89,7 @@ export function MobileBottomNav() {
         {/* 4. Creators Directory */}
         <Link
           href="/creators"
+          prefetch={true}
           className={cn(
             "relative flex flex-col items-center justify-center min-h-[48px] min-w-[48px] w-12 h-12 rounded-full transition-all duration-200",
             isCreators
@@ -107,6 +111,7 @@ export function MobileBottomNav() {
         {/* 5. Me / Profile (or Login) */}
         <Link
           href={user ? "/me" : "/login"}
+          prefetch={true}
           className={cn(
             "relative flex flex-col items-center justify-center min-h-[48px] min-w-[48px] w-12 h-12 rounded-full transition-all duration-200",
             isMe
