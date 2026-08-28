@@ -2,30 +2,17 @@
 
 import React from "react";
 import Link from "next/link";
-import { useSession } from "@/lib/session-context";
 import { bricolage } from "@/lib/fonts";
-import {
-  Sparkles,
-  ArrowUpRight,
-  ShieldCheck,
-  Compass,
-  Layers,
-  Users,
-  Plus,
-  Lock,
-} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function SiteFooter() {
-  const { user } = useSession();
-
   return (
     <footer className="w-full border-t border-[var(--border-neutral)] bg-[var(--bg-screen)] pt-12 pb-8 transition-colors">
       <div className="mx-auto max-w-[1580px] px-4 sm:px-6 space-y-12">
-        {/* Main 5-Column Navigation Grid */}
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 pb-12 border-b border-[var(--border-neutral)]">
+        {/* Main 4-Column Navigation Grid */}
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 pb-12 border-b border-[var(--border-neutral)]">
           {/* Column 1: Brand & Ethos */}
-          <div className="space-y-4 lg:col-span-1">
+          <div className="space-y-4">
             <Link
               href="/"
               prefetch={true}
@@ -36,7 +23,7 @@ export function SiteFooter() {
               </span>
             </Link>
 
-            <p className="type-body-default text-[var(--content-secondary)] text-xs sm:text-sm leading-relaxed">
+            <p className="type-body-default text-[var(--content-secondary)] text-xs sm:text-sm leading-relaxed max-w-sm">
               Curated digital monographs, high-DPI case studies, and studio portfolios for independent designers and art directors worldwide.
             </p>
 
@@ -92,15 +79,6 @@ export function SiteFooter() {
                   Global Search
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/explore"
-                  prefetch={true}
-                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors"
-                >
-                  Curated Spreads
-                </Link>
-              </li>
             </ul>
           </div>
 
@@ -126,15 +104,6 @@ export function SiteFooter() {
                   className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors"
                 >
                   Our Team & Curators
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/about"
-                  prefetch={true}
-                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors"
-                >
-                  Design Manifesto
                 </Link>
               </li>
               <li>
@@ -173,112 +142,6 @@ export function SiteFooter() {
                   Privacy Policy
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/terms"
-                  prefetch={true}
-                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors"
-                >
-                  Creator IP Rights
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/guidelines"
-                  prefetch={true}
-                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors"
-                >
-                  Attribution Standards
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Column 5: Creator Studio */}
-          <div className="space-y-3">
-            <h4 className="type-title-group text-[var(--content-primary)] font-bold text-xs uppercase tracking-wider">
-              Creator Studio
-            </h4>
-            <ul className="space-y-2 text-xs sm:text-sm">
-              {user ? (
-                <>
-                  <li>
-                    <Link
-                      href="/me"
-                      prefetch={true}
-                      className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors"
-                    >
-                      Studio Dashboard
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/me/projects/new"
-                      prefetch={true}
-                      className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors"
-                    >
-                      + Publish Project
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href={`/u/${user.username}`}
-                      prefetch={true}
-                      className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors"
-                    >
-                      Public Portfolio
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/settings"
-                      prefetch={true}
-                      className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors"
-                    >
-                      Account Settings
-                    </Link>
-                  </li>
-                </>
-              ) : (
-                <>
-                  <li>
-                    <Link
-                      href="/signup"
-                      prefetch={true}
-                      className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors font-semibold"
-                    >
-                      Join as Creator
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/login"
-                      prefetch={true}
-                      className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors"
-                    >
-                      Member Sign In
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/login"
-                      prefetch={true}
-                      className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors"
-                    >
-                      Publish Work
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/about"
-                      prefetch={true}
-                      className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors"
-                    >
-                      Creator Benefits
-                    </Link>
-                  </li>
-                </>
-              )}
             </ul>
           </div>
         </div>
