@@ -64,8 +64,8 @@ export function MeClient() {
     }
   }, [user, router]);
 
-  // While session/auth is initializing from Supabase on reload, show smooth profile skeleton
-  if (isLoadingDb) {
+  // While session/auth is initializing from Supabase on reload and no cached user, show smooth profile skeleton
+  if (isLoadingDb && !user) {
     return <CreatorProfileSkeleton />;
   }
 

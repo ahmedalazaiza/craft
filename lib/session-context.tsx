@@ -72,22 +72,26 @@ interface SessionContextType {
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
-  // Instant synchronous hydration from client localStorage cache to eliminate FOUS (Flash of Unauthenticated State)
-  const [user, setUserState] = useState<Creator | null>(() => {
+  // Initialize to null to match SSR initial DOM, then immediately hydrate from local cache on mount
+  const [user, setUserState] = useState<Creator | null>(null);
+  const [isAuthReady, setIsAuthReady] = useState<boolean>(false);
+
+  useEffect(() => {
     if (typeof window !== "undefined") {
       try {
         const cached = localStorage.getItem("craft_cached_profile");
         if (cached) {
           const parsed = JSON.parse(cached);
-          if (parsed && parsed.id) return parsed;
+          if (parsed && parsed.id) {
+            setUserState(parsed);
+          }
         }
       } catch {
-        return null;
+        // Ignore
       }
+      setIsAuthReady(true);
     }
-    return null;
-  });
-  const [isAuthReady, setIsAuthReady] = useState<boolean>(false);
+  }, []);
 
   // Synchronize user state updates to localStorage
   const setUser = useCallback(

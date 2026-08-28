@@ -11,6 +11,8 @@ import { TopLoader } from "@/components/layout/top-loader";
 import { PageLoadingOverlay } from "@/components/layout/page-loading-overlay";
 import { NetworkStatusIndicator } from "@/components/layout/network-status-indicator";
 
+import Script from "next/script";
+
 import {
   SITE_NAME,
   SITE_URL,
@@ -29,13 +31,40 @@ export const metadata: Metadata = {
   },
   description: defaultDescription,
   keywords: PRIMARY_KEYWORDS,
+  authors: [{ name: "Craft Curators", url: SITE_URL }],
+  creator: "Craft",
+  publisher: "Craft Platforms Inc.",
   applicationName: SITE_NAME,
-  authors: [{ name: SITE_NAME, url: SITE_URL }],
-  creator: SITE_NAME,
-  publisher: SITE_NAME,
-  category: "Design & Creative Portfolio",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   alternates: {
-    canonical: SITE_URL,
+    canonical: "/",
+  },
+  openGraph: {
+    title: defaultTitle,
+    description: defaultDescription,
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    locale: "en_US",
+    type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Craft — Curated Digital Monographs & Visual Artifacts",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: defaultTitle,
+    description: defaultDescription,
+    creator: "@craftplatform",
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,
@@ -48,38 +77,22 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  openGraph: {
-    siteName: SITE_NAME,
-    title: defaultTitle,
-    description: defaultDescription,
-    url: SITE_URL,
-    type: "website",
-    locale: "en_US",
-    images: [
-      {
-        url: `${SITE_URL}/default-avatar.svg`,
-        width: 1200,
-        height: 630,
-        alt: `${SITE_NAME} — Showcase Your Work & Connect with Creators`,
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: defaultTitle,
-    description: defaultDescription,
-    creator: "@craftplatform",
-    site: "@craftplatform",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon-16x16.png",
+    apple: "/apple-touch-icon.png",
   },
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
-    { media: "(prefers-color-scheme: dark)", color: "#121511" },
+    { media: "(prefers-color-scheme: light)", color: "#F7F9F6" },
+    { media: "(prefers-color-scheme: dark)", color: "#090C09" },
   ],
   width: "device-width",
   initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -91,11 +104,7 @@ export default function RootLayout({
   const organizationSchema = generateOrganizationJsonLd();
 
   return (
-    <html
-      lang="en"
-      className={`${bricolage.variable} ${inter.variable}`}
-      suppressHydrationWarning
-    >
+    <html lang="en" className={bricolage.variable} suppressHydrationWarning>
       <head>
         {/* Preconnect & DNS-Prefetch for Speed & LCP Core Web Vitals */}
         <link rel="preconnect" href="https://ttjobsgglwgyioqlldqj.supabase.co" crossOrigin="anonymous" />
@@ -112,7 +121,9 @@ export default function RootLayout({
         />
 
         {/* Blocking theme script to prevent any flash of unstyled theme */}
-        <script
+        <Script
+          id="craft-theme-init"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               (function() {

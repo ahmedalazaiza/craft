@@ -30,8 +30,8 @@ export function NewProjectClient() {
     }
   };
 
-  // While session/auth is initializing on reload, show authentic editor skeleton
-  if (isLoadingDb) {
+  // While session/auth is initializing on reload and no cached user, show authentic editor skeleton
+  if (isLoadingDb && !user) {
     return <ProjectEditorSkeleton />;
   }
 

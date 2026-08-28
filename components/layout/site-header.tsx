@@ -162,7 +162,7 @@ export function SiteHeader() {
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0" suppressHydrationWarning>
           {/* Mobile Search Toggle */}
           <button
             onClick={() => setIsMobileSearchExpanded(!isMobileSearchExpanded)}
