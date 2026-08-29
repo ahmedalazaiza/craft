@@ -26,7 +26,9 @@ import {
   Wrench,
   ArrowLeft,
   Edit3,
+  Trash2,
 } from "lucide-react";
+import { DeleteProjectModal } from "@/components/project/delete-project-modal";
 import { cn } from "@/lib/utils";
 
 interface ProjectDetailClientProps {
@@ -45,6 +47,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   // Grab live project data from session context if updated
   const project =
@@ -119,17 +122,30 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
               </div>
 
               {isAuthor && (
-                <Link
-                  href={`/me/projects/${project.id}`}
-                  className={buttonVariants({
-                    variant: "secondary",
-                    size: "default",
-                    className: "shrink-0 gap-2 font-bold shadow-xs",
-                  })}
-                >
-                  <Edit3 className="h-4 w-4" />
-                  <span>Edit Case Study</span>
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/me/projects/${project.id}`}
+                    className={buttonVariants({
+                      variant: "secondary",
+                      size: "default",
+                      className: "shrink-0 gap-2 font-bold shadow-xs",
+                    })}
+                  >
+                    <Edit3 className="h-4 w-4" />
+                    <span>Edit Case Study</span>
+                  </Link>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="default"
+                    onClick={() => setIsDeleteModalOpen(true)}
+                    className="shrink-0 gap-2 font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 hover:text-rose-700 transition-colors"
+                    title="Delete Project"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span className="hidden sm:inline">Delete</span>
+                  </Button>
+                </div>
               )}
             </div>
           </header>
@@ -190,15 +206,25 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                   <Share2 className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
                 </button>
 
-                {/* 4. Owner Edit Button (When viewer is the author) */}
+                {/* 4. Owner Edit & Delete Buttons (When viewer is the author) */}
                 {isAuthor && (
-                  <Link
-                    href={`/me/projects/${project.id}`}
-                    className="h-12 w-12 rounded-full bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] flex items-center justify-center transition-all cursor-pointer select-none group"
-                    title="Edit Case Study"
-                  >
-                    <Edit3 className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-                  </Link>
+                  <>
+                    <Link
+                      href={`/me/projects/${project.id}`}
+                      className="h-12 w-12 rounded-full bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] flex items-center justify-center transition-all cursor-pointer select-none group"
+                      title="Edit Case Study"
+                    >
+                      <Edit3 className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setIsDeleteModalOpen(true)}
+                      className="h-12 w-12 rounded-full bg-[var(--bg-neutral)]/70 text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white flex items-center justify-center transition-all cursor-pointer select-none group"
+                      title="Delete Case Study"
+                    >
+                      <Trash2 className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                    </button>
+                  </>
                 )}
               </div>
 
@@ -341,13 +367,23 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
         </button>
 
         {isAuthor && (
-          <Link
-            href={`/me/projects/${project.id}`}
-            className="h-12 w-12 min-h-[48px] min-w-[48px] rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] flex items-center justify-center transition-all shrink-0"
-            title="Edit Case Study"
-          >
-            <Edit3 className="h-4 w-4" />
-          </Link>
+          <>
+            <Link
+              href={`/me/projects/${project.id}`}
+              className="h-12 w-12 min-h-[48px] min-w-[48px] rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] flex items-center justify-center transition-all shrink-0"
+              title="Edit Case Study"
+            >
+              <Edit3 className="h-4 w-4" />
+            </Link>
+            <button
+              type="button"
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="h-12 w-12 min-h-[48px] min-w-[48px] rounded-full bg-[var(--bg-neutral)] text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white flex items-center justify-center transition-all shrink-0"
+              title="Delete Case Study"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </>
         )}
 
         <div className="h-6 w-[1px] bg-[var(--border-neutral)] mx-0.5" />
@@ -391,6 +427,17 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
             : `https://craft.studio/project/${project.slug}`
         }
       />
+
+      {/* Owner Delete Project Modal */}
+      {isAuthor && (
+        <DeleteProjectModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          projectId={project.id}
+          projectTitle={project.title}
+          onSuccess={() => router.push("/me")}
+        />
+      )}
     </article>
   );
 }

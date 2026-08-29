@@ -44,6 +44,8 @@ import {
   Wand2,
 } from "lucide-react";
 
+import { DeleteProjectModal } from "@/components/project/delete-project-modal";
+
 interface ProjectFormProps {
   initialData?: Project;
   mode: "new" | "edit";
@@ -92,6 +94,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const [newTool, setNewTool] = useState("");
 
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDraggingGallery, setIsDraggingGallery] = useState(false);
   const [isProcessingFiles, setIsProcessingFiles] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
@@ -378,6 +381,21 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                   <span>Auto-Fill with AI</span>
                 </>
               )}
+            </Button>
+          )}
+
+          {mode === "edit" && initialData?.id && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="default"
+              disabled={isSaving}
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="gap-1.5 font-semibold text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 hover:text-rose-700 transition-colors"
+              title="Delete this project permanently"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Delete</span>
             </Button>
           )}
 
@@ -920,15 +938,31 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
       </div>
 
       {/* Bottom Sticky Actions */}
-      <div className="flex items-center justify-between pt-4 border-t border-[var(--border-neutral)]">
-        <Link
-          href="/me"
-          className="text-xs font-semibold text-[var(--content-tertiary)] hover:text-[var(--content-primary)] transition-colors"
-        >
-          Cancel & Return to Studio
-        </Link>
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-4 border-t border-[var(--border-neutral)]">
+        <div className="flex items-center gap-4">
+          <Link
+            href="/me"
+            className="text-xs font-semibold text-[var(--content-tertiary)] hover:text-[var(--content-primary)] transition-colors"
+          >
+            Cancel & Return to Studio
+          </Link>
 
-        <div className="flex items-center gap-3">
+          {mode === "edit" && initialData?.id && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="default"
+              disabled={isSaving}
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="gap-1.5 font-semibold text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 hover:text-rose-700 transition-colors"
+            >
+              <Trash2 className="h-4 w-4" />
+              <span>Delete Project</span>
+            </Button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3 justify-end">
           <Button
             type="button"
             variant="secondary"
@@ -963,6 +997,17 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           </Button>
         </div>
       </div>
+
+      {/* Delete Project Confirmation Modal */}
+      {initialData?.id && (
+        <DeleteProjectModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          projectId={initialData.id}
+          projectTitle={title || initialData.title || "Project"}
+          onSuccess={() => router.push("/me")}
+        />
+      )}
     </div>
   );
 }
