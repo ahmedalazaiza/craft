@@ -122,17 +122,7 @@ export function HomeClient({
       {/* ========================================================================= */}
       {/* CENTERED MONUMENTAL HERO SECTION                                          */}
       {/* ========================================================================= */}
-      <section className="relative border-b border-[var(--border-neutral)] bg-gradient-to-b from-[var(--bg-neutral)]/20 via-[var(--bg-screen)] to-[var(--bg-screen)] min-h-[calc(100vh-64px)] flex items-center justify-center pt-10 pb-12 sm:pt-14 sm:pb-16 lg:py-20 overflow-hidden text-center">
-        {/* Ambient Radial Lime Glow */}
-        <div
-          className="absolute inset-0 pointer-events-none select-none overflow-hidden flex items-center justify-center -z-10"
-          aria-hidden="true"
-        >
-          <div className="absolute w-[600px] h-[400px] sm:w-[900px] sm:h-[550px] rounded-full bg-[#8DFF00]/10 blur-[140px] top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-          {/* Architectural Dot Grid Matrix */}
-          <div className="absolute inset-0 bg-[radial-gradient(var(--border-neutral)_1px,transparent_1px)] [background-size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-40 dark:opacity-20" />
-        </div>
-
+      <section className="relative border-b border-[var(--border-neutral)] bg-[var(--bg-screen)] min-h-[calc(100vh-64px)] flex items-center justify-center pt-10 pb-12 sm:pt-14 sm:pb-16 lg:py-20 text-center">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 w-full z-10 flex flex-col items-center justify-center text-center">
           {/* Eyebrow Pill */}
           <div className="inline-flex items-center gap-2 rounded-full bg-[var(--chip-bg)] px-4 py-1.5 text-xs font-semibold text-[var(--chip-fg)] mb-6 sm:mb-8 shadow-xs border border-white/10 select-none mx-auto">
