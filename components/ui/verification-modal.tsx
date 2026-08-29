@@ -173,7 +173,7 @@ export function VerificationModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 overflow-y-auto">
+      <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-6 overflow-y-auto">
         {/* Ambient Blur Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}

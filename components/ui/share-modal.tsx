@@ -90,14 +90,14 @@ export function ShareModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm"
           />
 
           {/* Modal Card */}
@@ -106,7 +106,7 @@ export function ShareModal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 12 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="relative w-full max-w-md rounded-t-[28px] sm:rounded-[28px] border-t sm:border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 sm:p-7 shadow-[0_24px_60px_rgba(0,0,0,0.18)] dark:shadow-none z-10 overflow-hidden pb-safe"
+            className="relative w-full max-w-md rounded-t-[28px] sm:rounded-[28px] border-t sm:border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 sm:p-7 shadow-[0_24px_60px_rgba(0,0,0,0.18)] dark:shadow-none z-10 overflow-hidden pb-10 sm:pb-7 pb-safe"
           >
             {/* Top Close Button */}
             <button

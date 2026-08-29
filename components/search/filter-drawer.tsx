@@ -142,7 +142,7 @@ export function FilterDrawer({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-stretch justify-center sm:justify-end bg-[var(--base-dark)]/50 backdrop-blur-xs transition-opacity p-0"
+      className="fixed inset-0 z-[100] flex items-end sm:items-stretch justify-center sm:justify-end bg-[var(--base-dark)]/50 backdrop-blur-xs transition-opacity p-0"
       onClick={onClose}
     >
       <div

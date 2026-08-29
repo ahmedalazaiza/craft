@@ -169,7 +169,7 @@ export function SearchField({
           }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="flex-1 bg-transparent text-sm text-[var(--content-primary)] placeholder:text-[var(--content-tertiary)] focus:outline-none"
+          className="flex-1 bg-transparent text-base md:text-sm text-[var(--content-primary)] placeholder:text-[var(--content-tertiary)] focus:outline-none"
         />
 
         {query && (
