@@ -9,9 +9,8 @@ import { MotionCardWrapper } from "@/components/ui/motion-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { AppreciationButton } from "@/components/project/appreciation-button";
 import { useSession } from "@/lib/session-context";
-import { Share2, Edit3, Trash2 } from "lucide-react";
+import { Share2, Edit3 } from "lucide-react";
 import { ShareModal } from "@/components/ui/share-modal";
-import { DeleteProjectModal } from "@/components/project/delete-project-modal";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { OnlineBadge } from "@/components/ui/online-badge";
 import { getValidAvatarUrl } from "@/lib/avatar";
@@ -27,7 +26,6 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
   const router = useRouter();
   const { projects, user } = useSession();
   const [isShareOpen, setIsShareOpen] = useState(false);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   // Pick up live appreciation count and session data if available
   const liveProject = projects.find((p) => p.id === project.id) || project;
@@ -77,33 +75,20 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
               </Badge>
             </div>
 
-            {/* Action Buttons Top-Right: Owner Edit & Delete + Quick Share + Appreciation */}
+            {/* Action Buttons Top-Right: Owner Edit + Quick Share + Appreciation */}
             <div className="absolute top-3.5 right-3.5 z-10 flex items-center gap-1.5">
               {isOwner && (
-                <>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      router.push(`/me/projects/${liveProject.id}`);
-                    }}
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--bg-elevated)]/90 backdrop-blur-xs text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] transition-all shadow-xs cursor-pointer border border-[var(--border-neutral)]"
-                    title="Edit case study"
-                  >
-                    <Edit3 className="h-3.5 w-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsDeleteOpen(true);
-                    }}
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--bg-elevated)]/90 backdrop-blur-xs text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white transition-all shadow-xs cursor-pointer border border-[var(--border-neutral)] hover:border-transparent"
-                    title="Delete project"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push(`/me/projects/${liveProject.id}`);
+                  }}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--bg-elevated)]/90 backdrop-blur-xs text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] transition-all shadow-xs cursor-pointer border border-[var(--border-neutral)]"
+                  title="Edit case study"
+                >
+                  <Edit3 className="h-3.5 w-3.5" />
+                </button>
               )}
 
               <button
@@ -180,16 +165,6 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
             : `https://craft.studio/project/${liveProject.slug}`
         }
       />
-
-      {/* Owner Delete Project Modal */}
-      {isOwner && (
-        <DeleteProjectModal
-          isOpen={isDeleteOpen}
-          onClose={() => setIsDeleteOpen(false)}
-          projectId={liveProject.id}
-          projectTitle={liveProject.title}
-        />
-      )}
     </>
   );
 }

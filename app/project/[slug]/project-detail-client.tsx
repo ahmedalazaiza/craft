@@ -24,11 +24,8 @@ import {
   Maximize2,
   Tag,
   Wrench,
-  ArrowLeft,
   Edit3,
-  Trash2,
 } from "lucide-react";
-import { DeleteProjectModal } from "@/components/project/delete-project-modal";
 import { cn } from "@/lib/utils";
 
 interface ProjectDetailClientProps {
@@ -47,7 +44,6 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   // Grab live project data from session context if updated
   const project =
@@ -61,91 +57,121 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
     (user.id === project.creator.id ||
       user.username.toLowerCase() === project.creator.username.toLowerCase());
 
-  // Combine cover image + gallery images into { url, alt } objects
-  const rawImages = [project.coverImage, ...(project.galleryImages || [])];
-  const allImages = rawImages.map((url, idx) => ({
-    url,
-    alt: `${project.title} - Shot ${idx + 1}`,
-  }));
+  const handleToggleAppreciation = () => {
+    toggleAppreciation(project.id);
+  };
+
+  const handleScrollToComments = () => {
+    const el = document.getElementById("comments-section");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
     setIsLightboxOpen(true);
   };
 
-  const handleToggleAppreciation = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-    toggleAppreciation(project.id);
-  };
-
-  const handleScrollToComments = () => {
-    const commentsEl = document.getElementById("comments-section");
-    if (commentsEl) {
-      commentsEl.scrollIntoView({ behavior: "smooth" });
-    }
-  };
+  const allImages = [project.coverImage, ...(project.galleryImages || [])].filter(
+    Boolean
+  );
 
   return (
-    <article className="pb-16 min-h-screen">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-6 sm:pt-8">
-        <FadeIn>
-          {/* Breadcrumbs Navigation */}
-          <Breadcrumbs
-            items={[
-              { label: "Explore", href: "/explore" },
-              { label: project.category, href: `/explore?category=${encodeURIComponent(project.category)}` },
-              { label: project.title, isCurrent: true },
-            ]}
-          />
+    <article className="mx-auto max-w-[1400px] px-4 sm:px-6 py-6 pb-28 sm:pb-32">
+      <FadeIn>
+        {/* Breadcrumb Navigation */}
+        <Breadcrumbs
+          items={[
+            { label: "Explore", href: "/explore" },
+            {
+              label: project.category,
+              href: `/explore?category=${encodeURIComponent(project.category)}`,
+            },
+            { label: project.title, isCurrent: true },
+          ]}
+        />
 
-          {/* ================================================================= */}
-          {/* 1. TOP HEADER: Project Title, Description & Author Edit Button   */}
-          {/* ================================================================= */}
-          <header className="mb-8 sm:mb-10">
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-              <div className="flex-1">
-                <h1
-                  className={cn(
-                    bricolage.className,
-                    "text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[var(--primary-forest-green)] leading-[1.1]"
-                  )}
+        {/* =================================================================== */}
+        {/* 1. PROJECT HEADER BAR: Info, Tags & Tools Chip Matrix, Metas        */}
+        {/* =================================================================== */}
+        <div className="space-y-6 mb-8">
+          <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-[var(--border-neutral)]">
+            <div className="space-y-3 flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="accent" size="default">
+                  {project.category}
+                </Badge>
+                {project.featured && (
+                  <Badge variant="forest" size="default">
+                    Featured Work
+                  </Badge>
+                )}
+                {project.medium && (
+                  <Badge variant="neutral" size="default">
+                    {project.medium}
+                  </Badge>
+                )}
+              </div>
+
+              <h1
+                className={cn(
+                  bricolage.className,
+                  "text-3xl sm:text-4xl lg:text-[42px] font-black text-[var(--content-primary)] leading-[1.1] tracking-tight"
+                )}
+              >
+                {project.title}
+              </h1>
+
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--content-secondary)]">
+                <Link
+                  href={`/u/${project.creator.username}`}
+                  className="flex items-center gap-2 hover:opacity-80 transition-opacity font-bold text-[var(--content-primary)]"
                 >
-                  {project.title}
-                </h1>
-                <p className="mt-3 text-sm sm:text-base text-[var(--content-secondary)] leading-relaxed max-w-4xl">
-                  {project.summary}
-                </p>
+                  <div className="relative h-6 w-6 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-1 ring-[var(--border-neutral)]">
+                    <Image
+                      src={getValidAvatarUrl(project.creator.avatarUrl)}
+                      alt={project.creator.displayName}
+                      fill
+                      sizes="24px"
+                      className="object-cover"
+                    />
+                  </div>
+                  <span>{project.creator.displayName}</span>
+                  {project.creator.isVerified !== false && <VerifiedBadge size="sm" />}
+                </Link>
+
+                <span className="text-[var(--content-tertiary)]">•</span>
+                <span>{project.creator.city || project.creator.location || "Global"}</span>
+                <span className="text-[var(--content-tertiary)]">•</span>
+                <span>{new Date(project.publishedAt || Date.now()).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+              </div>
+            </div>
+
+            {/* Right Meta Column */}
+            <div className="flex flex-col md:items-end gap-3 shrink-0">
+              <div className="flex items-center gap-4 text-xs font-mono">
+                <span className="text-[var(--content-secondary)]">
+                  <strong className="text-[var(--content-primary)] font-bold">{project.appreciations}</strong> appreciations
+                </span>
+                <span className="text-[var(--content-tertiary)]">•</span>
+                <span className="text-[var(--content-secondary)]">
+                  <strong className="text-[var(--content-primary)] font-bold">{project.comments?.length || 0}</strong> comments
+                </span>
               </div>
 
               {isAuthor && (
-                <div className="flex items-center gap-2">
-                  <Link
-                    href={`/me/projects/${project.id}`}
-                    className={buttonVariants({
-                      variant: "secondary",
-                      size: "default",
-                      className: "shrink-0 gap-2 font-bold shadow-xs",
-                    })}
-                  >
-                    <Edit3 className="h-4 w-4" />
-                    <span>Edit Case Study</span>
-                  </Link>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="default"
-                    onClick={() => setIsDeleteModalOpen(true)}
-                    className="shrink-0 gap-2 font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 hover:text-rose-700 transition-colors"
-                    title="Delete Project"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    <span className="hidden sm:inline">Delete</span>
-                  </Button>
-                </div>
+                <Link
+                  href={`/me/projects/${project.id}`}
+                  className={buttonVariants({
+                    variant: "secondary",
+                    size: "default",
+                    className: "shrink-0 gap-2 font-bold shadow-xs",
+                  })}
+                >
+                  <Edit3 className="h-4 w-4" />
+                  <span>Edit Case Study</span>
+                </Link>
               )}
             </div>
           </header>
@@ -158,7 +184,6 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
             {/* LEFT FLOATING STICKY ACTION RAIL (DESKTOP)                     */}
             {/* ------------------------------------------------------------- */}
             <aside className="hidden md:flex flex-col items-center sticky top-28 shrink-0 z-30 select-none">
-              {/* First 3 Actions Pill: Like, Comment, Share */}
               <div className="flex flex-col items-center gap-3 p-2 rounded-full bg-[var(--bg-screen)] border border-[var(--border-neutral)] shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
                 {/* 1. Like / Appreciation with Live Count */}
                 <button
@@ -183,7 +208,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                   </span>
                 </button>
 
-                {/* 2. Comment Button (Smooth scroll to comments section) */}
+                {/* 2. Comment Button */}
                 <button
                   type="button"
                   onClick={handleScrollToComments}
@@ -206,25 +231,15 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                   <Share2 className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
                 </button>
 
-                {/* 4. Owner Edit & Delete Buttons (When viewer is the author) */}
+                {/* 4. Owner Edit Button (When viewer is the author) */}
                 {isAuthor && (
-                  <>
-                    <Link
-                      href={`/me/projects/${project.id}`}
-                      className="h-12 w-12 rounded-full bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] flex items-center justify-center transition-all cursor-pointer select-none group"
-                      title="Edit Case Study"
-                    >
-                      <Edit3 className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => setIsDeleteModalOpen(true)}
-                      className="h-12 w-12 rounded-full bg-[var(--bg-neutral)]/70 text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white flex items-center justify-center transition-all cursor-pointer select-none group"
-                      title="Delete Case Study"
-                    >
-                      <Trash2 className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-                    </button>
-                  </>
+                  <Link
+                    href={`/me/projects/${project.id}`}
+                    className="h-12 w-12 rounded-full bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] flex items-center justify-center transition-all cursor-pointer select-none group"
+                    title="Edit Case Study"
+                  >
+                    <Edit3 className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                  </Link>
                 )}
               </div>
 
@@ -260,80 +275,104 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                     onClick={() => openLightbox(idx)}
                     className="relative w-full rounded-none bg-[var(--bg-neutral)] overflow-hidden cursor-pointer select-none group"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={img.url}
-                      alt={img.alt}
-                      className="w-full h-auto block rounded-none transition-transform duration-300 group-hover:scale-[1.003]"
-                      loading={idx === 0 ? "eager" : "lazy"}
+                    <Image
+                      src={img}
+                      alt={`${project.title} gallery image ${idx + 1}`}
+                      width={1200}
+                      height={900}
+                      className="w-full h-auto object-cover transition-opacity duration-300 group-hover:opacity-95"
+                      priority={idx === 0}
                     />
 
-                    {/* Expand Cue Overlay on Hover */}
-                    <div className="absolute bottom-4 right-4 rounded-full bg-black/70 text-white p-2.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {/* Subtle Zoom/Expand Overlay */}
+                    <div className="absolute top-4 right-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-[var(--bg-elevated)]/90 backdrop-blur-xs text-[var(--content-primary)] opacity-0 group-hover:opacity-100 transition-opacity shadow-xs">
                       <Maximize2 className="h-4 w-4" />
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* Tools & Disciplines Meta Block (Side-by-Side) */}
-              {((project.tools && project.tools.length > 0) ||
-                (project.tags && project.tags.length > 0)) && (
-                <div className="mt-10 rounded-[24px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 sm:p-7 shadow-xs">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 divide-y md:divide-y-0 md:divide-x divide-[var(--border-neutral)]">
-                    {project.tools && project.tools.length > 0 && (
+              {/* ----------------------------------------------------------- */}
+              {/* EDITORIAL NARRATIVE & METADATA SECTION                     */}
+              {/* ----------------------------------------------------------- */}
+              <div className="mt-12 space-y-10">
+                {/* Body Case Study Narrative */}
+                <div className="rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-screen)] p-6 sm:p-10 shadow-xs">
+                  <h2 className="type-title-section text-[var(--content-primary)] mb-4">
+                    About this Project
+                  </h2>
+                  <div className="type-body-large text-[var(--content-secondary)] leading-relaxed whitespace-pre-line font-normal">
+                    {project.body || project.summary}
+                  </div>
+                </div>
+
+                {/* Tags and Tools Matrix */}
+                {(project.tags?.length > 0 || project.tools?.length > 0) && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-screen)] p-6 sm:p-8 shadow-xs">
+                    {/* Tags */}
+                    {project.tags?.length > 0 && (
                       <div className="space-y-3">
-                        <div className="text-xs font-bold uppercase tracking-wider text-[var(--content-tertiary)] flex items-center gap-2">
-                          <Wrench className="h-4 w-4 text-[var(--primary-forest-green)]" />
-                          <span>Tools & Technologies</span>
+                        <div className="flex items-center gap-2">
+                          <Tag className="h-4 w-4 text-[var(--content-tertiary)]" />
+                          <h3 className="type-label uppercase text-[var(--content-primary)] font-bold">
+                            Disciplines & Tags
+                          </h3>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {project.tools.map((tool) => (
-                            <Badge key={tool} variant="neutral" size="sm" className="px-3 py-1 font-medium">
-                              {tool}
-                            </Badge>
+                          {project.tags.map((tag) => (
+                            <Link
+                              key={tag}
+                              href={`/search?q=${encodeURIComponent(tag)}`}
+                              className="rounded-full bg-[var(--bg-neutral)] border border-[var(--border-neutral)] px-3 py-1 text-xs font-semibold text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:border-[var(--content-primary)] transition-all"
+                            >
+                              #{tag}
+                            </Link>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    {project.tags && project.tags.length > 0 && (
-                      <div className={cn("space-y-3", project.tools && project.tools.length > 0 && "pt-6 md:pt-0 md:pl-8")}>
-                        <div className="text-xs font-bold uppercase tracking-wider text-[var(--content-tertiary)] flex items-center gap-2">
-                          <Tag className="h-4 w-4 text-[var(--primary-forest-green)]" />
-                          <span>Categories & Tags</span>
+                    {/* Tools */}
+                    {project.tools?.length > 0 && (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Wrench className="h-4 w-4 text-[var(--content-tertiary)]" />
+                          <h3 className="type-label uppercase text-[var(--content-primary)] font-bold">
+                            Software & Tools
+                          </h3>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {project.tags.map((tag) => (
-                            <Badge key={tag} variant="neutral" size="sm" className="px-3 py-1 font-medium">
-                              #{tag}
-                            </Badge>
+                          {project.tools.map((tool) => (
+                            <span
+                              key={tool}
+                              className="rounded-full bg-[var(--bg-neutral)] border border-[var(--border-neutral)] px-3 py-1 text-xs font-semibold text-[var(--content-secondary)]"
+                            >
+                              {tool}
+                            </span>
                           ))}
                         </div>
                       </div>
                     )}
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* ============================================================= */}
-              {/* 3. DISCUSSION & CRITIQUE SECTION (Intact as is)               */}
-              {/* ============================================================= */}
-              <div id="comments-section" className="mt-14 scroll-mt-28">
-                <CommentSection
-                  projectId={project.id}
-                  comments={project.comments}
-                />
+                {/* Discussion / Comments Section */}
+                <div id="comments-section" className="pt-4">
+                  <CommentSection
+                    projectId={project.id}
+                    comments={project.comments || []}
+                  />
+                </div>
               </div>
             </main>
           </div>
-        </FadeIn>
-      </div>
+        </div>
+      </FadeIn>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* MOBILE FLOATING ACTION BAR (BOTTOM PILL ABOVE MOBILE NAV)         */}
-      {/* ----------------------------------------------------------------- */}
-      <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 md:hidden flex items-center gap-2 p-1.5 rounded-full bg-[var(--bg-screen)]/95 backdrop-blur-md border border-[var(--border-neutral)] shadow-2xl dark:shadow-none">
+      {/* ===================================================================== */}
+      {/* MOBILE BOTTOM FLOATING ACTION BAR                                     */}
+      {/* ===================================================================== */}
+      <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 p-1.5 rounded-full bg-[var(--bg-screen)]/95 backdrop-blur-md border border-[var(--border-neutral)] shadow-[0_12px_32px_rgba(0,0,0,0.18)]">
         <button
           type="button"
           onClick={handleToggleAppreciation}
@@ -367,23 +406,13 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
         </button>
 
         {isAuthor && (
-          <>
-            <Link
-              href={`/me/projects/${project.id}`}
-              className="h-12 w-12 min-h-[48px] min-w-[48px] rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] flex items-center justify-center transition-all shrink-0"
-              title="Edit Case Study"
-            >
-              <Edit3 className="h-4 w-4" />
-            </Link>
-            <button
-              type="button"
-              onClick={() => setIsDeleteModalOpen(true)}
-              className="h-12 w-12 min-h-[48px] min-w-[48px] rounded-full bg-[var(--bg-neutral)] text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white flex items-center justify-center transition-all shrink-0"
-              title="Delete Case Study"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          </>
+          <Link
+            href={`/me/projects/${project.id}`}
+            className="h-12 w-12 min-h-[48px] min-w-[48px] rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] flex items-center justify-center transition-all shrink-0"
+            title="Edit Case Study"
+          >
+            <Edit3 className="h-4 w-4" />
+          </Link>
         )}
 
         <div className="h-6 w-[1px] bg-[var(--border-neutral)] mx-0.5" />
@@ -408,7 +437,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
       {/* Full-screen Lightbox Modal */}
       <ProjectLightbox
         isOpen={isLightboxOpen}
-        images={allImages}
+        images={allImages.map((url) => ({ url, alt: project.title }))}
         currentIndex={lightboxIndex}
         onClose={() => setIsLightboxOpen(false)}
         onNavigate={setLightboxIndex}
@@ -427,17 +456,6 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
             : `https://craft.studio/project/${project.slug}`
         }
       />
-
-      {/* Owner Delete Project Modal */}
-      {isAuthor && (
-        <DeleteProjectModal
-          isOpen={isDeleteModalOpen}
-          onClose={() => setIsDeleteModalOpen(false)}
-          projectId={project.id}
-          projectTitle={project.title}
-          onSuccess={() => router.push("/me")}
-        />
-      )}
     </article>
   );
 }
