@@ -154,7 +154,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   };
 
   // AI Visual Analysis & Auto-Drafting Engine
-  const triggerAIAnalysis = async (imagesToAnalyze: string[], forceOverwrite = false) => {
+  const triggerAIAnalysis = async (imagesToAnalyze: string[], forceOverwrite = false, filenames: string[] = []) => {
     if (imagesToAnalyze.length === 0) return;
 
     setIsAnalyzingAI(true);
@@ -164,7 +164,10 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
       const res = await fetch("/api/ai/analyze-project", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrls: imagesToAnalyze }),
+        body: JSON.stringify({
+          imageUrls: imagesToAnalyze,
+          filenames: filenames.length > 0 ? filenames : undefined,
+        }),
       });
 
       if (!res.ok) throw new Error("AI analysis response was not ok");
@@ -216,6 +219,8 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     const fileList = Array.from(files).filter((f) => f.type.startsWith("image/"));
     if (fileList.length === 0) return;
 
+    const fileNames = fileList.map((f) => f.name);
+
     setIsProcessingFiles(true);
     setUploadProgress({ current: 0, total: fileList.length });
     try {
@@ -231,8 +236,8 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           setCoverImage(nextGallery[0]);
         }
 
-        // Trigger AI Auto-Fill based on newly uploaded visual spreads
-        triggerAIAnalysis(nextGallery, mode === "new" && !title.trim());
+        // Trigger AI Auto-Fill based on newly uploaded visual spreads & file names
+        triggerAIAnalysis(nextGallery, mode === "new" && !title.trim(), fileNames);
       }
     } catch (err) {
       console.error("Gallery files upload error:", err);

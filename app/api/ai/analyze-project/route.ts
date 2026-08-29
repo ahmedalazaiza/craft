@@ -7,6 +7,55 @@ export const maxDuration = 30; // 30 seconds max for multimodal image inspection
 interface AnalyzeRequestBody {
   imageUrls?: string[];
   imageDataList?: { data: string; mimeType: string }[];
+  filenames?: string[];
+}
+
+function cleanFilenameToTitle(filename: string): string {
+  // Strip extension
+  const nameWithoutExt = filename.replace(/\.[^/.]+$/, "");
+  // Replace delimiters with spaces
+  const cleaned = nameWithoutExt
+    .replace(/[_-]+/g, " ")
+    .replace(/\b(image|img|screenshot|screen|shot|frame|artboard|final|v\d+|copy|\d+)\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!cleaned || cleaned.length < 3) return "";
+
+  // Capitalize words
+  return cleaned
+    .split(" ")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+}
+
+function detectCategoryFromKeywords(text: string): typeof MASTER_TAXONOMY[0] {
+  const lower = text.toLowerCase();
+  
+  if (lower.match(/\b(ux|ui|app|dashboard|screen|interface|web|saas|mobile|ios|android|portal|figma)\b/)) {
+    return MASTER_TAXONOMY.find((c) => c.name.includes("Interface")) || MASTER_TAXONOMY[0];
+  }
+  if (lower.match(/\b(brand|identity|logo|editorial|book|monograph|guidelines|stationery|packaging|poster)\b/)) {
+    return MASTER_TAXONOMY.find((c) => c.name.includes("Brand")) || MASTER_TAXONOMY[1];
+  }
+  if (lower.match(/\b(3d|render|blender|cinema4d|octane|c4d|spatial|sculpt|houdini)\b/)) {
+    return MASTER_TAXONOMY.find((c) => c.name.includes("3D")) || MASTER_TAXONOMY[2];
+  }
+  if (lower.match(/\b(motion|animation|aftereffects|video|reel|kinetic)\b/)) {
+    return MASTER_TAXONOMY.find((c) => c.name.includes("Motion")) || MASTER_TAXONOMY[3];
+  }
+  if (lower.match(/\b(type|font|typeface|typography|lettering)\b/)) {
+    return MASTER_TAXONOMY.find((c) => c.name.includes("Typography")) || MASTER_TAXONOMY[4];
+  }
+  if (lower.match(/\b(photo|photography|film|portrait|editorial-shot|35mm)\b/)) {
+    return MASTER_TAXONOMY.find((c) => c.name.includes("Photography")) || MASTER_TAXONOMY[5];
+  }
+  if (lower.match(/\b(architect|spatial|interior|building|pavilion|structure)\b/)) {
+    return MASTER_TAXONOMY.find((c) => c.name.includes("Architecture")) || MASTER_TAXONOMY[6];
+  }
+
+  // Default to UI
+  return MASTER_TAXONOMY[0];
 }
 
 export async function POST(req: NextRequest) {
@@ -14,6 +63,7 @@ export async function POST(req: NextRequest) {
     const body: AnalyzeRequestBody = await req.json();
     const imageUrls = body.imageUrls || [];
     const imageDataList = body.imageDataList || [];
+    const filenames = body.filenames || [];
 
     if (imageUrls.length === 0 && imageDataList.length === 0) {
       return NextResponse.json(
@@ -33,16 +83,19 @@ export async function POST(req: NextRequest) {
         `- Category: "${cat.name}" (ID: ${cat.id})\n  Sub-Categories: ${cat.subCategories.join(", ")}\n  Typical Tags: ${cat.tags.slice(0, 10).join(", ")}\n  Typical Tools: ${cat.tools.slice(0, 8).join(", ")}`
     ).join("\n\n");
 
+    const filenamesHint = filenames.length > 0 ? `Uploaded File Names: ${filenames.join(", ")}` : "";
+
     const promptText = `
 You are the AI Creative Director and Taxonomy Curator for LAYERAT (layerat.com), a world-class portfolio exhibition platform for elite digital designers, brand architects, and 3D artists.
 
 Analyze the uploaded project image(s) and generate the complete, high-aesthetic case study metadata in JSON format.
+${filenamesHint}
 
 ### Available 13 Master Categories and Disciplines:
 ${taxonomySummary}
 
 ### Output Rules:
-1. "title": A sophisticated, punchy, studio-grade project title (e.g., "Aura: Spatial Design System & Monograph", "Kroma: Generative Brand Identity", "Voxel: Hard-Surface Cybernetic Vehicle").
+1. "title": A sophisticated, punchy, studio-grade project title (e.g., "Sakha: De-fragmenting Faith-Based Philanthropy (Zakat UX)", "Aura: Spatial Design System", "Kroma: Generative Brand Identity").
 2. "category": EXACT MATCH with one of the 13 category names listed above (e.g., "User Interface Design (UI)", "Brand Identity & Visual Design", "3D Design & Spatial Art").
 3. "subCategory": EXACT MATCH from the sub-categories list of that selected category.
 4. "body": A compelling, poetic 2-paragraph design narrative and case study rationale (written in studio-grade English). Discuss the visual tension, typography hierarchy, grid system, color harmony, and functional intent shown in the imagery.
@@ -61,7 +114,7 @@ Return ONLY valid JSON matching this structure without markdown formatting or co
 `;
 
     // 1. If Gemini API key is configured, execute multimodal vision analysis
-    if (apiKey) {
+    if (apiKey && apiKey.startsWith("AIzaSy")) {
       try {
         const parts: any[] = [{ text: promptText }];
 
@@ -103,7 +156,12 @@ Return ONLY valid JSON matching this structure without markdown formatting or co
           }
         }
 
-        const modelsToTry = ["gemini-flash-latest", "gemini-3.5-flash", "gemini-2.5-pro"];
+        const modelsToTry = [
+          "gemini-2.5-flash",
+          "gemini-2.0-flash",
+          "gemini-1.5-flash",
+          "gemini-1.5-pro",
+        ];
         let rawText = "";
 
         for (const model of modelsToTry) {
@@ -161,18 +219,68 @@ Return ONLY valid JSON matching this structure without markdown formatting or co
       }
     }
 
-    // 2. Intelligent Heuristic Fallback Engine
-    const fallbackCategory = MASTER_TAXONOMY[0]; // UI
+    // 2. Intelligent Dynamic Semantic Heuristic Engine
+    // Inspect uploaded filenames & image URL path tokens
+    const combinedTerms = [
+      ...filenames.map(cleanFilenameToTitle),
+      ...imageUrls.map((url) => {
+        try {
+          const pathname = new URL(url).pathname;
+          return cleanFilenameToTitle(pathname.split("/").pop() || "");
+        } catch {
+          return "";
+        }
+      }),
+    ].filter(Boolean);
+
+    const primaryExtractedTitle = combinedTerms.find((t) => t.length > 4) || "";
+    const detectedTaxonomy = detectCategoryFromKeywords(
+      primaryExtractedTitle + " " + filenames.join(" ") + " " + imageUrls.join(" ")
+    );
+
+    let dynamicTitle = "";
+    let dynamicBody = "";
+
+    if (primaryExtractedTitle) {
+      dynamicTitle = `${primaryExtractedTitle}: Design System & Case Study`;
+      dynamicBody = `${primaryExtractedTitle} explores the intersection of functional ergonomic design and expressive visual craft. Built to deliver a seamless user experience, the system utilizes high-density typography hierarchy, balanced negative space, and a refined aesthetic palette.\n\nEvery interface spread and design artifact was structured to maintain maximum clarity, responsive scalability, and deliberate craft across diverse digital touchpoints.`;
+    } else {
+      // Dynamic thematic generator based on detected taxonomy
+      const categoryTitles: Record<string, string[]> = {
+        "User Interface Design (UI)": [
+          "Aether: Adaptive Spatial Interface & Design System",
+          "Kinetics: High-Density Operating Canvas",
+          "Nexus: Contemporary FinTech & Mobile Experience",
+        ],
+        "Brand Identity & Visual Design": [
+          "Sanctuary: Bespoke Monograph & Visual Identity",
+          "Verve: Generative Brand Identity & Packaging System",
+          "Forma: Tactile Editorial & Spatial Branding",
+        ],
+        "3D Design & Spatial Art": [
+          "Voxel: Hard-Surface Cybernetic Form Studies",
+          "Solarium: Real-Time Spatial Environment",
+          "Prism: Generative 3D Shaders & Motion Artifacts",
+        ],
+      };
+
+      const candidates = categoryTitles[detectedTaxonomy.name] || [
+        `${detectedTaxonomy.name}: Visual Case Study & Artifacts`,
+      ];
+      dynamicTitle = candidates[Math.floor(Math.random() * candidates.length)];
+      dynamicBody = `A comprehensive case study documenting the visual research, compositional hierarchy, and artifact production for ${detectedTaxonomy.name.toLowerCase()}.\n\nEngineered with meticulous attention to detail, tactile finishes, and contemporary design principles.`;
+    }
+
     return NextResponse.json({
       success: true,
-      source: "heuristic-engine",
+      source: "semantic-heuristic-engine",
       data: {
-        title: "Kinetics: Contemporary Digital Interface & Systems",
-        category: fallbackCategory.name,
-        subCategory: fallbackCategory.subCategories[0] || "Web Design",
-        body: "A comprehensive digital case study balancing rigorous typographic hierarchy, ergonomic spatial layouts, and high-contrast dark mode aesthetics. Designed with fluid responsiveness and accessible components.",
-        tags: fallbackCategory.tags.slice(0, 5),
-        tools: fallbackCategory.tools.slice(0, 3),
+        title: dynamicTitle,
+        category: detectedTaxonomy.name,
+        subCategory: detectedTaxonomy.subCategories[0] || "Web Design",
+        body: dynamicBody,
+        tags: detectedTaxonomy.tags.slice(0, 5),
+        tools: detectedTaxonomy.tools.slice(0, 3),
       },
     });
   } catch (err: any) {
