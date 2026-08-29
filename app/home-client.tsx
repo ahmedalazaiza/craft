@@ -181,7 +181,7 @@ export function HomeClient({
               >
                 <span>Showcase</span>
                 <span>your</span>
-                <span className="inline-flex items-center rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#FFE600] dark:text-[#090C09] px-3 sm:px-4 py-0.5 sm:py-1 shadow-sm border border-white/10 dark:border-transparent tracking-tight font-bold">
+                <span className="inline-flex items-center rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#8DFF00] dark:text-[#090C09] px-3 sm:px-4 py-0.5 sm:py-1 shadow-sm border border-white/10 dark:border-transparent tracking-tight font-black">
                   work<span className="text-[#8DFF00] dark:text-[#090C09]">.</span>
                 </span>
               </motion.span>
@@ -200,7 +200,7 @@ export function HomeClient({
               >
                 <span>Connect</span>
                 <span>with</span>
-                <span className="inline-flex items-center rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#FFE600] dark:text-[#090C09] px-3 sm:px-4 py-0.5 sm:py-1 shadow-sm border border-white/10 dark:border-transparent tracking-tight font-bold">
+                <span className="inline-flex items-center rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#8DFF00] dark:text-[#090C09] px-3 sm:px-4 py-0.5 sm:py-1 shadow-sm border border-white/10 dark:border-transparent tracking-tight font-black">
                   makers<span className="text-[#8DFF00] dark:text-[#090C09]">.</span>
                 </span>
               </motion.span>
