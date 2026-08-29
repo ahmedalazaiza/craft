@@ -30,6 +30,7 @@ import {
   BarChart3,
   Cpu,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const FEATURE_POINTS = [
@@ -125,12 +126,17 @@ export function HomeClient({
       <section className="relative border-b border-[var(--border-neutral)] bg-[var(--bg-screen)] min-h-[calc(100vh-64px)] flex items-center justify-center pt-10 pb-12 sm:pt-14 sm:pb-16 lg:py-20 text-center">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 w-full z-10 flex flex-col items-center justify-center text-center">
           {/* Eyebrow Pill */}
-          <div className="inline-flex items-center gap-2 rounded-full bg-[var(--chip-bg)] px-4 py-1.5 text-xs font-semibold text-[var(--chip-fg)] mb-6 sm:mb-8 shadow-xs border border-white/10 select-none mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="inline-flex items-center gap-2 rounded-full bg-[var(--chip-bg)] px-4 py-1.5 text-xs font-semibold text-[var(--chip-fg)] mb-6 sm:mb-8 shadow-xs border border-white/10 select-none mx-auto"
+          >
             <Sparkles className="h-3.5 w-3.5 text-[#8DFF00]" />
             <span>Craft Platform</span>
             <span className="text-[var(--content-tertiary)]">•</span>
             <span className="text-[var(--chip-fg)] font-normal">Independent Creators</span>
-          </div>
+          </motion.div>
 
           {/* Monumental Centered Headline */}
           <h1
@@ -139,34 +145,70 @@ export function HomeClient({
               "text-[44px] sm:text-6xl md:text-7xl lg:text-[84px] xl:text-[92px] font-black tracking-[-0.04em] leading-[1.02] sm:leading-[0.96] text-[var(--primary-forest-green)] dark:text-white text-center w-full flex flex-col items-center justify-center max-w-4xl"
             )}
           >
-            <span className="block w-full text-center">
-              <span className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--primary-forest-green)] dark:text-white text-center">
+            <span className="block w-full text-center overflow-hidden">
+              <motion.span
+                className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--primary-forest-green)] dark:text-white text-center"
+                initial={{ opacity: 0, y: "100%" }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.6,
+                  delay: 0.08,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+              >
                 <span>Showcase</span>
                 <span>your</span>
                 <span className="inline-flex items-center rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#8DFF00] dark:text-[#090C09] px-3 sm:px-4 py-0.5 sm:py-1 shadow-sm border border-white/10 dark:border-transparent tracking-tight font-black">
                   work<span className="text-[#8DFF00] dark:text-[#090C09]">.</span>
                 </span>
-              </span>
+              </motion.span>
             </span>
 
-            <span className="block w-full text-center mt-1 sm:mt-2">
-              <span className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--primary-forest-green)] dark:text-white text-center">
+            <span className="block w-full text-center overflow-hidden mt-1 sm:mt-2">
+              <motion.span
+                className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--primary-forest-green)] dark:text-white text-center"
+                initial={{ opacity: 0, y: "100%" }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.6,
+                  delay: 0.18,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+              >
                 <span>Connect</span>
                 <span>with</span>
                 <span className="inline-flex items-center rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#8DFF00] dark:text-[#090C09] px-3 sm:px-4 py-0.5 sm:py-1 shadow-sm border border-white/10 dark:border-transparent tracking-tight font-black">
                   makers<span className="text-[#8DFF00] dark:text-[#090C09]">.</span>
                 </span>
-              </span>
+              </motion.span>
             </span>
           </h1>
 
           {/* Subtitle */}
-          <p className="mt-6 sm:mt-8 text-base sm:text-xl text-[var(--content-secondary)] max-w-2xl leading-relaxed font-normal text-center mx-auto">
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.5,
+              delay: 0.28,
+              ease: [0.16, 1, 0.3, 1],
+            }}
+            className="mt-6 sm:mt-8 text-base sm:text-xl text-[var(--content-secondary)] max-w-2xl leading-relaxed font-normal text-center mx-auto"
+          >
             A modern portfolio platform to publish your projects, build your studio profile, and discover inspiring work from designers worldwide.
-          </p>
+          </motion.p>
 
           {/* Action Buttons */}
-          <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto mx-auto max-w-md sm:max-w-none">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.5,
+              delay: 0.38,
+              ease: [0.16, 1, 0.3, 1],
+            }}
+            className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto mx-auto max-w-md sm:max-w-none"
+          >
             <Link
               href="/explore"
               className={buttonVariants({
@@ -202,7 +244,7 @@ export function HomeClient({
                 Join as a Creator
               </Link>
             )}
-          </div>
+          </motion.div>
 
           {/* Minimalist 3-Point Value Manifesto (Centered Balanced Grid) */}
           <div className="mt-12 sm:mt-14 pt-10 sm:pt-12 border-t border-[var(--border-neutral)] grid grid-cols-1 sm:grid-cols-3 gap-8 w-full max-w-4xl text-center">
