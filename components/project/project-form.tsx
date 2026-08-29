@@ -42,6 +42,7 @@ import {
   Send,
   ChevronDown,
   Wand2,
+  AlertTriangle,
 } from "lucide-react";
 
 import { DeleteProjectModal } from "@/components/project/delete-project-modal";
@@ -381,21 +382,6 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                   <span>Auto-Fill with AI</span>
                 </>
               )}
-            </Button>
-          )}
-
-          {mode === "edit" && initialData?.id && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="default"
-              disabled={isSaving}
-              onClick={() => setIsDeleteModalOpen(true)}
-              className="gap-1.5 font-semibold text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 hover:text-rose-700 transition-colors"
-              title="Delete this project permanently"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Delete</span>
             </Button>
           )}
 
@@ -937,6 +923,47 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
         </div>
       </div>
 
+      {/* ========================================================================= */}
+      {/* DANGER ZONE (Permanent Project Deletion)                                  */}
+      {/* ========================================================================= */}
+      {mode === "edit" && initialData?.id && (
+        <div className="rounded-[28px] border border-rose-500/30 bg-rose-500/5 p-6 sm:p-8 shadow-xs space-y-5">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 shrink-0">
+              <AlertTriangle className="h-6 w-6 stroke-[2.2]" />
+            </div>
+            <div>
+              <h3 className="text-lg sm:text-xl font-bold text-rose-600 dark:text-rose-400">
+                Danger Zone
+              </h3>
+              <p className="mt-1 text-xs text-[var(--content-secondary)] leading-relaxed max-w-xl">
+                Actions here are irreversible. Deleting this project permanently removes all media uploads, case study narrative, peer appreciations, and critique discussions from the platform.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-[20px] border border-rose-500/20 bg-[var(--bg-elevated)] p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <div className="text-sm font-bold text-[var(--content-primary)]">
+                Permanently Delete Project
+              </div>
+              <div className="text-xs text-[var(--content-secondary)] mt-0.5">
+                Once deleted, &quot;{title || initialData.title || "this project"}&quot; cannot be restored.
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="inline-flex items-center justify-center gap-2 rounded-full h-10 px-5 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition-all cursor-pointer shrink-0"
+            >
+              <Trash2 className="h-4 w-4" />
+              <span>Delete Project</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Bottom Sticky Actions */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-4 border-t border-[var(--border-neutral)]">
         <div className="flex items-center gap-4">
@@ -946,20 +973,6 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           >
             Cancel & Return to Studio
           </Link>
-
-          {mode === "edit" && initialData?.id && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="default"
-              disabled={isSaving}
-              onClick={() => setIsDeleteModalOpen(true)}
-              className="gap-1.5 font-semibold text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 hover:text-rose-700 transition-colors"
-            >
-              <Trash2 className="h-4 w-4" />
-              <span>Delete Project</span>
-            </Button>
-          )}
         </div>
 
         <div className="flex items-center gap-3 justify-end">

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Trash2, X, Loader2, ShieldAlert } from "lucide-react";
+import { AlertTriangle, Trash2, X, Loader2, ShieldAlert, CheckCircle2, Image as ImageIcon, MessageSquare, Heart, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/session-context";
 import { cn } from "@/lib/utils";
@@ -80,11 +80,11 @@ export function DeleteProjectModal({
                   "text-xl sm:text-2xl font-black text-[var(--content-primary)] tracking-tight"
                 )}
               >
-                Delete Case Study
+                Delete Project Permanently?
               </h2>
               <span className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 dark:text-rose-400">
                 <ShieldAlert className="h-3.5 w-3.5" />
-                Permanent Action
+                Irreversible Permanent Action
               </span>
             </div>
           </div>
@@ -106,14 +106,34 @@ export function DeleteProjectModal({
             <span className="font-bold text-[var(--content-primary)] font-mono bg-[var(--bg-neutral)] px-2 py-0.5 rounded-md border border-[var(--border-neutral)]">
               &quot;{projectTitle}&quot;
             </span>
-            ? This action cannot be undone and will permanently erase this case study, high-resolution media gallery, and all peer appreciations.
+            ? Everything related to this project will be permanently erased from Craft:
           </p>
+
+          {/* Purge Checklist */}
+          <div className="rounded-2xl border border-[var(--border-neutral)] bg-[var(--bg-neutral)]/40 p-4 space-y-2.5 text-xs text-[var(--content-secondary)]">
+            <div className="flex items-center gap-2.5 text-[var(--content-primary)]">
+              <ImageIcon className="h-4 w-4 text-rose-500 shrink-0" />
+              <span>All uploaded case study images & high-res media</span>
+            </div>
+            <div className="flex items-center gap-2.5 text-[var(--content-primary)]">
+              <Heart className="h-4 w-4 text-rose-500 shrink-0" />
+              <span>All community appreciations and likes</span>
+            </div>
+            <div className="flex items-center gap-2.5 text-[var(--content-primary)]">
+              <MessageSquare className="h-4 w-4 text-rose-500 shrink-0" />
+              <span>All peer discussion comments & critiques</span>
+            </div>
+            <div className="flex items-center gap-2.5 text-[var(--content-primary)]">
+              <Globe className="h-4 w-4 text-rose-500 shrink-0" />
+              <span>Public explore showcase, search entries & profile link</span>
+            </div>
+          </div>
 
           {/* Warning Banner */}
           <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4 text-xs leading-relaxed text-rose-700 dark:text-rose-300 flex items-start gap-3">
             <AlertTriangle className="h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
             <span>
-              Once deleted, your project URL will be removed from explore galleries, search indexes, and your public profile.
+              This action cannot be undone. You will need to re-upload and re-publish if you change your mind.
             </span>
           </div>
 
@@ -133,7 +153,7 @@ export function DeleteProjectModal({
             disabled={isDeleting}
             className="w-full sm:w-auto font-semibold text-xs"
           >
-            Cancel
+            Cancel & Keep Project
           </Button>
 
           <Button
@@ -150,7 +170,7 @@ export function DeleteProjectModal({
             ) : (
               <>
                 <Trash2 className="h-4 w-4" />
-                <span>Yes, Delete Project</span>
+                <span>I Understand, Delete Project</span>
               </>
             )}
           </Button>
