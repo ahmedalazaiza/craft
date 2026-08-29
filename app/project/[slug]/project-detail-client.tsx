@@ -17,6 +17,7 @@ import { OnlineBadge } from "@/components/ui/online-badge";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { getValidAvatarUrl } from "@/lib/avatar";
+import { DeleteProjectModal } from "@/components/project/delete-project-modal";
 import {
   Heart,
   MessageSquare,
@@ -25,6 +26,11 @@ import {
   Tag,
   Wrench,
   Edit3,
+  Trash2,
+  Send,
+  Loader2,
+  CheckCircle2,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -39,11 +45,15 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
     user,
     isProjectAppreciated,
     toggleAppreciation,
+    saveProject,
   } = useSession();
 
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [publishToast, setPublishToast] = useState<string | null>(null);
 
   // Grab live project data from session context if updated
   const project =
@@ -56,6 +66,23 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
     project.creator &&
     (user.id === project.creator.id ||
       user.username.toLowerCase() === project.creator.username.toLowerCase());
+
+  const isDraft =
+    project.published === false ||
+    (project as any).status === "draft" ||
+    !project.publishedAt;
+
+  const displayDate = React.useMemo(() => {
+    if (isDraft) return "Draft • Unpublished";
+    if (!project.publishedAt) return "Recently Published";
+    const parsed = new Date(project.publishedAt);
+    if (isNaN(parsed.getTime())) return "Recently Published";
+    return parsed.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  }, [isDraft, project.publishedAt]);
 
   const handleToggleAppreciation = () => {
     toggleAppreciation(project.id);
@@ -71,6 +98,26 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
     setIsLightboxOpen(true);
+  };
+
+  const handlePublishProject = async () => {
+    if (isPublishing || !project.id) return;
+    setIsPublishing(true);
+    try {
+      await saveProject({
+        id: project.id,
+        title: project.title,
+        published: true,
+        publishedAt: new Date().toISOString(),
+        status: "published" as any,
+      });
+      setPublishToast("🎉 Project published live! It is now visible on Explore.");
+      setTimeout(() => setPublishToast(null), 6000);
+    } catch (err) {
+      console.error("Failed to publish project:", err);
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   const allImages = React.useMemo(() => {
@@ -99,6 +146,23 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
           ]}
         />
 
+        {/* Publish Toast Notification */}
+        {publishToast && (
+          <div className="rounded-2xl bg-emerald-500/10 border border-emerald-500/30 p-4 mb-6 flex items-center justify-between gap-3 text-emerald-800 dark:text-emerald-200 text-xs sm:text-sm font-semibold animate-scale-in">
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>{publishToast}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPublishToast(null)}
+              className="text-emerald-700 dark:text-emerald-300 hover:opacity-80 p-1 cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
         {/* =================================================================== */}
         {/* 1. PROJECT HEADER BAR: Info, Tags & Tools Chip Matrix, Metas        */}
         {/* =================================================================== */}
@@ -109,6 +173,11 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                 <Badge variant="accent" size="default">
                   {project.category}
                 </Badge>
+                {isDraft && (
+                  <Badge variant="neutral" size="default" className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 font-mono font-bold">
+                    Draft • Unpublished
+                  </Badge>
+                )}
                 {project.featured && (
                   <Badge variant="forest" size="default">
                     Featured Work
@@ -151,11 +220,11 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                 <span className="text-[var(--content-tertiary)]">•</span>
                 <span>{project.creator.city || project.creator.location || "Global"}</span>
                 <span className="text-[var(--content-tertiary)]">•</span>
-                <span>{new Date(project.publishedAt || Date.now()).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                <span className={cn(isDraft && "font-mono text-amber-600 dark:text-amber-400 font-semibold")}>{displayDate}</span>
               </div>
             </div>
 
-            {/* Right Meta Column */}
+            {/* Right Meta Column & Author Actions */}
             <div className="flex flex-col md:items-end gap-3 shrink-0">
               <div className="flex items-center gap-4 text-xs font-mono">
                 <span className="text-[var(--content-secondary)]">
@@ -168,17 +237,50 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
               </div>
 
               {isAuthor && (
-                <Link
-                  href={`/me/projects/${project.id}`}
-                  className={buttonVariants({
-                    variant: "secondary",
-                    size: "default",
-                    className: "shrink-0 gap-2 font-bold shadow-xs",
-                  })}
-                >
-                  <Edit3 className="h-4 w-4" />
-                  <span>Edit Case Study</span>
-                </Link>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* If Draft, Show Direct Publish Button */}
+                  {isDraft ? (
+                    <Button
+                      type="button"
+                      variant="primary"
+                      size="default"
+                      disabled={isPublishing}
+                      onClick={handlePublishProject}
+                      className="shrink-0 gap-2 font-bold shadow-md bg-[var(--primary-forest-green)] hover:bg-[var(--primary-forest-green)]/90 text-white dark:bg-[var(--accent)] dark:text-[#090C09]"
+                    >
+                      {isPublishing ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                      <span>{isPublishing ? "Publishing..." : "Publish Project"}</span>
+                    </Button>
+                  ) : null}
+
+                  {/* Edit Case Study Link */}
+                  <Link
+                    href={`/me/projects/${project.id}`}
+                    className={buttonVariants({
+                      variant: "secondary",
+                      size: "default",
+                      className: "shrink-0 gap-2 font-bold shadow-xs",
+                    })}
+                    title="Edit Case Study"
+                  >
+                    <Edit3 className="h-4 w-4" />
+                    <span>{isDraft ? "Edit Details" : "Edit Case Study"}</span>
+                  </Link>
+
+                  {/* Delete Project Button */}
+                  <button
+                    type="button"
+                    onClick={() => setIsDeleteModalOpen(true)}
+                    className="h-10 w-10 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center transition-all cursor-pointer shadow-xs shrink-0"
+                    title="Delete Project"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               )}
             </div>
           </header>
@@ -238,15 +340,42 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                   <Share2 className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
                 </button>
 
-                {/* 4. Owner Edit Button (When viewer is the author) */}
+                {/* 4. Author Action Icons */}
                 {isAuthor && (
-                  <Link
-                    href={`/me/projects/${project.id}`}
-                    className="h-12 w-12 rounded-full bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] flex items-center justify-center transition-all cursor-pointer select-none group"
-                    title="Edit Case Study"
-                  >
-                    <Edit3 className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-                  </Link>
+                  <>
+                    {isDraft && (
+                      <button
+                        type="button"
+                        onClick={handlePublishProject}
+                        disabled={isPublishing}
+                        className="h-12 w-12 rounded-full bg-[var(--primary-forest-green)] text-white hover:opacity-90 flex items-center justify-center transition-all cursor-pointer select-none group shadow-xs"
+                        title="Publish Project"
+                      >
+                        {isPublishing ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                        )}
+                      </button>
+                    )}
+
+                    <Link
+                      href={`/me/projects/${project.id}`}
+                      className="h-12 w-12 rounded-full bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] flex items-center justify-center transition-all cursor-pointer select-none group"
+                      title="Edit Case Study"
+                    >
+                      <Edit3 className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                    </Link>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsDeleteModalOpen(true)}
+                      className="h-12 w-12 rounded-full bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 flex items-center justify-center transition-all cursor-pointer select-none group"
+                      title="Delete Project"
+                    >
+                      <Trash2 className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                    </button>
+                  </>
                 )}
               </div>
 
@@ -413,13 +542,41 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
         </button>
 
         {isAuthor && (
-          <Link
-            href={`/me/projects/${project.id}`}
-            className="h-12 w-12 min-h-[48px] min-w-[48px] rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] flex items-center justify-center transition-all shrink-0"
-            title="Edit Case Study"
-          >
-            <Edit3 className="h-4 w-4" />
-          </Link>
+          <>
+            {isDraft && (
+              <button
+                type="button"
+                onClick={handlePublishProject}
+                disabled={isPublishing}
+                className="h-12 min-h-[48px] px-3.5 rounded-full bg-[var(--primary-forest-green)] text-white hover:opacity-90 flex items-center gap-1.5 text-xs font-bold transition-all shrink-0"
+                title="Publish Project"
+              >
+                {isPublishing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+                <span>Publish</span>
+              </button>
+            )}
+
+            <Link
+              href={`/me/projects/${project.id}`}
+              className="h-12 w-12 min-h-[48px] min-w-[48px] rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] flex items-center justify-center transition-all shrink-0"
+              title="Edit Case Study"
+            >
+              <Edit3 className="h-4 w-4" />
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="h-12 w-12 min-h-[48px] min-w-[48px] rounded-full bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 flex items-center justify-center transition-all shrink-0"
+              title="Delete Project"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </>
         )}
 
         <div className="h-6 w-[1px] bg-[var(--border-neutral)] mx-0.5" />
@@ -462,6 +619,17 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
             ? `${window.location.origin}/project/${project.slug}`
             : `https://layerat.com/project/${project.slug}`
         }
+      />
+
+      {/* Delete Project Confirmation Modal */}
+      <DeleteProjectModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        projectId={project.id}
+        projectTitle={project.title}
+        onSuccess={() => {
+          router.push("/me");
+        }}
       />
     </article>
   );

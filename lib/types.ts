@@ -75,6 +75,9 @@ export interface Project {
   medium: ProjectMedium;
   published: boolean;
   publishedAt: string;
+  status?: "published" | "draft" | "pending";
+  createdAt?: string;
+  updatedAt?: string;
   appreciations: number;
   comments: Comment[];
   featured?: boolean;
