@@ -76,7 +76,7 @@ export function SiteHeader() {
                 )}
               >
                 {isHome && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary-forest-green)] dark:bg-[var(--accent)] shadow-xs animate-pulse" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-white dark:bg-[var(--accent)] shadow-xs animate-pulse" />
                 )}
                 <span>Home</span>
               </Link>
@@ -91,7 +91,7 @@ export function SiteHeader() {
                 )}
               >
                 {isExplore && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary-forest-green)] dark:bg-[var(--accent)] shadow-xs animate-pulse" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-white dark:bg-[var(--accent)] shadow-xs animate-pulse" />
                 )}
                 <span>Explore</span>
               </Link>
@@ -106,7 +106,7 @@ export function SiteHeader() {
                 )}
               >
                 {isCreators && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary-forest-green)] dark:bg-[var(--accent)] shadow-xs animate-pulse" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-white dark:bg-[var(--accent)] shadow-xs animate-pulse" />
                 )}
                 <span>Creators</span>
               </Link>
