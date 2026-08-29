@@ -73,9 +73,16 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
     setIsLightboxOpen(true);
   };
 
-  const allImages = [project.coverImage, ...(project.galleryImages || [])].filter(
-    Boolean
-  );
+  const allImages = React.useMemo(() => {
+    const gallery = (project.galleryImages || []).filter(Boolean);
+    if (gallery.length > 0) {
+      if (project.coverImage && !gallery.includes(project.coverImage)) {
+        return [project.coverImage, ...gallery];
+      }
+      return gallery;
+    }
+    return project.coverImage ? [project.coverImage] : [];
+  }, [project.coverImage, project.galleryImages]);
 
   return (
     <article className="mx-auto max-w-[1400px] px-4 sm:px-6 py-6 pb-28 sm:pb-32">

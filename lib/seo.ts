@@ -301,7 +301,9 @@ export function generateProjectJsonLd(project: Project) {
     "@type": ["CreativeWork", "VisualArtwork", "Article"],
     headline: project.title,
     description: project.summary,
-    image: [project.coverImage, ...project.galleryImages],
+    image: Array.from(
+      new Set([project.coverImage, ...(project.galleryImages || [])].filter(Boolean))
+    ),
     datePublished: project.publishedAt,
     dateModified: project.publishedAt,
     inLanguage: "en",

@@ -310,7 +310,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
     setIsSaving(true);
     try {
-      await saveProject({
+      const saved = await saveProject({
         id: initialData?.id,
         title: title.trim(),
         summary: body.trim().slice(0, 200) || title.trim(),
@@ -325,8 +325,9 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
         published: isPublish,
       });
 
-      if (initialData) {
-        router.push(isPublish ? `/project/${initialData.slug}` : "/me");
+      const targetSlug = saved?.slug || initialData?.slug;
+      if (isPublish && targetSlug) {
+        router.push(`/project/${targetSlug}`);
       } else {
         router.push("/me");
       }
