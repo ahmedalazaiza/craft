@@ -11,12 +11,6 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { DEFAULT_AVATAR_URL, getValidAvatarUrl } from "@/lib/avatar";
 import { MASTER_TAXONOMY, normalizeCategory } from "@/lib/taxonomy";
 import {
-  ScrollRevealSection,
-  StaggerGridItem,
-  MOTION_EASE,
-} from "@/components/ui/motion-wrapper";
-import { motion, useReducedMotion } from "framer-motion";
-import {
   ArrowRight,
   ArrowUpRight,
   MapPin,
@@ -82,7 +76,6 @@ export function HomeClient({
   initialCreators = [],
 }: HomeClientProps) {
   const { projects: contextProjects, creators: contextCreators, user } = useSession();
-  const shouldReduceMotion = useReducedMotion();
 
   // Instant SSR hydration: prioritize context if updated by user action, otherwise use SSR initial data
   const projects = contextProjects.length > 0 ? contextProjects : initialProjects;
@@ -124,8 +117,6 @@ export function HomeClient({
     }).filter((section) => section.projects.length > 0);
   }, [publishedProjects]);
 
-  const headlineLines = ["Showcase your work.", "Connect with makers."];
-
   return (
     <div className="flex flex-col gap-12 sm:gap-14 pb-14">
       {/* ========================================================================= */}
@@ -137,29 +128,19 @@ export function HomeClient({
           className="absolute inset-0 pointer-events-none select-none overflow-hidden flex items-center justify-center -z-10"
           aria-hidden="true"
         >
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
-            className="absolute w-[600px] h-[400px] sm:w-[900px] sm:h-[550px] rounded-full bg-[#8DFF00]/10 blur-[140px] top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2"
-          />
+          <div className="absolute w-[600px] h-[400px] sm:w-[900px] sm:h-[550px] rounded-full bg-[#8DFF00]/10 blur-[140px] top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2" />
           {/* Architectural Dot Grid Matrix */}
           <div className="absolute inset-0 bg-[radial-gradient(var(--border-neutral)_1px,transparent_1px)] [background-size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-40 dark:opacity-20" />
         </div>
 
         <div className="mx-auto max-w-5xl px-4 sm:px-6 w-full z-10 flex flex-col items-center justify-center text-center">
           {/* Eyebrow Pill */}
-          <motion.div
-            initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: MOTION_EASE }}
-            className="inline-flex items-center gap-2 rounded-full bg-[var(--chip-bg)] px-4 py-1.5 text-xs font-semibold text-[var(--chip-fg)] mb-6 sm:mb-8 shadow-xs border border-white/10 select-none mx-auto"
-          >
+          <div className="inline-flex items-center gap-2 rounded-full bg-[var(--chip-bg)] px-4 py-1.5 text-xs font-semibold text-[var(--chip-fg)] mb-6 sm:mb-8 shadow-xs border border-white/10 select-none mx-auto">
             <Sparkles className="h-3.5 w-3.5 text-[#8DFF00]" />
             <span>Craft Platform</span>
             <span className="text-[var(--content-tertiary)]">•</span>
             <span className="text-[var(--chip-fg)] font-normal">Independent Creators</span>
-          </motion.div>
+          </div>
 
           {/* Monumental Centered Headline */}
           <h1
@@ -168,70 +149,34 @@ export function HomeClient({
               "text-[44px] sm:text-6xl md:text-7xl lg:text-[84px] xl:text-[92px] font-black tracking-[-0.04em] leading-[1.02] sm:leading-[0.96] text-[var(--primary-forest-green)] dark:text-white text-center w-full flex flex-col items-center justify-center max-w-4xl"
             )}
           >
-            <span className="block w-full text-center overflow-hidden">
-              <motion.span
-                className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--primary-forest-green)] dark:text-white text-center"
-                initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: "100%" }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 0.6,
-                  delay: shouldReduceMotion ? 0 : 0.08,
-                  ease: MOTION_EASE,
-                }}
-              >
+            <span className="block w-full text-center">
+              <span className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--primary-forest-green)] dark:text-white text-center">
                 <span>Showcase</span>
                 <span>your</span>
                 <span className="inline-flex items-center rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#8DFF00] dark:text-[#090C09] px-3 sm:px-4 py-0.5 sm:py-1 shadow-sm border border-white/10 dark:border-transparent tracking-tight font-black">
                   work<span className="text-[#8DFF00] dark:text-[#090C09]">.</span>
                 </span>
-              </motion.span>
+              </span>
             </span>
 
-            <span className="block w-full text-center overflow-hidden mt-1 sm:mt-2">
-              <motion.span
-                className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--primary-forest-green)] dark:text-white text-center"
-                initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: "100%" }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 0.6,
-                  delay: shouldReduceMotion ? 0 : 0.18,
-                  ease: MOTION_EASE,
-                }}
-              >
+            <span className="block w-full text-center mt-1 sm:mt-2">
+              <span className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--primary-forest-green)] dark:text-white text-center">
                 <span>Connect</span>
                 <span>with</span>
                 <span className="inline-flex items-center rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#8DFF00] dark:text-[#090C09] px-3 sm:px-4 py-0.5 sm:py-1 shadow-sm border border-white/10 dark:border-transparent tracking-tight font-black">
                   makers<span className="text-[#8DFF00] dark:text-[#090C09]">.</span>
                 </span>
-              </motion.span>
+              </span>
             </span>
           </h1>
 
           {/* Subtitle */}
-          <motion.p
-            initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 0.5,
-              delay: shouldReduceMotion ? 0 : 0.28,
-              ease: MOTION_EASE,
-            }}
-            className="mt-6 sm:mt-8 text-base sm:text-xl text-[var(--content-secondary)] max-w-2xl leading-relaxed font-normal text-center mx-auto"
-          >
+          <p className="mt-6 sm:mt-8 text-base sm:text-xl text-[var(--content-secondary)] max-w-2xl leading-relaxed font-normal text-center mx-auto">
             A modern portfolio platform to publish your projects, build your studio profile, and discover inspiring work from designers worldwide.
-          </motion.p>
+          </p>
 
           {/* Action Buttons */}
-          <motion.div
-            initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 0.5,
-              delay: shouldReduceMotion ? 0 : 0.38,
-              ease: MOTION_EASE,
-            }}
-            className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto mx-auto max-w-md sm:max-w-none"
-          >
+          <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto mx-auto max-w-md sm:max-w-none">
             <Link
               href="/explore"
               className={buttonVariants({
@@ -267,15 +212,10 @@ export function HomeClient({
                 Join as a Creator
               </Link>
             )}
-          </motion.div>
+          </div>
 
           {/* Minimalist 3-Point Value Manifesto (Centered Balanced Grid) */}
-          <motion.div
-            initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: shouldReduceMotion ? 0 : 0.48 }}
-            className="mt-12 sm:mt-14 pt-10 sm:pt-12 border-t border-[var(--border-neutral)] grid grid-cols-1 sm:grid-cols-3 gap-8 w-full max-w-4xl text-center"
-          >
+          <div className="mt-12 sm:mt-14 pt-10 sm:pt-12 border-t border-[var(--border-neutral)] grid grid-cols-1 sm:grid-cols-3 gap-8 w-full max-w-4xl text-center">
             {FEATURE_POINTS.map((pt) => (
               <div key={pt.num} className="space-y-2.5 flex flex-col items-center text-center">
                 <div className="inline-flex items-center gap-2 rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] px-3 py-1 text-xs font-mono font-bold tracking-wider">
@@ -290,7 +230,7 @@ export function HomeClient({
                 </p>
               </div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -298,7 +238,7 @@ export function HomeClient({
       {/* SECTION 1: FEATURED PROJECTS (4 Projects Grid)                            */}
       {/* ========================================================================= */}
       {featuredProjects.length > 0 && (
-        <ScrollRevealSection className="mx-auto max-w-[1580px] px-4 sm:px-6 w-full">
+        <section className="mx-auto max-w-[1580px] px-4 sm:px-6 w-full">
           <div className="flex items-baseline justify-between mb-5 pb-2.5 border-b border-[var(--border-neutral)]">
             <div>
               <div className="flex items-center gap-2 mb-1">
@@ -329,13 +269,13 @@ export function HomeClient({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProjects.map((project, idx) => (
-              <StaggerGridItem key={project.id} index={idx}>
+            {featuredProjects.map((project) => (
+              <div key={project.id}>
                 <ProjectCard project={project} />
-              </StaggerGridItem>
+              </div>
             ))}
           </div>
-        </ScrollRevealSection>
+        </section>
       )}
 
       {/* ========================================================================= */}
@@ -347,7 +287,7 @@ export function HomeClient({
         const IconComponent = CATEGORY_ICONS[section.taxonomy.id] || LayoutGrid;
 
         return (
-          <ScrollRevealSection
+          <section
             key={section.taxonomy.id}
             className="mx-auto max-w-[1580px] px-4 sm:px-6 w-full"
           >
@@ -381,13 +321,13 @@ export function HomeClient({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {section.projects.map((project, idx) => (
-                <StaggerGridItem key={project.id} index={idx}>
+              {section.projects.map((project) => (
+                <div key={project.id}>
                   <ProjectCard project={project} />
-                </StaggerGridItem>
+                </div>
               ))}
             </div>
-          </ScrollRevealSection>
+          </section>
         );
       })}
 
@@ -395,7 +335,7 @@ export function HomeClient({
       {/* HIGH-CONVERSION CREATOR CTA SECTION (Only for Guests / Not Logged In)     */}
       {/* ========================================================================= */}
       {!user && (
-        <ScrollRevealSection className="mx-auto max-w-[1580px] px-4 sm:px-6 w-full pt-4">
+        <section className="mx-auto max-w-[1580px] px-4 sm:px-6 w-full pt-4">
           <div className="relative rounded-[32px] bg-[var(--base-dark)] text-white border border-white/10 p-8 sm:p-12 lg:p-14 overflow-hidden shadow-[0_24px_64px_rgba(9,12,9,0.18)] dark:shadow-none">
             {/* Ambient Glows */}
             <div className="pointer-events-none absolute -right-20 -top-20 h-96 w-96 rounded-full bg-[#8DFF00]/15 blur-[120px]" />
@@ -553,10 +493,9 @@ export function HomeClient({
                   </div>
                 )}
               </div>
-
             </div>
           </div>
-        </ScrollRevealSection>
+        </section>
       )}
     </div>
   );
