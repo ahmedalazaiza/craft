@@ -63,9 +63,18 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const [category, setCategory] = useState<string>(
     initialData?.category ? normalizeCategory(initialData.category) : MASTER_TAXONOMY[0].name
   );
-  const [subCategory, setSubCategory] = useState<string>(
-    initialData?.subCategory || ""
-  );
+
+  // Multi-Select Specializations
+  const [specializations, setSpecializations] = useState<string[]>(() => {
+    if (initialData?.subCategory) return [initialData.subCategory];
+    if (initialData?.tags) {
+      const tax = getCategoryTaxonomy(initialData.category || "UI");
+      const matched = initialData.tags.filter((t) => tax?.subCategories.includes(t));
+      if (matched.length > 0) return matched;
+    }
+    return [];
+  });
+
   const [galleryImages, setGalleryImages] = useState<string[]>(
     initialData?.galleryImages || (initialData?.coverImage ? [initialData.coverImage] : [])
   );
@@ -111,11 +120,18 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const handleCategoryChange = (catName: string) => {
     setCategory(catName);
     const tax = getCategoryTaxonomy(catName);
-    if (tax && tax.subCategories.length > 0) {
-      setSubCategory(tax.subCategories[0]);
+    // Retain only specializations that belong to the new category, or reset
+    if (tax) {
+      setSpecializations((prev) => prev.filter((s) => tax.subCategories.includes(s)));
     } else {
-      setSubCategory("");
+      setSpecializations([]);
     }
+  };
+
+  const handleToggleSpecialization = (sub: string) => {
+    setSpecializations((prev) =>
+      prev.includes(sub) ? prev.filter((s) => s !== sub) : [...prev, sub]
+    );
   };
 
   // Reorder & Manipulate Gallery Spreads
@@ -167,7 +183,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           setCategory(aiCategory);
         }
         if (aiSubCategory) {
-          setSubCategory(aiSubCategory);
+          setSpecializations((prev) => Array.from(new Set([...prev, aiSubCategory])));
         }
         if (forceOverwrite || !body.trim()) {
           setBody(aiBody);
@@ -286,9 +302,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     }
 
     const finalCover = coverImage || galleryImages[0];
-    const combinedTags = subCategory && !tags.includes(subCategory)
-      ? [subCategory, ...tags]
-      : tags;
+    const combinedTags = Array.from(new Set([...specializations, ...tags]));
 
     setIsSaving(true);
     try {
@@ -298,7 +312,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
         summary: body.trim().slice(0, 200) || title.trim(),
         body: body.trim() || "Visual design case study.",
         category,
-        subCategory: subCategory || undefined,
+        subCategory: specializations[0] || undefined,
         medium: "Image",
         coverImage: finalCover,
         galleryImages,
@@ -634,18 +648,18 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           />
         </div>
 
-        {/* Category & Subcategory Selectors (Compact Dropdown + Chips) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+        {/* Category & Multi-Select Specialization (Compact Dropdown + Chips) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
           {/* Category Dropdown */}
-          <div>
-            <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] block mb-1.5">
+          <div className="space-y-1.5">
+            <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] block">
               Category
             </label>
             <div className="relative">
               <select
                 value={category}
                 onChange={(e) => handleCategoryChange(e.target.value)}
-                className="w-full h-11 rounded-[14px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] px-3.5 pr-8 text-xs font-bold text-[var(--content-primary)] focus:outline-none focus:border-[var(--primary-forest-green)] appearance-none cursor-pointer"
+                className="w-full h-11 rounded-[14px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] px-3.5 pr-8 text-xs font-bold text-[var(--content-primary)] focus:outline-none focus:border-[var(--primary-forest-green)] appearance-none cursor-pointer shadow-2xs"
               >
                 {MASTER_TAXONOMY.map((cat) => (
                   <option key={cat.id} value={cat.name}>
@@ -655,34 +669,48 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
               </select>
               <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-[var(--content-tertiary)] pointer-events-none" />
             </div>
+            <p className="text-[11px] text-[var(--content-tertiary)]">
+              Primary discipline for exploration feeds & discover grids.
+            </p>
           </div>
 
-          {/* Subcategory Pills */}
+          {/* Multi-Select Specialization Pills */}
           {availableSubCategories.length > 0 && (
-            <div>
-              <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] block mb-1.5">
-                Specialization ({availableSubCategories.length})
-              </label>
-              <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-0.5">
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
+                  Specialization ({specializations.length}/{availableSubCategories.length})
+                </label>
+                {specializations.length > 0 && (
+                  <span className="text-[10px] font-mono font-bold text-[var(--primary-forest-green)] dark:text-[var(--accent)]">
+                    {specializations.length} Selected
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-1 rounded-xl bg-[var(--bg-neutral)]/30 border border-[var(--border-neutral)]">
                 {availableSubCategories.map((sub) => {
-                  const isSelected = subCategory === sub;
+                  const isSelected = specializations.includes(sub);
                   return (
                     <button
                       key={sub}
                       type="button"
-                      onClick={() => setSubCategory(sub)}
+                      onClick={() => handleToggleSpecialization(sub)}
                       className={cn(
-                        "rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all border",
+                        "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all border",
                         isSelected
-                          ? "bg-[var(--primary-forest-green)] text-white dark:bg-[var(--accent)] dark:text-[#090C09] border-transparent shadow-xs"
-                          : "bg-[var(--bg-elevated)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)]"
+                          ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-xs dark:bg-[var(--accent)] dark:text-[#090C09] font-bold scale-[1.02]"
+                          : "bg-[var(--bg-elevated)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)] hover:text-[var(--content-primary)]"
                       )}
                     >
-                      {sub}
+                      {isSelected && <Check className="h-3 w-3 shrink-0" />}
+                      <span>{sub}</span>
                     </button>
                   );
                 })}
               </div>
+              <p className="text-[11px] text-[var(--content-tertiary)]">
+                Select one or multiple sub-disciplines that match this project.
+              </p>
             </div>
           )}
         </div>
@@ -703,15 +731,23 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
       </div>
 
       {/* ========================================================================= */}
-      {/* 3. TAGS & TOOLS (1-Click Suggestions)                                     */}
+      {/* 3. TAGS & TOOLS (Unified Harmonious Design System)                         */}
       {/* ========================================================================= */}
       <div className="rounded-[28px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 sm:p-8 shadow-xs grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Tags */}
-        <div className="space-y-3">
+        {/* Tags Section */}
+        <div className="space-y-3.5">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
-              Tags ({tags.length}/20)
-            </label>
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-6 rounded-lg bg-[var(--bg-neutral)] flex items-center justify-center text-[var(--content-secondary)]">
+                <Tag className="h-3.5 w-3.5 text-[var(--primary-forest-green)] dark:text-[var(--accent)]" />
+              </div>
+              <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-primary)]">
+                Tags & Methodology
+              </label>
+            </div>
+            <span className="text-[11px] font-mono text-[var(--content-tertiary)]">
+              {tags.length}/20 max
+            </span>
           </div>
 
           <div className="flex gap-2">
@@ -719,9 +755,9 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
               value={newTag}
               onChange={(e) => setNewTag(e.target.value)}
               onKeyDown={handleAddTag}
-              placeholder="Add tag (Press Enter)..."
+              placeholder="Add custom tag (Press Enter)..."
               disabled={tags.length >= 20}
-              className="h-9 text-xs"
+              className="h-10 text-xs bg-[var(--bg-elevated)]"
             />
             <Button
               type="button"
@@ -729,24 +765,27 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
               size="sm"
               onClick={handleAddTag}
               disabled={tags.length >= 20}
-              className="h-9 text-xs"
+              className="h-10 px-4 text-xs font-bold shrink-0"
             >
               Add
             </Button>
           </div>
 
+          {/* Selected Tags Chips */}
           {tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {tags.map((tag) => (
                 <span
                   key={tag}
-                  className="inline-flex items-center gap-1 bg-[var(--chip-bg)] text-[var(--chip-fg)] px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border transition-all shadow-2xs bg-[var(--chip-bg)] text-[var(--chip-fg)] border-[var(--border-neutral)] hover:border-[var(--border-neutral-hover)]"
                 >
-                  #{tag}
+                  <Tag className="h-3 w-3 text-[var(--primary-forest-green)] dark:text-[var(--accent)] shrink-0" />
+                  <span>#{tag}</span>
                   <button
                     type="button"
                     onClick={() => handleRemoveTag(tag)}
-                    className="hover:text-rose-500 ml-0.5 cursor-pointer"
+                    className="p-0.5 rounded-full hover:bg-rose-500/20 hover:text-rose-500 transition-colors ml-0.5 cursor-pointer"
+                    title={`Remove ${tag}`}
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -755,10 +794,11 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
             </div>
           )}
 
+          {/* Suggested Tags */}
           {suggestedTags.length > 0 && (
-            <div className="pt-2">
-              <span className="text-[10px] font-mono text-[var(--content-tertiary)] uppercase block mb-1.5">
-                Suggested tags:
+            <div className="pt-2 border-t border-[var(--border-neutral)]">
+              <span className="text-[10px] font-mono font-bold text-[var(--content-tertiary)] uppercase tracking-wider block mb-1.5">
+                Suggested for {activeTaxonomy?.shortName}:
               </span>
               <div className="flex flex-wrap gap-1">
                 {suggestedTags.slice(0, 8).map((sTag) => {
@@ -770,13 +810,14 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                       disabled={isAdded}
                       onClick={() => handleQuickAddTag(sTag)}
                       className={cn(
-                        "rounded-full px-2 py-0.5 text-[11px] transition-all cursor-pointer",
+                        "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border transition-all cursor-pointer",
                         isAdded
-                          ? "bg-[var(--bg-neutral)] text-[var(--content-tertiary)] opacity-40 cursor-not-allowed"
-                          : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:bg-[var(--accent)] hover:text-[#090C09]"
+                          ? "bg-[var(--bg-neutral)] text-[var(--content-tertiary)] opacity-40 border-transparent cursor-not-allowed"
+                          : "border-[var(--border-neutral)] bg-[var(--bg-elevated)] text-[var(--content-secondary)] hover:bg-[var(--accent)] hover:text-[#090C09] hover:border-transparent"
                       )}
                     >
-                      +{sTag}
+                      <Plus className="h-2.5 w-2.5" />
+                      <span>{sTag}</span>
                     </button>
                   );
                 })}
@@ -785,12 +826,20 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           )}
         </div>
 
-        {/* Tools */}
-        <div className="space-y-3">
+        {/* Tools Section (Unified Styling) */}
+        <div className="space-y-3.5">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
-              Tools Stack ({tools.length}/10)
-            </label>
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-6 rounded-lg bg-[var(--bg-neutral)] flex items-center justify-center text-[var(--content-secondary)]">
+                <Wrench className="h-3.5 w-3.5 text-[var(--primary-forest-green)] dark:text-[var(--accent)]" />
+              </div>
+              <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-primary)]">
+                Tools & Technologies
+              </label>
+            </div>
+            <span className="text-[11px] font-mono text-[var(--content-tertiary)]">
+              {tools.length}/10 max
+            </span>
           </div>
 
           <div className="flex gap-2">
@@ -798,9 +847,9 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
               value={newTool}
               onChange={(e) => setNewTool(e.target.value)}
               onKeyDown={handleAddTool}
-              placeholder="e.g. Figma, Blender..."
+              placeholder="e.g. Figma, Blender, Unity..."
               disabled={tools.length >= 10}
-              className="h-9 text-xs"
+              className="h-10 text-xs bg-[var(--bg-elevated)]"
             />
             <Button
               type="button"
@@ -808,24 +857,27 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
               size="sm"
               onClick={handleAddTool}
               disabled={tools.length >= 10}
-              className="h-9 text-xs"
+              className="h-10 px-4 text-xs font-bold shrink-0"
             >
               Add
             </Button>
           </div>
 
+          {/* Selected Tools Chips (Unified Styling matching Tags) */}
           {tools.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {tools.map((tool) => (
                 <span
                   key={tool}
-                  className="inline-flex items-center gap-1 bg-[var(--accent)] text-[#090C09] px-2.5 py-0.5 rounded-full text-xs font-bold"
+                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border transition-all shadow-2xs bg-[var(--chip-bg)] text-[var(--chip-fg)] border-[var(--border-neutral)] hover:border-[var(--border-neutral-hover)]"
                 >
-                  {tool}
+                  <Wrench className="h-3 w-3 text-[var(--primary-forest-green)] dark:text-[var(--accent)] shrink-0" />
+                  <span>{tool}</span>
                   <button
                     type="button"
                     onClick={() => handleRemoveTool(tool)}
-                    className="hover:text-rose-700 ml-0.5 cursor-pointer"
+                    className="p-0.5 rounded-full hover:bg-rose-500/20 hover:text-rose-500 transition-colors ml-0.5 cursor-pointer"
+                    title={`Remove ${tool}`}
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -834,10 +886,11 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
             </div>
           )}
 
+          {/* Suggested Tools (Unified Styling matching Tags) */}
           {suggestedTools.length > 0 && (
-            <div className="pt-2">
-              <span className="text-[10px] font-mono text-[var(--content-tertiary)] uppercase block mb-1.5">
-                Suggested tools:
+            <div className="pt-2 border-t border-[var(--border-neutral)]">
+              <span className="text-[10px] font-mono font-bold text-[var(--content-tertiary)] uppercase tracking-wider block mb-1.5">
+                Suggested for {activeTaxonomy?.shortName}:
               </span>
               <div className="flex flex-wrap gap-1">
                 {suggestedTools.slice(0, 8).map((sTool) => {
@@ -849,13 +902,14 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                       disabled={isAdded}
                       onClick={() => handleQuickAddTool(sTool)}
                       className={cn(
-                        "rounded-full px-2 py-0.5 text-[11px] transition-all cursor-pointer",
+                        "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border transition-all cursor-pointer",
                         isAdded
-                          ? "bg-[var(--bg-neutral)] text-[var(--content-tertiary)] opacity-40 cursor-not-allowed"
-                          : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:bg-[var(--accent)] hover:text-[#090C09]"
+                          ? "bg-[var(--bg-neutral)] text-[var(--content-tertiary)] opacity-40 border-transparent cursor-not-allowed"
+                          : "border-[var(--border-neutral)] bg-[var(--bg-elevated)] text-[var(--content-secondary)] hover:bg-[var(--accent)] hover:text-[#090C09] hover:border-transparent"
                       )}
                     >
-                      +{sTool}
+                      <Plus className="h-2.5 w-2.5" />
+                      <span>{sTool}</span>
                     </button>
                   );
                 })}

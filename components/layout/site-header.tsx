@@ -64,42 +64,51 @@ export function SiteHeader() {
             </Link>
 
             {/* Desktop Navigation Links */}
-            <nav className="hidden md:flex items-center gap-1">
+            <nav className="hidden md:flex items-center gap-1 bg-[var(--bg-elevated)]/90 border border-[var(--border-neutral)] p-1 rounded-full shadow-2xs">
               <Link
                 href="/"
                 prefetch={true}
                 className={cn(
-                  "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                  "relative rounded-full px-3.5 py-1.5 text-xs font-bold transition-all flex items-center gap-1.5",
                   isHome
-                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs border border-[var(--primary-forest-green)]/30 dark:bg-[var(--accent)]/15 dark:border-[var(--accent)]/40 dark:text-[var(--accent)]"
                     : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
                 )}
               >
-                Home
+                {isHome && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary-forest-green)] dark:bg-[var(--accent)] shadow-xs animate-pulse" />
+                )}
+                <span>Home</span>
               </Link>
               <Link
                 href="/explore"
                 prefetch={true}
                 className={cn(
-                  "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                  "relative rounded-full px-3.5 py-1.5 text-xs font-bold transition-all flex items-center gap-1.5",
                   isExplore
-                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs border border-[var(--primary-forest-green)]/30 dark:bg-[var(--accent)]/15 dark:border-[var(--accent)]/40 dark:text-[var(--accent)]"
                     : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
                 )}
               >
-                Explore
+                {isExplore && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary-forest-green)] dark:bg-[var(--accent)] shadow-xs animate-pulse" />
+                )}
+                <span>Explore</span>
               </Link>
               <Link
                 href="/creators"
                 prefetch={true}
                 className={cn(
-                  "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                  "relative rounded-full px-3.5 py-1.5 text-xs font-bold transition-all flex items-center gap-1.5",
                   isCreators
-                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs border border-[var(--primary-forest-green)]/30 dark:bg-[var(--accent)]/15 dark:border-[var(--accent)]/40 dark:text-[var(--accent)]"
                     : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
                 )}
               >
-                Creators
+                {isCreators && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary-forest-green)] dark:bg-[var(--accent)] shadow-xs animate-pulse" />
+                )}
+                <span>Creators</span>
               </Link>
             </nav>
           </div>
