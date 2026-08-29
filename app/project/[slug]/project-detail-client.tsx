@@ -219,8 +219,12 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
 
                 <span className="text-[var(--content-tertiary)]">•</span>
                 <span>{project.creator.city || project.creator.location || "Global"}</span>
-                <span className="text-[var(--content-tertiary)]">•</span>
-                <span className={cn(isDraft && "font-mono text-amber-600 dark:text-amber-400 font-semibold")}>{displayDate}</span>
+                {!isDraft && (
+                  <>
+                    <span className="text-[var(--content-tertiary)]">•</span>
+                    <span>{displayDate}</span>
+                  </>
+                )}
               </div>
             </div>
 
