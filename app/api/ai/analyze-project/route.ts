@@ -10,9 +10,24 @@ interface AnalyzeRequestBody {
   filenames?: string[];
 }
 
+function isRandomHashOrGibberish(str: string): boolean {
+  const cleaned = str.replace(/[^a-z0-9]/gi, "");
+  // Hashes like 59kv1zo, 8f7e2a, 169829381, etc.
+  if (/^[a-z0-9]{5,16}$/i.test(cleaned) && /\d/.test(cleaned) && !/[aeiouy]{2,}/i.test(cleaned)) {
+    return true;
+  }
+  if (/^[a-f0-9]{8,}$/i.test(cleaned) || /^\d+$/.test(cleaned) || cleaned.length < 3) {
+    return true;
+  }
+  return false;
+}
+
 function cleanFilenameToTitle(filename: string): string {
   // Strip extension
   const nameWithoutExt = filename.replace(/\.[^/.]+$/, "");
+  
+  if (isRandomHashOrGibberish(nameWithoutExt)) return "";
+
   // Replace delimiters with spaces
   const cleaned = nameWithoutExt
     .replace(/[_-]+/g, " ")
@@ -20,7 +35,7 @@ function cleanFilenameToTitle(filename: string): string {
     .replace(/\s+/g, " ")
     .trim();
 
-  if (!cleaned || cleaned.length < 3) return "";
+  if (!cleaned || cleaned.length < 3 || isRandomHashOrGibberish(cleaned)) return "";
 
   // Capitalize words
   return cleaned
@@ -114,18 +129,20 @@ Return ONLY valid JSON matching this structure without markdown formatting or co
 `;
 
     // 1. If Gemini API key is configured, execute multimodal vision analysis
-    if (apiKey && apiKey.startsWith("AIzaSy")) {
+    if (apiKey && apiKey.trim().length > 10) {
       try {
         const parts: any[] = [{ text: promptText }];
 
-        // Add base64 image data if provided
+        // Add base64 image data if provided (CamelCase inlineData is required by Gemini REST API)
         for (const imgData of imageDataList.slice(0, 3)) {
-          parts.push({
-            inline_data: {
-              data: imgData.data,
-              mime_type: imgData.mimeType || "image/jpeg",
-            },
-          });
+          if (imgData.data) {
+            parts.push({
+              inlineData: {
+                data: imgData.data,
+                mimeType: imgData.mimeType || "image/jpeg",
+              },
+            });
+          }
         }
 
         // If only URLs were provided and no direct inline data, fetch top 2 images as buffers
@@ -145,11 +162,11 @@ Return ONLY valid JSON matching this structure without markdown formatting or co
 
           const fetchedImages = (await Promise.all(fetchPromises)).filter(Boolean);
           for (const img of fetchedImages) {
-            if (img) {
+            if (img && img.data) {
               parts.push({
-                inline_data: {
+                inlineData: {
                   data: img.data,
-                  mime_type: img.mimeType,
+                  mimeType: img.mimeType,
                 },
               });
             }
@@ -167,14 +184,14 @@ Return ONLY valid JSON matching this structure without markdown formatting or co
         for (const model of modelsToTry) {
           try {
             const geminiRes = await fetch(
-              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.trim()}`,
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   contents: [{ parts }],
                   generationConfig: {
-                    temperature: 0.4,
+                    temperature: 0.2,
                     responseMimeType: "application/json",
                   },
                 }),
@@ -185,6 +202,9 @@ Return ONLY valid JSON matching this structure without markdown formatting or co
               const geminiData = await geminiRes.json();
               rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "";
               if (rawText) break;
+            } else {
+              const errBody = await geminiRes.json().catch(() => ({}));
+              console.warn(`Gemini model ${model} response not ok:`, geminiRes.status, errBody);
             }
           } catch (modelErr) {
             console.warn(`Model ${model} failed, trying next candidate...`, modelErr);

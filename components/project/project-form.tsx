@@ -154,8 +154,13 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   };
 
   // AI Visual Analysis & Auto-Drafting Engine
-  const triggerAIAnalysis = async (imagesToAnalyze: string[], forceOverwrite = false, filenames: string[] = []) => {
-    if (imagesToAnalyze.length === 0) return;
+  const triggerAIAnalysis = async (
+    imagesToAnalyze: string[],
+    forceOverwrite = false,
+    filenames: string[] = [],
+    imageDataList: { data: string; mimeType: string }[] = []
+  ) => {
+    if (imagesToAnalyze.length === 0 && imageDataList.length === 0) return;
 
     setIsAnalyzingAI(true);
     setAiSuccessMessage(null);
@@ -167,6 +172,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
         body: JSON.stringify({
           imageUrls: imagesToAnalyze,
           filenames: filenames.length > 0 ? filenames : undefined,
+          imageDataList: imageDataList.length > 0 ? imageDataList : undefined,
         }),
       });
 
@@ -214,6 +220,27 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     }
   };
 
+  // Helper to convert files to base64 for instant multimodal vision
+  const convertFilesToBase64 = async (files: File[]): Promise<{ data: string; mimeType: string }[]> => {
+    const promises = files.slice(0, 3).map((file) => {
+      return new Promise<{ data: string; mimeType: string }>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          const base64Data = result.split(",")[1] || "";
+          resolve({ data: base64Data, mimeType: file.type || "image/jpeg" });
+        };
+        reader.onerror = () => {
+          resolve({ data: "", mimeType: file.type || "image/jpeg" });
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    const results = await Promise.all(promises);
+    return results.filter((r) => r.data.length > 0);
+  };
+
   // Batch Media Upload Handler
   const handleGalleryFiles = async (files: FileList | File[]) => {
     const fileList = Array.from(files).filter((f) => f.type.startsWith("image/"));
@@ -224,11 +251,17 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     setIsProcessingFiles(true);
     setUploadProgress({ current: 0, total: fileList.length });
     try {
-      const cdnUrls = await uploadMultipleMediaFiles(
+      // Convert to base64 for immediate multimodal vision analysis
+      const base64ImagesPromise = convertFilesToBase64(fileList);
+
+      const cdnUrlsPromise = uploadMultipleMediaFiles(
         fileList,
         "project-media",
         (current, total) => setUploadProgress({ current, total })
       );
+
+      const [cdnUrls, base64Images] = await Promise.all([cdnUrlsPromise, base64ImagesPromise]);
+
       if (cdnUrls.length > 0) {
         const nextGallery = [...galleryImages, ...cdnUrls];
         setGalleryImages(nextGallery);
@@ -236,8 +269,8 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           setCoverImage(nextGallery[0]);
         }
 
-        // Trigger AI Auto-Fill based on newly uploaded visual spreads & file names
-        triggerAIAnalysis(nextGallery, mode === "new" && !title.trim(), fileNames);
+        // Trigger AI Auto-Fill with both URLs, original file names, and raw base64 image data
+        triggerAIAnalysis(nextGallery, mode === "new" && !title.trim(), fileNames, base64Images);
       }
     } catch (err) {
       console.error("Gallery files upload error:", err);
