@@ -3,7 +3,7 @@ import { NewProjectClient } from "./new-project-client";
 
 export const metadata: Metadata = {
   title: "New Project",
-  description: "Create and publish a new studio project on Craft.",
+  description: "Create and publish a new studio project on Layerat.",
   robots: {
     index: false,
     follow: false,

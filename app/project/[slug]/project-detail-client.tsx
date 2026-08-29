@@ -453,7 +453,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
         url={
           typeof window !== "undefined"
             ? `${window.location.origin}/project/${project.slug}`
-            : `https://craft.studio/project/${project.slug}`
+            : `https://layerat.com/project/${project.slug}`
         }
       />
     </article>

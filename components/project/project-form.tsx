@@ -355,7 +355,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
             </span>
           </div>
           <p className="text-xs text-[var(--content-secondary)] mt-0.5">
-            Upload images, let Craft AI draft the story, and publish live in seconds.
+            Upload images, let Layerat AI draft the story, and publish live in seconds.
           </p>
         </div>
 
@@ -428,7 +428,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           </div>
           <div>
             <h4 className="text-xs font-bold text-[var(--content-primary)]">
-              Craft Vision AI is inspecting your visual spreads...
+              Layerat Vision AI is inspecting your visual spreads...
             </h4>
             <p className="text-[11px] text-[var(--content-secondary)]">
               Detecting design discipline, typography scale, palette, and drafting a bespoke case study narrative.
@@ -940,7 +940,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
               </h3>
 
               <p className="text-xs sm:text-sm text-[var(--content-secondary)] leading-relaxed">
-                Permanently purge <span className="font-semibold text-[var(--content-primary)] font-mono">&quot;{title || initialData.title || "this project"}&quot;</span> including all media assets, case study storytelling, tags, and peer appreciations from Craft.
+                Permanently purge <span className="font-semibold text-[var(--content-primary)] font-mono">&quot;{title || initialData.title || "this project"}&quot;</span> including all media assets, case study storytelling, tags, and peer appreciations from Layerat.
               </p>
             </div>
 

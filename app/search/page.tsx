@@ -15,8 +15,8 @@ export async function generateMetadata({
   return {
     title,
     description: q
-      ? `Search results for "${q}" across projects, creators, tools, and design disciplines on Craft.`
-      : "Search projects, creators, tools, and design disciplines on Craft.",
+      ? `Search results for "${q}" across projects, creators, tools, and design disciplines on Layerat.`
+      : "Search projects, creators, tools, and design disciplines on Layerat.",
     robots: {
       index: false,
       follow: true,

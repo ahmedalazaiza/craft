@@ -3,7 +3,7 @@ import { LoginClient } from "./login-client";
 
 export const metadata: Metadata = {
   title: "Log in",
-  description: "Sign in to manage your portfolio and projects on Craft.",
+  description: "Sign in to manage your portfolio and projects on Layerat.",
   robots: {
     index: false,
     follow: false,

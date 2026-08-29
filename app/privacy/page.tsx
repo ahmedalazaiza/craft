@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = constructMetadata({
   title: "Privacy Policy — Zero Data-Selling & Encryption",
   description:
-    "Learn about Craft's strict privacy principles, transparent session security, and data protection practices.",
+    "Learn about Layerat's strict privacy principles, transparent session security, and data protection practices.",
   path: "/privacy",
 });
 
@@ -115,7 +115,7 @@ export default function PrivacyPage() {
             Your information is used strictly to:
           </p>
           <ul className="list-disc pl-5 space-y-1.5 text-sm sm:text-base">
-            <li>Render your studio profile, projects, and high-DPI case studies across the Craft directory.</li>
+            <li>Render your studio profile, projects, and high-DPI case studies across the Layerat directory.</li>
             <li>Send essential transactional emails (email verification, password resets, account security alerts).</li>
             <li>Provide real-time peer notifications when other verified makers appreciate or comment on your work.</li>
           </ul>
@@ -126,7 +126,7 @@ export default function PrivacyPage() {
             3. Local Storage & Preferences
           </h2>
           <p>
-            Craft uses local browser storage exclusively for functional purposes: caching your dark/light theme preference (`craft-theme`) and fast hydration tokens to eliminate visual loading flashes (0ms navigation). We do not use third-party tracking pixels or surveillance analytics.
+            Layerat uses local browser storage exclusively for functional purposes: caching your theme preference and fast hydration tokens to eliminate visual loading flashes (0ms navigation). We do not use third-party tracking pixels or surveillance analytics.
           </p>
         </section>
 
@@ -136,8 +136,8 @@ export default function PrivacyPage() {
           </h2>
           <p>
             Regardless of your geographic location, you have the right to access, rectify, or permanently erase your personal data. To request a full data export or complete account deletion, please contact{" "}
-            <a href="mailto:privacy@craftplatform.com" className="text-[var(--primary-forest-green)] dark:text-[var(--accent)] font-semibold underline">
-              privacy@craftplatform.com
+            <a href="mailto:privacy@layerat.com" className="text-[var(--primary-forest-green)] dark:text-[var(--accent)] font-semibold underline">
+              privacy@layerat.com
             </a>.
           </p>
         </section>

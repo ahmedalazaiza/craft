@@ -133,7 +133,7 @@ export function HomeClient({
             className="inline-flex items-center gap-2 rounded-full bg-[var(--chip-bg)] px-4 py-1.5 text-xs font-semibold text-[var(--chip-fg)] mb-6 sm:mb-8 shadow-xs border border-white/10 select-none mx-auto"
           >
             <Sparkles className="h-3.5 w-3.5 text-[#8DFF00]" />
-            <span>Craft Platform</span>
+            <span>Layerat Platform</span>
             <span className="text-[var(--content-tertiary)]">•</span>
             <span className="text-[var(--chip-fg)] font-normal">Independent Creators</span>
           </motion.div>

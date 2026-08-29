@@ -15,7 +15,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("Craft Platform Runtime Error:", error);
+    console.error("Layerat Platform Runtime Error:", error);
   }, [error]);
 
   return (

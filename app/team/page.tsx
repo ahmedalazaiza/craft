@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = constructMetadata({
   title: "Our Team — Curators, Designers & Builders",
   description:
-    "Meet the team, curators, and creative technologists behind the Craft platform.",
+    "Meet the team, curators, and creative technologists behind the Layerat platform.",
   path: "/team",
 });
 
@@ -51,7 +51,7 @@ const TEAM_MEMBERS: TeamMember[] = [
       github: "https://github.com",
       twitter: "https://x.com",
       linkedin: "https://linkedin.com",
-      website: "https://craftplatform.com",
+      website: "https://layerat.com",
     },
   },
   {
@@ -64,7 +64,7 @@ const TEAM_MEMBERS: TeamMember[] = [
     socials: {
       twitter: "https://x.com",
       linkedin: "https://linkedin.com",
-      website: "https://craftplatform.com",
+      website: "https://layerat.com",
     },
   },
   {
@@ -90,7 +90,7 @@ const TEAM_MEMBERS: TeamMember[] = [
     socials: {
       twitter: "https://x.com",
       linkedin: "https://linkedin.com",
-      website: "https://craftplatform.com",
+      website: "https://layerat.com",
     },
   },
 ];
@@ -172,7 +172,7 @@ export default function TeamPage() {
               Core Collective
             </h2>
             <p className="text-sm text-[var(--content-secondary)] mt-1">
-              The creative stewards directing the curation and technical infrastructure of Craft.
+              The creative stewards directing the curation and technical infrastructure of Layerat.
             </p>
           </div>
           <span className="text-xs font-semibold text-[var(--content-tertiary)] uppercase tracking-wider">

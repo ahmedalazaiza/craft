@@ -188,7 +188,7 @@ export function CreatorListItem({
         url={
           typeof window !== "undefined"
             ? `${window.location.origin}/u/${creator.username}`
-            : `https://craft.studio/u/${creator.username}`
+            : `https://layerat.com/u/${creator.username}`
         }
       />
     </>

@@ -124,7 +124,7 @@ export function PasswordResetModal({ isOpen, onClose, onSuccess }: PasswordReset
                   Set New Password
                 </h2>
                 <span className="text-xs text-[var(--content-secondary)]">
-                  Secure your Craft account credentials
+                  Secure your Layerat account credentials
                 </span>
               </div>
             </div>

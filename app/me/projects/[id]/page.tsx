@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const project = await fetchProjectById(id);
 
   return {
-    title: project ? `Edit "${project.title}"` : "Edit Project — Craft",
+    title: project ? `Edit "${project.title}"` : "Edit Project — Layerat",
     robots: {
       index: false,
       follow: false,

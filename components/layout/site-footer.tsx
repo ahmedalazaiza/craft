@@ -19,7 +19,7 @@ export function SiteFooter() {
               className="inline-flex items-center gap-1.5 text-xl font-bold tracking-tight text-[var(--primary-forest-green)] select-none hover:opacity-90 transition-opacity"
             >
               <span className="font-semibold tracking-[-0.04em] text-[22px]">
-                Craft<span className="text-[var(--accent)] font-black">.</span>
+                Layerat<span className="text-[var(--accent)] font-black">.</span>
               </span>
             </Link>
 
@@ -149,7 +149,7 @@ export function SiteFooter() {
         {/* Bottom Bar without theme changer */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[var(--content-tertiary)] text-center sm:text-left">
           <p>
-            &copy; {new Date().getFullYear()} Craft Platforms Inc. All creative monographs and works are the intellectual property of their respective creators.
+            &copy; {new Date().getFullYear()} Layerat Platforms Inc. All creative monographs and works are the intellectual property of their respective creators.
           </p>
 
           <div className="flex items-center gap-6">

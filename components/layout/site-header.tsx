@@ -60,7 +60,7 @@ export function SiteHeader() {
               className="flex items-center gap-1.5 text-xl font-bold tracking-tight text-[var(--primary-forest-green)] select-none hover:opacity-90 transition-opacity"
             >
               <span className="font-semibold tracking-[-0.04em] text-[22px]">
-                Craft<span className="text-[var(--accent)] font-black">.</span>
+                Layerat<span className="text-[var(--accent)] font-black">.</span>
               </span>
             </Link>
 
@@ -161,8 +161,8 @@ export function SiteHeader() {
                     type="button"
                     onClick={() => setIsInlineSearchOpen(true)}
                     className="h-9 px-4 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)] text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] flex items-center gap-2.5 transition-all shadow-xs cursor-pointer select-none group"
-                    title="Search Craft"
-                    aria-label="Search Craft"
+                    title="Search Layerat"
+                    aria-label="Search Layerat"
                   >
                     <Search className="h-4 w-4 text-[var(--content-tertiary)] group-hover:text-[var(--content-primary)] transition-colors" />
                     <span className="text-xs font-medium text-[var(--content-tertiary)] group-hover:text-[var(--content-primary)] transition-colors">

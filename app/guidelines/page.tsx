@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = constructMetadata({
   title: "Community Guidelines — Curation & Peer Standards",
   description:
-    "Standards for publishing original case studies, delivering thoughtful peer feedback, and maintaining Craft's editorial excellence.",
+    "Standards for publishing original case studies, delivering thoughtful peer feedback, and maintaining Layerat's editorial excellence.",
   path: "/guidelines",
 });
 
@@ -47,7 +47,7 @@ export default function GuidelinesPage() {
         </h1>
 
         <p className="text-sm text-[var(--content-tertiary)]">
-          The shared principles and curation expectations that keep Craft a high-signal sanctuary for creators.
+          The shared principles and curation expectations that keep Layerat a high-signal sanctuary for creators.
         </p>
       </div>
 
@@ -85,7 +85,7 @@ export default function GuidelinesPage() {
             Zero Harassment
           </h3>
           <p className="text-xs text-[var(--content-secondary)] leading-relaxed">
-            Craft maintains zero tolerance for hate speech, harassment, impersonation, or predatory behavior.
+            Layerat maintains zero tolerance for hate speech, harassment, impersonation, or predatory behavior.
           </p>
         </div>
       </div>
@@ -97,7 +97,7 @@ export default function GuidelinesPage() {
             1. Curation & Publishing Standards
           </h2>
           <p>
-            When publishing a case study on Craft:
+            When publishing a case study on Layerat:
           </p>
           <ul className="list-disc pl-5 space-y-1.5 text-sm sm:text-base">
             <li>Ensure high-resolution imagery and clear typography specimens without unnecessary watermarks.</li>
@@ -121,8 +121,8 @@ export default function GuidelinesPage() {
           </h2>
           <p>
             If you notice copyright infringement, uncredited work, or violations of these guidelines, please contact our curation team at{" "}
-            <a href="mailto:curation@craftplatform.com" className="text-[var(--primary-forest-green)] dark:text-[var(--accent)] font-semibold underline">
-              curation@craftplatform.com
+            <a href="mailto:curation@layerat.com" className="text-[var(--primary-forest-green)] dark:text-[var(--accent)] font-semibold underline">
+              curation@layerat.com
             </a>.
           </p>
         </section>

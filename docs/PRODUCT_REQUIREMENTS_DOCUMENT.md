@@ -1,4 +1,4 @@
-# Craft. — Product Requirements Document (PRD) & Platform Hub
+# Layerat. — Product Requirements Document (PRD) & Platform Hub
 
 > **Document Version:** 1.2.0  
 > **Status:** Active / Production-Ready Living Specification  
@@ -11,13 +11,13 @@
 ## 1. Executive Summary & Product Vision
 
 ### 1.1 Product Overview
-**Craft.** is a specialized portfolio, monograph publishing, and community showcase platform engineered specifically for independent creators, art directors, brand architects, and creative engineers. 
+**Layerat.** is a specialized portfolio, monograph publishing, and community showcase platform engineered specifically for independent creators, art directors, brand architects, and creative engineers. 
 
-Unlike mainstream design aggregators that compress work into generic thumbnail grids and prioritize engagement-bait algorithms, **Craft.** treats each creative artifact as an editorial case study. It balances monumental typography, intrinsic-resolution media spreads, and tactile micro-interactions to elevate individual studio identities.
+Unlike mainstream design aggregators that compress work into generic thumbnail grids and prioritize engagement-bait algorithms, **Layerat.** treats each creative artifact as an editorial case study. It balances monumental typography, intrinsic-resolution media spreads, and tactile micro-interactions to elevate individual studio identities.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                                   CRAFT.                                    │
+│                                  LAYERAT.                                   │
 │             "The Living Showcase for Independent Creators"                 │
 │                                                                             │
 │  • Living Case Studies with 2px Zero-Radius Continuous Gallery Spreads     │
@@ -100,4 +100,4 @@ To provide independent designers and studios with a zero-noise, high-fidelity pu
 
 ---
 
-*Craft. — Engineered with precision for creators worldwide.*
+*Layerat. — Engineered with precision for creators worldwide.*

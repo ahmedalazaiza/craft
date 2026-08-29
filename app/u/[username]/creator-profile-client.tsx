@@ -321,7 +321,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                   About
                 </span>
                 <p className="text-sm text-[var(--content-secondary)] leading-relaxed">
-                  {creator.bio || "Craft community designer and visual creator."}
+                  {creator.bio || "Layerat community designer and visual creator."}
                 </p>
               </div>
 
@@ -696,7 +696,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
           url={
             typeof window !== "undefined"
               ? `${window.location.origin}/u/${creator.username}`
-              : `https://craft.studio/u/${creator.username}`
+              : `https://layerat.com/u/${creator.username}`
           }
         />
       </FadeIn>

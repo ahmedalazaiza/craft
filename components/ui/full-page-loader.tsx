@@ -10,7 +10,7 @@ interface FullPageLoaderProps {
 }
 
 export function FullPageLoader({
-  text = "Loading Craft directory...",
+  text = "Loading Layerat directory...",
   minHeight = "min-h-[calc(100vh-12rem)]",
 }: FullPageLoaderProps) {
   return (

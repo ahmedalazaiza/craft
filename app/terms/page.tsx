@@ -7,9 +7,9 @@ import { ShieldCheck, FileText, Scale, Lock, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = constructMetadata({
-  title: "Terms of Use — Craft Platform Agreement",
+  title: "Terms of Use — Layerat Platform Agreement",
   description:
-    "Review the Terms of Use governing your portfolio publishing, intellectual property, and community participation on Craft.",
+    "Review the Terms of Use governing your portfolio publishing, intellectual property, and community participation on Layerat.",
   path: "/terms",
 });
 
@@ -56,10 +56,10 @@ export default function TermsPage() {
       <div className="rounded-[24px] border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 sm:p-8 space-y-3">
         <div className="flex items-center gap-2 text-[var(--primary-forest-green)] dark:text-[var(--accent)] font-bold text-sm">
           <ShieldCheck className="h-5 w-5" />
-          <span>The Craft Creator Pledge</span>
+          <span>The Layerat Creator Pledge</span>
         </div>
         <p className="text-sm text-[var(--content-secondary)] leading-relaxed">
-          <strong>You own 100% of your work.</strong> When you upload projects, visual spreads, fonts, or case studies to Craft, you retain all copyrights, trademarks, and intellectual property. We merely ask for the non-exclusive license required to render and display your work across the platform.
+          <strong>You own 100% of your work.</strong> When you upload projects, visual spreads, fonts, or case studies to Layerat, you retain all copyrights, trademarks, and intellectual property. We merely ask for the non-exclusive license required to render and display your work across the platform.
         </p>
       </div>
 
@@ -71,7 +71,7 @@ export default function TermsPage() {
             1. Acceptance of Terms
           </h2>
           <p>
-            By accessing, creating an account on, or interacting with Craft (&quot;the Platform&quot;), you agree to be bound by these Terms of Use and our Community Guidelines. If you do not agree with any part of these terms, you must refrain from using the Platform.
+            By accessing, creating an account on, or interacting with Layerat (&quot;the Platform&quot;), you agree to be bound by these Terms of Use and our Community Guidelines. If you do not agree with any part of these terms, you must refrain from using the Platform.
           </p>
         </section>
 
@@ -81,7 +81,7 @@ export default function TermsPage() {
             2. Creator Intellectual Property & Ownership
           </h2>
           <p>
-            You represent and warrant that you own or have obtained all necessary licenses, rights, consents, and permissions to publish any content, imagery, videos, or assets uploaded to your Craft portfolio.
+            You represent and warrant that you own or have obtained all necessary licenses, rights, consents, and permissions to publish any content, imagery, videos, or assets uploaded to your Layerat portfolio.
           </p>
           <ul className="list-disc pl-5 space-y-1.5 text-sm sm:text-base">
             <li>We do not claim any ownership rights over your creative assets.</li>
@@ -96,7 +96,7 @@ export default function TermsPage() {
             3. Account Security & Verification
           </h2>
           <p>
-            You are responsible for maintaining the confidentiality of your login credentials and for all activities that occur under your account. You agree to immediately notify Craft of any unauthorized use or security breach.
+            You are responsible for maintaining the confidentiality of your login credentials and for all activities that occur under your account. You agree to immediately notify Layerat of any unauthorized use or security breach.
           </p>
         </section>
 
@@ -106,7 +106,7 @@ export default function TermsPage() {
             4. Acceptable Use & Conduct
           </h2>
           <p>
-            Craft is an editorial platform devoted to professional design and visual culture. You agree not to:
+            Layerat is an editorial platform devoted to professional design and visual culture. You agree not to:
           </p>
           <ul className="list-disc pl-5 space-y-1.5 text-sm sm:text-base">
             <li>Upload malicious scripts, spam, or automated bot interactions.</li>
@@ -121,7 +121,7 @@ export default function TermsPage() {
             5. Termination & Modifications
           </h2>
           <p>
-            We reserve the right to suspend or terminate accounts that violate these terms or engage in copyright infringement. We may update these terms periodically; continued use of Craft following updates constitutes acceptance.
+            We reserve the right to suspend or terminate accounts that violate these terms or engage in copyright infringement. We may update these terms periodically; continued use of Layerat following updates constitutes acceptance.
           </p>
         </section>
 
@@ -132,8 +132,8 @@ export default function TermsPage() {
           </h2>
           <p>
             For questions regarding these terms, DMCA notices, or intellectual property questions, please reach out to our legal collective at{" "}
-            <a href="mailto:legal@craftplatform.com" className="text-[var(--primary-forest-green)] dark:text-[var(--accent)] font-semibold underline">
-              legal@craftplatform.com
+            <a href="mailto:legal@layerat.com" className="text-[var(--primary-forest-green)] dark:text-[var(--accent)] font-semibold underline">
+              legal@layerat.com
             </a>.
           </p>
         </section>

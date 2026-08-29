@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { Project, Creator } from "./types";
 
-export const SITE_NAME = "Craft";
+export const SITE_NAME = "Layerat";
 export const SITE_TAGLINE = "The Portfolio Platform for Designers & Creators";
 
 export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://craftplatform.com";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://layerat.com";
 
 export function absoluteUrl(path: string = ""): string {
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
@@ -34,7 +34,8 @@ export const PRIMARY_KEYWORDS = [
   "independent designer showcase",
   "best design portfolios 2026",
   "hire top UI UX designers",
-  "craft design platform",
+  "layerat design platform",
+  "layerat portfolio showcase",
 ];
 
 export function constructMetadata({
@@ -67,9 +68,9 @@ export function constructMetadata({
     description,
     keywords,
     applicationName: SITE_NAME,
-    authors: [{ name: "Craft Creators", url: SITE_URL }],
+    authors: [{ name: "Layerat Creators", url: SITE_URL }],
     creator: SITE_NAME,
-    publisher: "Craft Platforms Inc.",
+    publisher: "Layerat Platforms Inc.",
     category: "Design Portfolio & Creative Case Studies",
     metadataBase: new URL(SITE_URL),
     alternates: {
@@ -96,8 +97,8 @@ export function constructMetadata({
       title: pageTitle,
       description,
       images: [ogImage],
-      creator: "@craftplatform",
-      site: "@craftplatform",
+      creator: "@layerat",
+      site: "@layerat",
     },
     robots: noIndex
       ? {
@@ -252,7 +253,7 @@ export function generateWebSiteJsonLd() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: SITE_NAME,
-    alternateName: "Craft Portfolio Platform",
+    alternateName: "Layerat Portfolio Platform",
     url: SITE_URL,
     description: defaultDescription,
     potentialAction: {
@@ -274,8 +275,7 @@ export function generateOrganizationJsonLd() {
     url: SITE_URL,
     logo: absoluteUrl("/og-image.png"),
     sameAs: [
-      "https://twitter.com/craftplatform",
-      "https://github.com/ahmedalazaiza/craft",
+      "https://twitter.com/layerat",
     ],
   };
 }

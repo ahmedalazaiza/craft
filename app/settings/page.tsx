@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Account Settings",
-  description: "Manage your studio profile, security credentials, preferences, and account configurations on Craft.",
+  description: "Manage your studio profile, security credentials, preferences, and account configurations on Layerat.",
   robots: {
     index: false,
     follow: false,

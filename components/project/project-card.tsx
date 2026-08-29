@@ -162,7 +162,7 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
         url={
           typeof window !== "undefined"
             ? `${window.location.origin}/project/${liveProject.slug}`
-            : `https://craft.studio/project/${liveProject.slug}`
+            : `https://layerat.com/project/${liveProject.slug}`
         }
       />
     </>

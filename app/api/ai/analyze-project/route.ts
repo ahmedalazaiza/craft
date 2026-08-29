@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     ).join("\n\n");
 
     const promptText = `
-You are the AI Creative Director and Taxonomy Curator for CRAFT (craft.design), a world-class portfolio exhibition platform for elite digital designers, brand architects, and 3D artists.
+You are the AI Creative Director and Taxonomy Curator for LAYERAT (layerat.com), a world-class portfolio exhibition platform for elite digital designers, brand architects, and 3D artists.
 
 Analyze the uploaded project image(s) and generate the complete, high-aesthetic case study metadata in JSON format.
 

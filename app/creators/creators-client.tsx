@@ -147,7 +147,7 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
               Discover Global Creators
             </h1>
             <p className="mt-2 type-body-large text-[var(--content-secondary)] leading-relaxed">
-              Explore independent designers, art directors, typographers, and creative engineers publishing on Craft worldwide.
+              Explore independent designers, art directors, typographers, and creative engineers publishing on Layerat worldwide.
             </p>
           </div>
 

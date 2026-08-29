@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = constructMetadata({
   title: "About Us — The Modern Home for Great Design",
   description:
-    "Craft is a portfolio platform for designers, art directors, and creative studios to share high-resolution case studies without ads or algorithms.",
+    "Layerat is a portfolio platform for designers, art directors, and creative studios to share high-resolution case studies without ads or algorithms.",
   path: "/about",
 });
 
@@ -62,7 +62,7 @@ export default function AboutPage() {
         </h1>
 
         <p className="type-body-large text-[var(--content-secondary)] max-w-2xl mx-auto leading-relaxed text-base sm:text-lg">
-          We built Craft because design portfolios deserve a clean, fast, and ad-free space. Here, your work speaks for itself.
+          We built Layerat because design portfolios deserve a clean, fast, and ad-free space. Here, your work speaks for itself.
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
@@ -128,17 +128,17 @@ export default function AboutPage() {
       <section className="rounded-[32px] border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-8 sm:p-14 space-y-8">
         <div className="max-w-3xl space-y-6">
           <h2 className={cn(bricolage.className, "text-3xl sm:text-4xl font-extrabold text-[var(--content-primary)]")}>
-            Why We Started Craft
+            Why We Started Layerat
           </h2>
           <div className="space-y-4 type-body-default text-[var(--content-secondary)] leading-relaxed text-base sm:text-lg">
             <p>
-              Craft was created to give designers, art directors, and creative studios a clean, distraction-free home for their best work.
+              Layerat was created to give designers, art directors, and creative studios a clean, distraction-free home for their best work.
             </p>
             <p>
               While modern social feeds focus on quick video clips and engagement tricks, we believe great design needs room to breathe—with clear typography, high-resolution imagery, and thoughtful write-ups.
             </p>
             <p>
-              Whether you specialize in UI/UX design, branding, 3D motion, or architecture, Craft gives you the tools to share your creative process and connect with other designers around the world.
+              Whether you specialize in UI/UX design, branding, 3D motion, or architecture, Layerat gives you the tools to share your creative process and connect with other designers around the world.
             </p>
           </div>
         </div>

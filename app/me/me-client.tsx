@@ -557,7 +557,7 @@ export function MeClient() {
             url={
               typeof window !== "undefined"
                 ? `${window.location.origin}/u/${user.username}`
-                : `https://craft.studio/u/${user.username}`
+                : `https://layerat.com/u/${user.username}`
             }
           />
         )}

@@ -52,7 +52,7 @@ export function ShareModal({
     }
   };
 
-  const shareText = `Check out ${creatorName ? `${creatorName}'s studio` : title} on Craft:`;
+  const shareText = `Check out ${creatorName ? `${creatorName}'s studio` : title} on Layerat:`;
 
   const shareLinks = [
     {
