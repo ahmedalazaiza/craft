@@ -665,8 +665,8 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                     </div>
                   </div>
 
-                  {/* Fill Manually Button */}
-                  <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                  {/* Fill Manually Button & Floating Pointer Tooltip Container */}
+                  <div className="relative shrink-0 self-end sm:self-auto">
                     <button
                       type="button"
                       onClick={handleFillManually}
@@ -676,48 +676,53 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                       <Edit3 className="h-3.5 w-3.5 text-[var(--primary-forest-green)] dark:text-[var(--accent)]" />
                       <span>Fill manually</span>
                     </button>
+
+                    {/* Floating Tooltip Pointing Directly at "Fill Manually" Button */}
+                    {showAiGuideTooltip && (
+                      <div className="absolute right-0 top-full mt-3 z-40 w-72 sm:w-80 rounded-2xl bg-[#090C0A] text-white border border-white/20 p-4 shadow-2xl backdrop-blur-xl animate-scale-in text-left">
+                        {/* Upward Pointer Caret aligned with Fill Manually button */}
+                        <div className="absolute -top-1.5 right-6 h-3 w-3 rotate-45 bg-[#090C0A] border-l border-t border-white/25" />
+
+                        <div className="relative space-y-2.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--accent)] text-[#090C09] text-[10px] font-bold shadow-xs">
+                                ⚡
+                              </span>
+                              <h5 className="text-xs font-bold text-white tracking-wide">
+                                Prefer manual control?
+                              </h5>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={dismissAiGuideTooltip}
+                              className="text-white/60 hover:text-white transition-colors cursor-pointer p-0.5"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+
+                          <p className="text-[12px] text-white/80 leading-relaxed font-normal">
+                            Click <strong className="text-white font-bold">Fill manually</strong> at any time to stop AI vision analysis and write your project details yourself.
+                          </p>
+
+                          <div className="pt-1.5 flex items-center justify-between gap-2 border-t border-white/10">
+                            <span className="text-[10px] font-mono text-white/50">
+                              First-time tip
+                            </span>
+                            <button
+                              type="button"
+                              onClick={dismissAiGuideTooltip}
+                              className="rounded-lg bg-[var(--accent)] hover:bg-white text-[#090C09] px-3.5 py-1 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95"
+                            >
+                              Got it
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
-
-                {/* First-Time Creator Onboarding Tooltip Popover */}
-                {showAiGuideTooltip && (
-                  <div className="mt-2 rounded-2xl bg-[var(--bg-screen)] border border-[var(--primary-forest-green)]/30 shadow-xl p-4 animate-scale-in text-left">
-                    <div className="flex items-start gap-3">
-                      <div className="h-8 w-8 rounded-xl bg-[var(--primary-forest-green)]/10 text-[var(--primary-forest-green)] dark:text-[var(--accent)] flex items-center justify-center shrink-0 mt-0.5">
-                        <Sparkles className="h-4 w-4 fill-current" />
-                      </div>
-                      <div className="space-y-1.5 flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <h5 className="text-xs font-black text-[var(--content-primary)] uppercase tracking-wider font-mono">
-                            ⚡ How AI Auto-Drafting Works
-                          </h5>
-                          <button
-                            type="button"
-                            onClick={dismissAiGuideTooltip}
-                            className="text-[var(--content-tertiary)] hover:text-[var(--content-primary)] cursor-pointer p-0.5"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                        <p className="text-xs text-[var(--content-secondary)] leading-relaxed">
-                          Layerat Vision AI reads typography, design systems, and tools directly from your uploaded images to generate a studio-grade case study draft automatically.
-                        </p>
-                        <div className="pt-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                          <span className="text-[11px] font-mono text-[var(--content-tertiary)]">
-                            💡 You can click <strong>Fill manually</strong> anytime or edit any field once generated.
-                          </span>
-                          <button
-                            type="button"
-                            onClick={dismissAiGuideTooltip}
-                            className="rounded-lg bg-[var(--primary-forest-green)] text-white dark:bg-[var(--accent)] dark:text-[#090C09] px-3.5 py-1 text-xs font-bold transition-all hover:opacity-90 cursor-pointer self-end sm:self-auto shadow-2xs"
-                          >
-                            Got it
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
