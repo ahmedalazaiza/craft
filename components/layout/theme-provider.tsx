@@ -13,7 +13,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 function getSystemTheme(): "light" | "dark" {
-  if (typeof window === "undefined") return "dark";
+  if (typeof window === "undefined") return "light";
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
@@ -60,11 +60,17 @@ function applyThemeInstantly(resolved: "light" | "dark") {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("system");
-  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("dark");
+  // Current user request: lock to Light mode across entire site for now, keeping theme engine preserved
+  const [theme, setThemeState] = useState<Theme>("light");
+  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
 
-  // Read initial theme synchronously on mount
+  // Force light theme on mount
   useEffect(() => {
+    document.documentElement.setAttribute("data-theme", "light");
+    setThemeState("light");
+    setResolvedTheme("light");
+
+    /* PRESERVED FOR FUTURE RE-ACTIVATION:
     try {
       const stored = localStorage.getItem("craft-theme") as Theme | null;
       const initialTheme: Theme =
@@ -92,23 +98,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     mediaQuery.addEventListener("change", handleSystemChange);
     return () => mediaQuery.removeEventListener("change", handleSystemChange);
+    */
   }, []);
 
-  // Instantaneous theme changer with zero-latency transition freezing
+  // Instantaneous theme changer kept intact for future re-activation
   const setTheme = useCallback((newTheme: Theme) => {
     const resolved = newTheme === "system" ? getSystemTheme() : newTheme;
-
-    // 1. Immediately apply to DOM without CSS transition congestion
     applyThemeInstantly(resolved);
-
-    // 2. Persist in storage
     try {
       localStorage.setItem("craft-theme", newTheme);
     } catch {
       // ignore
     }
-
-    // 3. Update React context in single batch
     setThemeState(newTheme);
     setResolvedTheme(resolved);
   }, []);

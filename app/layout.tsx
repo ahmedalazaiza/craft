@@ -121,7 +121,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />
 
-        {/* Blocking theme script to prevent any flash of unstyled theme */}
+        {/* Blocking theme script: locked to light theme for now, dynamic logic preserved */}
         <Script
           id="craft-theme-init"
           strategy="beforeInteractive"
@@ -129,10 +129,13 @@ export default function RootLayout({
             __html: `
               (function() {
                 try {
+                  document.documentElement.setAttribute('data-theme', 'light');
+                  /* PRESERVED FOR FUTURE RE-ACTIVATION:
                   var stored = localStorage.getItem('craft-theme');
                   var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                   var theme = (stored === 'light' || stored === 'dark') ? stored : (prefersDark ? 'dark' : 'light');
                   document.documentElement.setAttribute('data-theme', theme);
+                  */
                 } catch (e) {}
               })();
             `,

@@ -159,7 +159,7 @@ export function ProfileDropdown() {
               </Link>
             </div>
 
-            {/* Appearance & Theme Switcher Section */}
+            {/* Appearance & Theme Switcher Section - Suspended for now as requested
             <div className="p-3">
               <div className="text-[10px] font-mono uppercase tracking-wider text-[var(--content-tertiary)] font-semibold mb-2">
                 Interface Theme
@@ -188,6 +188,7 @@ export function ProfileDropdown() {
                 })}
               </div>
             </div>
+            */}
 
             {/* Footer / Log Out */}
             <div className="p-1.5">

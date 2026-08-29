@@ -191,7 +191,7 @@ export function SiteHeader() {
             )}
           </button>
 
-          {/* Mobile Mode Switcher (Light / Dark) */}
+          {/* Mobile Mode Switcher (Light / Dark) - Suspended for now as requested
           <button
             type="button"
             onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
@@ -206,6 +206,7 @@ export function SiteHeader() {
               <Moon className="h-4 w-4 text-[var(--primary-forest-green)]" />
             )}
           </button>
+          */}
 
           {user ? (
             <>
@@ -232,7 +233,9 @@ export function SiteHeader() {
             </>
           ) : (
             <div className="hidden md:flex items-center gap-1.5 sm:gap-2">
+              {/* ThemeToggle for guests - Suspended for now as requested
               <ThemeToggle />
+              */}
 
               <Link
                 href="/login"
