@@ -5,15 +5,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/session-context";
-import { Project, ProjectMedium } from "@/lib/types";
+import { Project } from "@/lib/types";
 import { bricolage } from "@/lib/fonts";
 import {
   MASTER_TAXONOMY,
   getCategoryTaxonomy,
   normalizeCategory,
 } from "@/lib/taxonomy";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -21,28 +20,21 @@ import { uploadMultipleMediaFiles } from "@/lib/supabase/storage";
 import {
   UploadCloud,
   Check,
-  ArrowLeft,
   Plus,
   X,
-  Upload,
-  Image as ImageIcon,
   Loader2,
   Sparkles,
   Tag,
   Wrench,
-  Layers,
-  FileText,
   Trash2,
-  ArrowLeft as ArrowLeftIcon,
-  ArrowRight as ArrowRightIcon,
+  ArrowUp,
+  ArrowDown,
   Star,
-  Eye,
   CheckCircle2,
   Save,
   Send,
   ChevronDown,
   Wand2,
-  AlertTriangle,
 } from "lucide-react";
 
 import { DeleteProjectModal } from "@/components/project/delete-project-modal";
@@ -57,6 +49,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const { saveProject } = useSession();
 
   const galleryFileInputRef = useRef<HTMLInputElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   // Form State
   const [title, setTitle] = useState(initialData?.title || "");
@@ -103,6 +96,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   // AI Visual Auto-Fill State
   const [isAnalyzingAI, setIsAnalyzingAI] = useState(false);
   const [aiSuccessMessage, setAiSuccessMessage] = useState<string | null>(null);
+  const [isTitleHighlighted, setIsTitleHighlighted] = useState(false);
 
   // Active Taxonomy
   const activeTaxonomy = useMemo(() => {
@@ -124,7 +118,6 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const handleCategoryChange = (catName: string) => {
     setCategory(catName);
     const tax = getCategoryTaxonomy(catName);
-    // Retain only specializations that belong to the new category, or reset
     if (tax) {
       setSpecializations((prev) => prev.filter((s) => tax.subCategories.includes(s)));
     } else {
@@ -199,8 +192,17 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           setTools(aiTools);
         }
 
-        setAiSuccessMessage("✨ AI analyzed your images and drafted project details! Feel free to customize anything.");
-        setTimeout(() => setAiSuccessMessage(null), 8000);
+        setAiSuccessMessage("✨ AI drafted project details from your spreads! Click any field to edit & customize.");
+        setTimeout(() => setAiSuccessMessage(null), 10000);
+
+        // Auto-focus on Title Input so user immediately sees fields are editable
+        setTimeout(() => {
+          if (titleInputRef.current) {
+            titleInputRef.current.focus();
+            setIsTitleHighlighted(true);
+            setTimeout(() => setIsTitleHighlighted(false), 4000);
+          }
+        }, 200);
       }
     } catch (err) {
       console.warn("AI Visual Analysis error:", err);
@@ -297,6 +299,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const handleSave = async (isPublish: boolean) => {
     if (!title.trim()) {
       alert("Please provide a project title.");
+      titleInputRef.current?.focus();
       return;
     }
 
@@ -342,31 +345,68 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const activeCoverUrl = coverImage || galleryImages[0];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-16">
-      {/* Top Header & Sticky Publishing Action Bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[var(--border-neutral)]">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className={cn(bricolage.className, "text-2xl sm:text-3xl font-black text-[var(--content-primary)] tracking-tight")}>
-              {mode === "new" ? "New Project" : "Edit Project"}
+    <div className="fixed inset-0 z-50 bg-[var(--bg-screen)] flex flex-col overflow-hidden text-[var(--content-primary)] select-none">
+      {/* Hidden File Input */}
+      <input
+        type="file"
+        multiple
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        ref={galleryFileInputRef}
+        onChange={(e) => {
+          if (e.target.files && e.target.files.length > 0) {
+            handleGalleryFiles(e.target.files);
+          }
+        }}
+        className="hidden"
+      />
+
+      {/* ========================================================================= */}
+      {/* TOP HEADER ACTION BAR                                                     */}
+      {/* ========================================================================= */}
+      <header className="h-16 shrink-0 border-b border-[var(--border-neutral)] bg-[var(--bg-screen)]/95 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between z-30">
+        {/* Left: Close/Back & Status */}
+        <div className="flex items-center gap-3 min-w-0">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="h-9 w-9 rounded-full bg-[var(--bg-neutral)] hover:bg-[var(--border-neutral)] flex items-center justify-center text-[var(--content-primary)] transition-colors cursor-pointer shrink-0"
+            title="Close creator studio"
+          >
+            <X className="h-4 w-4" />
+          </button>
+
+          <div className="flex items-center gap-2 truncate">
+            <h1 className={cn(bricolage.className, "text-sm sm:text-base font-black text-[var(--content-primary)] truncate")}>
+              {mode === "new" ? "Create New Project" : "Edit Case Study"}
             </h1>
-            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--accent)] text-[#090C09] px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider shadow-xs">
-              <Sparkles className="h-3 w-3 fill-current" />
-              AI Vision Enabled
-            </span>
+            {galleryImages.length > 0 && (
+              <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-[var(--bg-neutral)] border border-[var(--border-neutral)] px-2.5 py-0.5 text-[10px] font-mono text-[var(--content-secondary)]">
+                {galleryImages.length} Image{galleryImages.length === 1 ? "" : "s"}
+              </span>
+            )}
           </div>
-          <p className="text-xs text-[var(--content-secondary)] mt-0.5">
-            Upload images, let Layerat AI draft the story, and publish live in seconds.
-          </p>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+        {/* Right: Actions */}
+        <div className="flex items-center gap-2 shrink-0">
+          {mode === "edit" && initialData?.id && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="text-rose-600 hover:text-rose-700 hover:bg-rose-500/10 font-bold text-xs gap-1.5"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Delete</span>
+            </Button>
+          )}
+
           {galleryImages.length > 0 && (
             <Button
               type="button"
               variant="secondary"
-              size="default"
+              size="sm"
               disabled={isAnalyzingAI || isProcessingFiles}
               onClick={() => triggerAIAnalysis(galleryImages, true)}
               className="gap-1.5 font-bold text-xs shadow-xs text-[var(--primary-forest-green)] dark:text-[var(--accent)] border-[var(--primary-forest-green)]/30 hover:bg-[var(--primary-forest-green)]/10"
@@ -375,12 +415,12 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
               {isAnalyzingAI ? (
                 <>
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  <span>AI Analyzing...</span>
+                  <span className="hidden sm:inline">AI Analyzing...</span>
                 </>
               ) : (
                 <>
                   <Wand2 className="h-3.5 w-3.5" />
-                  <span>Auto-Fill with AI</span>
+                  <span className="hidden sm:inline">Re-Draft with AI</span>
                 </>
               )}
             </Button>
@@ -389,8 +429,8 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           <Button
             type="button"
             variant="secondary"
-            size="default"
-            disabled={isSaving}
+            size="sm"
+            disabled={isSaving || galleryImages.length === 0}
             onClick={() => handleSave(false)}
             className="gap-1.5 font-semibold text-xs shadow-xs"
           >
@@ -401,208 +441,477 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           <Button
             type="button"
             variant="accent"
-            size="default"
-            disabled={isSaving}
+            size="sm"
+            disabled={isSaving || galleryImages.length === 0}
             onClick={() => handleSave(true)}
-            className="gap-2 font-bold shadow-xs min-w-[130px]"
+            className="gap-2 font-bold shadow-xs min-w-[110px]"
           >
             {isSaving ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 <span>Publishing...</span>
               </>
             ) : (
               <>
-                <Send className="h-4 w-4" />
-                <span>Publish Project</span>
+                <Send className="h-3.5 w-3.5" />
+                <span>Publish Live</span>
               </>
             )}
           </Button>
         </div>
-      </div>
-
-      {/* AI Analyzing Status Banner */}
-      {isAnalyzingAI && (
-        <div className="rounded-[20px] bg-[var(--accent)]/15 border border-[var(--accent)]/40 p-4 flex items-center gap-3 animate-pulse shadow-xs">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--accent)] text-[#090C09] shrink-0">
-            <Sparkles className="h-4 w-4 fill-current animate-spin" />
-          </div>
-          <div>
-            <h4 className="text-xs font-bold text-[var(--content-primary)]">
-              Layerat Vision AI is inspecting your visual spreads...
-            </h4>
-            <p className="text-[11px] text-[var(--content-secondary)]">
-              Detecting design discipline, typography scale, palette, and drafting a bespoke case study narrative.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* AI Success Toast Banner */}
-      {aiSuccessMessage && (
-        <div className="rounded-[20px] bg-emerald-500/10 border border-emerald-500/30 p-3.5 flex items-center justify-between gap-3 animate-scale-in">
-          <div className="flex items-center gap-2.5">
-            <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span className="text-xs font-semibold text-emerald-800 dark:text-emerald-200">
-              {aiSuccessMessage}
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setAiSuccessMessage(null)}
-            className="text-xs text-[var(--content-tertiary)] hover:text-[var(--content-primary)] cursor-pointer"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      )}
+      </header>
 
       {/* ========================================================================= */}
-      {/* 1. VISUAL MEDIA DROPZONE & SPREADS STRIP                                  */}
+      {/* MAIN CONTAINER: EMPTY UPLOADER OR SPLIT-SCREEN WORKSPACE                  */}
       {/* ========================================================================= */}
-      <div className="space-y-4">
-        {/* Hidden File Input */}
-        <input
-          type="file"
-          multiple
-          accept="image/png,image/jpeg,image/webp,image/gif"
-          ref={galleryFileInputRef}
-          onChange={(e) => {
-            if (e.target.files && e.target.files.length > 0) {
-              handleGalleryFiles(e.target.files);
-            }
-          }}
-          className="hidden"
-        />
+      {galleryImages.length === 0 ? (
+        /* ----------------------------------------------------------------------- */
+        /* INITIAL STATE: FULL-SCREEN CENTERED UPLOADER                            */
+        /* ----------------------------------------------------------------------- */
+        <main className="flex-1 flex items-center justify-center p-4 sm:p-8 overflow-y-auto bg-[var(--bg-screen)]">
+          <div className="max-w-2xl w-full text-center space-y-6">
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDraggingGallery(true);
+              }}
+              onDragLeave={() => setIsDraggingGallery(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDraggingGallery(false);
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                  handleGalleryFiles(e.dataTransfer.files);
+                }
+              }}
+              onClick={() => galleryFileInputRef.current?.click()}
+              className={cn(
+                "rounded-[32px] bg-[var(--bg-screen)] border-2 border-dashed p-10 sm:p-16 text-center cursor-pointer transition-all duration-300 shadow-sm flex flex-col items-center justify-center gap-4 group",
+                isDraggingGallery
+                  ? "border-[var(--primary-forest-green)] bg-[var(--bg-neutral)]/70 scale-[0.99] ring-8 ring-[var(--primary-forest-green)]/10"
+                  : "border-[var(--border-neutral)] hover:border-[var(--primary-forest-green)] hover:shadow-md"
+              )}
+            >
+              {isProcessingFiles ? (
+                <div className="flex flex-col items-center py-8 space-y-4">
+                  <div className="relative">
+                    <Loader2 className="h-14 w-14 animate-spin text-[var(--primary-forest-green)]" />
+                    <Sparkles className="h-6 w-6 text-[var(--accent)] absolute -top-1 -right-1 fill-current animate-pulse" />
+                  </div>
+                  <div className="space-y-1 text-center">
+                    <h3 className="text-base font-bold text-[var(--content-primary)]">
+                      Uploading & Processing Media ({uploadProgress?.current || 0}/{uploadProgress?.total || 0})...
+                    </h3>
+                    <p className="text-xs text-[var(--content-secondary)]">
+                      Uploading to secure storage and launching AI visual analyzer
+                    </p>
+                  </div>
+                  {uploadProgress && (
+                    <div className="w-64 h-2 rounded-full bg-[var(--bg-neutral)] overflow-hidden border border-[var(--border-neutral)]">
+                      <div
+                        className="h-full bg-[var(--primary-forest-green)] transition-all duration-300 rounded-full"
+                        style={{
+                          width: `${Math.round((uploadProgress.current / uploadProgress.total) * 100)}%`,
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <div className="h-20 w-20 rounded-3xl bg-[var(--bg-neutral)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-tertiary)] group-hover:text-[var(--primary-forest-green)] group-hover:border-[var(--primary-forest-green)] group-hover:scale-105 transition-all shadow-sm">
+                    <UploadCloud className="h-10 w-10 stroke-[1.5]" />
+                  </div>
 
-        {/* Upload Dropzone */}
-        <div
-          onDragOver={(e) => {
-            e.preventDefault();
-            setIsDraggingGallery(true);
-          }}
-          onDragLeave={() => setIsDraggingGallery(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setIsDraggingGallery(false);
-            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-              handleGalleryFiles(e.dataTransfer.files);
-            }
-          }}
-          onClick={() => galleryFileInputRef.current?.click()}
-          className={cn(
-            "rounded-[24px] bg-[var(--bg-screen)] border-2 border-dashed p-8 text-center group cursor-pointer transition-all",
-            isDraggingGallery
-              ? "border-[var(--primary-forest-green)] bg-[var(--bg-neutral)]/60 scale-[0.99]"
-              : "border-[var(--border-neutral)] hover:border-[var(--primary-forest-green)]"
-          )}
-        >
-          {isProcessingFiles ? (
-            <div className="flex flex-col items-center py-4">
-              <Loader2 className="h-8 w-8 animate-spin text-[var(--primary-forest-green)] mb-2" />
-              <span className="text-xs font-bold text-[var(--content-primary)]">
-                Uploading images ({uploadProgress?.current || 0}/{uploadProgress?.total || 0})...
-              </span>
+                  <div className="space-y-1.5 max-w-md">
+                    <h2 className={cn(bricolage.className, "text-2xl sm:text-3xl font-black text-[var(--content-primary)] tracking-tight")}>
+                      Upload your Project Spreads
+                    </h2>
+                    <p className="text-xs sm:text-sm text-[var(--content-secondary)]">
+                      Drag and drop your case study images, mockups, or system boards here, or click to browse.
+                    </p>
+                  </div>
+
+                  <div className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)]/15 border border-[var(--accent)]/40 px-4 py-2 text-xs font-bold text-[var(--content-primary)] shadow-2xs mt-2">
+                    <Sparkles className="h-4 w-4 text-[var(--primary-forest-green)] dark:text-[var(--accent)] fill-current shrink-0 animate-pulse" />
+                    <span>AI will inspect your images to draft Title, Narrative, Category & Tags</span>
+                  </div>
+
+                  <span className="text-[11px] font-mono text-[var(--content-tertiary)] mt-1">
+                    Supports PNG, JPG, WebP, GIF • High-resolution supported
+                  </span>
+                </>
+              )}
             </div>
-          ) : (
-            <div className="flex flex-col items-center py-3">
-              <div className="h-12 w-12 rounded-full bg-[var(--bg-neutral)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-tertiary)] mb-2.5 group-hover:text-[var(--primary-forest-green)] group-hover:border-[var(--primary-forest-green)] transition-colors shadow-xs">
-                <UploadCloud className="h-6 w-6 group-hover:scale-110 transition-transform" />
+          </div>
+        </main>
+      ) : (
+        /* ----------------------------------------------------------------------- */
+        /* POST-UPLOAD STATE: DYNAMIC TWO-COLUMN SPLIT SCREEN                      */
+        /* ----------------------------------------------------------------------- */
+        <main className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+          {/* ===================================================================== */}
+          {/* LEFT COLUMN: EDITORIAL FORM & AI METADATA (SCROLLABLE)                */}
+          {/* ===================================================================== */}
+          <section className="w-full lg:w-[48%] xl:w-[45%] h-full overflow-y-auto border-r border-[var(--border-neutral)] p-6 sm:p-8 space-y-6 bg-[var(--bg-screen)]">
+            {/* AI Analyzing Status Banner */}
+            {isAnalyzingAI && (
+              <div className="rounded-[20px] bg-[var(--accent)]/15 border border-[var(--accent)]/40 p-4 flex items-center gap-3 animate-pulse shadow-xs">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--accent)] text-[#090C09] shrink-0">
+                  <Sparkles className="h-4 w-4 fill-current animate-spin" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-[var(--content-primary)]">
+                    Layerat Vision AI is inspecting your visual spreads...
+                  </h4>
+                  <p className="text-[11px] text-[var(--content-secondary)]">
+                    Drafting a bespoke title, case study narrative, category, and tags.
+                  </p>
+                </div>
               </div>
-              <span className="type-body-default-bold text-[var(--content-primary)] text-sm font-bold">
-                Drop project images here, or browse files
-              </span>
-              <span className="type-label text-[var(--content-tertiary)] text-xs mt-0.5">
-                PNG, JPG, WebP — AI will inspect images and auto-fill project details
-              </span>
-            </div>
-          )}
-        </div>
+            )}
 
-        {/* Uploaded Images Horizontal / Grid Tiles Strip */}
-        {galleryImages.length > 0 && (
-          <div className="space-y-2 pt-2">
-            <div className="flex items-center justify-between text-xs font-mono text-[var(--content-secondary)]">
-              <span>{galleryImages.length} Image{galleryImages.length === 1 ? "" : "s"} uploaded</span>
-              <span>Click ⭐ on any tile to set as cover</span>
+            {/* AI Success Toast Banner */}
+            {aiSuccessMessage && (
+              <div className="rounded-[20px] bg-emerald-500/10 border border-emerald-500/30 p-3.5 flex items-center justify-between gap-3 animate-scale-in">
+                <div className="flex items-center gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span className="text-xs font-semibold text-emerald-800 dark:text-emerald-200">
+                    {aiSuccessMessage}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAiSuccessMessage(null)}
+                  className="text-xs text-[var(--content-tertiary)] hover:text-[var(--content-primary)] cursor-pointer"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+
+            {/* 1. Project Title Field (Auto-focused after AI with editable indicator) */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] flex items-center gap-1.5">
+                  <span>Project Title</span>
+                  <span className="text-[10px] text-[var(--primary-forest-green)] dark:text-[var(--accent)] font-bold bg-[var(--primary-forest-green)]/10 dark:bg-[var(--accent)]/10 px-2 py-0.5 rounded-md">
+                    ✏️ Editable
+                  </span>
+                </label>
+                {title.trim() && (
+                  <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">
+                    ✓ Ready
+                  </span>
+                )}
+              </div>
+              <div className="relative">
+                <input
+                  ref={titleInputRef}
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Project title (or drop images to auto-generate)..."
+                  className={cn(
+                    bricolage.className,
+                    "w-full text-xl sm:text-2xl font-black text-[var(--content-primary)] bg-[var(--bg-elevated)]/50 rounded-2xl border p-4 transition-all duration-300 focus:outline-none placeholder:text-[var(--content-tertiary)]",
+                    isTitleHighlighted
+                      ? "border-[var(--accent)] ring-4 ring-[var(--accent)]/30 bg-[var(--accent)]/10"
+                      : "border-[var(--border-neutral)] focus:border-[var(--primary-forest-green)] focus:ring-2 focus:ring-[var(--primary-forest-green)]/20"
+                  )}
+                />
+              </div>
+              <p className="text-[11px] text-[var(--content-secondary)]">
+                You can customize and edit this title anytime.
+              </p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {/* 2. Category & Multi-Select Specialization */}
+            <div className="space-y-4 pt-2 border-t border-[var(--border-neutral)]">
+              {/* Category Dropdown */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] block">
+                  Category
+                </label>
+                <div className="relative">
+                  <select
+                    value={category}
+                    onChange={(e) => handleCategoryChange(e.target.value)}
+                    className="w-full h-11 rounded-[14px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] px-3.5 pr-8 text-xs font-bold text-[var(--content-primary)] focus:outline-none focus:border-[var(--primary-forest-green)] appearance-none cursor-pointer shadow-2xs"
+                  >
+                    {MASTER_TAXONOMY.map((cat) => (
+                      <option key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-[var(--content-tertiary)] pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Multi-Select Specialization Pills */}
+              {availableSubCategories.length > 0 && (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
+                      Specialization ({specializations.length}/{availableSubCategories.length})
+                    </label>
+                    {specializations.length > 0 && (
+                      <span className="text-[10px] font-mono font-bold text-[var(--primary-forest-green)] dark:text-[var(--accent)]">
+                        {specializations.length} Selected
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-2 rounded-xl bg-[var(--bg-neutral)]/30 border border-[var(--border-neutral)]">
+                    {availableSubCategories.map((sub) => {
+                      const isSelected = specializations.includes(sub);
+                      return (
+                        <button
+                          key={sub}
+                          type="button"
+                          onClick={() => handleToggleSpecialization(sub)}
+                          className={cn(
+                            "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all border",
+                            isSelected
+                              ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-xs dark:bg-[var(--accent)] dark:text-[#090C09] font-bold scale-[1.02]"
+                              : "bg-[var(--bg-elevated)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)] hover:text-[var(--content-primary)]"
+                          )}
+                        >
+                          {isSelected && <Check className="h-3 w-3 shrink-0" />}
+                          <span>{sub}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 3. Narrative / Case Study Story */}
+            <div className="space-y-1.5 pt-2 border-t border-[var(--border-neutral)]">
+              <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] block">
+                About the Project & Process
+              </label>
+              <Textarea
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                placeholder="Share the design narrative, creative decisions, materials, or context behind this project..."
+                rows={6}
+                className="text-sm bg-[var(--bg-elevated)] leading-relaxed rounded-2xl"
+              />
+            </div>
+
+            {/* 4. Tags & Tools Grid */}
+            <div className="space-y-4 pt-2 border-t border-[var(--border-neutral)]">
+              {/* Tags Section */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <Tag className="h-3.5 w-3.5 text-[var(--primary-forest-green)] dark:text-[var(--accent)]" />
+                  <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-primary)]">
+                    Tags & Methodology
+                  </label>
+                </div>
+                <div className="flex flex-wrap gap-1.5 min-h-[36px] p-2 rounded-xl bg-[var(--bg-neutral)]/30 border border-[var(--border-neutral)]">
+                  {tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-1 rounded-full bg-[var(--bg-elevated)] border border-[var(--border-neutral)] px-2.5 py-0.5 text-xs font-medium text-[var(--content-primary)] shadow-2xs"
+                    >
+                      <span>#{tag}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(tag)}
+                        className="text-[var(--content-tertiary)] hover:text-rose-500 cursor-pointer ml-0.5"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                  <input
+                    type="text"
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    onKeyDown={handleAddTag}
+                    placeholder="+ Add tag (Enter)"
+                    className="flex-1 min-w-[110px] bg-transparent text-xs text-[var(--content-primary)] focus:outline-none placeholder:text-[var(--content-tertiary)] px-1"
+                  />
+                </div>
+                {suggestedTags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 items-center">
+                    <span className="text-[10px] font-mono text-[var(--content-tertiary)] mr-1">Suggestions:</span>
+                    {suggestedTags.slice(0, 6).map((st) => (
+                      <button
+                        key={st}
+                        type="button"
+                        onClick={() => handleQuickAddTag(st)}
+                        disabled={tags.includes(st)}
+                        className="text-[11px] text-[var(--content-secondary)] hover:text-[var(--content-primary)] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] px-2 py-0.5 rounded-md disabled:opacity-40 cursor-pointer"
+                      >
+                        +{st}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Tools Section */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <Wrench className="h-3.5 w-3.5 text-[var(--primary-forest-green)] dark:text-[var(--accent)]" />
+                  <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-primary)]">
+                    Tools & Software
+                  </label>
+                </div>
+                <div className="flex flex-wrap gap-1.5 min-h-[36px] p-2 rounded-xl bg-[var(--bg-neutral)]/30 border border-[var(--border-neutral)]">
+                  {tools.map((tool) => (
+                    <span
+                      key={tool}
+                      className="inline-flex items-center gap-1 rounded-full bg-[var(--bg-elevated)] border border-[var(--border-neutral)] px-2.5 py-0.5 text-xs font-medium text-[var(--content-primary)] shadow-2xs"
+                    >
+                      <span>{tool}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTool(tool)}
+                        className="text-[var(--content-tertiary)] hover:text-rose-500 cursor-pointer ml-0.5"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                  <input
+                    type="text"
+                    value={newTool}
+                    onChange={(e) => setNewTool(e.target.value)}
+                    onKeyDown={handleAddTool}
+                    placeholder="+ Add tool (Enter)"
+                    className="flex-1 min-w-[110px] bg-transparent text-xs text-[var(--content-primary)] focus:outline-none placeholder:text-[var(--content-tertiary)] px-1"
+                  />
+                </div>
+                {suggestedTools.length > 0 && (
+                  <div className="flex flex-wrap gap-1 items-center">
+                    <span className="text-[10px] font-mono text-[var(--content-tertiary)] mr-1">Suggestions:</span>
+                    {suggestedTools.slice(0, 6).map((st) => (
+                      <button
+                        key={st}
+                        type="button"
+                        onClick={() => handleQuickAddTool(st)}
+                        disabled={tools.includes(st)}
+                        className="text-[11px] text-[var(--content-secondary)] hover:text-[var(--content-primary)] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] px-2 py-0.5 rounded-md disabled:opacity-40 cursor-pointer"
+                      >
+                        +{st}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* ===================================================================== */}
+          {/* RIGHT COLUMN: VISUAL MEDIA FEED / SPREADS CANVAS (SCROLLABLE)         */}
+          {/* ===================================================================== */}
+          <section className="w-full lg:w-[52%] xl:w-[55%] h-full flex flex-col overflow-hidden bg-[var(--bg-neutral)]/20">
+            {/* Media Feed Header */}
+            <div className="p-4 sm:px-6 border-b border-[var(--border-neutral)] bg-[var(--bg-screen)]/90 backdrop-blur-xs flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2">
+                <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-primary)]">
+                  Project Visual Spreads ({galleryImages.length})
+                </h3>
+                <span className="text-[11px] text-[var(--content-tertiary)] hidden md:inline">
+                  • Click ⭐ to set as cover
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => galleryFileInputRef.current?.click()}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--bg-elevated)] border border-[var(--border-neutral)] hover:border-[var(--primary-forest-green)] text-xs font-bold text-[var(--content-primary)] transition-all cursor-pointer shadow-xs"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Add Spreads</span>
+              </button>
+            </div>
+
+            {/* Continuous Vertical Spreads Feed */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
               {galleryImages.map((url, idx) => {
                 const isCurrentCover = activeCoverUrl === url;
 
                 return (
                   <div
-                    key={idx}
+                    key={`${url}-${idx}`}
                     className={cn(
-                      "group relative aspect-[16/10] rounded-[16px] overflow-hidden bg-[var(--bg-neutral)] border transition-all",
+                      "group relative rounded-[24px] overflow-hidden bg-[var(--bg-neutral)] border transition-all duration-200 shadow-sm",
                       isCurrentCover
-                        ? "border-[var(--primary-forest-green)] ring-2 ring-[var(--primary-forest-green)]/30"
+                        ? "border-[var(--primary-forest-green)] ring-2 ring-[var(--primary-forest-green)]/40"
                         : "border-[var(--border-neutral)] hover:border-[var(--border-neutral-hover)]"
                     )}
                   >
-                    <Image
-                      src={url}
-                      alt={`Image ${idx + 1}`}
-                      fill
-                      sizes="280px"
-                      className="object-cover"
-                    />
+                    <div className="relative w-full aspect-auto max-h-[850px] min-h-[240px] bg-black/5 flex items-center justify-center">
+                      <Image
+                        src={url}
+                        alt={`Project Spread ${idx + 1}`}
+                        width={1400}
+                        height={1000}
+                        className="w-full h-auto object-contain"
+                        priority={idx === 0}
+                      />
+                    </div>
 
-                    {/* Top Plate & Cover Badge */}
-                    <div className="absolute top-2 left-2 flex items-center gap-1 z-10">
-                      <span className="rounded-md bg-black/70 backdrop-blur-xs text-white px-2 py-0.5 text-[10px] font-mono font-bold">
+                    {/* Top Left Badge: Spread # & Cover Indicator */}
+                    <div className="absolute top-3.5 left-3.5 flex items-center gap-1.5 z-10">
+                      <span className="rounded-lg bg-black/75 backdrop-blur-xs text-white px-2.5 py-1 text-xs font-mono font-bold shadow-xs">
                         #{idx + 1}
                       </span>
                       {isCurrentCover && (
-                        <span className="rounded-md bg-[var(--accent)] text-[#090C09] px-2 py-0.5 text-[10px] font-bold shadow-xs">
-                          Cover
+                        <span className="rounded-lg bg-[var(--accent)] text-[#090C09] px-2.5 py-1 text-xs font-black shadow-xs flex items-center gap-1">
+                          <Star className="h-3 w-3 fill-current" />
+                          <span>Card Cover</span>
                         </span>
                       )}
                     </div>
 
-                    {/* Hover Overlay Controls */}
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 p-2">
-                      <button
-                        type="button"
-                        disabled={idx === 0}
-                        onClick={() => handleMoveImage(idx, idx - 1)}
-                        className="h-7 w-7 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center disabled:opacity-20 cursor-pointer"
-                        title="Move left"
-                      >
-                        <ArrowLeftIcon className="h-3.5 w-3.5" />
-                      </button>
-
+                    {/* Action Overlay Controls */}
+                    <div className="absolute top-3.5 right-3.5 flex items-center gap-1.5 z-10 bg-black/60 backdrop-blur-md p-1.5 rounded-full opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity shadow-md">
                       <button
                         type="button"
                         onClick={() => handleSetAsCover(url)}
                         className={cn(
-                          "h-7 px-2.5 rounded-full text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-transform hover:scale-105",
+                          "h-8 px-3 rounded-full text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all",
                           isCurrentCover
-                            ? "bg-[var(--accent)] text-[#090C09]"
-                            : "bg-white text-black"
+                            ? "bg-[var(--accent)] text-[#090C09] shadow-xs"
+                            : "bg-white/20 hover:bg-white text-white hover:text-black"
                         )}
-                        title="Set as Project Cover"
+                        title="Set as feed card cover thumbnail"
                       >
-                        <Star className="h-3 w-3 fill-current" />
-                        <span>{isCurrentCover ? "Cover" : "Set Cover"}</span>
+                        <Star className={cn("h-3.5 w-3.5", isCurrentCover && "fill-current")} />
+                        <span>{isCurrentCover ? "Active Cover" : "Make Cover"}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={idx === 0}
+                        onClick={() => handleMoveImage(idx, idx - 1)}
+                        className="h-8 w-8 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center disabled:opacity-20 cursor-pointer"
+                        title="Move Up"
+                      >
+                        <ArrowUp className="h-3.5 w-3.5" />
                       </button>
 
                       <button
                         type="button"
                         disabled={idx === galleryImages.length - 1}
                         onClick={() => handleMoveImage(idx, idx + 1)}
-                        className="h-7 w-7 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center disabled:opacity-20 cursor-pointer"
-                        title="Move right"
+                        className="h-8 w-8 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center disabled:opacity-20 cursor-pointer"
+                        title="Move Down"
                       >
-                        <ArrowRightIcon className="h-3.5 w-3.5" />
+                        <ArrowDown className="h-3.5 w-3.5" />
                       </button>
 
                       <button
                         type="button"
                         onClick={() => handleRemoveImage(idx)}
-                        className="h-7 w-7 rounded-full bg-rose-600 text-white flex items-center justify-center hover:bg-rose-700 cursor-pointer ml-1"
-                        title="Delete image"
+                        className="h-8 w-8 rounded-full bg-rose-600/90 hover:bg-rose-600 text-white flex items-center justify-center cursor-pointer ml-0.5"
+                        title="Remove spread"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -611,409 +920,33 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                 );
               })}
 
-              {/* Quick Add More Tile */}
-              <button
-                type="button"
+              {/* Bottom Add Spreads Tile */}
+              <div
                 onClick={() => galleryFileInputRef.current?.click()}
-                className="aspect-[16/10] rounded-[16px] border-2 border-dashed border-[var(--border-neutral)] hover:border-[var(--primary-forest-green)] bg-[var(--bg-neutral)]/30 flex flex-col items-center justify-center gap-1 text-[var(--content-tertiary)] hover:text-[var(--primary-forest-green)] transition-all cursor-pointer"
+                className="rounded-[24px] border-2 border-dashed border-[var(--border-neutral)] hover:border-[var(--primary-forest-green)] bg-[var(--bg-screen)]/60 hover:bg-[var(--bg-screen)] p-8 text-center cursor-pointer transition-all group flex flex-col items-center justify-center gap-2"
               >
-                <Plus className="h-5 w-5" />
-                <span className="text-[11px] font-bold">Add More</span>
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ========================================================================= */}
-      {/* 2. PROJECT TITLE & STORY (Expressive Clean Inputs)                         */}
-      {/* ========================================================================= */}
-      <div className="rounded-[28px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 sm:p-8 shadow-xs space-y-6">
-        {/* Title Input */}
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
-              Project Title
-            </label>
-            {title && (
-              <span className="text-[10px] font-mono text-[var(--primary-forest-green)] dark:text-[var(--accent)] font-bold">
-                ✓ Ready
-              </span>
-            )}
-          </div>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Give your project a title (or drop images to auto-generate)..."
-            className={cn(
-              bricolage.className,
-              "w-full text-2xl sm:text-3xl font-black text-[var(--content-primary)] bg-transparent border-0 border-b border-[var(--border-neutral)] pb-3 focus:outline-none focus:border-[var(--primary-forest-green)] transition-colors placeholder:text-[var(--content-tertiary)]"
-            )}
-          />
-        </div>
-
-        {/* Category & Multi-Select Specialization (Compact Dropdown + Chips) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-          {/* Category Dropdown */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] block">
-              Category
-            </label>
-            <div className="relative">
-              <select
-                value={category}
-                onChange={(e) => handleCategoryChange(e.target.value)}
-                className="w-full h-11 rounded-[14px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] px-3.5 pr-8 text-xs font-bold text-[var(--content-primary)] focus:outline-none focus:border-[var(--primary-forest-green)] appearance-none cursor-pointer shadow-2xs"
-              >
-                {MASTER_TAXONOMY.map((cat) => (
-                  <option key={cat.id} value={cat.name}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-[var(--content-tertiary)] pointer-events-none" />
-            </div>
-            <p className="text-[11px] text-[var(--content-tertiary)]">
-              Primary discipline for exploration feeds & discover grids.
-            </p>
-          </div>
-
-          {/* Multi-Select Specialization Pills */}
-          {availableSubCategories.length > 0 && (
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
-                  Specialization ({specializations.length}/{availableSubCategories.length})
-                </label>
-                {specializations.length > 0 && (
-                  <span className="text-[10px] font-mono font-bold text-[var(--primary-forest-green)] dark:text-[var(--accent)]">
-                    {specializations.length} Selected
-                  </span>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-1 rounded-xl bg-[var(--bg-neutral)]/30 border border-[var(--border-neutral)]">
-                {availableSubCategories.map((sub) => {
-                  const isSelected = specializations.includes(sub);
-                  return (
-                    <button
-                      key={sub}
-                      type="button"
-                      onClick={() => handleToggleSpecialization(sub)}
-                      className={cn(
-                        "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all border",
-                        isSelected
-                          ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-xs dark:bg-[var(--accent)] dark:text-[#090C09] font-bold scale-[1.02]"
-                          : "bg-[var(--bg-elevated)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)] hover:text-[var(--content-primary)]"
-                      )}
-                    >
-                      {isSelected && <Check className="h-3 w-3 shrink-0" />}
-                      <span>{sub}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="text-[11px] text-[var(--content-tertiary)]">
-                Select one or multiple sub-disciplines that match this project.
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Narrative / Case Study Story */}
-        <div>
-          <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] block mb-1.5">
-            About the Project & Process
-          </label>
-          <Textarea
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder="Share the design narrative, creative decisions, materials, or context behind this project..."
-            rows={5}
-            className="text-sm bg-[var(--bg-elevated)] leading-relaxed"
-          />
-        </div>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* 3. TAGS & TOOLS (Unified Harmonious Design System)                         */}
-      {/* ========================================================================= */}
-      <div className="rounded-[28px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-6 sm:p-8 shadow-xs grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Tags Section */}
-        <div className="space-y-3.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-lg bg-[var(--bg-neutral)] flex items-center justify-center text-[var(--content-secondary)]">
-                <Tag className="h-3.5 w-3.5 text-[var(--primary-forest-green)] dark:text-[var(--accent)]" />
-              </div>
-              <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-primary)]">
-                Tags & Methodology
-              </label>
-            </div>
-            <span className="text-[11px] font-mono text-[var(--content-tertiary)]">
-              {tags.length}/20 max
-            </span>
-          </div>
-
-          <div className="flex gap-2">
-            <Input
-              value={newTag}
-              onChange={(e) => setNewTag(e.target.value)}
-              onKeyDown={handleAddTag}
-              placeholder="Add custom tag (Press Enter)..."
-              disabled={tags.length >= 20}
-              className="h-10 text-xs bg-[var(--bg-elevated)]"
-            />
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={handleAddTag}
-              disabled={tags.length >= 20}
-              className="h-10 px-4 text-xs font-bold shrink-0"
-            >
-              Add
-            </Button>
-          </div>
-
-          {/* Selected Tags Chips */}
-          {tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border transition-all shadow-2xs bg-[var(--chip-bg)] text-[var(--chip-fg)] border-[var(--border-neutral)] hover:border-[var(--border-neutral-hover)]"
-                >
-                  <Tag className="h-3 w-3 text-[var(--primary-forest-green)] dark:text-[var(--accent)] shrink-0" />
-                  <span>#{tag}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveTag(tag)}
-                    className="p-0.5 rounded-full hover:bg-rose-500/20 hover:text-rose-500 transition-colors ml-0.5 cursor-pointer"
-                    title={`Remove ${tag}`}
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
+                <div className="h-10 w-10 rounded-full bg-[var(--bg-neutral)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-tertiary)] group-hover:text-[var(--primary-forest-green)] group-hover:border-[var(--primary-forest-green)] transition-colors">
+                  <Plus className="h-5 w-5" />
+                </div>
+                <span className="text-xs font-bold text-[var(--content-primary)]">
+                  Add more visual spreads or UI mockups
                 </span>
-              ))}
-            </div>
-          )}
-
-          {/* Suggested Tags */}
-          {suggestedTags.length > 0 && (
-            <div className="pt-2 border-t border-[var(--border-neutral)]">
-              <span className="text-[10px] font-mono font-bold text-[var(--content-tertiary)] uppercase tracking-wider block mb-1.5">
-                Suggested for {activeTaxonomy?.shortName}:
-              </span>
-              <div className="flex flex-wrap gap-1">
-                {suggestedTags.slice(0, 8).map((sTag) => {
-                  const isAdded = tags.includes(sTag);
-                  return (
-                    <button
-                      key={sTag}
-                      type="button"
-                      disabled={isAdded}
-                      onClick={() => handleQuickAddTag(sTag)}
-                      className={cn(
-                        "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border transition-all cursor-pointer",
-                        isAdded
-                          ? "bg-[var(--bg-neutral)] text-[var(--content-tertiary)] opacity-40 border-transparent cursor-not-allowed"
-                          : "border-[var(--border-neutral)] bg-[var(--bg-elevated)] text-[var(--content-secondary)] hover:bg-[var(--accent)] hover:text-[#090C09] hover:border-transparent"
-                      )}
-                    >
-                      <Plus className="h-2.5 w-2.5" />
-                      <span>{sTag}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Tools Section (Unified Styling) */}
-        <div className="space-y-3.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-lg bg-[var(--bg-neutral)] flex items-center justify-center text-[var(--content-secondary)]">
-                <Wrench className="h-3.5 w-3.5 text-[var(--primary-forest-green)] dark:text-[var(--accent)]" />
-              </div>
-              <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-primary)]">
-                Tools & Technologies
-              </label>
-            </div>
-            <span className="text-[11px] font-mono text-[var(--content-tertiary)]">
-              {tools.length}/10 max
-            </span>
-          </div>
-
-          <div className="flex gap-2">
-            <Input
-              value={newTool}
-              onChange={(e) => setNewTool(e.target.value)}
-              onKeyDown={handleAddTool}
-              placeholder="e.g. Figma, Blender, Unity..."
-              disabled={tools.length >= 10}
-              className="h-10 text-xs bg-[var(--bg-elevated)]"
-            />
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={handleAddTool}
-              disabled={tools.length >= 10}
-              className="h-10 px-4 text-xs font-bold shrink-0"
-            >
-              Add
-            </Button>
-          </div>
-
-          {/* Selected Tools Chips (Unified Styling matching Tags) */}
-          {tools.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {tools.map((tool) => (
-                <span
-                  key={tool}
-                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border transition-all shadow-2xs bg-[var(--chip-bg)] text-[var(--chip-fg)] border-[var(--border-neutral)] hover:border-[var(--border-neutral-hover)]"
-                >
-                  <Wrench className="h-3 w-3 text-[var(--primary-forest-green)] dark:text-[var(--accent)] shrink-0" />
-                  <span>{tool}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveTool(tool)}
-                    className="p-0.5 rounded-full hover:bg-rose-500/20 hover:text-rose-500 transition-colors ml-0.5 cursor-pointer"
-                    title={`Remove ${tool}`}
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
+                <span className="text-[11px] text-[var(--content-tertiary)]">
+                  Supports PNG, JPG, WebP, GIF
                 </span>
-              ))}
-            </div>
-          )}
-
-          {/* Suggested Tools (Unified Styling matching Tags) */}
-          {suggestedTools.length > 0 && (
-            <div className="pt-2 border-t border-[var(--border-neutral)]">
-              <span className="text-[10px] font-mono font-bold text-[var(--content-tertiary)] uppercase tracking-wider block mb-1.5">
-                Suggested for {activeTaxonomy?.shortName}:
-              </span>
-              <div className="flex flex-wrap gap-1">
-                {suggestedTools.slice(0, 8).map((sTool) => {
-                  const isAdded = tools.includes(sTool);
-                  return (
-                    <button
-                      key={sTool}
-                      type="button"
-                      disabled={isAdded}
-                      onClick={() => handleQuickAddTool(sTool)}
-                      className={cn(
-                        "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border transition-all cursor-pointer",
-                        isAdded
-                          ? "bg-[var(--bg-neutral)] text-[var(--content-tertiary)] opacity-40 border-transparent cursor-not-allowed"
-                          : "border-[var(--border-neutral)] bg-[var(--bg-elevated)] text-[var(--content-secondary)] hover:bg-[var(--accent)] hover:text-[#090C09] hover:border-transparent"
-                      )}
-                    >
-                      <Plus className="h-2.5 w-2.5" />
-                      <span>{sTool}</span>
-                    </button>
-                  );
-                })}
               </div>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* DANGER ZONE (High-End Studio Deletion Area)                                */}
-      {/* ========================================================================= */}
-      {mode === "edit" && initialData?.id && (
-        <div className="relative overflow-hidden rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-screen)] p-6 sm:p-8 shadow-xs transition-all">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-            <div className="space-y-2 max-w-xl">
-              <div className="inline-flex items-center gap-2 rounded-full bg-rose-500/10 px-3 py-1 text-[11px] font-bold text-rose-600 dark:text-rose-400">
-                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                <span className="tracking-wide uppercase">Danger Zone</span>
-              </div>
-
-              <h3 className={cn(bricolage.className, "text-lg sm:text-xl font-bold text-[var(--content-primary)] tracking-tight")}>
-                Delete this case study
-              </h3>
-
-              <p className="text-xs sm:text-sm text-[var(--content-secondary)] leading-relaxed">
-                Permanently purge <span className="font-semibold text-[var(--content-primary)] font-mono">&quot;{title || initialData.title || "this project"}&quot;</span> including all media assets, case study storytelling, tags, and peer appreciations from Layerat.
-              </p>
-            </div>
-
-            <div className="shrink-0 pt-2 sm:pt-0">
-              <button
-                type="button"
-                onClick={() => setIsDeleteModalOpen(true)}
-                className="group relative inline-flex items-center justify-center gap-2 rounded-full h-11 px-5 text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-600 hover:text-white border border-rose-500/20 hover:border-transparent transition-all duration-200 shadow-xs cursor-pointer active:scale-98"
-              >
-                <Trash2 className="h-4 w-4 transition-transform group-hover:scale-110" />
-                <span>Delete Project</span>
-              </button>
-            </div>
-          </div>
-        </div>
+          </section>
+        </main>
       )}
 
-      {/* Bottom Sticky Actions */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-4 border-t border-[var(--border-neutral)]">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/me"
-            className="text-xs font-semibold text-[var(--content-tertiary)] hover:text-[var(--content-primary)] transition-colors"
-          >
-            Cancel & Return to Studio
-          </Link>
-        </div>
-
-        <div className="flex items-center gap-3 justify-end">
-          <Button
-            type="button"
-            variant="secondary"
-            size="lg"
-            disabled={isSaving}
-            onClick={() => handleSave(false)}
-            className="gap-2 font-semibold text-xs shadow-xs"
-          >
-            <Save className="h-4 w-4" />
-            <span>Save as Draft</span>
-          </Button>
-
-          <Button
-            type="button"
-            variant="accent"
-            size="lg"
-            disabled={isSaving}
-            onClick={() => handleSave(true)}
-            className="gap-2 font-bold shadow-md px-8"
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Publishing...</span>
-              </>
-            ) : (
-              <>
-                <Send className="h-4 w-4" />
-                <span>Publish Project Live</span>
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
-
-      {/* Delete Project Confirmation Modal */}
-      {initialData?.id && (
+      {/* Delete Project Modal (In Edit Mode) */}
+      {mode === "edit" && initialData?.id && (
         <DeleteProjectModal
           isOpen={isDeleteModalOpen}
           onClose={() => setIsDeleteModalOpen(false)}
           projectId={initialData.id}
-          projectTitle={title || initialData.title || "Project"}
-          onSuccess={() => router.push("/me")}
+          projectTitle={initialData.title}
         />
       )}
     </div>

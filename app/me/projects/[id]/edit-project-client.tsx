@@ -6,8 +6,6 @@ import { notFound } from "next/navigation";
 import { useSession } from "@/lib/session-context";
 import { Project } from "@/lib/types";
 import { ProjectForm } from "@/components/project/project-form";
-import { FadeIn } from "@/components/ui/motion-wrapper";
-import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ProjectEditorSkeleton } from "@/components/project/project-editor-skeleton";
@@ -84,34 +82,5 @@ export function EditProjectClient({ projectId, initialProject }: EditProjectClie
     );
   }
 
-  return (
-    <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-4 sm:py-6">
-      <FadeIn>
-        {/* Breadcrumbs Navigation */}
-        <Breadcrumbs
-          items={[
-            { label: user ? `@${user.username}` : "My Studio", href: user ? `/u/${user.username}` : "/explore" },
-            { label: project.title, href: `/project/${project.slug}` },
-            { label: "Edit Case Study", isCurrent: true },
-          ]}
-        />
-
-        <div className="mb-8">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="type-label text-[var(--content-tertiary)] uppercase tracking-wider font-semibold">
-              Project Editor
-            </span>
-          </div>
-          <h1 className="type-title-screen text-[var(--primary-forest-green)]">
-            Edit: {project.title}
-          </h1>
-          <p className="mt-1.5 type-body-large text-[var(--content-secondary)]">
-            Update project metadata, exhibition gallery spreads, or publication status.
-          </p>
-        </div>
-
-        <ProjectForm initialData={project} mode="edit" />
-      </FadeIn>
-    </div>
-  );
+  return <ProjectForm initialData={project} mode="edit" />;
 }
