@@ -100,7 +100,7 @@ export function LocationInput({
       {/* Label and Quick Auto-Detect Trigger */}
       <div className="flex items-center justify-between">
         <label className="text-xs font-semibold text-[var(--content-primary)] flex items-center gap-1.5">
-          <MapPin className="h-3.5 w-3.5 text-[#8DFF00]" />
+          <MapPin className="h-3.5 w-3.5 text-[var(--primary-forest-green)] dark:text-[#8DFF00]" />
           <span>{label}</span>
         </label>
 
@@ -119,7 +119,7 @@ export function LocationInput({
               </>
             ) : (
               <>
-                <Sparkles className="h-3 w-3 text-[#8DFF00]" />
+                <Sparkles className="h-3 w-3 text-[var(--primary-forest-green)] dark:text-[#8DFF00]" />
                 <span>Auto-detect</span>
               </>
             )}
@@ -144,7 +144,7 @@ export function LocationInput({
                 className={cn(
                   "rounded-full px-3 py-1 text-xs font-medium transition-all cursor-pointer inline-flex items-center gap-1",
                   isSelected
-                    ? "bg-[var(--accent)] text-[#090C09] font-bold shadow-xs ring-1 ring-[var(--accent)]"
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#8DFF00] dark:text-[#090C09] font-bold shadow-xs ring-1 ring-black/10 dark:ring-[var(--accent)]"
                     : "border border-[var(--border-neutral)] bg-[var(--bg-screen)] text-[var(--content-secondary)] hover:border-[var(--content-secondary)] hover:bg-[var(--bg-neutral)]"
                 )}
               >

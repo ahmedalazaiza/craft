@@ -127,7 +127,7 @@ export function OnboardingClient() {
         {/* Header Title & Progress Indicator */}
         <div className="max-w-2xl mx-auto text-center mb-8">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip-bg)] px-3.5 py-1 text-[11px] font-semibold text-[var(--chip-fg)] mb-3 shadow-xs">
-            <Sparkles className="h-3.5 w-3.5 text-[#8DFF00]" />
+            <Sparkles className="h-3.5 w-3.5 text-[var(--primary-forest-green)] dark:text-[#8DFF00]" />
             <span>Profile Onboarding Experience</span>
           </div>
 
@@ -307,7 +307,7 @@ export function OnboardingClient() {
                       {/* Website URL */}
                       <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-[var(--content-primary)] flex items-center gap-1.5">
-                          <Globe className="h-3.5 w-3.5 text-[#8DFF00]" />
+                          <Globe className="h-3.5 w-3.5 text-[var(--primary-forest-green)] dark:text-[#8DFF00]" />
                           <span>Website / Portfolio URL</span>
                         </label>
                         <input
@@ -331,7 +331,7 @@ export function OnboardingClient() {
                       transition={{ duration: 0.2 }}
                       className="space-y-6 text-center py-4"
                     >
-                      <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[#8DFF00]/20 border border-[#8DFF00]/30 text-[#8DFF00] mx-auto shadow-sm animate-bounce">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--chip-bg)] border border-[var(--border-neutral)] text-[var(--chip-fg)] dark:bg-[#8DFF00]/20 dark:border-[#8DFF00]/30 dark:text-[#8DFF00] mx-auto shadow-sm animate-bounce">
                         <Rocket className="h-8 w-8" />
                       </div>
 
@@ -411,7 +411,7 @@ export function OnboardingClient() {
             <div className="space-y-3">
               <div className="flex items-center justify-between px-1">
                 <span className="text-[11px] font-mono uppercase font-bold text-[var(--content-tertiary)] flex items-center gap-1.5">
-                  <Sparkles className="h-3 w-3 text-[#8DFF00]" />
+                  <Sparkles className="h-3 w-3 text-[var(--primary-forest-green)] dark:text-[#8DFF00]" />
                   <span>Live Directory Preview</span>
                 </span>
                 <span className="text-[11px] text-[var(--content-tertiary)]">
@@ -458,7 +458,7 @@ export function OnboardingClient() {
                 {/* Location & Website */}
                 <div className="mt-3 flex items-center gap-3 text-[11px] text-[var(--content-tertiary)]">
                   <span className="flex items-center gap-1">
-                    <MapPin className="h-3 w-3 text-[#8DFF00]" />
+                    <MapPin className="h-3 w-3 text-[var(--primary-forest-green)] dark:text-[#8DFF00]" />
                     <span className="truncate">{location}</span>
                   </span>
                   {website && (

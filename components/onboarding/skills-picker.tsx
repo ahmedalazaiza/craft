@@ -87,13 +87,13 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
             selectedSkills.map((skill) => (
               <span
                 key={skill}
-                className="inline-flex items-center gap-1.5 rounded-full bg-[var(--accent)] text-[#090C09] px-3 py-1 text-xs font-bold shadow-xs animate-scale-in"
+                className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#8DFF00] dark:text-[#090C09] px-3 py-1 text-xs font-bold shadow-xs animate-scale-in"
               >
                 <span>{skill}</span>
                 <button
                   type="button"
                   onClick={() => toggleSkill(skill)}
-                  className="rounded-full p-0.5 hover:bg-black/10 transition-colors cursor-pointer"
+                  className="rounded-full p-0.5 hover:bg-white/20 dark:hover:bg-black/10 transition-colors cursor-pointer"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -107,7 +107,7 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <label className="text-xs font-semibold text-[var(--content-secondary)] flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-[#8DFF00]" />
+            <Sparkles className="h-3.5 w-3.5 text-[var(--primary-forest-green)] dark:text-[#8DFF00]" />
             <span>Browse by Discipline ({MASTER_TAXONOMY.length} Domains)</span>
           </label>
         </div>
@@ -158,7 +158,7 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all cursor-pointer border",
                   isSelected
-                    ? "bg-[var(--accent)] text-[#090C09] font-bold border-transparent shadow-xs scale-102"
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#8DFF00] dark:text-[#090C09] font-bold border-transparent shadow-xs scale-102"
                     : "border-[var(--border-neutral)] bg-[var(--bg-screen)] text-[var(--content-secondary)] hover:border-[var(--content-secondary)] hover:text-[var(--content-primary)]"
                 )}
               >
