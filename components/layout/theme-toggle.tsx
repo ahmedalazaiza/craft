@@ -13,9 +13,11 @@ interface ThemeToggleProps {
 export function ThemeToggle({ compact = false, className }: ThemeToggleProps) {
   const { theme, resolvedTheme, setTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setMounted(true);
     function handleClickOutside(event: MouseEvent) {
       if (
         dropdownRef.current &&
@@ -38,22 +40,27 @@ export function ThemeToggle({ compact = false, className }: ThemeToggleProps) {
     { value: "system", label: "System", icon: Laptop },
   ];
 
-  const CurrentIcon = resolvedTheme === "dark" ? Moon : Sun;
+  const CurrentIcon = !mounted ? Sun : resolvedTheme === "dark" ? Sun : Moon;
 
   return (
-    <div ref={dropdownRef} className={cn("relative inline-block", className)}>
+    <div ref={dropdownRef} className={cn("relative inline-block", className)} suppressHydrationWarning>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)] text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-colors cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--btn-cta-bg)]"
-        title={`Theme: ${theme.charAt(0).toUpperCase() + theme.slice(1)}`}
+        className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)] text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-all shadow-xs cursor-pointer select-none focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[var(--primary-forest-green)]"
+        title={mounted ? `Theme: ${theme.charAt(0).toUpperCase() + theme.slice(1)}` : "Change theme"}
+        aria-label="Toggle theme appearance"
       >
-        <CurrentIcon className="h-4 w-4" />
+        {mounted && resolvedTheme === "dark" ? (
+          <Sun className="h-4 w-4 text-[var(--accent)]" />
+        ) : (
+          <Moon className="h-4 w-4 text-[var(--primary-forest-green)]" />
+        )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-36 overflow-hidden rounded-[16px] border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-1.5 shadow-xl z-50 animate-in fade-in zoom-in-95 duration-100">
-          <div className="px-2.5 py-1 text-[10px] font-semibold text-[var(--content-tertiary)] uppercase tracking-wider">
+        <div className="absolute right-0 top-full mt-2 w-36 overflow-hidden rounded-[20px] border border-[var(--border-neutral)] bg-[var(--bg-screen)]/95 backdrop-blur-md p-1.5 shadow-[0_12px_32px_rgba(0,0,0,0.14)] z-50 animate-in fade-in zoom-in-95 duration-150">
+          <div className="px-2.5 py-1 text-[10px] font-bold text-[var(--content-tertiary)] uppercase tracking-wider">
             Appearance
           </div>
           {options.map((opt) => {
@@ -68,24 +75,17 @@ export function ThemeToggle({ compact = false, className }: ThemeToggleProps) {
                   setIsOpen(false);
                 }}
                 className={cn(
-                  "flex w-full items-center justify-between gap-2 rounded-[10px] px-2.5 py-1.5 text-xs font-semibold transition-colors cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--btn-cta-bg)]",
+                  "flex w-full items-center justify-between gap-2 rounded-xl px-2.5 py-1.5 text-xs font-semibold transition-colors cursor-pointer text-left focus-visible:outline-hidden",
                   isSelected
-                    ? "bg-[var(--btn-cta-bg)] text-[var(--btn-cta-fg)]"
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[var(--accent)] dark:text-[#090C09]"
                     : "bg-transparent text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
                 )}
               >
                 <span className="flex items-center gap-2">
-                  <Icon
-                    className={cn(
-                      "h-3.5 w-3.5",
-                      isSelected ? "text-[var(--btn-cta-fg)]" : "text-[var(--content-primary)]"
-                    )}
-                  />
-                  <span className={isSelected ? "text-[var(--btn-cta-fg)] font-bold" : "text-[var(--content-primary)]"}>
-                    {opt.label}
-                  </span>
+                  <Icon className="h-3.5 w-3.5" />
+                  <span>{opt.label}</span>
                 </span>
-                {isSelected && <Check className="h-3.5 w-3.5 text-[var(--btn-cta-fg)] stroke-[2.5]" />}
+                {isSelected && <Check className="h-3.5 w-3.5 stroke-[2.5]" />}
               </button>
             );
           })}

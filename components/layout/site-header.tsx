@@ -8,6 +8,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { SearchField } from "@/components/search/search-field";
 import { NotificationsPopover } from "@/components/layout/notifications-popover";
 import { ProfileDropdown } from "@/components/layout/profile-dropdown";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { VerificationBanner } from "@/components/layout/verification-banner";
 import { Plus, Search, X, Sun, Moon } from "lucide-react";
 import { useTheme } from "@/components/layout/theme-provider";
@@ -231,6 +232,8 @@ export function SiteHeader() {
             </>
           ) : (
             <div className="hidden md:flex items-center gap-1.5 sm:gap-2">
+              <ThemeToggle />
+
               <Link
                 href="/login"
                 className={buttonVariants({
