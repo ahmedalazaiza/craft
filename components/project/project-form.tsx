@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -35,6 +35,8 @@ import {
   Send,
   ChevronDown,
   Wand2,
+  Edit3,
+  HelpCircle,
 } from "lucide-react";
 
 import { DeleteProjectModal } from "@/components/project/delete-project-modal";
@@ -93,10 +95,43 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const [isProcessingFiles, setIsProcessingFiles] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
 
-  // AI Visual Auto-Fill State
+  // AI Visual Auto-Fill State & Abort Controller
   const [isAnalyzingAI, setIsAnalyzingAI] = useState(false);
   const [aiSuccessMessage, setAiSuccessMessage] = useState<string | null>(null);
   const [isTitleHighlighted, setIsTitleHighlighted] = useState(false);
+  const [showAiGuideTooltip, setShowAiGuideTooltip] = useState(false);
+  const aiAbortControllerRef = useRef<AbortController | null>(null);
+
+  // Check first-time uploader state for AI guide tooltip
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const dismissed = localStorage.getItem("layerat_ai_creator_tooltip_dismissed");
+      if (!dismissed) {
+        setShowAiGuideTooltip(true);
+      }
+    }
+  }, []);
+
+  const dismissAiGuideTooltip = () => {
+    setShowAiGuideTooltip(false);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("layerat_ai_creator_tooltip_dismissed", "true");
+    }
+  };
+
+  // Stop AI & allow creator to fill fields manually
+  const handleFillManually = () => {
+    if (aiAbortControllerRef.current) {
+      aiAbortControllerRef.current.abort();
+      aiAbortControllerRef.current = null;
+    }
+    setIsAnalyzingAI(false);
+    if (titleInputRef.current) {
+      titleInputRef.current.focus();
+      setIsTitleHighlighted(true);
+      setTimeout(() => setIsTitleHighlighted(false), 3000);
+    }
+  };
 
   // Active Taxonomy
   const activeTaxonomy = useMemo(() => {
@@ -162,6 +197,13 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   ) => {
     if (imagesToAnalyze.length === 0 && imageDataList.length === 0) return;
 
+    // Abort previous in-flight request if any
+    if (aiAbortControllerRef.current) {
+      aiAbortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    aiAbortControllerRef.current = controller;
+
     setIsAnalyzingAI(true);
     setAiSuccessMessage(null);
 
@@ -169,6 +211,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
       const res = await fetch("/api/ai/analyze-project", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           imageUrls: imagesToAnalyze,
           filenames: filenames.length > 0 ? filenames : undefined,
@@ -213,10 +256,13 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           }
         }, 200);
       }
-    } catch (err) {
-      console.warn("AI Visual Analysis error:", err);
+    } catch (err: any) {
+      if (err?.name !== "AbortError") {
+        console.warn("AI Visual Analysis error:", err);
+      }
     } finally {
       setIsAnalyzingAI(false);
+      aiAbortControllerRef.current = null;
     }
   };
 
@@ -591,20 +637,87 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           {/* LEFT COLUMN: EDITORIAL FORM & AI METADATA (SCROLLABLE)                */}
           {/* ===================================================================== */}
           <section className="w-full lg:w-[48%] xl:w-[45%] h-full overflow-y-auto border-r border-[var(--border-neutral)] p-6 sm:p-8 space-y-6 bg-[var(--bg-screen)]">
-            {/* AI Analyzing Status Banner */}
+            {/* AI Analyzing Status Banner with "Fill manually" action & First-Time Onboarding Tooltip */}
             {isAnalyzingAI && (
-              <div className="rounded-[20px] bg-[var(--accent)]/15 border border-[var(--accent)]/40 p-4 flex items-center gap-3 animate-pulse shadow-xs">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--accent)] text-[#090C09] shrink-0">
-                  <Sparkles className="h-4 w-4 fill-current animate-spin" />
+              <div className="relative">
+                <div className="rounded-[20px] bg-[var(--accent)]/15 border border-[var(--accent)]/40 p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--accent)] text-[#090C09] shrink-0 shadow-2xs">
+                      <Sparkles className="h-4 w-4 fill-current animate-spin" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="text-xs font-bold text-[var(--content-primary)] truncate">
+                          Layerat Vision AI is inspecting your visual spreads...
+                        </h4>
+                        <button
+                          type="button"
+                          onClick={() => setShowAiGuideTooltip((prev) => !prev)}
+                          className="text-[var(--content-tertiary)] hover:text-[var(--content-primary)] transition-colors cursor-pointer p-0.5"
+                          title="How AI Auto-Drafting works"
+                        >
+                          <HelpCircle className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-[var(--content-secondary)] truncate">
+                        Drafting a bespoke title, case study narrative, category, and tags.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Fill Manually Button */}
+                  <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={handleFillManually}
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--bg-screen)] hover:bg-[var(--bg-neutral)] border border-[var(--border-neutral)] hover:border-[var(--primary-forest-green)] px-3 py-1.5 text-xs font-bold text-[var(--content-primary)] transition-all cursor-pointer shadow-2xs hover:scale-[1.02] active:scale-[0.98]"
+                      title="Stop AI analysis and fill fields manually"
+                    >
+                      <Edit3 className="h-3.5 w-3.5 text-[var(--primary-forest-green)] dark:text-[var(--accent)]" />
+                      <span>Fill manually</span>
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-xs font-bold text-[var(--content-primary)]">
-                    Layerat Vision AI is inspecting your visual spreads...
-                  </h4>
-                  <p className="text-[11px] text-[var(--content-secondary)]">
-                    Drafting a bespoke title, case study narrative, category, and tags.
-                  </p>
-                </div>
+
+                {/* First-Time Creator Onboarding Tooltip Popover */}
+                {showAiGuideTooltip && (
+                  <div className="mt-2 rounded-2xl bg-[var(--bg-screen)] border border-[var(--primary-forest-green)]/30 shadow-xl p-4 animate-scale-in text-left">
+                    <div className="flex items-start gap-3">
+                      <div className="h-8 w-8 rounded-xl bg-[var(--primary-forest-green)]/10 text-[var(--primary-forest-green)] dark:text-[var(--accent)] flex items-center justify-center shrink-0 mt-0.5">
+                        <Sparkles className="h-4 w-4 fill-current" />
+                      </div>
+                      <div className="space-y-1.5 flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <h5 className="text-xs font-black text-[var(--content-primary)] uppercase tracking-wider font-mono">
+                            ⚡ How AI Auto-Drafting Works
+                          </h5>
+                          <button
+                            type="button"
+                            onClick={dismissAiGuideTooltip}
+                            className="text-[var(--content-tertiary)] hover:text-[var(--content-primary)] cursor-pointer p-0.5"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                        <p className="text-xs text-[var(--content-secondary)] leading-relaxed">
+                          Layerat Vision AI reads typography, design systems, and tools directly from your uploaded images to generate a studio-grade case study draft automatically.
+                        </p>
+                        <div className="pt-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                          <span className="text-[11px] font-mono text-[var(--content-tertiary)]">
+                            💡 You can click <strong>Fill manually</strong> anytime or edit any field once generated.
+                          </span>
+                          <button
+                            type="button"
+                            onClick={dismissAiGuideTooltip}
+                            className="rounded-lg bg-[var(--primary-forest-green)] text-white dark:bg-[var(--accent)] dark:text-[#090C09] px-3.5 py-1 text-xs font-bold transition-all hover:opacity-90 cursor-pointer self-end sm:self-auto shadow-2xs"
+                          >
+                            Got it
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
