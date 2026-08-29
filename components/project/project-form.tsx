@@ -504,7 +504,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
               ) : (
                 <>
                   <Wand2 className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Re-Draft with AI</span>
+                  <span className="hidden sm:inline">Auto-Fill with AI</span>
                 </>
               )}
             </Button>
@@ -519,7 +519,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
             className="gap-1.5 font-semibold text-xs shadow-xs"
           >
             <Save className="h-3.5 w-3.5" />
-            <span>Save Draft</span>
+            <span>Save as Draft</span>
           </Button>
 
           <Button
@@ -538,7 +538,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
             ) : (
               <>
                 <Send className="h-3.5 w-3.5" />
-                <span>Publish Live</span>
+                <span>{mode === "edit" ? "Save Changes" : "Publish Project"}</span>
               </>
             )}
           </Button>
@@ -608,16 +608,16 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
                   <div className="space-y-1.5 max-w-md">
                     <h2 className={cn(bricolage.className, "text-2xl sm:text-3xl font-black text-[var(--content-primary)] tracking-tight")}>
-                      Upload your Project Spreads
+                      Upload Project Images
                     </h2>
                     <p className="text-xs sm:text-sm text-[var(--content-secondary)]">
-                      Drag and drop your case study images, mockups, or system boards here, or click to browse.
+                      Drag & drop your project images or design mockups here, or click to browse.
                     </p>
                   </div>
 
                   <div className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)]/15 border border-[var(--accent)]/40 px-4 py-2 text-xs font-bold text-[var(--content-primary)] shadow-2xs mt-2">
                     <Sparkles className="h-4 w-4 text-[var(--primary-forest-green)] dark:text-[var(--accent)] fill-current shrink-0 animate-pulse" />
-                    <span>AI will inspect your images to draft Title, Narrative, Category & Tags</span>
+                    <span>AI will auto-fill your title, description, category & tags</span>
                   </div>
 
                   <span className="text-[11px] font-mono text-[var(--content-tertiary)] mt-1">
@@ -648,7 +648,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
                         <h4 className="text-xs font-bold text-[var(--content-primary)] truncate">
-                          Layerat Vision AI is inspecting your visual spreads...
+                          Layerat AI is analyzing your images...
                         </h4>
                         <button
                           type="button"
@@ -660,7 +660,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                         </button>
                       </div>
                       <p className="text-[11px] text-[var(--content-secondary)] truncate">
-                        Drafting a bespoke title, case study narrative, category, and tags.
+                        Generating project title, description, category, and tags.
                       </p>
                     </div>
                   </div>
@@ -690,7 +690,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                                 ⚡
                               </span>
                               <h5 className="text-xs font-bold text-white tracking-wide">
-                                Prefer manual control?
+                                Want to type details yourself?
                               </h5>
                             </div>
                             <button
@@ -703,12 +703,12 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                           </div>
 
                           <p className="text-[12px] text-white/80 leading-relaxed font-normal">
-                            Click <strong className="text-white font-bold">Fill manually</strong> at any time to stop AI vision analysis and write your project details yourself.
+                            Click <strong className="text-white font-bold">Fill manually</strong> at any time to skip AI and type your project details manually.
                           </p>
 
                           <div className="pt-1.5 flex items-center justify-between gap-2 border-t border-white/10">
                             <span className="text-[10px] font-mono text-white/50">
-                              First-time tip
+                              Quick tip
                             </span>
                             <button
                               type="button"
@@ -766,7 +766,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Project title (or drop images to auto-generate)..."
+                  placeholder="Enter project title..."
                   className={cn(
                     bricolage.className,
                     "w-full text-xl sm:text-2xl font-black text-[var(--content-primary)] bg-[var(--bg-elevated)]/50 rounded-2xl border p-4 transition-all duration-300 focus:outline-none placeholder:text-[var(--content-tertiary)]",
@@ -777,7 +777,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                 />
               </div>
               <p className="text-[11px] text-[var(--content-secondary)]">
-                You can customize and edit this title anytime.
+                You can edit this title at any time.
               </p>
             </div>
 
@@ -845,12 +845,12 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
             {/* 3. Narrative / Case Study Story */}
             <div className="space-y-1.5 pt-2 border-t border-[var(--border-neutral)]">
               <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] block">
-                About the Project & Process
+                Project Description
               </label>
               <Textarea
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
-                placeholder="Share the design narrative, creative decisions, materials, or context behind this project..."
+                placeholder="Tell the story behind your project, key features, and tools used..."
                 rows={6}
                 className="text-sm bg-[var(--bg-elevated)] leading-relaxed rounded-2xl"
               />
@@ -863,7 +863,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                 <div className="flex items-center gap-1.5">
                   <Tag className="h-3.5 w-3.5 text-[var(--primary-forest-green)] dark:text-[var(--accent)]" />
                   <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-primary)]">
-                    Tags & Methodology
+                    Project Tags
                   </label>
                 </div>
                 <div className="flex flex-wrap gap-1.5 min-h-[36px] p-2 rounded-xl bg-[var(--bg-neutral)]/30 border border-[var(--border-neutral)]">
@@ -914,7 +914,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                 <div className="flex items-center gap-1.5">
                   <Wrench className="h-3.5 w-3.5 text-[var(--primary-forest-green)] dark:text-[var(--accent)]" />
                   <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-primary)]">
-                    Tools & Software
+                    Tools Used
                   </label>
                 </div>
                 <div className="flex flex-wrap gap-1.5 min-h-[36px] p-2 rounded-xl bg-[var(--bg-neutral)]/30 border border-[var(--border-neutral)]">

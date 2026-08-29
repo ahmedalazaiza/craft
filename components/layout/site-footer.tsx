@@ -152,7 +152,7 @@ export function SiteFooter() {
         {/* Bottom Bar without theme changer */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[var(--content-tertiary)] text-center sm:text-left">
           <p>
-            &copy; {new Date().getFullYear()} Layerat Platforms Inc. All creative monographs and works are the intellectual property of their respective creators.
+            &copy; {new Date().getFullYear()} Layerat Platforms Inc. All projects and visual works belong to their respective creators.
           </p>
 
           <div className="flex items-center gap-6">

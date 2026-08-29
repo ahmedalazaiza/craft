@@ -101,21 +101,24 @@ export async function POST(req: NextRequest) {
     const filenamesHint = filenames.length > 0 ? `Uploaded File Names: ${filenames.join(", ")}` : "";
 
     const promptText = `
-You are the AI Creative Director and Taxonomy Curator for LAYERAT (layerat.com), a world-class portfolio exhibition platform for elite digital designers, brand architects, and 3D artists.
+You are an expert AI Design Assistant for LAYERAT (layerat.com), a portfolio platform for digital designers, brand creators, and 3D artists.
 
-Analyze the uploaded project image(s) and generate the complete, high-aesthetic case study metadata in JSON format.
+Analyze the uploaded project image(s) and generate clean, clear, and professional project metadata in JSON format.
 ${filenamesHint}
 
 ### Available 13 Master Categories and Disciplines:
 ${taxonomySummary}
 
-### Output Rules:
-1. "title": A sophisticated, punchy, studio-grade project title (e.g., "Sakha: De-fragmenting Faith-Based Philanthropy (Zakat UX)", "Aura: Spatial Design System", "Kroma: Generative Brand Identity").
-2. "category": EXACT MATCH with one of the 13 category names listed above (e.g., "User Interface Design (UI)", "Brand Identity & Visual Design", "3D Design & Spatial Art").
+### Output Rules (CRITICAL: Use simple, natural, clear international English that is easy to understand for all designers):
+1. "title": A clear, concise, and professional project title (e.g., "Cinema — Mobile Movie Booking App", "Aura — Mobile Banking App", "Kroma — Brand Identity & Packaging", "Sakha — Zakat & Giving App"). Keep it direct and easy to read.
+2. "category": EXACT MATCH with one of the 13 category names listed above.
 3. "subCategory": EXACT MATCH from the sub-categories list of that selected category.
-4. "body": A compelling, poetic 2-paragraph design narrative and case study rationale (written in studio-grade English). Discuss the visual tension, typography hierarchy, grid system, color harmony, and functional intent shown in the imagery.
-5. "tags": An array of 4 to 7 relevant methodology tags from the category's typical tags or modern design terms.
-6. "tools": An array of 2 to 4 likely software tools used to create these visuals (e.g. ["Figma", "Webflow"], ["Blender", "Octane Render"], ["Adobe Illustrator", "After Effects"]).
+4. "body": 2 clear, well-structured paragraphs written in simple, friendly, and professional English:
+   - Paragraph 1: What this project is, what problem it solves, and who it was designed for.
+   - Paragraph 2: The visual style, user experience features, color scheme, and tools used.
+   - IMPORTANT: Avoid complicated or confusing academic jargon. Write clearly so anyone can easily read and enjoy the case study.
+5. "tags": An array of 4 to 6 simple and relevant tags (e.g. ["UI Design", "Mobile App", "iOS App", "Design System", "Dark Mode"]).
+6. "tools": An array of 2 to 4 tools used (e.g. ["Figma", "FigJam", "Adobe Illustrator"]).
 
 Return ONLY valid JSON matching this structure without markdown formatting or code fences:
 {
@@ -226,10 +229,10 @@ Return ONLY valid JSON matching this structure without markdown formatting or co
             success: true,
             source: "gemini-vision",
             data: {
-              title: parsed.title || "Monograph: Contemporary Visual Study",
+              title: parsed.title || "Modern Visual Design Project",
               category: matchedTax.name,
               subCategory: validSub,
-              body: parsed.body || "A refined visual case study exploring spatial balance and typography.",
+              body: parsed.body || "A modern design case study exploring clean layouts, typography, and user experience.",
               tags: Array.isArray(parsed.tags) ? parsed.tags : matchedTax.tags.slice(0, 5),
               tools: Array.isArray(parsed.tools) ? parsed.tools : matchedTax.tools.slice(0, 3),
             },
@@ -240,7 +243,7 @@ Return ONLY valid JSON matching this structure without markdown formatting or co
       }
     }
 
-    // 2. Intelligent Dynamic Semantic Heuristic Engine
+    // 2. Intelligent Dynamic Semantic Heuristic Engine (Simplified English)
     // Inspect uploaded filenames & image URL path tokens
     const combinedTerms = [
       ...filenames.map(cleanFilenameToTitle),
@@ -263,33 +266,33 @@ Return ONLY valid JSON matching this structure without markdown formatting or co
     let dynamicBody = "";
 
     if (primaryExtractedTitle) {
-      dynamicTitle = `${primaryExtractedTitle}: Design System & Case Study`;
-      dynamicBody = `${primaryExtractedTitle} explores the intersection of functional ergonomic design and expressive visual craft. Built to deliver a seamless user experience, the system utilizes high-density typography hierarchy, balanced negative space, and a refined aesthetic palette.\n\nEvery interface spread and design artifact was structured to maintain maximum clarity, responsive scalability, and deliberate craft across diverse digital touchpoints.`;
+      dynamicTitle = `${primaryExtractedTitle} — Design Case Study`;
+      dynamicBody = `${primaryExtractedTitle} is a modern design project created with clear visual hierarchy, balanced layouts, and a refined color palette.\n\nEvery screen and design asset was carefully structured to deliver a smooth user experience across mobile and web platforms.`;
     } else {
       // Dynamic thematic generator based on detected taxonomy
       const categoryTitles: Record<string, string[]> = {
         "User Interface Design (UI)": [
-          "Aether: Adaptive Spatial Interface & Design System",
-          "Kinetics: High-Density Operating Canvas",
-          "Nexus: Contemporary FinTech & Mobile Experience",
+          "Aether — Modern Mobile App Design",
+          "Kinetics — Web App & Dashboard Design",
+          "Nexus — Digital Banking & Finance App",
         ],
         "Brand Identity & Visual Design": [
-          "Sanctuary: Bespoke Monograph & Visual Identity",
-          "Verve: Generative Brand Identity & Packaging System",
-          "Forma: Tactile Editorial & Spatial Branding",
+          "Sanctuary — Brand Identity & Visual System",
+          "Verve — Packaging & Brand Identity",
+          "Forma — Brand Guidelines & Print Design",
         ],
         "3D Design & Spatial Art": [
-          "Voxel: Hard-Surface Cybernetic Form Studies",
-          "Solarium: Real-Time Spatial Environment",
-          "Prism: Generative 3D Shaders & Motion Artifacts",
+          "Voxel — 3D Product Concepts & Renders",
+          "Solarium — 3D Environment & Spatial Scene",
+          "Prism — 3D Visuals & Shaders",
         ],
       };
 
       const candidates = categoryTitles[detectedTaxonomy.name] || [
-        `${detectedTaxonomy.name}: Visual Case Study & Artifacts`,
+        `${detectedTaxonomy.name} — Design Project`,
       ];
       dynamicTitle = candidates[Math.floor(Math.random() * candidates.length)];
-      dynamicBody = `A comprehensive case study documenting the visual research, compositional hierarchy, and artifact production for ${detectedTaxonomy.name.toLowerCase()}.\n\nEngineered with meticulous attention to detail, tactile finishes, and contemporary design principles.`;
+      dynamicBody = `A comprehensive design case study showcasing the concept, visual exploration, and final assets for ${detectedTaxonomy.name.toLowerCase()}.\n\nCrafted with attention to detail, modern typography, and clean layout principles.`;
     }
 
     return NextResponse.json({

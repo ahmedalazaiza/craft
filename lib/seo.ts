@@ -14,7 +14,7 @@ export function absoluteUrl(path: string = ""): string {
 
 export const defaultTitle = `${SITE_NAME} — ${SITE_TAGLINE}`;
 export const defaultDescription =
-  "Discover standout design portfolios, detailed UI & brand case studies, and connect with independent designers, art directors, and creative studios worldwide.";
+  "Discover standout design portfolios, UI/UX case studies, and brand identities. Connect with top independent designers and creative studios worldwide.";
 
 export const PRIMARY_KEYWORDS = [
   "design portfolio platform",
@@ -26,16 +26,17 @@ export const PRIMARY_KEYWORDS = [
   "motion design & animation",
   "3D rendering & spatial design",
   "game design UI and concept art",
-  "AR VR spatial computing portfolio",
-  "industrial product design case studies",
+  "Arab designers portfolio",
+  "Middle East creative directory",
   "type design & custom lettering",
-  "presentation & information design pitch decks",
-  "creative director portfolio directory",
+  "presentation & pitch deck design",
+  "creative director portfolio",
   "independent designer showcase",
   "best design portfolios 2026",
   "hire top UI UX designers",
   "layerat design platform",
   "layerat portfolio showcase",
+  "Behance alternative for designers",
 ];
 
 export function constructMetadata({

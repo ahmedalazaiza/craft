@@ -7,17 +7,17 @@ import { fetchCreators } from "@/lib/supabase/queries";
 export const revalidate = 60;
 
 export const metadata: Metadata = constructMetadata({
-  title: "Directory of Independent Creators & Design Studios",
+  title: "Discover Top Designers & Creative Studios",
   description:
-    "Discover world-class independent designers, typographers, art directors, product architects, and creative studios. Connect and follow top makers.",
+    "Find and connect with talented UI/UX designers, brand designers, and 3D artists from the Middle East and worldwide.",
   path: "/creators",
   keywords: [
     "designers directory",
     "independent creators",
     "design studios",
-    "art directors portfolio",
-    "typographers directory",
-    "top visual makers",
+    "UI UX designers",
+    "brand designers",
+    "Arab designers",
     "creative network",
   ],
 });
@@ -26,9 +26,9 @@ export default async function CreatorsPage() {
   const initialCreators = await fetchCreators();
 
   const collectionJsonLd = generateCollectionJsonLd({
-    name: "Directory of Independent Creators & Design Studios",
+    name: "Directory of Top Designers & Creative Studios",
     description:
-      "Discover world-class independent designers, typographers, art directors, product architects, and creative studios.",
+      "Find and connect with talented UI/UX designers, brand designers, and 3D artists worldwide.",
     url: "/creators",
     items: initialCreators.map((c) => ({
       name: `${c.displayName} (@${c.username})`,

@@ -7,17 +7,17 @@ import { fetchProjects } from "@/lib/supabase/queries";
 export const revalidate = 60;
 
 export const metadata: Metadata = constructMetadata({
-  title: "Explore Curated Projects & Monographs",
+  title: "Explore Design Projects & Case Studies",
   description:
-    "Browse architectural monographs, UI systems, type specimens, brand identity systems, and spatial design projects from independent creators worldwide.",
+    "Browse UI/UX designs, brand identities, 3D artwork, and mobile app case studies from independent designers worldwide.",
   path: "/explore",
   keywords: [
     "explore design projects",
     "curated portfolio showcase",
     "UI UX design case studies",
-    "brand systems gallery",
-    "typography specimens",
-    "architectural monographs",
+    "brand identity gallery",
+    "mobile app designs",
+    "3D art inspiration",
     "design inspiration",
   ],
 });
@@ -28,7 +28,7 @@ export default async function ExplorePage() {
   const collectionJsonLd = generateCollectionJsonLd({
     name: "Explore Curated Projects & Case Studies",
     description:
-      "Browse UI systems, typography, brand identities, and 3D design projects from independent creators worldwide.",
+      "Browse UI designs, brand identities, and 3D artwork from independent designers worldwide.",
     url: "/explore",
     items: initialProjects.map((p) => ({
       name: p.title,
