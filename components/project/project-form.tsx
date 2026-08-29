@@ -924,42 +924,36 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
       </div>
 
       {/* ========================================================================= */}
-      {/* DANGER ZONE (Permanent Project Deletion)                                  */}
+      {/* DANGER ZONE (High-End Studio Deletion Area)                                */}
       {/* ========================================================================= */}
       {mode === "edit" && initialData?.id && (
-        <div className="rounded-[28px] border border-rose-500/30 bg-rose-500/5 p-6 sm:p-8 shadow-xs space-y-5">
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 shrink-0">
-              <AlertTriangle className="h-6 w-6 stroke-[2.2]" />
-            </div>
-            <div>
-              <h3 className="text-lg sm:text-xl font-bold text-rose-600 dark:text-rose-400">
-                Danger Zone
+        <div className="relative overflow-hidden rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-screen)] p-6 sm:p-8 shadow-xs transition-all">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div className="space-y-2 max-w-xl">
+              <div className="inline-flex items-center gap-2 rounded-full bg-rose-500/10 px-3 py-1 text-[11px] font-bold text-rose-600 dark:text-rose-400">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                <span className="tracking-wide uppercase">Danger Zone</span>
+              </div>
+
+              <h3 className={cn(bricolage.className, "text-lg sm:text-xl font-bold text-[var(--content-primary)] tracking-tight")}>
+                Delete this case study
               </h3>
-              <p className="mt-1 text-xs text-[var(--content-secondary)] leading-relaxed max-w-xl">
-                Actions here are irreversible. Deleting this project permanently removes all media uploads, case study narrative, peer appreciations, and critique discussions from the platform.
+
+              <p className="text-xs sm:text-sm text-[var(--content-secondary)] leading-relaxed">
+                Permanently purge <span className="font-semibold text-[var(--content-primary)] font-mono">&quot;{title || initialData.title || "this project"}&quot;</span> including all media assets, case study storytelling, tags, and peer appreciations from Craft.
               </p>
             </div>
-          </div>
 
-          <div className="rounded-[20px] border border-rose-500/20 bg-[var(--bg-elevated)] p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <div className="text-sm font-bold text-[var(--content-primary)]">
-                Permanently Delete Project
-              </div>
-              <div className="text-xs text-[var(--content-secondary)] mt-0.5">
-                Once deleted, &quot;{title || initialData.title || "this project"}&quot; cannot be restored.
-              </div>
+            <div className="shrink-0 pt-2 sm:pt-0">
+              <button
+                type="button"
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="group relative inline-flex items-center justify-center gap-2 rounded-full h-11 px-5 text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-600 hover:text-white border border-rose-500/20 hover:border-transparent transition-all duration-200 shadow-xs cursor-pointer active:scale-98"
+              >
+                <Trash2 className="h-4 w-4 transition-transform group-hover:scale-110" />
+                <span>Delete Project</span>
+              </button>
             </div>
-
-            <button
-              type="button"
-              onClick={() => setIsDeleteModalOpen(true)}
-              className="inline-flex items-center justify-center gap-2 rounded-full h-10 px-5 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition-all cursor-pointer shrink-0"
-            >
-              <Trash2 className="h-4 w-4" />
-              <span>Delete Project</span>
-            </button>
           </div>
         </div>
       )}
