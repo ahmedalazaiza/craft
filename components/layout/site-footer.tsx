@@ -16,9 +16,12 @@ export function SiteFooter() {
             <Link
               href="/"
               prefetch={true}
-              className="inline-flex items-center gap-1.5 text-xl font-bold tracking-tight text-[var(--primary-forest-green)] select-none hover:opacity-90 transition-opacity"
+              className={cn(
+                bricolage.className,
+                "inline-flex items-center gap-1.5 text-xl font-bold tracking-tight text-[var(--primary-forest-green)] select-none hover:opacity-90 transition-opacity"
+              )}
             >
-              <span className="font-semibold tracking-[-0.04em] text-[22px]">
+              <span className="font-bold tracking-[-0.03em] text-[22px]">
                 Layerat<span className="text-[var(--accent)] font-black">.</span>
               </span>
             </Link>
