@@ -22,16 +22,16 @@ export function Breadcrumbs({
   className,
   showHomeIcon = true,
 }: BreadcrumbsProps) {
-  // Always ensure Home is the root item if not explicitly provided
-  const allItems: BreadcrumbItem[] = [
-    { label: "Home", href: "/" },
-    ...items,
-  ];
+  // Deduplicate Home if already present as first item
+  const hasHome = items.length > 0 && items[0].label.toLowerCase() === "home";
+  const allItems: BreadcrumbItem[] = hasHome
+    ? items
+    : [{ label: "Home", href: "/" }, ...items];
 
   return (
     <nav
       aria-label="Breadcrumb"
-      className={cn("flex items-center text-xs font-medium text-[var(--content-tertiary)] mb-6 select-none", className)}
+      className={cn("flex items-center text-xs font-medium text-[var(--content-secondary)] mb-6 select-none", className)}
     >
       <ol className="flex flex-wrap items-center gap-1.5 sm:gap-2">
         {allItems.map((item, index) => {
@@ -42,14 +42,14 @@ export function Breadcrumbs({
             <li key={index} className="flex items-center gap-1.5 sm:gap-2">
               {/* Separator between items */}
               {!isFirst && (
-                <ChevronRight className="h-3.5 w-3.5 text-[var(--border-neutral)] text-[var(--content-tertiary)]/60 shrink-0" aria-hidden="true" />
+                <ChevronRight className="h-3.5 w-3.5 text-[var(--content-tertiary)] shrink-0" aria-hidden="true" />
               )}
 
               {/* Item link or current text */}
               {item.href && !isLast ? (
                 <Link
                   href={item.href}
-                  className="flex items-center gap-1 hover:text-[var(--content-primary)] transition-colors py-0.5 rounded-sm hover:underline underline-offset-2"
+                  className="flex items-center gap-1 text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors py-0.5 rounded-sm hover:underline underline-offset-2"
                 >
                   {isFirst && showHomeIcon && (
                     <Home className="h-3.5 w-3.5 shrink-0 mb-0.5" />
@@ -60,12 +60,9 @@ export function Breadcrumbs({
                 <span
                   aria-current={isLast ? "page" : undefined}
                   className={cn(
-                    "truncate max-w-[200px] sm:max-w-xs md:max-w-md",
-                    isLast
-                      ? "font-bold text-[var(--content-primary)]"
-                      : "text-[var(--content-secondary)]"
+                    "font-semibold text-[var(--content-primary)]",
+                    isLast && "tracking-tight"
                   )}
-                  title={item.label}
                 >
                   {item.label}
                 </span>

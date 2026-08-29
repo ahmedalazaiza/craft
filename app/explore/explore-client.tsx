@@ -222,7 +222,7 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
             <h1
               className={cn(
                 bricolage.className,
-                "text-3xl sm:text-4xl lg:text-[42px] font-bold text-[var(--primary-forest-green)] leading-tight tracking-tight"
+                "text-3xl sm:text-4xl lg:text-[42px] font-bold text-[var(--content-primary)] leading-tight tracking-tight"
               )}
             >
               Explore Projects

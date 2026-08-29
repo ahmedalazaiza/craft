@@ -251,7 +251,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   // Check auth and fetch live database on mount
   const refreshFromDb = useCallback(async () => {
     try {
-      setIsLoadingDb(true);
       const [dbProjects, dbCreators, activeAuthUser] = await Promise.all([
         fetchProjects({ publishedOnly: false }),
         fetchCreators(),
@@ -286,7 +285,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoadingDb(false);
     }
-  }, []);
+  }, [setUser]);
 
   useEffect(() => {
     // Intercept signup verification hashes landing on root or other pages and route to /auth/verify

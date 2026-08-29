@@ -24,8 +24,8 @@ export function FadeIn({
   children,
   className,
   delay = 0,
-  duration = 0.4,
-  yOffset = 16,
+  duration = 0.3,
+  yOffset = 10,
 }: FadeInProps) {
   const shouldReduceMotion = useReducedMotion();
 
@@ -35,10 +35,10 @@ export function FadeIn({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: yOffset }}
+      initial={false}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration, delay, ease: MOTION_EASE }}
-      className={className}
+      className={cn("w-full", className)}
     >
       {children}
     </motion.div>
@@ -56,7 +56,7 @@ export function ScrollRevealSection({
   children,
   className,
   delay = 0,
-  yOffset = 20,
+  yOffset = 16,
 }: ScrollRevealSectionProps) {
   const shouldReduceMotion = useReducedMotion();
 
@@ -66,10 +66,9 @@ export function ScrollRevealSection({
 
   return (
     <motion.section
-      initial={{ opacity: 0, y: yOffset }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.5, delay, ease: MOTION_EASE }}
+      initial={false}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay, ease: MOTION_EASE }}
       className={className}
     >
       {children}
@@ -88,7 +87,7 @@ export function ScrollRevealDiv({
   children,
   className,
   delay = 0,
-  yOffset = 20,
+  yOffset = 16,
 }: ScrollRevealDivProps) {
   const shouldReduceMotion = useReducedMotion();
 
@@ -98,10 +97,9 @@ export function ScrollRevealDiv({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: yOffset }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.5, delay, ease: MOTION_EASE }}
+      initial={false}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay, ease: MOTION_EASE }}
       className={className}
     >
       {children}
@@ -126,15 +124,14 @@ export function StaggerGridItem({
     return <div className={className}>{children}</div>;
   }
 
-  const cappedIndex = Math.min(index, 7);
-  const delay = cappedIndex * 0.05; // 50ms stagger per item
+  const cappedIndex = Math.min(index, 6);
+  const delay = cappedIndex * 0.03; // Fast 30ms stagger
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.15 }}
-      transition={{ duration: 0.5, delay, ease: MOTION_EASE }}
+      initial={false}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay, ease: MOTION_EASE }}
       className={className}
     >
       {children}
