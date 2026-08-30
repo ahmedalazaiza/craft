@@ -116,7 +116,7 @@ export function ForgotPasswordClient() {
 
               <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip-bg)] px-3 py-1 text-[11px] font-semibold text-[var(--chip-fg)] mx-auto mb-3 shadow-xs">
                 <ShieldCheck className="h-3.5 w-3.5 text-[#8DFF00]" />
-                <span>Reset Instructions Sent</span>
+                <span>Reset Request Dispatched</span>
               </div>
 
               <h1
@@ -129,22 +129,24 @@ export function ForgotPasswordClient() {
               </h1>
 
               <p className="mt-2 text-xs sm:text-sm text-[var(--content-secondary)] leading-relaxed max-w-sm mx-auto">
-                We sent a secure password reset link to:
+                If an account is associated with this email, we sent password reset instructions to:
               </p>
-              <p className="font-mono text-xs sm:text-sm font-bold text-[var(--content-primary)] bg-[var(--bg-neutral)] px-3 py-1.5 rounded-xl inline-block mt-1 border border-[var(--border-neutral)]">
+              <p className="font-mono text-xs sm:text-sm font-bold text-[var(--content-primary)] bg-[var(--bg-neutral)] px-3 py-1.5 rounded-xl inline-block mt-2 border border-[var(--border-neutral)]">
                 {email}
               </p>
             </CardHeader>
 
             <CardContent className="space-y-5 pt-2">
-              <div className="rounded-2xl bg-[var(--bg-neutral)]/50 border border-[var(--border-neutral)] p-4 text-left text-xs text-[var(--content-secondary)] space-y-1.5">
+              <div className="rounded-2xl bg-[var(--bg-neutral)]/60 border border-[var(--border-neutral)] p-4 text-left text-xs text-[var(--content-secondary)] space-y-2">
                 <p className="font-semibold text-[var(--content-primary)] flex items-center gap-1.5">
                   <Sparkles className="h-3.5 w-3.5 text-[#8DFF00]" />
-                  <span>Next Steps:</span>
+                  <span>Important tips:</span>
                 </p>
-                <p className="text-[11px] text-[var(--content-tertiary)]">
-                  Click the link in the email to choose a new password. The link will remain active for 1 hour.
-                </p>
+                <ul className="list-disc list-inside space-y-1 text-[11px] text-[var(--content-tertiary)] pl-1">
+                  <li>Click the link in the email to set a new password (valid for 1 hour).</li>
+                  <li>Check your spam or junk folder if the email doesn&apos;t arrive within 2 minutes.</li>
+                  <li>If no email arrives, this address may not have an account registered yet.</li>
+                </ul>
               </div>
 
               {resendSuccess && (
@@ -184,15 +186,34 @@ export function ForgotPasswordClient() {
                   )}
                 </Button>
 
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setIsSent(false);
+                    setErrorMessage(null);
+                    setResendSuccess(false);
+                  }}
+                  className="w-full font-semibold text-xs text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
+                >
+                  Try a different email address
+                </Button>
+              </div>
+
+              <div className="pt-2 border-t border-[var(--border-neutral)] flex items-center justify-between text-xs">
                 <Link
                   href="/login"
-                  className={buttonVariants({
-                    variant: "ghost",
-                    className: "w-full font-semibold gap-2 text-xs",
-                  })}
+                  className="font-medium text-[var(--content-tertiary)] hover:text-[var(--content-primary)] transition-colors inline-flex items-center gap-1"
                 >
-                  <ArrowLeft className="h-4 w-4" />
-                  <span>Return to log in</span>
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  <span>Back to login</span>
+                </Link>
+
+                <Link
+                  href="/signup"
+                  className="font-semibold text-emerald-600 dark:text-[#8DFF00] hover:underline"
+                >
+                  Create new account &rarr;
                 </Link>
               </div>
             </CardContent>
@@ -234,7 +255,7 @@ export function ForgotPasswordClient() {
             </h1>
 
             <p className="mt-1.5 text-xs sm:text-sm text-[var(--content-secondary)] leading-relaxed max-w-xs mx-auto">
-              Enter your email address and we will send you a secure link to reset your password.
+              Enter your registered email address and we will send you a secure link to reset your password.
             </p>
           </CardHeader>
 
@@ -267,22 +288,29 @@ export function ForgotPasswordClient() {
 
               <Button
                 type="submit"
-                variant="primary"
+                variant="accent"
                 disabled={loading || !email.trim()}
-                className="w-full mt-2 font-semibold shadow-xs"
+                className="w-full mt-2 font-bold shadow-xs"
               >
-                {loading ? "Sending reset link..." : "Send Reset Link"}
+                {loading ? "Sending reset link..." : "Send Reset Instructions"}
                 <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             </form>
 
-            <div className="text-center pt-2">
+            <div className="pt-3 border-t border-[var(--border-neutral)] flex items-center justify-between text-xs">
               <Link
                 href="/login"
-                className="type-body-default text-xs font-semibold text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors inline-flex items-center gap-1.5"
+                className="font-semibold text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors inline-flex items-center gap-1.5"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
                 <span>Back to log in</span>
+              </Link>
+
+              <Link
+                href="/signup"
+                className="font-semibold text-emerald-600 dark:text-[#8DFF00] hover:underline"
+              >
+                Create account
               </Link>
             </div>
           </CardContent>

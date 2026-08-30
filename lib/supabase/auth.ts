@@ -133,6 +133,14 @@ export async function signUpWithEmail(
       return { success: false, error: "Failed to create user account." };
     }
 
+    // In Supabase, if email confirmation is enabled and the user is already registered, identities is []
+    if (authUser.identities && authUser.identities.length === 0) {
+      return {
+        success: false,
+        error: "An account with this email address already exists. Please log in or reset your password.",
+      };
+    }
+
     const isEmailConfirmed = Boolean(authUser.email_confirmed_at);
 
     // 2. Ensure profile exists in public.profiles table

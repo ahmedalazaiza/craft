@@ -161,6 +161,50 @@ export function ResetPasswordClient() {
   }
 
   // =========================================================================
+  // VIEW: INVALID OR EXPIRED RECOVERY LINK
+  // =========================================================================
+  if (!isSessionValid && !isUpdated) {
+    return (
+      <div className="flex min-h-[calc(100vh-14rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+        <FadeIn className="w-full max-w-md text-center">
+          <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[28px] p-6 sm:p-8 shadow-xl">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400">
+              <AlertCircle className="h-7 w-7" />
+            </div>
+
+            <h1
+              className={cn(
+                bricolage.className,
+                "text-2xl font-bold text-[var(--content-primary)] tracking-tight"
+              )}
+            >
+              Reset Link Expired or Invalid
+            </h1>
+
+            <p className="mt-2 text-xs sm:text-sm text-[var(--content-secondary)] leading-relaxed max-w-xs mx-auto">
+              This password recovery link has expired, has already been used, or is invalid. Please request a fresh reset link.
+            </p>
+
+            <div className="mt-6 space-y-2.5">
+              <Link href="/forgot-password" className="block w-full">
+                <Button variant="accent" className="w-full font-bold shadow-xs">
+                  Request New Reset Link
+                </Button>
+              </Link>
+
+              <Link href="/login" className="block w-full">
+                <Button variant="secondary" className="w-full font-semibold text-xs">
+                  Return to Log in
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        </FadeIn>
+      </div>
+    );
+  }
+
+  // =========================================================================
   // VIEW: SUCCESS CONFIRMATION
   // =========================================================================
   if (isUpdated) {

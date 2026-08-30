@@ -243,13 +243,13 @@ export function SignupClient() {
                 </Button>
 
                 <Link
-                  href="/me"
+                  href="/login"
                   className={buttonVariants({
                     variant: "accent",
                     className: "w-full font-bold shadow-xs gap-2",
                   })}
                 >
-                  <span>Continue to My Profile</span>
+                  <span>Proceed to Log In</span>
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
