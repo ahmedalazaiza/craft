@@ -28,6 +28,7 @@ export function SiteHeader() {
   const isHome = pathname === "/";
   const isExplore = pathname === "/explore";
   const isCreators = pathname === "/creators";
+  const isCommunity = pathname.startsWith("/community");
 
   // Listen to window scroll to collapse search into an icon when reaching section 2
   useEffect(() => {
@@ -99,6 +100,21 @@ export function SiteHeader() {
                   <span className="h-1.5 w-1.5 rounded-full bg-white dark:bg-[var(--accent)] shadow-xs animate-pulse" />
                 )}
                 <span>Explore</span>
+              </Link>
+              <Link
+                href="/community"
+                prefetch={true}
+                className={cn(
+                  "relative rounded-full px-3.5 py-1.5 text-xs font-bold transition-all flex items-center gap-1.5",
+                  isCommunity
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs border border-[var(--primary-forest-green)]/30 dark:bg-[var(--accent)]/15 dark:border-[var(--accent)]/40 dark:text-[var(--accent)]"
+                    : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
+                )}
+              >
+                {isCommunity && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-white dark:bg-[var(--accent)] shadow-xs animate-pulse" />
+                )}
+                <span>Community</span>
               </Link>
               <Link
                 href="/creators"

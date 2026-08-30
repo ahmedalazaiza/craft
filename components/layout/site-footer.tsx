@@ -75,6 +75,15 @@ export function SiteFooter() {
               </li>
               <li>
                 <Link
+                  href="/community"
+                  prefetch={true}
+                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors"
+                >
+                  Community Feed
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/search"
                   prefetch={true}
                   className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors"

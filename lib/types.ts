@@ -83,7 +83,14 @@ export interface Project {
   featured?: boolean;
 }
 
-export type NotificationType = "appreciation" | "comment" | "follow" | "publish";
+export type NotificationType =
+  | "appreciation"
+  | "comment"
+  | "follow"
+  | "publish"
+  | "community_like"
+  | "community_comment"
+  | "community_vote";
 
 export interface Notification {
   id: string;
@@ -94,7 +101,59 @@ export interface Notification {
     slug: string;
     title: string;
   };
+  post?: {
+    id: string;
+    title: string;
+  };
   content?: string;
   createdAt: string;
   read: boolean;
 }
+
+export type CommunityPostType = "text" | "image" | "ab_test" | "poll";
+
+export interface PollOption {
+  id: string;
+  text: string;
+  votesCount: number;
+}
+
+export interface ABTestOption {
+  id: "A" | "B";
+  label: string;
+  imageUrl?: string;
+  votesCount: number;
+}
+
+export interface CommunityComment {
+  id: string;
+  author: Creator;
+  content: string;
+  createdAt: string;
+}
+
+export interface CommunityPost {
+  id: string;
+  author: Creator;
+  type: CommunityPostType;
+  title: string;
+  content: string;
+  category: ProjectCategory;
+  tags: string[];
+  images?: string[];
+  abTest?: {
+    optionA: ABTestOption;
+    optionB: ABTestOption;
+  };
+  poll?: {
+    question: string;
+    options: PollOption[];
+    totalVotes: number;
+  };
+  createdAt: string;
+  likesCount: number;
+  userLikes?: number; // 0 to 10 claps given by current user
+  userVotedOptionId?: string; // id of option voted by current user in Poll ("opt-1" etc.) or A/B ("A" | "B")
+  comments: CommunityComment[];
+}
+

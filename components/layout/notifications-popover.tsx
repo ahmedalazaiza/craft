@@ -57,12 +57,18 @@ export function NotificationsPopover() {
   const getNotificationIcon = (type: NotificationType) => {
     switch (type) {
       case "appreciation":
+      case "community_like":
         return <Heart className="h-3 w-3 text-[var(--primary-forest-green)] fill-[var(--primary-forest-green)]" />;
       case "comment":
+      case "community_comment":
         return <MessageSquare className="h-3 w-3 text-white fill-white" />;
       case "follow":
         return <UserPlus className="h-3 w-3 text-[var(--primary-forest-green)]" />;
       case "publish":
+        return <Sparkles className="h-3 w-3 text-[var(--primary-forest-green)]" />;
+      case "community_vote":
+        return <Sparkles className="h-3 w-3 text-sky-600 dark:text-sky-400" />;
+      default:
         return <Sparkles className="h-3 w-3 text-[var(--primary-forest-green)]" />;
     }
   };
@@ -70,12 +76,18 @@ export function NotificationsPopover() {
   const getNotificationIconBg = (type: NotificationType) => {
     switch (type) {
       case "appreciation":
+      case "community_like":
         return "bg-[var(--accent)]";
       case "comment":
+      case "community_comment":
         return "bg-[var(--chip-bg)]";
       case "follow":
         return "bg-[var(--accent)]";
       case "publish":
+        return "bg-[var(--accent)]";
+      case "community_vote":
+        return "bg-sky-500/20";
+      default:
         return "bg-[var(--accent)]";
     }
   };
@@ -304,10 +316,61 @@ export function NotificationsPopover() {
                             )}
                           </span>
                         )}
+                        {notif.type === "community_like" && (
+                          <span className="text-[var(--content-secondary)]">
+                            liked your community post{" "}
+                            {notif.post && (
+                              <Link
+                                href={`/community#${notif.post.id}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setIsOpen(false);
+                                }}
+                                className="font-bold text-[var(--content-primary)] hover:underline underline-offset-2"
+                              >
+                                &ldquo;{notif.post.title}&rdquo;
+                              </Link>
+                            )}
+                          </span>
+                        )}
+                        {notif.type === "community_comment" && (
+                          <span className="text-[var(--content-secondary)]">
+                            replied to your community post{" "}
+                            {notif.post && (
+                              <Link
+                                href={`/community#${notif.post.id}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setIsOpen(false);
+                                }}
+                                className="font-bold text-[var(--content-primary)] hover:underline underline-offset-2"
+                              >
+                                &ldquo;{notif.post.title}&rdquo;
+                              </Link>
+                            )}
+                          </span>
+                        )}
+                        {notif.type === "community_vote" && (
+                          <span className="text-[var(--content-secondary)]">
+                            voted on your post{" "}
+                            {notif.post && (
+                              <Link
+                                href={`/community#${notif.post.id}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setIsOpen(false);
+                                }}
+                                className="font-bold text-[var(--content-primary)] hover:underline underline-offset-2"
+                              >
+                                &ldquo;{notif.post.title}&rdquo;
+                              </Link>
+                            )}
+                          </span>
+                        )}
                       </p>
 
                       {/* Comment excerpt if present */}
-                      {notif.content && notif.type === "comment" && (
+                      {notif.content && (notif.type === "comment" || notif.type === "community_comment") && (
                         <p className="mt-1 text-[11px] text-[var(--content-secondary)] line-clamp-2 italic bg-[var(--bg-neutral)]/60 rounded-md p-1.5">
                           &ldquo;{notif.content}&rdquo;
                         </p>

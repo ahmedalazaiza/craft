@@ -6,7 +6,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession } from "@/lib/session-context";
 import { motion } from "framer-motion";
-import { Home, Compass, Plus, Users, User } from "lucide-react";
+import { Home, Compass, Plus, Users, User, Sparkles } from "lucide-react";
 import { getValidAvatarUrl } from "@/lib/avatar";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +17,7 @@ export function MobileBottomNav() {
   // Hide on full-screen editor/login/signup if desired, or keep as universal quick access
   const isHome = pathname === "/";
   const isExplore = pathname.startsWith("/explore") || pathname.startsWith("/project");
+  const isCommunity = pathname.startsWith("/community");
   const isCreators = pathname.startsWith("/creators") || (pathname.startsWith("/u/") && !pathname.startsWith("/me"));
   const isNewProject = pathname === "/me/projects/new";
   const isMe = pathname.startsWith("/me") && !isNewProject;
@@ -25,21 +26,21 @@ export function MobileBottomNav() {
     <div className="fixed bottom-0 inset-x-0 z-50 md:hidden pointer-events-none px-4 pb-safe pb-3 pt-2">
       <nav
         aria-label="Mobile Navigation"
-        className="pointer-events-auto mx-auto max-w-md h-16 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)]/95 backdrop-blur-2xl px-3 flex items-center justify-around shadow-[0_12px_36px_rgba(0,0,0,0.12)] dark:shadow-none transition-all"
+        className="pointer-events-auto mx-auto max-w-md h-16 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)]/95 backdrop-blur-2xl px-2 flex items-center justify-around shadow-[0_12px_36px_rgba(0,0,0,0.12)] dark:shadow-none transition-all"
       >
         {/* 1. Home */}
         <Link
           href="/"
           prefetch={true}
           className={cn(
-            "relative flex flex-col items-center justify-center min-h-[48px] min-w-[48px] w-12 h-12 rounded-full transition-all duration-200",
+            "relative flex flex-col items-center justify-center min-h-[48px] min-w-[48px] w-11 h-11 rounded-full transition-all duration-200",
             isHome
               ? "text-[var(--primary-forest-green)] dark:text-[var(--accent)] font-bold"
               : "text-[var(--content-tertiary)] hover:text-[var(--content-primary)]"
           )}
         >
           <Home className={cn("h-5 w-5 transition-transform", isHome ? "scale-110 text-[var(--primary-forest-green)] dark:text-[var(--accent)] stroke-[2.5]" : "stroke-[1.8]")} />
-          <span className="text-xs mt-0.5 tracking-tight font-medium">Home</span>
+          <span className="text-[10px] mt-0.5 tracking-tight font-medium">Home</span>
           {isHome && (
             <motion.div
               layoutId="mobile-nav-pill"
@@ -54,14 +55,14 @@ export function MobileBottomNav() {
           href="/explore"
           prefetch={true}
           className={cn(
-            "relative flex flex-col items-center justify-center min-h-[48px] min-w-[48px] w-12 h-12 rounded-full transition-all duration-200",
+            "relative flex flex-col items-center justify-center min-h-[48px] min-w-[48px] w-11 h-11 rounded-full transition-all duration-200",
             isExplore
               ? "text-[var(--primary-forest-green)] dark:text-[var(--accent)] font-bold"
               : "text-[var(--content-tertiary)] hover:text-[var(--content-primary)]"
           )}
         >
           <Compass className={cn("h-5 w-5 transition-transform", isExplore ? "scale-110 text-[var(--primary-forest-green)] dark:text-[var(--accent)] stroke-[2.5]" : "stroke-[1.8]")} />
-          <span className="text-xs mt-0.5 tracking-tight font-medium">Explore</span>
+          <span className="text-[10px] mt-0.5 tracking-tight font-medium">Explore</span>
           {isExplore && (
             <motion.div
               layoutId="mobile-nav-pill"
@@ -71,19 +72,26 @@ export function MobileBottomNav() {
           )}
         </Link>
 
-        {/* 3. Center CTA: + Publish New Project */}
+        {/* 3. Community */}
         <Link
-          href={user ? "/me/projects/new" : "/login"}
+          href="/community"
           prefetch={true}
-          className="relative -top-2 flex items-center justify-center min-h-[48px] min-w-[48px]"
-          title="Publish Project"
+          className={cn(
+            "relative flex flex-col items-center justify-center min-h-[48px] min-w-[48px] w-11 h-11 rounded-full transition-all duration-200",
+            isCommunity
+              ? "text-[var(--primary-forest-green)] dark:text-[var(--accent)] font-bold"
+              : "text-[var(--content-tertiary)] hover:text-[var(--content-primary)]"
+          )}
         >
-          <motion.div
-            whileTap={{ scale: 0.92 }}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--btn-cta-bg)] text-[var(--btn-cta-fg)] shadow-md border-2 border-[var(--bg-screen)]"
-          >
-            <Plus className="h-6 w-6 stroke-[2.5]" />
-          </motion.div>
+          <Users className={cn("h-5 w-5 transition-transform", isCommunity ? "scale-110 text-[var(--primary-forest-green)] dark:text-[var(--accent)] stroke-[2.5]" : "stroke-[1.8]")} />
+          <span className="text-[10px] mt-0.5 tracking-tight font-medium">Community</span>
+          {isCommunity && (
+            <motion.div
+              layoutId="mobile-nav-pill"
+              className="absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--primary-forest-green)] dark:bg-[var(--accent)]"
+              transition={{ type: "spring", stiffness: 380, damping: 30 }}
+            />
+          )}
         </Link>
 
         {/* 4. Creators Directory */}
@@ -91,14 +99,14 @@ export function MobileBottomNav() {
           href="/creators"
           prefetch={true}
           className={cn(
-            "relative flex flex-col items-center justify-center min-h-[48px] min-w-[48px] w-12 h-12 rounded-full transition-all duration-200",
+            "relative flex flex-col items-center justify-center min-h-[48px] min-w-[48px] w-11 h-11 rounded-full transition-all duration-200",
             isCreators
               ? "text-[var(--primary-forest-green)] dark:text-[var(--accent)] font-bold"
               : "text-[var(--content-tertiary)] hover:text-[var(--content-primary)]"
           )}
         >
-          <Users className={cn("h-5 w-5 transition-transform", isCreators ? "scale-110 text-[var(--primary-forest-green)] dark:text-[var(--accent)] stroke-[2.5]" : "stroke-[1.8]")} />
-          <span className="text-xs mt-0.5 tracking-tight font-medium">Creators</span>
+          <Sparkles className={cn("h-5 w-5 transition-transform", isCreators ? "scale-110 text-[var(--primary-forest-green)] dark:text-[var(--accent)] stroke-[2.5]" : "stroke-[1.8]")} />
+          <span className="text-[10px] mt-0.5 tracking-tight font-medium">Creators</span>
           {isCreators && (
             <motion.div
               layoutId="mobile-nav-pill"

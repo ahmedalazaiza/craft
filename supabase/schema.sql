@@ -910,3 +910,77 @@ DROP TRIGGER IF EXISTS on_auth_user_confirmed ON auth.users;
 CREATE TRIGGER on_auth_user_confirmed
 AFTER UPDATE OF email_confirmed_at ON auth.users
 FOR EACH ROW EXECUTE FUNCTION public.handle_user_email_confirmed();
+
+-- =============================================================================
+-- 7. COMMUNITY HUB TABLES (Posts, Comments, Likes & Votes)
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS public.community_posts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    type TEXT NOT NULL CHECK (type IN ('text', 'image', 'ab_test', 'poll')),
+    title TEXT NOT NULL,
+    content TEXT,
+    category TEXT NOT NULL,
+    tags TEXT[] DEFAULT '{}',
+    images TEXT[] DEFAULT '{}',
+    ab_test_option_a_label TEXT,
+    ab_test_option_a_image TEXT,
+    ab_test_option_a_votes INTEGER DEFAULT 0,
+    ab_test_option_b_label TEXT,
+    ab_test_option_b_image TEXT,
+    ab_test_option_b_votes INTEGER DEFAULT 0,
+    poll_question TEXT,
+    poll_options JSONB DEFAULT '[]'::jsonb,
+    poll_total_votes INTEGER DEFAULT 0,
+    author_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+    likes_count INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.community_comments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    post_id UUID REFERENCES public.community_posts(id) ON DELETE CASCADE NOT NULL,
+    author_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.community_likes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    post_id UUID REFERENCES public.community_posts(id) ON DELETE CASCADE NOT NULL,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+    claps_count INTEGER DEFAULT 1 CHECK (claps_count >= 1 AND claps_count <= 10),
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    CONSTRAINT unique_community_post_user_like UNIQUE(post_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.community_votes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    post_id UUID REFERENCES public.community_posts(id) ON DELETE CASCADE NOT NULL,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+    option_id TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    CONSTRAINT unique_community_post_user_vote UNIQUE(post_id, user_id)
+);
+
+ALTER TABLE public.community_posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.community_comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.community_likes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.community_votes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public can view community posts" ON public.community_posts FOR SELECT USING (true);
+CREATE POLICY "Authenticated users can create community posts" ON public.community_posts FOR INSERT WITH CHECK (auth.uid() = author_id);
+CREATE POLICY "Authors can update their community posts" ON public.community_posts FOR UPDATE USING (auth.uid() = author_id);
+CREATE POLICY "Authors can delete their community posts" ON public.community_posts FOR DELETE USING (auth.uid() = author_id);
+
+CREATE POLICY "Public can view community comments" ON public.community_comments FOR SELECT USING (true);
+CREATE POLICY "Authenticated users can post community comments" ON public.community_comments FOR INSERT WITH CHECK (auth.uid() = author_id);
+CREATE POLICY "Authors can delete their community comments" ON public.community_comments FOR DELETE USING (auth.uid() = author_id);
+
+CREATE POLICY "Public can view community likes" ON public.community_likes FOR SELECT USING (true);
+CREATE POLICY "Authenticated users can clap for posts" ON public.community_likes FOR ALL USING (auth.uid() = user_id);
+
+CREATE POLICY "Public can view community votes" ON public.community_votes FOR SELECT USING (true);
+CREATE POLICY "Authenticated users can cast votes" ON public.community_votes FOR ALL USING (auth.uid() = user_id);

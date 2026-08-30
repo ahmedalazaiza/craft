@@ -26,8 +26,8 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
     }
   };
 
-  const handleAddCustom = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddCustom = (e?: React.SyntheticEvent) => {
+    if (e) e.preventDefault();
     const clean = customInput.trim();
     if (!clean) return;
 
@@ -175,23 +175,30 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
       </div>
 
       {/* Custom Discipline Adder */}
-      <form onSubmit={handleAddCustom} className="flex gap-2">
+      <div className="flex gap-2">
         <input
           type="text"
           value={customInput}
           onChange={(e) => setCustomInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleAddCustom(e);
+            }
+          }}
           placeholder="Add custom specialization or skill (e.g. Design Systems, Spatial Audio)..."
           className="flex-1 rounded-xl border border-[var(--border-neutral)] bg-[var(--bg-screen)] px-3.5 py-2 text-xs text-[var(--content-primary)] placeholder-[var(--content-tertiary)] focus:border-[var(--input-focus-border)] focus:ring-2 focus:ring-[var(--input-focus-ring)] focus:outline-hidden"
         />
         <button
-          type="submit"
+          type="button"
+          onClick={handleAddCustom}
           disabled={!customInput.trim()}
           className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--bg-neutral)] border border-[var(--border-neutral)] px-4 py-2 text-xs font-semibold text-[var(--content-primary)] hover:bg-[var(--accent)] hover:text-[#090C09] hover:border-transparent transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
         >
           <Plus className="h-3.5 w-3.5" />
           <span>Add</span>
         </button>
-      </form>
+      </div>
     </div>
   );
 }

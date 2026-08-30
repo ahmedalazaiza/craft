@@ -6,7 +6,18 @@ import {
   Project,
   Comment,
   Notification,
+  CommunityPost,
+  CommunityComment,
 } from "./types";
+import {
+  loadCommunityPostsFromStorage,
+  saveCommunityPostsToStorage,
+  INITIAL_COMMUNITY_POSTS,
+  loadUserLikesMap,
+  saveUserLikesMap,
+  loadUserVotesMap,
+  saveUserVotesMap,
+} from "./community-data";
 import {
   fetchProjects,
   fetchCreators,
@@ -23,6 +34,13 @@ import {
   insertNotificationInDb,
   markNotificationReadInDb,
   markAllNotificationsReadInDb,
+  fetchCommunityPostsFromDb,
+  insertCommunityPostInDb,
+  updateCommunityPostInDb,
+  deleteCommunityPostInDb,
+  toggleCommunityLikeInDb,
+  voteCommunityPostInDb,
+  insertCommunityCommentInDb,
 } from "./supabase/queries";
 import {
   signInWithEmail,
@@ -38,6 +56,7 @@ interface SessionContextType {
   user: Creator | null;
   projects: Project[];
   creators: Creator[];
+  communityPosts: CommunityPost[];
   isLoadingDb: boolean;
   isAuthReady: boolean;
   appreciatedProjectIds: Set<string>;
@@ -67,6 +86,13 @@ interface SessionContextType {
   deleteProject: (id: string) => Promise<boolean>;
   updateProfile: (updatedData: Partial<Creator>) => Promise<void>;
   deleteAccount: () => Promise<boolean>;
+  // Community Actions
+  createCommunityPost: (postData: Omit<CommunityPost, "id" | "author" | "createdAt" | "likesCount" | "comments">) => Promise<CommunityPost>;
+  updateCommunityPost: (postId: string, updates: Partial<CommunityPost>) => Promise<boolean>;
+  deleteCommunityPost: (postId: string) => Promise<boolean>;
+  likeCommunityPost: (postId: string) => number;
+  voteCommunityPost: (postId: string, optionId: string) => void;
+  addCommunityComment: (postId: string, content: string) => Promise<CommunityComment | null>;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -652,6 +678,375 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     updateProfileInDb(user.id, updatedData).catch(console.error);
   };
 
+  const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>(INITIAL_COMMUNITY_POSTS);
+
+  // Load from local storage immediately, then fetch live from Supabase & subscribe to realtime
+  useEffect(() => {
+    // 1. Instant local storage bootstrap
+    if (typeof window !== "undefined") {
+      const cached = loadCommunityPostsFromStorage();
+      if (cached && cached.length > 0) {
+        setCommunityPosts(cached);
+      }
+    }
+
+    // 2. Fetch live data from Supabase
+    fetchCommunityPostsFromDb(user?.id, loadUserLikesMap(), loadUserVotesMap())
+      .then((dbPosts) => {
+        if (dbPosts && dbPosts.length > 0) {
+          setCommunityPosts(dbPosts);
+          saveCommunityPostsToStorage(dbPosts);
+        }
+      })
+      .catch((err) => {
+        console.warn("Notice fetching community posts from Supabase:", err);
+      });
+
+    // 3. Realtime subscription on community changes
+    const channel = supabase
+      .channel("community_realtime_feed")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "community_posts" },
+        () => {
+          fetchCommunityPostsFromDb(user?.id, loadUserLikesMap(), loadUserVotesMap()).then((posts) => {
+            if (posts && posts.length > 0) {
+              setCommunityPosts(posts);
+              saveCommunityPostsToStorage(posts);
+            }
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
+  const createCommunityPost = async (
+    postData: Omit<CommunityPost, "id" | "author" | "createdAt" | "likesCount" | "comments">
+  ): Promise<CommunityPost> => {
+    if (!user) {
+      openVerificationModal("publish", "Create Community Post");
+      throw new Error("Authentication required");
+    }
+
+    const optimisticPost: CommunityPost = {
+      ...postData,
+      id: `post-${Date.now()}`,
+      author: user,
+      createdAt: new Date().toISOString(),
+      likesCount: 0,
+      userLikes: 0,
+      comments: [],
+    };
+
+    const updated = [optimisticPost, ...communityPosts];
+    setCommunityPosts(updated);
+    saveCommunityPostsToStorage(updated);
+
+    // Persist to Supabase
+    insertCommunityPostInDb(postData, user.id)
+      .then((savedPost) => {
+        if (savedPost) {
+          setCommunityPosts((prev) =>
+            prev.map((p) => (p.id === optimisticPost.id ? savedPost : p))
+          );
+        }
+      })
+      .catch((err) => {
+        console.warn("Notice saving community post to Supabase:", err);
+      });
+
+    return optimisticPost;
+  };
+
+  const updateCommunityPost = async (
+    postId: string,
+    updates: Partial<CommunityPost>
+  ): Promise<boolean> => {
+    if (!user) {
+      openVerificationModal("publish", "Edit Community Post");
+      return false;
+    }
+
+    const updated = communityPosts.map((p) => {
+      if (p.id === postId) {
+        return {
+          ...p,
+          ...updates,
+          author: p.author, // keep original author object
+        };
+      }
+      return p;
+    });
+
+    setCommunityPosts(updated);
+    saveCommunityPostsToStorage(updated);
+
+    // Persist update to DB
+    const success = await updateCommunityPostInDb(postId, updates);
+    return success;
+  };
+
+  const deleteCommunityPost = async (postId: string): Promise<boolean> => {
+    if (!user) {
+      openVerificationModal("publish", "Delete Community Post");
+      return false;
+    }
+
+    const updated = communityPosts.filter((p) => p.id !== postId);
+    setCommunityPosts(updated);
+    saveCommunityPostsToStorage(updated);
+
+    // Persist delete to DB
+    const success = await deleteCommunityPostInDb(postId);
+    return success;
+  };
+
+  const likeCommunityPost = (postId: string): number => {
+    let currentLikes = 0;
+    const targetPost = communityPosts.find((p) => p.id === postId);
+
+    const updated = communityPosts.map((p) => {
+      if (p.id === postId) {
+        const prevUserLikes = p.userLikes || 0;
+        if (prevUserLikes >= 10) {
+          currentLikes = 10;
+          return p; // max 10
+        }
+        currentLikes = prevUserLikes + 1;
+        return {
+          ...p,
+          likesCount: p.likesCount + 1,
+          userLikes: currentLikes,
+        };
+      }
+      return p;
+    });
+
+    setCommunityPosts(updated);
+    saveCommunityPostsToStorage(updated);
+
+    const userLikesMap = loadUserLikesMap();
+    userLikesMap[postId] = currentLikes;
+    saveUserLikesMap(userLikesMap);
+
+    // Persist like / claps count to Supabase
+    if (user) {
+      toggleCommunityLikeInDb(postId, user.id, currentLikes).catch(console.error);
+    }
+
+    // Notify author if current user is logged in and not author
+    if (user && targetPost && targetPost.author.id !== user.id && currentLikes === 1) {
+      const newNotif: Notification = {
+        id: `notif-${Date.now()}`,
+        type: "community_like",
+        actor: user,
+        post: {
+          id: targetPost.id,
+          title: targetPost.title,
+        },
+        content: `${user.displayName} liked your post "${targetPost.title.slice(0, 40)}..."`,
+        createdAt: "Just now",
+        read: false,
+      };
+      setNotifications((prev) => [newNotif, ...prev]);
+
+      // Persist notification in DB
+      insertNotificationInDb({
+        recipientId: targetPost.author.id,
+        actorId: user.id,
+        type: "community_like",
+        content: `${user.displayName} liked your post "${targetPost.title.slice(0, 40)}..."`,
+      }).catch(console.error);
+    }
+
+    return currentLikes;
+  };
+
+  const voteCommunityPost = (postId: string, optionId: string) => {
+    const targetPost = communityPosts.find((p) => p.id === postId);
+    const updated = communityPosts.map((p) => {
+      if (p.id === postId) {
+        // If it's an A/B test
+        if (p.type === "ab_test" && p.abTest) {
+          const prevChoice = p.userVotedOptionId;
+          if (prevChoice === optionId) return p; // same vote
+
+          const isA = optionId === "A";
+          const newOptionA = {
+            ...p.abTest.optionA,
+            votesCount: isA
+              ? p.abTest.optionA.votesCount + 1
+              : prevChoice === "A"
+              ? Math.max(0, p.abTest.optionA.votesCount - 1)
+              : p.abTest.optionA.votesCount,
+          };
+          const newOptionB = {
+            ...p.abTest.optionB,
+            votesCount: !isA
+              ? p.abTest.optionB.votesCount + 1
+              : prevChoice === "B"
+              ? Math.max(0, p.abTest.optionB.votesCount - 1)
+              : p.abTest.optionB.votesCount,
+          };
+
+          return {
+            ...p,
+            userVotedOptionId: optionId,
+            abTest: {
+              optionA: newOptionA,
+              optionB: newOptionB,
+            },
+          };
+        }
+
+        // If it's a Poll
+        if (p.type === "poll" && p.poll) {
+          const prevChoice = p.userVotedOptionId;
+          if (prevChoice === optionId) return p; // same vote
+
+          const updatedOptions = p.poll.options.map((opt) => {
+            if (opt.id === optionId) {
+              return { ...opt, votesCount: (opt.votesCount || 0) + 1 };
+            }
+            if (prevChoice && opt.id === prevChoice) {
+              return { ...opt, votesCount: Math.max(0, (opt.votesCount || 0) - 1) };
+            }
+            return { ...opt, votesCount: opt.votesCount || 0 };
+          });
+
+          const totalVotes = updatedOptions.reduce((acc, o) => acc + (o.votesCount || 0), 0);
+
+          return {
+            ...p,
+            userVotedOptionId: optionId,
+            poll: {
+              ...p.poll,
+              options: updatedOptions,
+              totalVotes,
+            },
+          };
+        }
+      }
+      return p;
+    });
+
+    setCommunityPosts(updated);
+    saveCommunityPostsToStorage(updated);
+
+    const userVotesMap = loadUserVotesMap();
+    userVotesMap[postId] = optionId;
+    saveUserVotesMap(userVotesMap);
+
+    // Persist vote to Supabase
+    if (user) {
+      voteCommunityPostInDb(postId, user.id, optionId).catch(console.error);
+    }
+
+    // Notify author if voter is logged in and not author
+    if (user && targetPost && targetPost.author.id !== user.id) {
+      const newNotif: Notification = {
+        id: `notif-${Date.now()}`,
+        type: "community_vote",
+        actor: user,
+        post: {
+          id: targetPost.id,
+          title: targetPost.title,
+        },
+        content: `${user.displayName} voted on your post "${targetPost.title.slice(0, 40)}..."`,
+        createdAt: "Just now",
+        read: false,
+      };
+      setNotifications((prev) => [newNotif, ...prev]);
+
+      insertNotificationInDb({
+        recipientId: targetPost.author.id,
+        actorId: user.id,
+        type: "community_vote",
+        content: `${user.displayName} voted on your post "${targetPost.title.slice(0, 40)}..."`,
+      }).catch(console.error);
+    }
+  };
+
+  const addCommunityComment = async (postId: string, content: string): Promise<CommunityComment | null> => {
+    if (!user) {
+      openVerificationModal("comment", "Join Discussion");
+      return null;
+    }
+
+    const optimisticComment: CommunityComment = {
+      id: `cc-${Date.now()}`,
+      author: user,
+      content,
+      createdAt: "Just now",
+    };
+
+    const targetPost = communityPosts.find((p) => p.id === postId);
+
+    const updated = communityPosts.map((p) => {
+      if (p.id === postId) {
+        return {
+          ...p,
+          comments: [optimisticComment, ...p.comments],
+        };
+      }
+      return p;
+    });
+
+    setCommunityPosts(updated);
+    saveCommunityPostsToStorage(updated);
+
+    // Persist comment to Supabase
+    insertCommunityCommentInDb(postId, user.id, content)
+      .then((savedComment) => {
+        if (savedComment) {
+          setCommunityPosts((prev) =>
+            prev.map((p) => {
+              if (p.id === postId) {
+                return {
+                  ...p,
+                  comments: p.comments.map((c) =>
+                    c.id === optimisticComment.id ? savedComment : c
+                  ),
+                };
+              }
+              return p;
+            })
+          );
+        }
+      })
+      .catch(console.error);
+
+    // Notify author
+    if (targetPost && targetPost.author.id !== user.id) {
+      const newNotif: Notification = {
+        id: `notif-${Date.now()}`,
+        type: "community_comment",
+        actor: user,
+        post: {
+          id: targetPost.id,
+          title: targetPost.title,
+        },
+        content: `${user.displayName} replied: "${content.slice(0, 40)}..."`,
+        createdAt: "Just now",
+        read: false,
+      };
+      setNotifications((prev) => [newNotif, ...prev]);
+
+      insertNotificationInDb({
+        recipientId: targetPost.author.id,
+        actorId: user.id,
+        type: "community_comment",
+        content: `${user.displayName} replied to your post "${targetPost.title.slice(0, 40)}...": "${content.slice(0, 40)}"`,
+      }).catch(console.error);
+    }
+
+    return optimisticComment;
+  };
+
   const deleteAccount = async (): Promise<boolean> => {
     if (!user) return false;
     const userId = user.id;
@@ -675,6 +1070,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         user,
         projects,
         creators,
+        communityPosts,
         isLoadingDb,
         isAuthReady,
         appreciatedProjectIds,
@@ -705,6 +1101,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         deleteProject,
         updateProfile,
         deleteAccount,
+
+        createCommunityPost,
+        updateCommunityPost,
+        deleteCommunityPost,
+        likeCommunityPost,
+        voteCommunityPost,
+        addCommunityComment,
       }}
     >
       {children}

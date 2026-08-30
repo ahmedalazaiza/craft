@@ -19,7 +19,7 @@ import { LocationInput } from "@/components/ui/location-input";
 import { SkillsPicker } from "@/components/onboarding/skills-picker";
 import { DeleteAccountModal } from "@/components/settings/delete-account-modal";
 import { PasswordResetModal } from "@/components/settings/password-reset-modal";
-import { requestPasswordResetInDb } from "@/lib/supabase/queries";
+import { requestPasswordResetInDb, checkUsernameAvailability } from "@/lib/supabase/queries";
 import { uploadMediaFile } from "@/lib/supabase/storage";
 import { DEFAULT_AVATAR_URL, getValidAvatarUrl } from "@/lib/avatar";
 import { supabase } from "@/lib/supabase/client";
@@ -61,6 +61,14 @@ export function SettingsClient() {
 
   // Profile Edit State
   const [displayName, setDisplayName] = useState(user?.displayName || "");
+  const [username, setUsername] = useState(user?.username || "");
+  const [usernameStatus, setUsernameStatus] = useState<{
+    isChecking: boolean;
+    isAvailable: boolean | null;
+    error?: string;
+  }>({ isChecking: false, isAvailable: null });
+  const [isSavingHandle, setIsSavingHandle] = useState(false);
+  const [handleSavedSuccess, setHandleSavedSuccess] = useState(false);
   const [bio, setBio] = useState(user?.bio || "");
   const [location, setLocation] = useState(user?.location || user?.city || "");
   const [website, setWebsite] = useState(user?.website || "");
@@ -93,6 +101,7 @@ export function SettingsClient() {
   useEffect(() => {
     if (user) {
       setDisplayName(user.displayName);
+      setUsername(user.username);
       setBio(user.bio || "");
       setLocation(user.location || user.city || "");
       setWebsite(user.website || "");
@@ -100,6 +109,47 @@ export function SettingsClient() {
       setSkills(user.skills || []);
     }
   }, [user]);
+
+  // Live Check Username Availability
+  useEffect(() => {
+    if (!user) return;
+    const clean = username.trim().toLowerCase().replace(/^@/, "");
+
+    if (!clean) {
+      setUsernameStatus({ isChecking: false, isAvailable: false, error: "Handle cannot be empty" });
+      return;
+    }
+
+    if (clean === user.username.toLowerCase()) {
+      setUsernameStatus({ isChecking: false, isAvailable: true });
+      return;
+    }
+
+    if (clean.length < 3) {
+      setUsernameStatus({ isChecking: false, isAvailable: false, error: "Min 3 characters" });
+      return;
+    }
+    if (clean.length > 30) {
+      setUsernameStatus({ isChecking: false, isAvailable: false, error: "Max 30 characters" });
+      return;
+    }
+    if (!/^[a-z0-9_.-]+$/.test(clean)) {
+      setUsernameStatus({ isChecking: false, isAvailable: false, error: "Only letters, numbers, _, -, ." });
+      return;
+    }
+
+    setUsernameStatus({ isChecking: true, isAvailable: null });
+    const timer = setTimeout(async () => {
+      const result = await checkUsernameAvailability(clean, user.id);
+      setUsernameStatus({
+        isChecking: false,
+        isAvailable: result.available,
+        error: result.error,
+      });
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [username, user]);
 
   // Check for password reset trigger from URL or Auth State
   useEffect(() => {
@@ -155,6 +205,33 @@ export function SettingsClient() {
     }
   };
 
+  // Handle Save Handle Only (Inline)
+  const handleSaveHandleOnly = async (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    const cleanUsername = username.trim().toLowerCase().replace(/^@/, "");
+    if (!cleanUsername || cleanUsername === user?.username.toLowerCase()) return;
+
+    const avail = await checkUsernameAvailability(cleanUsername, user?.id);
+    if (!avail.available) {
+      alert(avail.error || "This username is already taken. Please choose another.");
+      return;
+    }
+
+    setIsSavingHandle(true);
+    setHandleSavedSuccess(false);
+    try {
+      await updateProfile({ username: cleanUsername });
+      setHandleSavedSuccess(true);
+      setTimeout(() => {
+        setHandleSavedSuccess(false);
+      }, 3000);
+    } catch (err) {
+      console.error("Failed to update handle:", err);
+    } finally {
+      setIsSavingHandle(false);
+    }
+  };
+
   // Handle Save Profile
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,10 +240,26 @@ export function SettingsClient() {
       return;
     }
 
+    const cleanUsername = username.trim().toLowerCase().replace(/^@/, "");
+    if (!cleanUsername) {
+      alert("Studio handle cannot be empty.");
+      return;
+    }
+
+    const isUsernameChanged = cleanUsername !== user?.username.toLowerCase();
+    if (isUsernameChanged) {
+      const avail = await checkUsernameAvailability(cleanUsername, user?.id);
+      if (!avail.available) {
+        alert(avail.error || "This username is already taken. Please choose another.");
+        return;
+      }
+    }
+
     setIsSavingProfile(true);
     setProfileSavedSuccess(false);
     try {
       await updateProfile({
+        username: cleanUsername,
         displayName: displayName.trim(),
         bio: bio.trim(),
         location: location.trim(),
@@ -176,6 +269,10 @@ export function SettingsClient() {
         skills,
       });
       setProfileSavedSuccess(true);
+      if (isUsernameChanged) {
+        setHandleSavedSuccess(true);
+        setTimeout(() => setHandleSavedSuccess(false), 3000);
+      }
       setTimeout(() => setProfileSavedSuccess(false), 3000);
     } catch (err) {
       console.error("Failed to update profile:", err);
@@ -292,7 +389,7 @@ export function SettingsClient() {
               <div className="relative group">
                 <div
                   onClick={() => avatarFileInputRef.current?.click()}
-                  className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-4 ring-[var(--border-neutral)] shadow-sm cursor-pointer hover:ring-[var(--primary-forest-green)] transition-all"
+                  className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-4 ring-black dark:ring-white/20 shadow-md cursor-pointer hover:ring-[var(--primary-forest-green)] dark:hover:ring-[var(--accent)] hover:scale-102 active:scale-98 transition-all"
                   title="Click to replace avatar photo"
                 >
                   <Image
@@ -303,12 +400,15 @@ export function SettingsClient() {
                     priority
                     className="object-cover"
                   />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white gap-1">
-                    <Camera className="h-5 w-5" />
-                    <span className="text-[10px] font-bold">Change</span>
+                  {/* Permanent Camera & Change Overlay */}
+                  <div className="absolute inset-0 bg-black/45 hover:bg-black/60 transition-colors flex flex-col items-center justify-center text-white gap-1 select-none">
+                    <Camera className="h-5 w-5 sm:h-6 sm:w-6 text-white stroke-[2.2]" />
+                    <span className="text-[11px] sm:text-xs font-bold text-white tracking-wide drop-shadow-xs">
+                      Change
+                    </span>
                   </div>
                   {isUploadingAvatar && (
-                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/75 z-20 flex items-center justify-center">
                       <Loader2 className="h-6 w-6 text-white animate-spin" />
                     </div>
                   )}
@@ -507,16 +607,81 @@ export function SettingsClient() {
                     </div>
 
                     <div>
-                      <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5 text-xs">
-                        Studio Username (@handle)
-                      </label>
-                      <Input
-                        value={`@${user.username}`}
-                        disabled
-                        className="h-11 text-sm font-mono bg-[var(--bg-neutral)]/50 text-[var(--content-secondary)] cursor-not-allowed"
-                      />
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="type-body-default-bold text-[var(--content-primary)] text-xs">
+                          Studio Username (@handle)
+                        </label>
+                        {usernameStatus.isChecking ? (
+                          <span className="text-[10px] font-mono text-[var(--content-tertiary)] flex items-center gap-1">
+                            <Loader2 className="h-3 w-3 animate-spin" /> Checking...
+                          </span>
+                        ) : usernameStatus.isAvailable === false ? (
+                          <span className="text-[10px] font-mono text-rose-500 font-semibold flex items-center gap-1">
+                            <AlertCircle className="h-3 w-3" /> {usernameStatus.error || "Unavailable"}
+                          </span>
+                        ) : username.trim().toLowerCase().replace(/^@/, "") !== user?.username.toLowerCase() && usernameStatus.isAvailable === true ? (
+                          <span className="text-[10px] font-mono text-emerald-500 dark:text-[var(--accent)] font-semibold flex items-center gap-1">
+                            <Check className="h-3 w-3" /> Available
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="relative flex items-center">
+                        <span className="absolute left-3.5 text-sm font-mono text-[var(--content-tertiary)] select-none pointer-events-none">
+                          @
+                        </span>
+                        <Input
+                          value={username}
+                          onChange={(e) => {
+                            const val = e.target.value.toLowerCase().replace(/[^a-z0-9_.-]/g, "");
+                            setUsername(val);
+                          }}
+                          placeholder="your_handle"
+                          required
+                          className={cn(
+                            "h-11 pl-8 text-sm font-mono transition-all",
+                            (username.trim().toLowerCase().replace(/^@/, "") !== user?.username.toLowerCase() || handleSavedSuccess) && "pr-24",
+                            usernameStatus.isAvailable === false
+                              ? "border-rose-500 focus:border-rose-500"
+                              : username.trim().toLowerCase().replace(/^@/, "") !== user?.username.toLowerCase() && usernameStatus.isAvailable === true
+                              ? "border-emerald-500 dark:border-[var(--accent)]"
+                              : ""
+                          )}
+                        />
+                        {/* Inline Save / Saved Action */}
+                        <div className="absolute right-1.5 flex items-center">
+                          {handleSavedSuccess ? (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-[var(--accent)] bg-emerald-500/10 dark:bg-[#8DFF00]/10 px-2.5 py-1 rounded-lg animate-scale-in">
+                              <Check className="h-3.5 w-3.5" /> Saved
+                            </span>
+                          ) : username.trim().toLowerCase().replace(/^@/, "") !== user?.username.toLowerCase() ? (
+                            <Button
+                              type="button"
+                              size="sm"
+                              disabled={
+                                isSavingHandle ||
+                                usernameStatus.isChecking ||
+                                usernameStatus.isAvailable === false
+                              }
+                              onClick={handleSaveHandleOnly}
+                              className="h-8 px-3 text-xs font-bold rounded-lg bg-[var(--primary-forest-green)] dark:bg-[var(--accent)] text-white dark:text-[#090C09] hover:opacity-90 transition-all cursor-pointer shadow-2xs"
+                            >
+                              {isSavingHandle ? (
+                                <>
+                                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                  <span>Saving...</span>
+                                </>
+                              ) : (
+                                "Save"
+                              )}
+                            </Button>
+                          ) : null}
+                        </div>
+                      </div>
                       <span className="text-[10px] text-[var(--content-tertiary)] mt-1 block">
-                        Unique handle assigned at registration.
+                        Unique URL:{" "}
+                        <span className="font-mono text-[var(--content-secondary)]">
+                          craft.design/u/{username.trim().toLowerCase().replace(/^@/, "") || user?.username}
+                        </span>
                       </span>
                     </div>
                   </div>

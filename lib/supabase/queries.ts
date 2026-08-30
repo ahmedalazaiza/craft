@@ -1,5 +1,13 @@
 import { supabase } from "./client";
-import { Project, Creator, Comment, Notification, NotificationType } from "@/lib/types";
+import {
+  Project,
+  Creator,
+  Comment,
+  Notification,
+  NotificationType,
+  CommunityPost,
+  CommunityComment,
+} from "@/lib/types";
 import { DEFAULT_AVATAR_URL } from "@/lib/avatar";
 
 // =============================================================================
@@ -677,11 +685,68 @@ export async function toggleAppreciationInDb(projectId: string, userId: string):
 }
 
 /**
+ * Check if a username handle is available or taken
+ */
+export async function checkUsernameAvailability(
+  username: string,
+  currentUserId?: string
+): Promise<{ available: boolean; error?: string }> {
+  const clean = username.trim().toLowerCase().replace(/^@/, "");
+  if (!clean) return { available: false, error: "Username cannot be empty" };
+  if (clean.length < 3) return { available: false, error: "Username must be at least 3 characters" };
+  if (clean.length > 30) return { available: false, error: "Username must be at most 30 characters" };
+  if (!/^[a-z0-9_.-]+$/.test(clean)) {
+    return { available: false, error: "Only letters, numbers, underscores, dashes, and periods are allowed" };
+  }
+  const reserved = [
+    "admin",
+    "explore",
+    "community",
+    "creators",
+    "settings",
+    "about",
+    "api",
+    "login",
+    "signup",
+    "onboarding",
+    "terms",
+    "privacy",
+    "guidelines",
+    "project",
+    "me",
+  ];
+  if (reserved.includes(clean)) {
+    return { available: false, error: "This username is reserved" };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, username")
+      .eq("username", clean)
+      .maybeSingle();
+
+    if (error && error.code !== "PGRST116") {
+      return { available: true };
+    }
+
+    if (data && data.id !== currentUserId) {
+      return { available: false, error: "Username is already taken" };
+    }
+
+    return { available: true };
+  } catch {
+    return { available: true };
+  }
+}
+
+/**
  * Update creator profile
  */
 export async function updateProfileInDb(id: string, updates: Partial<Creator>): Promise<boolean> {
   try {
     const payload: Record<string, unknown> = {};
+    if (updates.username !== undefined) payload.username = updates.username.trim().toLowerCase().replace(/^@/, "");
     if (updates.displayName !== undefined) payload.display_name = updates.displayName;
     if (updates.bio !== undefined) payload.bio = updates.bio;
     if (updates.location !== undefined) payload.location = updates.location;
@@ -690,7 +755,6 @@ export async function updateProfileInDb(id: string, updates: Partial<Creator>): 
     if (updates.skills !== undefined) payload.skills = updates.skills;
     if (updates.avatarUrl !== undefined) payload.avatar_url = updates.avatarUrl;
     if (updates.isOnline !== undefined) payload.is_online = updates.isOnline;
-
 
     const { error } = await supabase
       .from("profiles")
@@ -973,5 +1037,352 @@ export async function markAllNotificationsReadInDb(recipientId: string): Promise
     console.error("Failed to mark all notifications as read:", err);
   }
 }
+
+// =============================================================================
+// COMMUNITY HUB DATABASE QUERIES & LIVE INTEGRATION
+// =============================================================================
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function mapCommunityCommentRow(row: any): CommunityComment {
+  return {
+    id: row.id,
+    author: mapProfileToCreator(row.author || row.profiles),
+    content: row.content,
+    createdAt: row.created_at || new Date().toISOString(),
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function mapCommunityPostRow(
+  row: any,
+  currentUserId?: string,
+  userLikesMap?: Record<string, number>,
+  userVotesMap?: Record<string, string>
+): CommunityPost {
+  const author = mapProfileToCreator(row.author || row.profiles, currentUserId);
+  const comments = Array.isArray(row.comments)
+    ? row.comments.map(mapCommunityCommentRow)
+    : [];
+
+  const userLikes = userLikesMap && userLikesMap[row.id] !== undefined ? userLikesMap[row.id] : 0;
+  const userVotedOptionId = userVotesMap ? userVotesMap[row.id] : undefined;
+
+  let abTest = undefined;
+  if (row.type === "ab_test" && row.ab_test_option_a_label) {
+    abTest = {
+      optionA: {
+        id: "A" as const,
+        label: row.ab_test_option_a_label,
+        imageUrl: row.ab_test_option_a_image || undefined,
+        votesCount: row.ab_test_option_a_votes || 0,
+      },
+      optionB: {
+        id: "B" as const,
+        label: row.ab_test_option_b_label,
+        imageUrl: row.ab_test_option_b_image || undefined,
+        votesCount: row.ab_test_option_b_votes || 0,
+      },
+    };
+  }
+
+  let poll = undefined;
+  if (row.type === "poll") {
+    const rawOptions = Array.isArray(row.poll_options) ? row.poll_options : [];
+    const mappedOptions = rawOptions.map((opt: any, idx: number) => ({
+      id: opt.id || `opt-${idx + 1}`,
+      text: opt.text || `Option ${idx + 1}`,
+      votesCount: typeof opt.votesCount === "number" ? opt.votesCount : 0,
+    }));
+    const sumVotes = mappedOptions.reduce((acc: number, o: { votesCount: number }) => acc + o.votesCount, 0);
+    poll = {
+      question: row.poll_question || row.title,
+      options: mappedOptions,
+      totalVotes: typeof row.poll_total_votes === "number" && row.poll_total_votes > 0 ? Math.max(row.poll_total_votes, sumVotes) : sumVotes,
+    };
+  }
+
+  return {
+    id: row.id,
+    type: row.type,
+    title: row.title,
+    content: row.content || "",
+    category: row.category,
+    tags: row.tags || [],
+    images: row.images || [],
+    abTest,
+    poll,
+    author,
+    likesCount: row.likes_count || 0,
+    userLikes,
+    userVotedOptionId,
+    comments,
+    createdAt: row.created_at || new Date().toISOString(),
+  };
+}
+
+/**
+ * Fetch all community posts with authors and comments from Supabase
+ */
+export async function fetchCommunityPostsFromDb(
+  currentUserId?: string,
+  userLikesMap?: Record<string, number>,
+  userVotesMap?: Record<string, string>
+): Promise<CommunityPost[]> {
+  try {
+    const { data, error } = await supabase
+      .from("community_posts")
+      .select(`
+        *,
+        author:profiles!author_id(*),
+        comments:community_comments(*, author:profiles!author_id(*))
+      `)
+      .order("created_at", { ascending: false });
+
+    if (error || !data) {
+      if (error && error.message) {
+        console.warn("Supabase community_posts query notice:", error.message);
+      }
+      return [];
+    }
+
+    return data.map((row) =>
+      mapCommunityPostRow(row, currentUserId, userLikesMap, userVotesMap)
+    );
+  } catch (err) {
+    console.error("Error fetching community posts from Supabase:", err);
+    return [];
+  }
+}
+
+/**
+ * Insert a new community post in Supabase
+ */
+export async function insertCommunityPostInDb(
+  post: Omit<CommunityPost, "id" | "author" | "createdAt" | "likesCount" | "comments">,
+  authorId: string
+): Promise<CommunityPost | null> {
+  try {
+    const payload: any = {
+      type: post.type,
+      title: post.title,
+      content: post.content || null,
+      category: post.category,
+      tags: post.tags || [],
+      images: post.images || [],
+      author_id: authorId,
+      likes_count: 0,
+    };
+
+    if (post.type === "ab_test" && post.abTest) {
+      payload.ab_test_option_a_label = post.abTest.optionA.label;
+      payload.ab_test_option_a_image = post.abTest.optionA.imageUrl || null;
+      payload.ab_test_option_a_votes = 0;
+      payload.ab_test_option_b_label = post.abTest.optionB.label;
+      payload.ab_test_option_b_image = post.abTest.optionB.imageUrl || null;
+      payload.ab_test_option_b_votes = 0;
+    } else if (post.type === "poll" && post.poll) {
+      payload.poll_question = post.poll.question;
+      payload.poll_options = post.poll.options;
+      payload.poll_total_votes = 0;
+    }
+
+    const { data, error } = await supabase
+      .from("community_posts")
+      .insert(payload)
+      .select(`
+        *,
+        author:profiles!author_id(*)
+      `)
+      .single();
+
+    if (error || !data) {
+      console.error("Error inserting community post in Supabase:", error?.message || error);
+      return null;
+    }
+
+    return mapCommunityPostRow(data, authorId);
+  } catch (err) {
+    console.error("Failed to insert community post:", err);
+    return null;
+  }
+}
+
+/**
+ * Claps / Likes for a community post in Supabase
+ */
+export async function toggleCommunityLikeInDb(
+  postId: string,
+  userId: string,
+  clapsCount: number
+): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from("community_likes")
+      .upsert(
+        {
+          post_id: postId,
+          user_id: userId,
+          claps_count: clapsCount,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "post_id,user_id" }
+      );
+
+    if (error) {
+      console.warn("Notice updating community_likes in Supabase:", error.message);
+      return false;
+    }
+
+    // Increment likes_count on post
+    await supabase.rpc("increment_community_likes", {
+      target_post_id: postId,
+      increment_by: 1,
+    });
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Vote for an A/B test or Poll choice in Supabase
+ */
+export async function voteCommunityPostInDb(
+  postId: string,
+  userId: string,
+  optionId: string
+): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from("community_votes")
+      .upsert(
+        {
+          post_id: postId,
+          user_id: userId,
+          option_id: optionId,
+        },
+        { onConflict: "post_id,user_id" }
+      );
+
+    if (error) {
+      console.warn("Notice updating community_votes in Supabase:", error.message);
+      return false;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Add a comment to a community post in Supabase
+ */
+export async function insertCommunityCommentInDb(
+  postId: string,
+  authorId: string,
+  content: string
+): Promise<CommunityComment | null> {
+  try {
+    const { data, error } = await supabase
+      .from("community_comments")
+      .insert({
+        post_id: postId,
+        author_id: authorId,
+        content,
+      })
+      .select(`
+        *,
+        author:profiles!author_id(*)
+      `)
+      .single();
+
+    if (error || !data) {
+      console.warn("Notice inserting community comment in Supabase:", error?.message || error);
+      return null;
+    }
+
+    return mapCommunityCommentRow(data);
+  } catch (err) {
+    console.error("Failed to insert community comment:", err);
+    return null;
+  }
+}
+
+/**
+ * Update an existing community post in Supabase
+ */
+export async function updateCommunityPostInDb(
+  postId: string,
+  updates: Partial<CommunityPost>
+): Promise<boolean> {
+  try {
+    const updatePayload: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (updates.title !== undefined) updatePayload.title = updates.title;
+    if (updates.content !== undefined) updatePayload.content = updates.content;
+    if (updates.category !== undefined) updatePayload.category = updates.category;
+    if (updates.tags !== undefined) updatePayload.tags = updates.tags;
+    if (updates.images !== undefined) updatePayload.images = updates.images;
+
+    if (updates.abTest) {
+      updatePayload.ab_test_option_a_label = updates.abTest.optionA.label;
+      updatePayload.ab_test_option_a_image = updates.abTest.optionA.imageUrl;
+      updatePayload.ab_test_option_b_label = updates.abTest.optionB.label;
+      updatePayload.ab_test_option_b_image = updates.abTest.optionB.imageUrl;
+    }
+
+    if (updates.poll) {
+      updatePayload.poll_question = updates.poll.question;
+      updatePayload.poll_options = updates.poll.options;
+    }
+
+    const { error } = await supabase
+      .from("community_posts")
+      .update(updatePayload)
+      .eq("id", postId);
+
+    if (error) {
+      console.warn("Notice updating community post in Supabase:", error.message);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error("Failed to update community post in Supabase:", err);
+    return false;
+  }
+}
+
+/**
+ * Delete a community post from Supabase
+ */
+export async function deleteCommunityPostInDb(postId: string): Promise<boolean> {
+  try {
+    // Delete associated records first
+    await supabase.from("community_likes").delete().eq("post_id", postId);
+    await supabase.from("community_votes").delete().eq("post_id", postId);
+    await supabase.from("community_comments").delete().eq("post_id", postId);
+
+    const { error } = await supabase
+      .from("community_posts")
+      .delete()
+      .eq("id", postId);
+
+    if (error) {
+      console.warn("Notice deleting community post in Supabase:", error.message);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error("Failed to delete community post from Supabase:", err);
+    return false;
+  }
+}
+
 
 
