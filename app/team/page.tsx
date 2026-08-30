@@ -4,15 +4,7 @@ import Link from "next/link";
 import { constructMetadata, generateBreadcrumbJsonLd } from "@/lib/seo";
 import { bricolage } from "@/lib/fonts";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
-import {
-  Users,
-  MapPin,
-  Globe,
-  Palette,
-  Terminal,
-  Shield,
-  ArrowUpRight,
-} from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = constructMetadata({
@@ -95,7 +87,6 @@ const TEAM_MEMBERS: TeamMember[] = [
   },
 ];
 
-// SVG Icons for Social Platforms
 function TwitterXIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="currentColor">
@@ -127,11 +118,12 @@ export default function TeamPage() {
   ]);
 
   return (
-    <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-6 sm:py-10 space-y-16">
+    <div className="mx-auto max-w-[1280px] px-4 sm:px-6 py-6 sm:py-10 space-y-16">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
+      
       {/* Breadcrumbs */}
       <Breadcrumbs
         items={[
@@ -141,189 +133,128 @@ export default function TeamPage() {
       />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden rounded-[32px] border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-8 sm:p-14 lg:p-20 text-center space-y-6">
-        <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-neutral)] px-4 py-1.5 text-xs font-semibold text-[var(--content-secondary)]">
-          <Users className="h-3.5 w-3.5 text-[var(--accent)]" />
-          <span>Curators & Builders</span>
-        </div>
+      <section className="text-center max-w-3xl mx-auto space-y-6 pt-4">
+        <span className="inline-block text-[11px] font-mono font-semibold uppercase tracking-widest text-neutral-400 dark:text-neutral-500">
+          Curators & Builders
+        </span>
 
         <h1
           className={cn(
             bricolage.className,
-            "text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-[var(--content-primary)] max-w-4xl mx-auto leading-[1.08]"
+            "text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-neutral-950 dark:text-white leading-[1.06]"
           )}
         >
-          Built by makers,{" "}
-          <span className="inline-block rounded-xl bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[var(--accent)] dark:text-[#090C09] px-3.5 py-0.5 mt-1 border border-[var(--border-neutral)] dark:border-[var(--accent)]">
-            for makers.
-          </span>
+          Built by makers, for makers.
         </h1>
 
-        <p className="type-body-large text-[var(--content-secondary)] max-w-2xl mx-auto leading-relaxed text-base sm:text-lg">
+        <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed font-normal max-w-2xl mx-auto">
           We are a distributed collective of designers, engineers, and typographers dedicated to building the premier home for digital craftsmanship.
         </p>
       </section>
 
-      {/* Team Grid with High-Impact Prominent Portraits */}
+      {/* Team Grid */}
       <section className="space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-[var(--border-neutral)]">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-neutral-200 dark:border-neutral-800">
           <div>
-            <h2 className={cn(bricolage.className, "text-2xl sm:text-3xl font-bold text-[var(--content-primary)]")}>
+            <h2 className={cn(bricolage.className, "text-2xl sm:text-3xl font-black text-neutral-950 dark:text-white tracking-tight")}>
               Core Collective
             </h2>
-            <p className="text-sm text-[var(--content-secondary)] mt-1">
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
               The creative stewards directing the curation and technical infrastructure of Layerat.
             </p>
           </div>
-          <span className="text-xs font-semibold text-[var(--content-tertiary)] uppercase tracking-wider">
+          <span className="text-xs font-mono font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
             4 Core Curators
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {TEAM_MEMBERS.map((member, idx) => (
             <div
               key={member.name}
-              className="group flex flex-col justify-between rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-elevated)] overflow-hidden transition-all duration-300 hover:border-[var(--content-tertiary)] hover:shadow-lg"
+              className="group flex flex-col rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#141713] overflow-hidden shadow-xs hover:border-neutral-300 dark:hover:border-neutral-700 transition-all"
             >
-              <div>
-                {/* Large Prominent Portrait Header */}
-                <div className="relative w-full aspect-[4/4.5] overflow-hidden bg-[var(--bg-neutral)]">
-                  <Image
-                    src={member.avatar}
-                    alt={member.name}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                    className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
-                    priority={idx < 2}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
+              {/* Portrait Image */}
+              <div className="relative w-full aspect-[4/4.5] overflow-hidden bg-neutral-100 dark:bg-neutral-800">
+                <Image
+                  src={member.avatar}
+                  alt={member.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                  className="object-cover object-top group-hover:scale-103 transition-transform duration-500"
+                  priority={idx < 2}
+                />
+              </div>
 
-                  {/* Floating Discipline Badge (Top Left) */}
-                  <div className="absolute top-3.5 left-3.5">
-                    <span className="inline-flex items-center rounded-full bg-black/60 backdrop-blur-md px-3 py-1 text-[11px] font-semibold text-white border border-white/15 shadow-xs">
-                      {member.discipline}
+              {/* Member Details */}
+              <div className="p-5 flex flex-col flex-1 justify-between space-y-4">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className={cn(bricolage.className, "text-base font-bold text-neutral-950 dark:text-white truncate")}>
+                      {member.name}
+                    </h3>
+                    <span className="text-[10px] font-mono text-neutral-400 dark:text-neutral-500 shrink-0">
+                      {member.location}
                     </span>
                   </div>
-
-                  {/* Location Badge (Bottom Left on Image) */}
-                  <div className="absolute bottom-3.5 left-3.5 flex items-center gap-1 text-xs font-medium text-white/95 drop-shadow-sm">
-                    <MapPin className="h-3.5 w-3.5 text-[var(--accent)]" />
-                    <span>{member.location}</span>
-                  </div>
-                </div>
-
-                {/* Card Information */}
-                <div className="p-6 space-y-2.5">
-                  <h3 className={cn(bricolage.className, "text-xl font-bold text-[var(--content-primary)] tracking-tight")}>
-                    {member.name}
-                  </h3>
-                  <p className="text-xs sm:text-sm font-semibold text-[var(--primary-forest-green)] dark:text-[var(--accent)]">
+                  <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
                     {member.role}
                   </p>
-                  <p className="text-xs sm:text-sm text-[var(--content-secondary)] leading-relaxed pt-1">
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400 line-clamp-3 leading-relaxed pt-1 font-normal">
                     {member.bio}
                   </p>
                 </div>
-              </div>
 
-              {/* Social Media Links Bar */}
-              <div className="px-6 pb-6 pt-3 border-t border-[var(--border-neutral)] flex items-center gap-2">
-                {member.socials.twitter && (
-                  <a
-                    href={member.socials.twitter}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border-neutral)] bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:text-[#090C09] hover:bg-[var(--accent)] hover:border-[var(--accent)] transition-all cursor-pointer"
-                    title={`${member.name} on X / Twitter`}
-                    aria-label={`${member.name} on X / Twitter`}
-                  >
-                    <TwitterXIcon className="h-3.5 w-3.5" />
-                  </a>
-                )}
-
-                {member.socials.github && (
-                  <a
-                    href={member.socials.github}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border-neutral)] bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:text-[#090C09] hover:bg-[var(--accent)] hover:border-[var(--accent)] transition-all cursor-pointer"
-                    title={`${member.name} on GitHub`}
-                    aria-label={`${member.name} on GitHub`}
-                  >
-                    <GithubIcon className="h-4 w-4" />
-                  </a>
-                )}
-
-                {member.socials.linkedin && (
-                  <a
-                    href={member.socials.linkedin}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border-neutral)] bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:text-[#090C09] hover:bg-[var(--accent)] hover:border-[var(--accent)] transition-all cursor-pointer"
-                    title={`${member.name} on LinkedIn`}
-                    aria-label={`${member.name} on LinkedIn`}
-                  >
-                    <LinkedInIcon className="h-4 w-4" />
-                  </a>
-                )}
-
-                {member.socials.website && (
-                  <a
-                    href={member.socials.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border-neutral)] bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:text-[#090C09] hover:bg-[var(--accent)] hover:border-[var(--accent)] transition-all cursor-pointer"
-                    title={`${member.name}'s Website / Studio`}
-                    aria-label={`${member.name}'s Website / Studio`}
-                  >
-                    <Globe className="h-4 w-4" />
-                  </a>
-                )}
+                {/* Social Links */}
+                <div className="flex items-center gap-3 pt-3 border-t border-neutral-100 dark:border-neutral-800/80">
+                  {member.socials.github && (
+                    <a
+                      href={member.socials.github}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
+                      aria-label={`${member.name} GitHub`}
+                    >
+                      <GithubIcon className="h-4 w-4" />
+                    </a>
+                  )}
+                  {member.socials.twitter && (
+                    <a
+                      href={member.socials.twitter}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
+                      aria-label={`${member.name} X`}
+                    >
+                      <TwitterXIcon className="h-3.5 w-3.5" />
+                    </a>
+                  )}
+                  {member.socials.linkedin && (
+                    <a
+                      href={member.socials.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
+                      aria-label={`${member.name} LinkedIn`}
+                    >
+                      <LinkedInIcon className="h-4 w-4" />
+                    </a>
+                  )}
+                  {member.socials.website && (
+                    <a
+                      href={member.socials.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors ml-auto text-xs font-semibold inline-flex items-center gap-0.5"
+                    >
+                      <span>Web</span>
+                      <ArrowUpRight className="h-3 w-3" />
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
           ))}
-        </div>
-      </section>
-
-      {/* Values Banner */}
-      <section className="rounded-[32px] border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-8 sm:p-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
-          <div className="space-y-2">
-            <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--bg-neutral)] text-[var(--primary-forest-green)] dark:text-[var(--accent)] mb-2">
-              <Palette className="h-5 w-5" />
-            </div>
-            <h4 className={cn(bricolage.className, "text-lg font-bold text-[var(--content-primary)]")}>
-              Editorial Quality
-            </h4>
-            <p className="text-xs sm:text-sm text-[var(--content-secondary)] leading-relaxed">
-              Every feature and layout is designed with reverence for typography, whitespace, and visual balance.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--bg-neutral)] text-[var(--primary-forest-green)] dark:text-[var(--accent)] mb-2">
-              <Terminal className="h-5 w-5" />
-            </div>
-            <h4 className={cn(bricolage.className, "text-lg font-bold text-[var(--content-primary)]")}>
-              Zero Bloat Engineering
-            </h4>
-            <p className="text-xs sm:text-sm text-[var(--content-secondary)] leading-relaxed">
-              Instant 0ms routing, sub-millisecond in-memory cache, and lightning-fast edge assets.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--bg-neutral)] text-[var(--primary-forest-green)] dark:text-[var(--accent)] mb-2">
-              <Shield className="h-5 w-5" />
-            </div>
-            <h4 className={cn(bricolage.className, "text-lg font-bold text-[var(--content-primary)]")}>
-              Independent & Creator-Led
-            </h4>
-            <p className="text-xs sm:text-sm text-[var(--content-secondary)] leading-relaxed">
-              Self-funded, privacy-first, and aligned 100% with the interests of our creators.
-            </p>
-          </div>
         </div>
       </section>
     </div>
