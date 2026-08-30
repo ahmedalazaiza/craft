@@ -46,17 +46,24 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
     isFollowingCreator,
     toggleFollowCreator,
     updateProfile,
+    isLoadingDb,
   } = useSession();
 
   const isCurrentUser =
     user && user.username.toLowerCase() === initialCreator.username.toLowerCase();
 
   // Grab the live creator data from session context (tracks live followersCount & profile updates)
-  const creator =
-    creators.find((c) => c.username.toLowerCase() === initialCreator.username.toLowerCase()) ||
-    (isCurrentUser && user ? user : initialCreator);
+  const liveCreator = creators.find(
+    (c) => c.username.toLowerCase() === initialCreator.username.toLowerCase()
+  );
 
-  if (!creator) {
+  const creator =
+    liveCreator || (isCurrentUser && user ? user : initialCreator);
+
+  const isDeleted =
+    !isLoadingDb && creators.length > 0 && !liveCreator && !isCurrentUser;
+
+  if (isDeleted || !creator) {
     notFound();
   }
 

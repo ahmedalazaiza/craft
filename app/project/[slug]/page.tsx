@@ -1,25 +1,15 @@
 import React from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { fetchProjectBySlug, fetchProjects } from "@/lib/supabase/queries";
+import { fetchProjectBySlug } from "@/lib/supabase/queries";
 import { getProjectMetadata, generateProjectJsonLd, generateBreadcrumbJsonLd } from "@/lib/seo";
 import { ProjectDetailClient } from "./project-detail-client";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface PageProps {
   params: Promise<{ slug: string }>;
-}
-
-export async function generateStaticParams() {
-  try {
-    const projects = await fetchProjects({ publishedOnly: true });
-    return projects.map((project) => ({
-      slug: project.slug,
-    }));
-  } catch {
-    return [];
-  }
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {

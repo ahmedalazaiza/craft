@@ -1,25 +1,15 @@
 import React from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { fetchCreatorByUsername, fetchCreators } from "@/lib/supabase/queries";
+import { fetchCreatorByUsername } from "@/lib/supabase/queries";
 import { getProfileMetadata, generateProfileJsonLd, generateBreadcrumbJsonLd } from "@/lib/seo";
 import { CreatorProfileClient } from "./creator-profile-client";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface PageProps {
   params: Promise<{ username: string }>;
-}
-
-export async function generateStaticParams() {
-  try {
-    const creators = await fetchCreators();
-    return creators.map((user) => ({
-      username: user.username,
-    }));
-  } catch {
-    return [];
-  }
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {

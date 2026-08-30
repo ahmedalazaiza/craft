@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, notFound } from "next/navigation";
 import { Project } from "@/lib/types";
 import { bricolage } from "@/lib/fonts";
 import { Badge } from "@/components/ui/badge";
@@ -46,6 +46,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
     isProjectAppreciated,
     toggleAppreciation,
     saveProject,
+    isLoadingDb,
   } = useSession();
 
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
@@ -56,8 +57,14 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
   const [publishToast, setPublishToast] = useState<string | null>(null);
 
   // Grab live project data from session context if updated
-  const project =
-    projects.find((p) => p.id === initialProject.id) || initialProject;
+  const liveProject = projects.find((p) => p.id === initialProject.id || p.slug === initialProject.slug);
+  const project = liveProject || initialProject;
+
+  const isDeleted = !isLoadingDb && projects.length > 0 && !liveProject;
+
+  if (isDeleted) {
+    notFound();
+  }
 
   const isAppreciated = isProjectAppreciated(project.id);
 
