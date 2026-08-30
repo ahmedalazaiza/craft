@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { ProjectCategory, ProjectMedium } from "@/lib/types";
 import {
   MASTER_TAXONOMY,
@@ -12,9 +12,10 @@ import {
   getToolsForCategory,
   getSubCategoriesForCategory,
 } from "@/lib/taxonomy";
+import { POPULAR_CITIES } from "@/lib/location";
 import { Button } from "@/components/ui/button";
 import { Badge, FilterChip } from "@/components/ui/badge";
-import { SlidersHorizontal, X, RotateCcw, Check, Wrench, Tag, Layers } from "lucide-react";
+import { SlidersHorizontal, X, RotateCcw, Check, Wrench, Tag, Layers, Search, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface ProjectFilters {
@@ -72,6 +73,34 @@ export function FilterDrawer({
   creatorFilters,
   onCreatorFiltersChange,
 }: FilterDrawerProps) {
+  const [locationQuery, setLocationQuery] = useState("");
+
+  const availableCities = useMemo(() => {
+    const baseCities = POPULAR_CITIES.filter((c) => c !== "Worldwide");
+    if (!locationQuery.trim()) {
+      return [
+        "All",
+        "Berlin, Germany",
+        "Tokyo, Japan",
+        "London, United Kingdom",
+        "New York, USA",
+        "San Francisco, USA",
+        "Paris, France",
+        "Amsterdam, Netherlands",
+        "Zurich, Switzerland",
+        "Stockholm, Sweden",
+        "Dubai, UAE",
+        "Riyadh, Saudi Arabia",
+        "Cairo, Egypt",
+        "Gaza, Palestine",
+        "Amman, Jordan",
+        "Toronto, Canada",
+      ];
+    }
+    const q = locationQuery.toLowerCase().trim();
+    return baseCities.filter((city) => city.toLowerCase().includes(q));
+  }, [locationQuery]);
+
   if (!isOpen) return null;
 
   const currentCategoryTaxonomy = useMemo(() => {
@@ -133,6 +162,7 @@ export function FilterDrawer({
 
   const handleResetCreators = () => {
     if (!onCreatorFiltersChange) return;
+    setLocationQuery("");
     onCreatorFiltersChange({
       discipline: "All",
       city: "All",
@@ -444,26 +474,108 @@ export function FilterDrawer({
                 </div>
               </div>
 
-              {/* City Filter */}
-              <div>
-                <label className="type-body-default-bold text-[var(--content-primary)] block mb-2.5 text-xs uppercase tracking-wider font-mono">
-                  Hub / Location
-                </label>
-                <div className="flex flex-wrap gap-1.5">
-                  {CITIES.map((city) => (
-                    <FilterChip
-                      key={city}
-                      active={creatorFilters.city === city}
+              {/* Location Filter with Auto-Suggest / Search */}
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="type-body-default-bold text-[var(--content-primary)] block text-xs uppercase tracking-wider font-mono">
+                    Location
+                  </label>
+                  {creatorFilters.city && creatorFilters.city !== "All" && (
+                    <button
+                      type="button"
                       onClick={() =>
                         onCreatorFiltersChange({
                           ...creatorFilters,
-                          city: city,
+                          city: "All",
                         })
                       }
+                      className="text-[11px] font-semibold text-neutral-500 hover:text-neutral-900 dark:hover:text-white underline cursor-pointer"
                     >
-                      {city}
-                    </FilterChip>
-                  ))}
+                      Reset ({creatorFilters.city})
+                    </button>
+                  )}
+                </div>
+
+                {/* Auto-suggest Search Input */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400" />
+                  <input
+                    type="text"
+                    value={locationQuery}
+                    onChange={(e) => setLocationQuery(e.target.value)}
+                    placeholder="Search city or country (e.g. Tokyo, Berlin, London)..."
+                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/80 pl-9 pr-8 py-2 text-xs text-neutral-900 dark:text-white placeholder-neutral-400 focus:bg-white dark:focus:bg-neutral-900 focus:border-neutral-900 dark:focus:border-white focus:outline-hidden transition-all"
+                  />
+                  {locationQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setLocationQuery("")}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 cursor-pointer"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Dynamic Auto-suggest / Auto-layout Location Pills */}
+                <div className="flex flex-wrap gap-1.5 max-h-44 overflow-y-auto pr-1 no-scrollbar pt-1">
+                  {/* Custom typed location fallback if not in list */}
+                  {locationQuery.trim() &&
+                    !availableCities.some(
+                      (c) => c.toLowerCase() === locationQuery.trim().toLowerCase()
+                    ) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onCreatorFiltersChange({
+                            ...creatorFilters,
+                            city: locationQuery.trim(),
+                          });
+                        }}
+                        className={cn(
+                          "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-all cursor-pointer select-none",
+                          creatorFilters.city?.toLowerCase() === locationQuery.trim().toLowerCase()
+                            ? "bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-xs"
+                            : "bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                        )}
+                      >
+                        <MapPin className="h-3 w-3 text-emerald-600 dark:text-[#8DFF00]" />
+                        <span>Filter by &ldquo;{locationQuery.trim()}&rdquo;</span>
+                      </button>
+                    )}
+
+                  {/* Render location options */}
+                  {availableCities.map((city) => {
+                    const isSelected =
+                      (city === "All" && (!creatorFilters.city || creatorFilters.city === "All")) ||
+                      creatorFilters.city === city ||
+                      (city !== "All" && creatorFilters.city && (
+                        city.toLowerCase().includes(creatorFilters.city.toLowerCase()) ||
+                        creatorFilters.city.toLowerCase().includes(city.toLowerCase())
+                      ));
+
+                    return (
+                      <button
+                        key={city}
+                        type="button"
+                        onClick={() => {
+                          onCreatorFiltersChange({
+                            ...creatorFilters,
+                            city: city,
+                          });
+                        }}
+                        className={cn(
+                          "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs transition-all shrink-0 cursor-pointer select-none",
+                          isSelected
+                            ? "bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-bold shadow-xs"
+                            : "bg-neutral-100 dark:bg-neutral-800/80 text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700 font-medium"
+                        )}
+                      >
+                        {city !== "All" && <MapPin className="h-2.5 w-2.5 opacity-60" />}
+                        <span>{city}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

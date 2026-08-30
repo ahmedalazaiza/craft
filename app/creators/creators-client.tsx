@@ -63,9 +63,24 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
         if (!matchDiscipline) return false;
       }
 
-      // City filter
+      // Location filter (supports exact city, country, or partial string match)
       if (filters.city && filters.city !== "All") {
-        if (creator.city !== filters.city && creator.location !== filters.city) {
+        const target = filters.city.toLowerCase().trim();
+        const cCity = (creator.city || "").toLowerCase().trim();
+        const cLoc = (creator.location || "").toLowerCase().trim();
+        // Extract main city name before comma (e.g. "Tokyo" from "Tokyo, Japan")
+        const targetMainCity = target.split(",")[0].trim();
+
+        const match =
+          cCity === target ||
+          cLoc === target ||
+          cCity.includes(target) ||
+          cLoc.includes(target) ||
+          target.includes(cCity) ||
+          target.includes(cLoc) ||
+          (targetMainCity && (cCity.includes(targetMainCity) || cLoc.includes(targetMainCity)));
+
+        if (!match) {
           return false;
         }
       }
@@ -255,7 +270,7 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
                 active
                 onRemove={() => setFilters({ ...filters, city: "All" })}
               >
-                City: {filters.city}
+                Location: {filters.city}
               </FilterChip>
             )}
 
