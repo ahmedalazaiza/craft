@@ -367,164 +367,100 @@ export function HomeClient({
       {/* HIGH-CONVERSION CREATOR CTA SECTION (Only for Guests / Not Logged In)     */}
       {/* ========================================================================= */}
       {!user && (
-        <section className="mx-auto max-w-[1580px] px-4 sm:px-6 w-full pt-4">
-          <div className="relative rounded-[32px] bg-[var(--base-dark)] text-white border border-white/10 p-8 sm:p-12 lg:p-14 overflow-hidden shadow-[0_24px_64px_rgba(9,12,9,0.18)] dark:shadow-none">
-            {/* Ambient Glows */}
-            <div className="pointer-events-none absolute -right-20 -top-20 h-96 w-96 rounded-full bg-[#8DFF00]/15 blur-[120px]" />
-            <div className="pointer-events-none absolute -left-20 -bottom-20 h-96 w-96 rounded-full bg-[var(--primary-forest-green)]/40 blur-[120px]" />
-            <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.1)_1px,transparent_1px)] [background-size:24px_24px] opacity-20 pointer-events-none" />
+        <section className="mx-auto max-w-[1580px] px-4 sm:px-6 w-full pt-4 pb-8">
+          <div className="relative rounded-[28px] bg-neutral-950 dark:bg-[#121511] text-white border border-neutral-800 p-8 sm:p-12 lg:p-14 overflow-hidden shadow-xl">
+            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+              {/* Left Column: Headline, Subtitle, Clean Action Buttons */}
+              <div className="lg:col-span-7 space-y-6">
+                <span className="inline-block text-[11px] font-mono font-semibold uppercase tracking-widest text-neutral-400">
+                  Join the Community
+                </span>
 
-            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-              {/* Left Column: 2-Line Headline, Subtitle, Value Points, CTAs (7 cols) */}
-              <div className="lg:col-span-7 flex flex-col justify-center">
-                {/* Eyebrow Pill */}
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-md px-3.5 py-1 text-xs font-semibold text-white mb-5 border border-white/15 w-fit">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#8DFF00]" />
-                  <span>Global Designer Community</span>
-                </div>
-
-                {/* Monumental 2-Line Headline */}
                 <h2
                   className={cn(
                     bricolage.className,
-                    "text-3xl sm:text-4xl lg:text-[46px] xl:text-[52px] font-black tracking-tight text-white leading-[1.04]"
+                    "text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-[1.08]"
                   )}
                 >
-                  <span className="block">Ready to showcase your work?</span>
-                  <span className="block text-[#8DFF00]">
-                    Join creators worldwide.
-                  </span>
+                  Ready to showcase your work to the world?
                 </h2>
 
-                <p className="mt-4 text-base sm:text-lg text-white/80 leading-relaxed max-w-xl font-normal">
-                  Publish detailed case studies, build your portfolio, and connect with designers, art directors, and creative studios.
+                <p className="text-sm sm:text-base text-neutral-300 max-w-lg leading-relaxed font-normal">
+                  Publish detailed design case studies, build your portfolio, and connect with creative peers and top studios worldwide.
                 </p>
 
-                {/* Value Checkmarks */}
-                <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2.5 text-xs sm:text-sm text-white/90">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-[#8DFF00]" />
-                    <span>100% Creator Ownership</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-[#8DFF00]" />
-                    <span>High-resolution images</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-[#8DFF00]" />
-                    <span>Direct peer feedback</span>
-                  </div>
-                </div>
-
-                {/* CTA Buttons */}
-                <div className="mt-8 flex flex-wrap items-center gap-4">
+                {/* Clean High-Contrast Action Buttons */}
+                <div className="flex flex-wrap items-center gap-3 pt-2">
                   <Link
                     href="/signup"
-                    className={buttonVariants({
-                      variant: "accent",
-                      size: "lg",
-                      className: "gap-2 font-bold shadow-lg",
-                    })}
+                    className="inline-flex items-center justify-center gap-2 rounded-full h-11 px-6 text-sm font-bold bg-white text-neutral-950 hover:bg-neutral-200 transition-colors shadow-sm cursor-pointer"
                   >
-                    <span>Sign Up Free</span>
+                    <span>Sign up free</span>
                     <ArrowRight className="h-4 w-4" />
                   </Link>
+
                   <Link
                     href="/explore"
-                    className={buttonVariants({
-                      variant: "secondary",
-                      size: "lg",
-                      className: "bg-white/10 hover:bg-white/20 text-white border-white/20 font-semibold",
-                    })}
+                    className="inline-flex items-center justify-center gap-2 rounded-full h-11 px-5 text-sm font-semibold border border-neutral-700 bg-white/5 hover:bg-white/10 text-white transition-colors"
                   >
-                    Explore All Projects
+                    <span>Explore projects</span>
                   </Link>
+                </div>
+
+                {/* Subtle Social Proof */}
+                <div className="flex items-center gap-3 pt-2 text-xs text-neutral-400">
+                  <div className="flex items-center -space-x-2">
+                    {creators.slice(0, 4).map((u) => (
+                      <div
+                        key={u.id}
+                        className="relative h-6 w-6 rounded-full overflow-hidden ring-2 ring-neutral-950 shrink-0"
+                      >
+                        <Image
+                          src={getValidAvatarUrl(u.avatarUrl)}
+                          alt={u.displayName}
+                          fill
+                          sizes="24px"
+                          className="object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <span>Joined by independent creators & studios worldwide</span>
                 </div>
               </div>
 
-              {/* Right Column: Visual Case Study Showcase Card & Creator Pile (5 cols) */}
-              <div className="lg:col-span-5 relative flex flex-col items-center lg:items-end justify-center">
-                {/* Main Floating Monograph Showcase Card */}
-                {(featuredProjects[0] || publishedProjects[0]) && (
-                  <div className="w-full max-w-md rounded-[24px] bg-white/10 backdrop-blur-xl border border-white/20 p-4 shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-transform hover:scale-[1.02] duration-300">
-                    {/* Creator Header */}
-                    <div className="flex items-center justify-between gap-3 mb-3 pb-3 border-b border-white/10">
-                      <div className="flex items-center gap-2.5">
-                        <div className="relative h-8 w-8 rounded-full overflow-hidden ring-1 ring-white/30 shrink-0">
-                          <Image
-                            src={getValidAvatarUrl((featuredProjects[0] || publishedProjects[0]).creator.avatarUrl)}
-                            alt={(featuredProjects[0] || publishedProjects[0]).creator.displayName}
-                            fill
-                            sizes="32px"
-                            className="object-cover"
-                          />
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold text-white flex items-center gap-1">
-                            <span>{(featuredProjects[0] || publishedProjects[0]).creator.displayName}</span>
-                            <CheckCircle2 className="h-3 w-3 text-[#8DFF00]" />
-                          </div>
-                          <div className="text-[10px] text-white/70">
-                            {(featuredProjects[0] || publishedProjects[0]).creator.location || (featuredProjects[0] || publishedProjects[0]).creator.city || "Earth"}
-                          </div>
-                        </div>
-                      </div>
-
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#8DFF00]/20 text-[#8DFF00] px-2.5 py-0.5 text-[10px] font-mono font-bold border border-[#8DFF00]/30">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#8DFF00]" />
-                        Featured Monograph
-                      </span>
-                    </div>
-
-                    {/* Case Study Image Preview */}
-                    <Link href={`/project/${(featuredProjects[0] || publishedProjects[0]).slug}`} className="block relative w-full aspect-[16/10] rounded-[16px] overflow-hidden bg-black/40 mb-3 group">
+              {/* Right Column: Clean, Minimalist Featured Preview */}
+              {(featuredProjects[0] || publishedProjects[0]) && (
+                <div className="lg:col-span-5 flex justify-center lg:justify-end">
+                  <Link
+                    href={`/project/${(featuredProjects[0] || publishedProjects[0]).slug}`}
+                    className="group block w-full max-w-sm rounded-2xl overflow-hidden border border-neutral-800 bg-neutral-900/80 hover:border-neutral-700 transition-all duration-300 shadow-lg"
+                  >
+                    <div className="relative aspect-[16/10] w-full overflow-hidden bg-neutral-900">
                       <Image
                         src={(featuredProjects[0] || publishedProjects[0]).coverImage}
                         alt={(featuredProjects[0] || publishedProjects[0]).title}
                         fill
-                        sizes="400px"
+                        sizes="380px"
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80" />
-                      <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-white">
-                        <span className="font-bold truncate">
+                    </div>
+                    <div className="p-4 flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="text-xs sm:text-sm font-bold text-white truncate group-hover:text-neutral-200">
                           {(featuredProjects[0] || publishedProjects[0]).title}
-                        </span>
-                        <span className="text-[11px] text-[#8DFF00] font-mono shrink-0">
-                          ♥ {(featuredProjects[0] || publishedProjects[0]).appreciations}
-                        </span>
+                        </h3>
+                        <p className="text-[11px] text-neutral-400 truncate mt-0.5">
+                          by {(featuredProjects[0] || publishedProjects[0]).creator.displayName}
+                        </p>
                       </div>
-                    </Link>
-
-                    {/* Card Footer Stack & Community Stats */}
-                    <div className="flex items-center justify-between pt-1 text-xs">
-                      <div className="flex items-center -space-x-2">
-                        {creators.slice(0, 4).map((u) => (
-                          <div
-                            key={u.id}
-                            className="relative h-6 w-6 rounded-full overflow-hidden ring-2 ring-[var(--base-dark)]"
-                          >
-                            <Image
-                              src={getValidAvatarUrl(u.avatarUrl)}
-                              alt={u.displayName}
-                              fill
-                              sizes="24px"
-                              className="object-cover"
-                            />
-                          </div>
-                        ))}
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#8DFF00] text-[9px] font-black text-[#090C09] ring-2 ring-[var(--base-dark)]">
-                          +{creators.length > 0 ? creators.length : 1}
-                        </div>
-                      </div>
-
-                      <span className="text-[11px] text-white/80 font-medium">
-                        Verified Makers Worldwide
+                      <span className="shrink-0 text-xs font-semibold text-neutral-400 group-hover:text-white flex items-center gap-1">
+                        View <ArrowUpRight className="h-3.5 w-3.5" />
                       </span>
                     </div>
-                  </div>
-                )}
-              </div>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </section>
