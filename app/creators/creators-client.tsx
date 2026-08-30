@@ -132,46 +132,46 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
         {/* ========================================================================= */}
         {/* UNIFIED BALANCED HEADER (Title & Description on Left + Stats on Right)   */}
         {/* ========================================================================= */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-8 border-b border-[var(--border-neutral)] mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-8 border-b border-neutral-200 dark:border-neutral-800 mb-8">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full bg-[var(--chip-bg)] px-3 py-1 text-xs font-semibold text-[var(--chip-fg)] mb-3 shadow-xs">
-              <Sparkles className="h-3 w-3 text-[#8DFF00]" />
+            <div className="inline-flex items-center gap-2 rounded-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-3 py-1 text-[11px] font-mono font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-300 mb-3 shadow-xs">
+              <Sparkles className="h-3 w-3 text-emerald-600 dark:text-[#8DFF00]" />
               <span>Creator Directory</span>
             </div>
             <h1
               className={cn(
                 bricolage.className,
-                "text-3xl sm:text-4xl lg:text-[42px] font-bold text-[var(--content-primary)] leading-tight tracking-tight"
+                "text-3xl sm:text-4xl lg:text-[44px] font-black text-neutral-950 dark:text-white leading-tight tracking-tight"
               )}
             >
               Discover Global Creators
             </h1>
-            <p className="mt-2 type-body-large text-[var(--content-secondary)] leading-relaxed">
+            <p className="mt-2 text-sm sm:text-base text-neutral-600 dark:text-neutral-400 leading-relaxed font-normal">
               Explore independent designers, art directors, typographers, and creative engineers publishing on Layerat worldwide.
             </p>
           </div>
 
           {/* Right-aligned Directory Stats Cards */}
           <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-            <div className="flex items-center gap-2.5 rounded-2xl bg-[var(--bg-neutral)]/50 border border-[var(--border-neutral)] px-4 py-2.5 shadow-xs">
-              <Users className="h-4 w-4 text-[var(--primary-forest-green)]" />
+            <div className="flex items-center gap-2.5 rounded-2xl bg-white dark:bg-[#141713] border border-neutral-200 dark:border-neutral-800 px-4 py-2.5 shadow-xs">
+              <Users className="h-4 w-4 text-neutral-900 dark:text-white" />
               <div className="text-left">
-                <span className="block text-xs font-bold text-[var(--content-primary)]">
+                <span className="block text-xs font-bold text-neutral-950 dark:text-white">
                   {creators.length} Creators
                 </span>
-                <span className="text-[10px] text-[var(--content-tertiary)] uppercase font-mono">
+                <span className="text-[10px] text-neutral-400 dark:text-neutral-500 uppercase font-mono">
                   {MASTER_TAXONOMY.length} Disciplines
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 rounded-2xl bg-[var(--bg-neutral)]/50 border border-[var(--border-neutral)] px-4 py-2.5 shadow-xs">
-              <Globe className="h-4 w-4 text-[var(--primary-forest-green)]" />
+            <div className="flex items-center gap-2.5 rounded-2xl bg-white dark:bg-[#141713] border border-neutral-200 dark:border-neutral-800 px-4 py-2.5 shadow-xs">
+              <Globe className="h-4 w-4 text-neutral-900 dark:text-white" />
               <div className="text-left">
-                <span className="block text-xs font-bold text-[var(--content-primary)]">
+                <span className="block text-xs font-bold text-neutral-950 dark:text-white">
                   {uniqueCitiesCount} Cities
                 </span>
-                <span className="text-[10px] text-[var(--content-tertiary)] uppercase font-mono">
+                <span className="text-[10px] text-neutral-400 dark:text-neutral-500 uppercase font-mono">
                   Worldwide
                 </span>
               </div>
@@ -196,15 +196,15 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
           </div>
 
           {/* Quick Discipline Pills Strip (13 Categories) */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 pt-1 no-scrollbar border-b border-[var(--border-neutral)]">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 pt-1 no-scrollbar border-b border-neutral-200 dark:border-neutral-800">
             <button
               type="button"
               onClick={() => setFilters({ ...filters, discipline: "All" })}
               className={cn(
                 "rounded-full px-3.5 py-1.5 text-xs transition-all shrink-0 cursor-pointer font-semibold select-none",
                 filters.discipline === "All"
-                  ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
-                  : "bg-[var(--bg-neutral)]/70 text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
+                  ? "bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-bold shadow-xs"
+                  : "bg-neutral-100 dark:bg-neutral-800/80 text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700"
               )}
             >
               All
@@ -218,10 +218,10 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
                   type="button"
                   onClick={() => setFilters({ ...filters, discipline: cat.name })}
                   className={cn(
-                    "rounded-full px-3.5 py-1.5 text-xs transition-all shrink-0 cursor-pointer font-medium select-none",
+                    "rounded-full px-3.5 py-1.5 text-xs transition-all shrink-0 cursor-pointer select-none",
                     isSelected
-                      ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] font-bold shadow-xs"
-                      : "bg-[var(--bg-neutral)]/70 text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
+                      ? "bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-bold shadow-xs"
+                      : "bg-neutral-100 dark:bg-neutral-800/80 text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700 font-medium"
                   )}
                   title={cat.name}
                 >
@@ -236,8 +236,8 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
         {/* ACTIVE FILTERS PILL BAR (If any active)                                   */}
         {/* ========================================================================= */}
         {activeFilterCount > 0 && (
-          <div className="flex flex-wrap items-center gap-2 mb-8 p-3 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
-            <span className="text-xs font-semibold text-[var(--content-secondary)] mr-1">
+          <div className="flex flex-wrap items-center gap-2 mb-8 p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800">
+            <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 mr-1">
               Active filters:
             </span>
 
@@ -277,7 +277,7 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
                   hasPublishedOnly: false,
                 })
               }
-              className="text-xs text-[var(--content-link)] hover:underline ml-auto font-semibold cursor-pointer"
+              className="text-xs text-neutral-900 dark:text-white hover:underline ml-auto font-bold cursor-pointer"
             >
               Clear all
             </button>
@@ -288,11 +288,11 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
         {/* CREATORS GRID DISPLAY                                                     */}
         {/* ========================================================================= */}
         {filteredCreators.length === 0 ? (
-          <div className="rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-12 text-center my-8">
-            <p className="type-title-subsection text-[var(--content-primary)] font-bold text-lg">
+          <div className="rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#141713] p-12 text-center my-8 shadow-xs">
+            <p className={cn(bricolage.className, "text-xl font-bold text-neutral-950 dark:text-white")}>
               No matching creators found
             </p>
-            <p className="type-body-default text-[var(--content-secondary)] mt-2 max-w-md mx-auto text-sm">
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-2 max-w-md mx-auto leading-relaxed font-normal">
               Try adjusting your search query, changing the discipline pill, or resetting filters.
             </p>
             <button
@@ -305,7 +305,7 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
                   hasPublishedOnly: false,
                 });
               }}
-              className="mt-5 inline-flex items-center gap-2 rounded-full font-bold bg-[var(--accent)] text-[#090C09] hover:bg-[var(--accent-hover)] px-5 py-2 text-xs shadow-xs transition-all cursor-pointer"
+              className="mt-5 inline-flex items-center gap-2 rounded-full font-bold bg-[#8DFF00] text-[#090C09] hover:bg-[#7ce000] px-6 py-2.5 text-xs shadow-xs transition-colors cursor-pointer"
             >
               Reset All Filters
             </button>

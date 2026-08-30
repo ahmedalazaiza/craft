@@ -91,14 +91,14 @@ export function CreatorListItem({
       <Link
         href={`/u/${creator.username}`}
         className={cn(
-          "group flex flex-col justify-between rounded-2xl bg-[var(--bg-screen)] border border-[var(--border-neutral)] p-4 sm:p-6 transition-all duration-200 hover:shadow-[0_8px_30px_rgba(14,15,12,0.06)] hover:border-[var(--primary-forest-green)]/30",
+          "group flex flex-col justify-between rounded-2xl bg-white dark:bg-[#141713] border border-neutral-200 dark:border-neutral-800 p-4 sm:p-6 transition-all duration-200 hover:shadow-md hover:border-neutral-300 dark:hover:border-neutral-700",
           className
         )}
       >
         <div>
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="relative h-14 w-14 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-2 ring-[var(--border-neutral)] group-hover:ring-[var(--primary-forest-green)] transition-all shrink-0">
+              <div className="relative h-14 w-14 rounded-full overflow-hidden bg-neutral-100 dark:bg-neutral-800 ring-2 border border-neutral-200 dark:border-neutral-700 shrink-0">
                 <Image
                   src={getValidAvatarUrl(creator.avatarUrl)}
                   alt={creator.displayName}
@@ -111,12 +111,12 @@ export function CreatorListItem({
 
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h3 className="type-title-body text-[var(--content-primary)] group-hover:text-[var(--primary-forest-green)] transition-colors">
+                  <h3 className="text-sm sm:text-base font-bold text-neutral-950 dark:text-white transition-colors">
                     {creator.displayName}
                   </h3>
                   {creator.isVerified !== false && <VerifiedBadge size="sm" />}
                 </div>
-                <div className="type-label text-[var(--content-tertiary)] flex items-center gap-1.5 mt-0.5">
+                <div className="text-xs text-neutral-400 dark:text-neutral-500 flex items-center gap-1.5 mt-0.5">
                   <span>@{creator.username}</span>
                   <span>•</span>
                   <span className="inline-flex items-center gap-0.5">
@@ -131,19 +131,19 @@ export function CreatorListItem({
               <button
                 type="button"
                 onClick={handleShareClick}
-                className="rounded-full p-2 text-[var(--content-tertiary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-all cursor-pointer"
+                className="rounded-full p-2 text-neutral-400 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all cursor-pointer"
                 title={`Share ${creator.displayName}'s profile`}
               >
                 <Share2 className="h-4 w-4" />
               </button>
 
-              <span className="rounded-full p-2 text-[var(--content-tertiary)] group-hover:text-[var(--primary-forest-green)] group-hover:bg-[var(--bg-neutral)] transition-all">
+              <span className="rounded-full p-2 text-neutral-400 group-hover:text-neutral-950 dark:group-hover:text-white group-hover:bg-neutral-100 dark:group-hover:bg-neutral-800 transition-all">
                 <ArrowRight className="h-4 w-4" />
               </span>
             </div>
           </div>
 
-          <p className="mt-4 type-body-default text-[var(--content-secondary)] line-clamp-2 leading-relaxed">
+          <p className="mt-4 text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2 leading-relaxed font-normal">
             {creator.bio}
           </p>
 
@@ -159,18 +159,18 @@ export function CreatorListItem({
         </div>
 
         {/* Metrics Row */}
-        <div className="mt-6 pt-4 border-t border-[var(--border-neutral)] flex items-center justify-between text-xs text-[var(--content-tertiary)]">
+        <div className="mt-6 pt-4 border-t border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between text-xs text-neutral-400 dark:text-neutral-500">
           <span className="flex items-center gap-1.5">
-            <FolderKanban className="h-3.5 w-3.5 text-[var(--primary-forest-green)]" />
-            <strong className="text-[var(--content-primary)] font-semibold">
+            <FolderKanban className="h-3.5 w-3.5 text-neutral-700 dark:text-neutral-300" />
+            <strong className="text-neutral-900 dark:text-white font-semibold">
               {publishedCount}
             </strong>{" "}
             published
           </span>
 
           <span className="flex items-center gap-1.5">
-            <Heart className="h-3.5 w-3.5 fill-[var(--primary-forest-green)] text-[var(--primary-forest-green)]" />
-            <strong className="text-[var(--content-primary)] font-semibold">
+            <Heart className="h-3.5 w-3.5 fill-red-500 text-red-500" />
+            <strong className="text-neutral-900 dark:text-white font-semibold">
               {totalAppreciations}
             </strong>{" "}
             appreciations
