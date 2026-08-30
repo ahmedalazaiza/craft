@@ -394,7 +394,10 @@ export function HomeClient({
               <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
                 <Link
                   href="/signup"
-                  className="inline-flex items-center justify-center gap-2 rounded-full h-11 px-7 text-sm font-bold bg-white text-neutral-950 hover:bg-neutral-200 transition-colors shadow-sm cursor-pointer"
+                  className={buttonVariants({
+                    variant: "accent",
+                    className: "gap-2 font-bold px-7 h-11 shadow-md hover:scale-102 active:scale-98 transition-all cursor-pointer",
+                  })}
                 >
                   <span>Sign up free</span>
                   <ArrowRight className="h-4 w-4" />
