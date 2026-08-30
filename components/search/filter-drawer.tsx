@@ -101,8 +101,6 @@ export function FilterDrawer({
     return baseCities.filter((city) => city.toLowerCase().includes(q));
   }, [locationQuery]);
 
-  if (!isOpen) return null;
-
   const currentCategoryTaxonomy = useMemo(() => {
     if (!projectFilters?.category || projectFilters.category === "All") return null;
     return getCategoryTaxonomy(projectFilters.category);
@@ -169,6 +167,8 @@ export function FilterDrawer({
       hasPublishedOnly: false,
     });
   };
+
+  if (!isOpen) return null;
 
   return (
     <div
