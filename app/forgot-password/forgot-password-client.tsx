@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
+import { getAuthRedirectUrl } from "@/lib/seo";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
@@ -49,10 +50,7 @@ export function ForgotPasswordClient() {
     setResendSuccess(false);
 
     try {
-      const redirectUrl =
-        typeof window !== "undefined"
-          ? `${window.location.origin}/reset-password`
-          : "http://localhost:3000/reset-password";
+      const redirectUrl = getAuthRedirectUrl("/reset-password");
 
       const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
         redirectTo: redirectUrl,
@@ -81,10 +79,7 @@ export function ForgotPasswordClient() {
     setResendSuccess(false);
 
     try {
-      const redirectUrl =
-        typeof window !== "undefined"
-          ? `${window.location.origin}/reset-password`
-          : "http://localhost:3000/reset-password";
+      const redirectUrl = getAuthRedirectUrl("/reset-password");
 
       const { error } = await supabase.auth.resetPasswordForEmail(
         email.trim().toLowerCase(),

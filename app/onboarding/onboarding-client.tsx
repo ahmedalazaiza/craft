@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "@/lib/session-context";
 import { AvatarUploader } from "@/components/onboarding/avatar-uploader";
 import { SkillsPicker } from "@/components/onboarding/skills-picker";
-import { DEFAULT_AVATAR_URL, getValidAvatarUrl } from "@/lib/avatar";
+import { DEFAULT_AVATAR_URL, getValidAvatarUrl, getInitials } from "@/lib/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FadeIn } from "@/components/ui/motion-wrapper";
@@ -212,6 +212,7 @@ export function OnboardingClient() {
                       <AvatarUploader
                         currentAvatar={avatarUrl}
                         onAvatarChange={setAvatarUrl}
+                        displayName={displayName}
                       />
 
                       {/* Display Name Field */}
@@ -425,13 +426,21 @@ export function OnboardingClient() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-3.5 min-w-0 flex-1">
                     {/* Avatar */}
-                    <div className="relative h-14 w-14 rounded-full overflow-hidden border-2 border-[var(--border-neutral)] bg-[var(--bg-neutral)] shrink-0">
-                      <Image
-                        src={getValidAvatarUrl(avatarUrl)}
-                        alt="Avatar preview"
-                        fill
-                        className="object-cover"
-                      />
+                    <div className="relative h-14 w-14 rounded-full overflow-hidden border-2 border-[var(--border-neutral)] bg-neutral-100 dark:bg-neutral-800 shrink-0 flex items-center justify-center select-none">
+                      {avatarUrl && avatarUrl !== DEFAULT_AVATAR_URL ? (
+                        <Image
+                          src={getValidAvatarUrl(avatarUrl)}
+                          alt="Avatar preview"
+                          fill
+                          className="object-cover"
+                        />
+                      ) : getInitials(displayName || user?.displayName) ? (
+                        <span className="text-base font-black text-neutral-800 dark:text-neutral-100 tracking-wider">
+                          {getInitials(displayName || user?.displayName)}
+                        </span>
+                      ) : (
+                        <User className="h-6 w-6 text-neutral-400 dark:text-neutral-500 stroke-[1.5]" />
+                      )}
                     </div>
 
                     <div className="min-w-0 flex-1">

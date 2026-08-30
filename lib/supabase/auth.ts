@@ -2,6 +2,9 @@ import { supabase } from "./client";
 import { Creator } from "@/lib/types";
 import { mapProfileToCreator } from "./queries";
 import { DEFAULT_AVATAR_URL } from "@/lib/avatar";
+import { getAuthRedirectUrl } from "@/lib/seo";
+
+export { getAuthRedirectUrl };
 
 
 export interface AuthResponse {
@@ -107,10 +110,7 @@ export async function signUpWithEmail(
     }
 
     // 1. Supabase Auth Sign Up with explicit redirect to /auth/verify
-    const redirectUrl =
-      typeof window !== "undefined"
-        ? `${window.location.origin}/auth/verify`
-        : process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000/auth/verify";
+    const redirectUrl = getAuthRedirectUrl("/auth/verify");
 
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: cleanEmail,

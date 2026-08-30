@@ -1,6 +1,7 @@
 import { supabase } from "./client";
 import { Project, Creator, Comment, Notification, NotificationType } from "@/lib/types";
 import { DEFAULT_AVATAR_URL } from "@/lib/avatar";
+import { getAuthRedirectUrl } from "@/lib/seo";
 
 // =============================================================================
 // TYPE MAPPERS
@@ -840,9 +841,7 @@ export async function requestPasswordResetInDb(email: string): Promise<{ success
       return { success: false, error: "Email address is required." };
     }
 
-    const redirectUrl = typeof window !== "undefined"
-      ? `${window.location.origin}/settings?reset_password=true`
-      : "http://localhost:3000/settings?reset_password=true";
+    const redirectUrl = getAuthRedirectUrl("/settings?reset_password=true");
 
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
       redirectTo: redirectUrl,

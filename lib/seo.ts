@@ -12,6 +12,19 @@ export function absoluteUrl(path: string = ""): string {
   return `${SITE_URL}${cleanPath}`;
 }
 
+/**
+ * Safely resolves the absolute redirect URL for Supabase Auth flows
+ * (signup verification, password reset, email change, etc.).
+ * Always ensures proper protocol and domain, avoiding localhost in production.
+ */
+export function getAuthRedirectUrl(path: string = "/auth/verify"): string {
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return `${window.location.origin}${cleanPath}`;
+  }
+  return `${SITE_URL}${cleanPath}`;
+}
+
 export const defaultTitle = `${SITE_NAME} — ${SITE_TAGLINE}`;
 export const defaultDescription =
   "Discover standout design portfolios, UI/UX case studies, and brand identities. Connect with top independent designers and creative studios worldwide.";

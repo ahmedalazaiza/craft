@@ -1,4 +1,5 @@
 import { supabase } from "./supabase/client";
+import { getAuthRedirectUrl } from "./supabase/auth";
 
 const WINDOW_MS = 5 * 60 * 1000; // 5 minutes window
 const MAX_ATTEMPTS = 3; // Max 3 resends per 5 minutes
@@ -108,10 +109,7 @@ export async function sendVerificationEmail(email: string): Promise<{
   }
 
   try {
-    const redirectUrl =
-      typeof window !== "undefined"
-        ? `${window.location.origin}/auth/verify`
-        : process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000/auth/verify";
+    const redirectUrl = getAuthRedirectUrl("/auth/verify");
 
     const { error } = await supabase.auth.resend({
       type: "signup",
