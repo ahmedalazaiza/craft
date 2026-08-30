@@ -367,100 +367,67 @@ export function HomeClient({
       {/* HIGH-CONVERSION CREATOR CTA SECTION (Only for Guests / Not Logged In)     */}
       {/* ========================================================================= */}
       {!user && (
-        <section className="mx-auto max-w-[1580px] px-4 sm:px-6 w-full pt-4 pb-8">
-          <div className="relative rounded-[28px] bg-neutral-950 dark:bg-[#121511] text-white border border-neutral-800 p-8 sm:p-12 lg:p-14 overflow-hidden shadow-xl">
-            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-              {/* Left Column: Headline, Subtitle, Clean Action Buttons */}
-              <div className="lg:col-span-7 space-y-6">
-                <span className="inline-block text-[11px] font-mono font-semibold uppercase tracking-widest text-neutral-400">
-                  Join the Community
-                </span>
+        <section className="mx-auto max-w-[1580px] px-4 sm:px-6 w-full pt-6 pb-10">
+          <div className="relative rounded-[32px] bg-neutral-950 dark:bg-[#121511] text-white border border-neutral-800 px-6 py-12 sm:px-12 sm:py-16 lg:py-20 overflow-hidden shadow-xl text-center">
+            <div className="relative z-10 max-w-2xl mx-auto flex flex-col items-center space-y-6">
+              {/* Eyebrow */}
+              <span className="inline-block text-[11px] font-mono font-semibold uppercase tracking-widest text-neutral-400">
+                Join the Community
+              </span>
 
-                <h2
-                  className={cn(
-                    bricolage.className,
-                    "text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-[1.08]"
-                  )}
+              {/* Centered Headline */}
+              <h2
+                className={cn(
+                  bricolage.className,
+                  "text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-[1.08]"
+                )}
+              >
+                Ready to showcase your work to the world?
+              </h2>
+
+              {/* Centered Subtitle */}
+              <p className="text-sm sm:text-base text-neutral-300 max-w-lg mx-auto leading-relaxed font-normal">
+                Publish detailed design case studies, build your portfolio, and connect with creative peers and top studios worldwide.
+              </p>
+
+              {/* Centered Action Buttons */}
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center justify-center gap-2 rounded-full h-11 px-7 text-sm font-bold bg-white text-neutral-950 hover:bg-neutral-200 transition-colors shadow-sm cursor-pointer"
                 >
-                  Ready to showcase your work to the world?
-                </h2>
+                  <span>Sign up free</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
 
-                <p className="text-sm sm:text-base text-neutral-300 max-w-lg leading-relaxed font-normal">
-                  Publish detailed design case studies, build your portfolio, and connect with creative peers and top studios worldwide.
-                </p>
-
-                {/* Clean High-Contrast Action Buttons */}
-                <div className="flex flex-wrap items-center gap-3 pt-2">
-                  <Link
-                    href="/signup"
-                    className="inline-flex items-center justify-center gap-2 rounded-full h-11 px-6 text-sm font-bold bg-white text-neutral-950 hover:bg-neutral-200 transition-colors shadow-sm cursor-pointer"
-                  >
-                    <span>Sign up free</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-
-                  <Link
-                    href="/explore"
-                    className="inline-flex items-center justify-center gap-2 rounded-full h-11 px-5 text-sm font-semibold border border-neutral-700 bg-white/5 hover:bg-white/10 text-white transition-colors"
-                  >
-                    <span>Explore projects</span>
-                  </Link>
-                </div>
-
-                {/* Subtle Social Proof */}
-                <div className="flex items-center gap-3 pt-2 text-xs text-neutral-400">
-                  <div className="flex items-center -space-x-2">
-                    {creators.slice(0, 4).map((u) => (
-                      <div
-                        key={u.id}
-                        className="relative h-6 w-6 rounded-full overflow-hidden ring-2 ring-neutral-950 shrink-0"
-                      >
-                        <Image
-                          src={getValidAvatarUrl(u.avatarUrl)}
-                          alt={u.displayName}
-                          fill
-                          sizes="24px"
-                          className="object-cover"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <span>Joined by independent creators & studios worldwide</span>
-                </div>
+                <Link
+                  href="/explore"
+                  className="inline-flex items-center justify-center gap-2 rounded-full h-11 px-6 text-sm font-semibold border border-neutral-700 bg-white/5 hover:bg-white/10 text-white transition-colors"
+                >
+                  <span>Explore projects</span>
+                </Link>
               </div>
 
-              {/* Right Column: Clean, Minimalist Featured Preview */}
-              {(featuredProjects[0] || publishedProjects[0]) && (
-                <div className="lg:col-span-5 flex justify-center lg:justify-end">
-                  <Link
-                    href={`/project/${(featuredProjects[0] || publishedProjects[0]).slug}`}
-                    className="group block w-full max-w-sm rounded-2xl overflow-hidden border border-neutral-800 bg-neutral-900/80 hover:border-neutral-700 transition-all duration-300 shadow-lg"
-                  >
-                    <div className="relative aspect-[16/10] w-full overflow-hidden bg-neutral-900">
+              {/* Centered Social Proof */}
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-3 text-xs text-neutral-400">
+                <div className="flex items-center -space-x-2">
+                  {creators.slice(0, 4).map((u) => (
+                    <div
+                      key={u.id}
+                      className="relative h-6 w-6 rounded-full overflow-hidden ring-2 ring-neutral-950 shrink-0"
+                    >
                       <Image
-                        src={(featuredProjects[0] || publishedProjects[0]).coverImage}
-                        alt={(featuredProjects[0] || publishedProjects[0]).title}
+                        src={getValidAvatarUrl(u.avatarUrl)}
+                        alt={u.displayName}
                         fill
-                        sizes="380px"
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        sizes="24px"
+                        className="object-cover"
                       />
                     </div>
-                    <div className="p-4 flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <h3 className="text-xs sm:text-sm font-bold text-white truncate group-hover:text-neutral-200">
-                          {(featuredProjects[0] || publishedProjects[0]).title}
-                        </h3>
-                        <p className="text-[11px] text-neutral-400 truncate mt-0.5">
-                          by {(featuredProjects[0] || publishedProjects[0]).creator.displayName}
-                        </p>
-                      </div>
-                      <span className="shrink-0 text-xs font-semibold text-neutral-400 group-hover:text-white flex items-center gap-1">
-                        View <ArrowUpRight className="h-3.5 w-3.5" />
-                      </span>
-                    </div>
-                  </Link>
+                  ))}
                 </div>
-              )}
+                <span>Joined by independent creators & studios worldwide</span>
+              </div>
             </div>
           </div>
         </section>
