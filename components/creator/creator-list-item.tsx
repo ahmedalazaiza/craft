@@ -169,7 +169,7 @@ export function CreatorListItem({
           </span>
 
           <span className="flex items-center gap-1.5">
-            <Heart className="h-3.5 w-3.5 fill-red-500 text-red-500" />
+            <Heart className="h-3.5 w-3.5 fill-neutral-900 text-neutral-900 dark:fill-neutral-100 dark:text-neutral-100" />
             <strong className="text-neutral-900 dark:text-white font-semibold">
               {totalAppreciations}
             </strong>{" "}
