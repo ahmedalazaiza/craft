@@ -5,7 +5,10 @@ export const SITE_NAME = "Layerat";
 export const SITE_TAGLINE = "The Portfolio Platform for Designers & Creators";
 
 export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://layerat.com";
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : "") ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
+  "https://layerat.com";
 
 export function absoluteUrl(path: string = ""): string {
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
