@@ -21,13 +21,13 @@ export function Logo({
   linkHref,
   priority = false,
 }: LogoProps) {
-  // Sizing configurations (refined for optical balance and crisp detail)
+  // Sizing configurations (calibrated with trimmed true-bleed icon)
   const iconSizes = {
-    sm: { width: 28, height: 28, imgClass: "h-7 w-7" },
-    default: { width: 38, height: 38, imgClass: "h-[38px] w-[38px]" },
+    sm: { width: 26, height: 26, imgClass: "h-[26px] w-[26px]" },
+    default: { width: 36, height: 36, imgClass: "h-9 w-9" },
     lg: { width: 48, height: 48, imgClass: "h-12 w-12" },
-    xl: { width: 58, height: 58, imgClass: "h-[58px] w-[58px]" },
-    "2xl": { width: 72, height: 72, imgClass: "h-[72px] w-[72px]" },
+    xl: { width: 64, height: 64, imgClass: "h-16 w-16" },
+    "2xl": { width: 80, height: 80, imgClass: "h-20 w-20" },
   };
 
   const textSizes = {
