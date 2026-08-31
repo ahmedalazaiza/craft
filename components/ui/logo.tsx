@@ -23,11 +23,11 @@ export function Logo({
 }: LogoProps) {
   // Sizing configurations (refined for optical balance and crisp detail)
   const iconSizes = {
-    sm: { width: 26, height: 26, imgClass: "h-[26px] w-[26px]" },
-    default: { width: 34, height: 34, imgClass: "h-[34px] w-[34px]" },
-    lg: { width: 44, height: 44, imgClass: "h-11 w-11" },
-    xl: { width: 56, height: 56, imgClass: "h-14 w-14" },
-    "2xl": { width: 68, height: 68, imgClass: "h-[68px] w-[68px]" },
+    sm: { width: 28, height: 28, imgClass: "h-7 w-7" },
+    default: { width: 38, height: 38, imgClass: "h-[38px] w-[38px]" },
+    lg: { width: 48, height: 48, imgClass: "h-12 w-12" },
+    xl: { width: 58, height: 58, imgClass: "h-[58px] w-[58px]" },
+    "2xl": { width: 72, height: 72, imgClass: "h-[72px] w-[72px]" },
   };
 
   const textSizes = {
@@ -40,8 +40,8 @@ export function Logo({
 
   const imageFullHeights = {
     sm: "h-6 w-auto",
-    default: "h-8 w-auto",
-    lg: "h-10 w-auto",
+    default: "h-8.5 w-auto",
+    lg: "h-11 w-auto",
     xl: "h-14 w-auto",
     "2xl": "h-18 w-auto",
   };
@@ -101,7 +101,7 @@ export function Logo({
 
     // Default: "full" (Icon + Razor-sharp adaptive typography)
     return (
-      <div className={cn("inline-flex items-center gap-2.5 select-none group", className)}>
+      <div className={cn("inline-flex items-center gap-1.5 select-none group", className)}>
         <div className={cn("relative flex items-center justify-center shrink-0", currentIcon.imgClass)}>
           <Image
             src="/logo-icon.png"
