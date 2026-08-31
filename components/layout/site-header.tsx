@@ -14,7 +14,7 @@ import { Plus, Search, X, Sun, Moon } from "lucide-react";
 import { useTheme } from "@/components/layout/theme-provider";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { bricolage } from "@/lib/fonts";
+import { Logo } from "@/components/ui/logo";
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -55,18 +55,7 @@ export function SiteHeader() {
         <div className="mx-auto flex h-16 max-w-[1580px] items-center justify-between px-4 sm:px-6 gap-4">
           {/* Left: Wordmark & Navigation Links */}
           <div className="flex items-center gap-8 shrink-0">
-            <Link
-              href="/"
-              prefetch={true}
-              className={cn(
-                bricolage.className,
-                "flex items-center gap-1.5 text-xl font-bold tracking-tight text-[var(--primary-forest-green)] select-none hover:opacity-90 transition-opacity"
-              )}
-            >
-              <span className="font-bold tracking-[-0.03em] text-[22px]">
-                Layerat<span className="text-[var(--accent)] font-black">.</span>
-              </span>
-            </Link>
+            <Logo linkHref="/" priority={true} />
 
             {/* Desktop Navigation Links */}
             <nav className="hidden md:flex items-center gap-1 bg-[var(--bg-elevated)]/90 border border-[var(--border-neutral)] p-1 rounded-full shadow-2xs">

@@ -22,6 +22,7 @@ import {
 import { bricolage } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { Logo } from "@/components/ui/logo";
 
 export function ForgotPasswordClient() {
   const [email, setEmail] = useState("");
@@ -240,6 +241,9 @@ export function ForgotPasswordClient() {
 
         <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[24px] p-2">
           <CardHeader className="text-center pb-4 pt-4">
+            <div className="flex justify-center mb-3">
+              <Logo variant="icon" size="xl" />
+            </div>
             <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip-bg)] px-3 py-1 text-[11px] font-semibold text-[var(--chip-fg)] mx-auto mb-3 shadow-xs">
               <KeyRound className="h-3 w-3 text-white" />
               <span>Password Recovery</span>

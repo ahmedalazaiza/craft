@@ -2,8 +2,8 @@
 
 import React from "react";
 import Link from "next/link";
-import { bricolage } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/ui/logo";
 
 export function SiteFooter() {
   return (
@@ -13,18 +13,7 @@ export function SiteFooter() {
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 pb-12 border-b border-[var(--border-neutral)]">
           {/* Column 1: Brand & Ethos */}
           <div className="space-y-4">
-            <Link
-              href="/"
-              prefetch={true}
-              className={cn(
-                bricolage.className,
-                "inline-flex items-center gap-1.5 text-xl font-bold tracking-tight text-[var(--primary-forest-green)] select-none hover:opacity-90 transition-opacity"
-              )}
-            >
-              <span className="font-bold tracking-[-0.03em] text-[22px]">
-                Layerat<span className="text-[var(--accent)] font-black">.</span>
-              </span>
-            </Link>
+            <Logo linkHref="/" size="default" />
 
             <p className="type-body-default text-[var(--content-secondary)] text-xs sm:text-sm leading-relaxed max-w-sm">
               The portfolio platform for designers, art directors, and creative studios to showcase their work and connect with peers worldwide.

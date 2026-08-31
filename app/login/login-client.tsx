@@ -12,6 +12,7 @@ import { Lock, Mail, ArrowRight, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { bricolage } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { Logo } from "@/components/ui/logo";
 
 export function LoginClient() {
   const router = useRouter();
@@ -59,6 +60,9 @@ export function LoginClient() {
 
         <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[24px] p-2">
           <CardHeader className="text-center pb-4 pt-4">
+            <div className="flex justify-center mb-3">
+              <Logo variant="icon" size="xl" />
+            </div>
             <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip-bg)] px-3 py-1 text-[11px] font-semibold text-[var(--chip-fg)] mx-auto mb-3 shadow-xs">
               <span className="h-1.5 w-1.5 rounded-full bg-white" />
               <span>Welcome Back</span>

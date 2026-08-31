@@ -80,9 +80,11 @@ export const metadata: Metadata = {
   },
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon-16x16.png",
-    apple: "/apple-touch-icon.png",
+    icon: [
+      { url: "/logo-icon.png", sizes: "512x512", type: "image/png" },
+    ],
+    shortcut: "/logo-icon.png",
+    apple: "/logo-icon.png",
   },
 };
 
