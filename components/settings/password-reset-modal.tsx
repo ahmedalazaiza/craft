@@ -111,7 +111,7 @@ export function PasswordResetModal({ isOpen, onClose, onSuccess }: PasswordReset
           {/* Header */}
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--accent)]/20 border border-[var(--accent)]/30 text-[var(--primary-forest-green)] shrink-0">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#7110DE]/15 border border-[#7110DE]/30 text-[#7110DE] dark:text-purple-300 shrink-0">
                 <KeyRound className="h-6 w-6 stroke-[2.2]" />
               </div>
               <div>

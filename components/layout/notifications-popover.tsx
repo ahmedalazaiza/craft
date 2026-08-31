@@ -57,26 +57,26 @@ export function NotificationsPopover() {
   const getNotificationIcon = (type: NotificationType) => {
     switch (type) {
       case "appreciation":
-        return <Heart className="h-3 w-3 text-[var(--primary-forest-green)] fill-[var(--primary-forest-green)]" />;
+        return <Heart className="h-2.5 w-2.5 text-white fill-white" />;
       case "comment":
-        return <MessageSquare className="h-3 w-3 text-white fill-white" />;
+        return <MessageSquare className="h-2.5 w-2.5 text-white fill-white" />;
       case "follow":
-        return <UserPlus className="h-3 w-3 text-[var(--primary-forest-green)]" />;
+        return <UserPlus className="h-2.5 w-2.5 text-white stroke-[2.4]" />;
       case "publish":
-        return <Sparkles className="h-3 w-3 text-[var(--primary-forest-green)]" />;
+        return <Sparkles className="h-2.5 w-2.5 text-white fill-white" />;
     }
   };
 
   const getNotificationIconBg = (type: NotificationType) => {
     switch (type) {
       case "appreciation":
-        return "bg-[var(--accent)]";
+        return "bg-[#7110DE]";
       case "comment":
-        return "bg-[var(--chip-bg)]";
+        return "bg-[#7110DE]";
       case "follow":
-        return "bg-[var(--accent)]";
+        return "bg-[#7110DE]";
       case "publish":
-        return "bg-[var(--accent)]";
+        return "bg-[#7110DE]";
     }
   };
 
@@ -97,7 +97,7 @@ export function NotificationsPopover() {
       >
         <Bell className="h-4 w-4" />
         {unreadNotificationsCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--accent)] px-1 text-[10px] font-black text-[var(--primary-forest-green)] ring-2 ring-[var(--bg-screen)] shadow-xs">
+          <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#7110DE] px-1 text-[10px] font-black text-white ring-2 ring-[var(--bg-screen)] shadow-xs">
             {unreadNotificationsCount}
           </span>
         )}
@@ -227,7 +227,7 @@ export function NotificationsPopover() {
                       </div>
                       <div
                         className={cn(
-                          "absolute -bottom-1 -right-1 h-5 w-5 rounded-full flex items-center justify-center shadow-xs",
+                          "absolute -bottom-1 -right-1 h-5 w-5 rounded-full flex items-center justify-center shadow-xs ring-2 ring-[var(--bg-elevated)]",
                           getNotificationIconBg(notif.type)
                         )}
                       >
@@ -320,7 +320,7 @@ export function NotificationsPopover() {
 
                     {/* Unread indicator */}
                     {!notif.read && (
-                      <span className="h-2 w-2 rounded-full bg-[var(--accent)] shrink-0 self-center shadow-xs" />
+                      <span className="h-2 w-2 rounded-full bg-[#7110DE] shrink-0 self-center shadow-xs" />
                     )}
                   </div>
                 ))

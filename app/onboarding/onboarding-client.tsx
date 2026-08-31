@@ -157,7 +157,7 @@ export function OnboardingClient() {
                   className={cn(
                     "flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer",
                     isCurrent
-                      ? "bg-[var(--accent)] text-[var(--primary-forest-green)] shadow-xs"
+                      ? "bg-[#7110DE] text-white shadow-xs"
                       : isCompleted
                       ? "bg-[var(--bg-neutral)] text-[var(--content-primary)] border border-[var(--border-neutral)]"
                       : "text-[var(--content-tertiary)] hover:text-[var(--content-secondary)]"
@@ -165,11 +165,11 @@ export function OnboardingClient() {
                 >
                   <span
                     className={cn(
-                      "flex h-5 w-5 items-center justify-center rounded-full text-[10px]",
+                      "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold",
                       isCurrent
-                        ? "bg-[var(--chip-bg)] text-[var(--chip-fg)]"
+                        ? "bg-white text-[#7110DE]"
                         : isCompleted
-                        ? "bg-[var(--accent)] text-[var(--primary-forest-green)]"
+                        ? "bg-[#7110DE] text-white"
                         : "bg-[var(--bg-neutral)] text-[var(--content-tertiary)]"
                     )}
                   >
