@@ -110,12 +110,12 @@ export function ForgotPasswordClient() {
         <FadeIn className="w-full max-w-md">
           <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[28px] p-4 sm:p-6 text-center shadow-xl">
             <CardHeader className="pb-4 pt-4">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--accent)]/20 border border-[var(--accent)]/30 text-[#090C09] dark:text-[#8DFF00] shadow-sm">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--accent)]/20 border border-[var(--accent)]/30 text-[#090C09] dark:text-[#7110DE] shadow-sm">
                 <KeyRound className="h-8 w-8" />
               </div>
 
               <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip-bg)] px-3 py-1 text-[11px] font-semibold text-[var(--chip-fg)] mx-auto mb-3 shadow-xs">
-                <ShieldCheck className="h-3.5 w-3.5 text-[#8DFF00]" />
+                <ShieldCheck className="h-3.5 w-3.5 text-white" />
                 <span>Reset Request Dispatched</span>
               </div>
 
@@ -139,7 +139,7 @@ export function ForgotPasswordClient() {
             <CardContent className="space-y-5 pt-2">
               <div className="rounded-2xl bg-[var(--bg-neutral)]/60 border border-[var(--border-neutral)] p-4 text-left text-xs text-[var(--content-secondary)] space-y-2">
                 <p className="font-semibold text-[var(--content-primary)] flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-[#8DFF00]" />
+                  <Sparkles className="h-3.5 w-3.5 text-[#7110DE]" />
                   <span>Important tips:</span>
                 </p>
                 <ul className="list-disc list-inside space-y-1 text-[11px] text-[var(--content-tertiary)] pl-1">
@@ -211,7 +211,7 @@ export function ForgotPasswordClient() {
 
                 <Link
                   href="/signup"
-                  className="font-semibold text-emerald-600 dark:text-[#8DFF00] hover:underline"
+                  className="font-semibold text-[#7110DE] hover:underline"
                 >
                   Create new account &rarr;
                 </Link>
@@ -241,7 +241,7 @@ export function ForgotPasswordClient() {
         <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[24px] p-2">
           <CardHeader className="text-center pb-4 pt-4">
             <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip-bg)] px-3 py-1 text-[11px] font-semibold text-[var(--chip-fg)] mx-auto mb-3 shadow-xs">
-              <KeyRound className="h-3 w-3 text-[#8DFF00]" />
+              <KeyRound className="h-3 w-3 text-white" />
               <span>Password Recovery</span>
             </div>
 
@@ -308,7 +308,7 @@ export function ForgotPasswordClient() {
 
               <Link
                 href="/signup"
-                className="font-semibold text-emerald-600 dark:text-[#8DFF00] hover:underline"
+                className="font-semibold text-[#7110DE] hover:underline"
               >
                 Create account
               </Link>

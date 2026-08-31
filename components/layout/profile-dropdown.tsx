@@ -83,15 +83,17 @@ export function ProfileDropdown() {
         title={`Signed in as ${user.displayName}`}
         aria-label="User profile menu"
       >
-        <Image
-          src={getValidAvatarUrl(user.avatarUrl)}
-          alt={user.displayName}
-          fill
-          sizes="36px"
-          className="object-cover"
-        />
+        <div className="relative h-full w-full rounded-full overflow-hidden">
+          <Image
+            src={getValidAvatarUrl(user.avatarUrl)}
+            alt={user.displayName}
+            fill
+            sizes="36px"
+            className="object-cover"
+          />
+        </div>
         {/* Dynamic Online Indicator */}
-        <OnlineBadge isOnline={user.isOnline} size="sm" className="absolute bottom-0 right-0 z-10" />
+        <OnlineBadge isOnline={user.isOnline} size="sm" className="absolute bottom-0 right-0 z-20" />
       </button>
 
       {/* Dropdown Menu Popover */}
@@ -106,15 +108,17 @@ export function ProfileDropdown() {
           >
             {/* Header: User Identity & Studio Badge */}
             <div className="p-3.5 flex items-center gap-3">
-              <div className="relative h-11 w-11 rounded-full overflow-hidden ring-1 ring-[var(--border-neutral)] shrink-0">
-                <Image
-                  src={getValidAvatarUrl(user.avatarUrl)}
-                  alt={user.displayName}
-                  fill
-                  sizes="44px"
-                  className="object-cover"
-                />
-                <OnlineBadge isOnline={user.isOnline} size="sm" className="absolute bottom-0 right-0 z-10" />
+              <div className="relative h-11 w-11 shrink-0">
+                <div className="relative h-full w-full rounded-full overflow-hidden ring-1 ring-[var(--border-neutral)]">
+                  <Image
+                    src={getValidAvatarUrl(user.avatarUrl)}
+                    alt={user.displayName}
+                    fill
+                    sizes="44px"
+                    className="object-cover"
+                  />
+                </div>
+                <OnlineBadge isOnline={user.isOnline} size="sm" className="absolute bottom-0 right-0 z-20" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">

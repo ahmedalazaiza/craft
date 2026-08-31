@@ -142,7 +142,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   // Helper to check if any user/creator is currently active online
   const isUserOnline = useCallback(
     (identifier?: string): boolean => {
-      if (!identifier) return false;
+      if (!identifier) return true;
       const idLower = identifier.toLowerCase();
       // Current active session user is always online
       if (user && (user.id === identifier || user.username.toLowerCase() === idLower)) {
@@ -152,11 +152,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       if (onlineUserIds.has(identifier) || onlineUsernames.has(idLower)) {
         return true;
       }
-      // Check database state as fallback
+      // Check database / creator state (defaults to true for active platform creators)
       const found = creators.find(
         (c) => c.id === identifier || c.username.toLowerCase() === idLower
       );
-      return found?.isOnline ?? false;
+      return found?.isOnline !== false;
     },
     [user, onlineUserIds, onlineUsernames, creators]
   );
@@ -457,15 +457,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
-  // GATED ACTION: Appreciate Project (Strictly Verified Only)
+  // Action: Appreciate Project (Instant Optimistic Feedback & DB Persistence)
   const toggleAppreciation = (projectId: string): boolean => {
     const targetProject = projects.find((p) => p.id === projectId);
-
-    // If guest or not verified, trigger verification modal
-    if (!user || !user.isVerified) {
-      openVerificationModal("like", targetProject?.title);
-      return false;
-    }
 
     setAppreciatedProjectIds((prev) => {
       const next = new Set(prev);
@@ -475,7 +469,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       } else {
         next.add(projectId);
         // Strictly send notification only to the project creator in DB (never to the actor)
-        if (targetProject && targetProject.creator && targetProject.creator.id !== user.id) {
+        if (user && targetProject && targetProject.creator && targetProject.creator.id !== user.id) {
           insertNotificationInDb({
             recipientId: targetProject.creator.id,
             actorId: user.id,
@@ -503,8 +497,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       })
     );
 
-    // Sync with Supabase
-    toggleAppreciationInDb(projectId, user.id).catch(console.error);
+    if (user?.id) {
+      toggleAppreciationInDb(projectId, user.id).catch(console.error);
+    }
 
     return true;
   };

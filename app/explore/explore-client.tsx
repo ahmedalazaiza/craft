@@ -214,7 +214,7 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-neutral-200 dark:border-neutral-800 mb-6">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-3 py-1 text-[11px] font-mono font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-300 mb-3 shadow-xs">
-              <Sparkles className="h-3 w-3 text-emerald-600 dark:text-[#8DFF00]" />
+              <Sparkles className="h-3 w-3 text-neutral-900 dark:text-white" />
               <span>Project Showcase</span>
               <span className="text-neutral-400 dark:text-neutral-500">•</span>
               <span className="font-normal text-neutral-500 dark:text-neutral-400">Design Case Studies</span>
@@ -509,7 +509,7 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
                   sortBy: "newest",
                 });
               }}
-              className="mt-5 inline-flex items-center gap-2 rounded-full font-bold bg-[#8DFF00] text-[#090C09] hover:bg-[#7ce000] px-6 py-2.5 text-xs shadow-xs transition-colors cursor-pointer"
+              className="mt-5 inline-flex items-center gap-2 rounded-full font-bold bg-[#7110DE] text-white hover:bg-[#5F0EBA] px-6 py-2.5 text-xs shadow-xs transition-colors cursor-pointer"
             >
               Reset All Filters
             </button>

@@ -26,8 +26,8 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
     }
   };
 
-  const handleAddCustom = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddCustom = (e?: React.FormEvent | React.MouseEvent | React.KeyboardEvent) => {
+    e?.preventDefault();
     const clean = customInput.trim();
     if (!clean) return;
 
@@ -47,7 +47,6 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
 
   const visibleDisciplines = useMemo(() => {
     if (selectedCategoryTab === "All") {
-      // 13 Master Categories + Top Subcategories
       const mainNames = MASTER_TAXONOMY.map((c) => c.name);
       const topSubs = MASTER_TAXONOMY.flatMap((c) => c.subCategories.slice(0, 2));
       return Array.from(new Set([...mainNames, ...topSubs]));
@@ -78,26 +77,23 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
           )}
         </div>
 
-        <div className="min-h-[52px] rounded-2xl border border-[var(--border-neutral)] bg-[var(--bg-neutral)]/40 p-2.5 flex flex-wrap items-center gap-2">
+        {/* Selected Tag Pills */}
+        <div className="flex flex-wrap gap-1.5 min-h-[38px] p-2 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
           {selectedSkills.length === 0 ? (
-            <span className="text-xs text-[var(--content-tertiary)] italic px-2">
-              Select disciplines below or add custom skills...
+            <span className="text-xs text-[var(--content-tertiary)] italic p-1">
+              Select 3–12 disciplines that define your creative practice.
             </span>
           ) : (
             selectedSkills.map((skill) => (
-              <span
+              <button
                 key={skill}
-                className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#8DFF00] dark:text-[#090C09] px-3 py-1 text-xs font-bold shadow-xs animate-scale-in"
+                type="button"
+                onClick={() => toggleSkill(skill)}
+                className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#7110DE] dark:text-white px-3 py-1 text-xs font-bold shadow-xs animate-scale-in"
               >
                 <span>{skill}</span>
-                <button
-                  type="button"
-                  onClick={() => toggleSkill(skill)}
-                  className="rounded-full p-0.5 hover:bg-white/20 dark:hover:bg-black/10 transition-colors cursor-pointer"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
+                <X className="h-3 w-3 opacity-60 hover:opacity-100" />
+              </button>
             ))
           )}
         </div>
@@ -107,47 +103,44 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <label className="text-xs font-semibold text-[var(--content-secondary)] flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-[var(--primary-forest-green)] dark:text-[#8DFF00]" />
+            <Sparkles className="h-3.5 w-3.5 text-[var(--content-secondary)]" />
             <span>Browse by Discipline ({MASTER_TAXONOMY.length} Domains)</span>
           </label>
         </div>
 
         {/* Tab Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+        <div className="flex flex-wrap gap-1.5">
           <button
             type="button"
             onClick={() => setSelectedCategoryTab("All")}
             className={cn(
-              "rounded-full px-3 py-1 text-xs font-semibold shrink-0 cursor-pointer transition-all",
+              "rounded-full px-3 py-1 text-xs font-semibold transition-all cursor-pointer",
               selectedCategoryTab === "All"
                 ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
-                : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:bg-[var(--bg-neutral)]/80"
+                : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
             )}
           >
-            All Disciplines
+            All Top Disciplines
           </button>
-          {MASTER_TAXONOMY.map((cat) => {
-            const isTabActive = selectedCategoryTab === cat.name;
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setSelectedCategoryTab(cat.name)}
-                className={cn(
-                  "rounded-full px-3 py-1 text-xs font-semibold shrink-0 cursor-pointer transition-all",
-                  isTabActive
-                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
-                    : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:bg-[var(--bg-neutral)]/80"
-                )}
-              >
-                {cat.shortName}
-              </button>
-            );
-          })}
+          {MASTER_TAXONOMY.map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => setSelectedCategoryTab(cat.name)}
+              className={cn(
+                "rounded-full px-3 py-1 text-xs font-semibold transition-all cursor-pointer",
+                selectedCategoryTab === cat.name
+                  ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                  : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
+              )}
+            >
+              {cat.name}
+            </button>
+          ))}
         </div>
 
-        {/* Disciplines & Sub-categories Grid */}
-        <div className="flex flex-wrap gap-1.5 max-h-56 overflow-y-auto p-1 border border-[var(--border-neutral)] rounded-2xl bg-[var(--bg-screen)]">
+        {/* Discipline Grid */}
+        <div className="flex flex-wrap gap-2 pt-1 max-h-56 overflow-y-auto p-1">
           {visibleDisciplines.map((discipline) => {
             const isSelected = selectedSkills.includes(discipline);
             return (
@@ -156,10 +149,10 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
                 type="button"
                 onClick={() => toggleSkill(discipline)}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all cursor-pointer border",
+                  "inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium cursor-pointer transition-all border",
                   isSelected
-                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#8DFF00] dark:text-[#090C09] font-bold border-transparent shadow-xs scale-102"
-                    : "border-[var(--border-neutral)] bg-[var(--bg-screen)] text-[var(--content-secondary)] hover:border-[var(--content-secondary)] hover:text-[var(--content-primary)]"
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#7110DE] dark:text-white font-bold border-transparent shadow-xs scale-102"
+                    : "bg-[var(--bg-elevated)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)] hover:text-[var(--content-primary)] hover:border-[var(--content-secondary)]"
                 )}
               >
                 {isSelected ? (
@@ -175,23 +168,30 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
       </div>
 
       {/* Custom Discipline Adder */}
-      <form onSubmit={handleAddCustom} className="flex gap-2">
+      <div className="flex gap-2">
         <input
           type="text"
           value={customInput}
           onChange={(e) => setCustomInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleAddCustom(e);
+            }
+          }}
           placeholder="Add custom specialization or skill (e.g. Design Systems, Spatial Audio)..."
           className="flex-1 rounded-xl border border-[var(--border-neutral)] bg-[var(--bg-screen)] px-3.5 py-2 text-xs text-[var(--content-primary)] placeholder-[var(--content-tertiary)] focus:border-[var(--input-focus-border)] focus:ring-2 focus:ring-[var(--input-focus-ring)] focus:outline-hidden"
         />
         <button
-          type="submit"
+          type="button"
+          onClick={handleAddCustom}
           disabled={!customInput.trim()}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--bg-neutral)] border border-[var(--border-neutral)] px-4 py-2 text-xs font-semibold text-[var(--content-primary)] hover:bg-[var(--accent)] hover:text-[#090C09] hover:border-transparent transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--bg-neutral)] border border-[var(--border-neutral)] px-4 py-2 text-xs font-semibold text-[var(--content-primary)] hover:bg-[#7110DE] hover:text-white hover:border-transparent transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
         >
           <Plus className="h-3.5 w-3.5" />
           <span>Add</span>
         </button>
-      </form>
+      </div>
     </div>
   );
 }

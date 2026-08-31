@@ -83,7 +83,7 @@ export function VerifyClient() {
         <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[28px] p-6 text-center shadow-2xl">
           {verifying ? (
             <div className="py-12 space-y-4">
-              <Loader2 className="h-10 w-10 text-[#8DFF00] animate-spin mx-auto" />
+              <Loader2 className="h-10 w-10 text-[#7110DE] animate-spin mx-auto" />
               <h2 className="type-title-subsection text-[var(--content-primary)]">
                 Confirming your email...
               </h2>
@@ -94,12 +94,12 @@ export function VerifyClient() {
           ) : success ? (
             <>
               <CardHeader className="pb-4 pt-4">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-[#8DFF00]/20 border border-[#8DFF00]/30 text-[#8DFF00] shadow-sm animate-bounce">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-[#7110DE]/20 border border-[#7110DE]/30 text-[#7110DE] shadow-sm animate-bounce">
                   <CheckCircle2 className="h-8 w-8" />
                 </div>
 
                 <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip-bg)] px-3 py-1 text-[11px] font-semibold text-[var(--chip-fg)] mx-auto mb-3 shadow-xs">
-                  <Sparkles className="h-3.5 w-3.5 text-[#8DFF00]" />
+                  <Sparkles className="h-3.5 w-3.5 text-white" />
                   <span>Account Verified</span>
                 </div>
 

@@ -132,7 +132,7 @@ export function HomeClient({
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             className="inline-flex items-center gap-2 rounded-full bg-[var(--chip-bg)] px-4 py-1.5 text-xs font-semibold text-[var(--chip-fg)] mb-6 sm:mb-8 shadow-xs border border-white/10 select-none mx-auto"
           >
-            <Sparkles className="h-3.5 w-3.5 text-[#8DFF00]" />
+            <Sparkles className="h-3.5 w-3.5 text-white" />
             <span>Layerat Platform</span>
             <span className="text-[var(--content-tertiary)]">•</span>
             <span className="text-[var(--chip-fg)] font-normal">Independent Creators</span>
@@ -158,8 +158,8 @@ export function HomeClient({
               >
                 <span>Showcase</span>
                 <span>your</span>
-                <span className="inline-flex items-center rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#8DFF00] dark:text-[#090C09] px-3 sm:px-4 py-0.5 sm:py-1 shadow-sm border border-white/10 dark:border-transparent tracking-tight font-black">
-                  work<span className="text-[#8DFF00] dark:text-[#090C09]">.</span>
+                <span className="inline-flex items-center rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#7110DE] dark:text-white px-3 sm:px-4 py-0.5 sm:py-1 shadow-sm border border-white/10 dark:border-transparent tracking-tight font-black">
+                  work<span className="text-[#7110DE] dark:text-white">.</span>
                 </span>
               </motion.span>
             </span>
@@ -177,8 +177,8 @@ export function HomeClient({
               >
                 <span>Connect</span>
                 <span>with</span>
-                <span className="inline-flex items-center rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#8DFF00] dark:text-[#090C09] px-3 sm:px-4 py-0.5 sm:py-1 shadow-sm border border-white/10 dark:border-transparent tracking-tight font-black">
-                  makers<span className="text-[#8DFF00] dark:text-[#090C09]">.</span>
+                <span className="inline-flex items-center rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#7110DE] dark:text-white px-3 sm:px-4 py-0.5 sm:py-1 shadow-sm border border-white/10 dark:border-transparent tracking-tight font-black">
+                  makers<span className="text-[#7110DE] dark:text-white">.</span>
                 </span>
               </motion.span>
             </span>
@@ -274,7 +274,7 @@ export function HomeClient({
           <div className="flex items-baseline justify-between mb-5 pb-2.5 border-b border-[var(--border-neutral)]">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="h-2 w-2 rounded-full bg-[#8DFF00]" />
+                <span className="h-2 w-2 rounded-full bg-[#7110DE]" />
                 <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
                   Hand-Curated
                 </span>

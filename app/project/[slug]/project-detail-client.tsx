@@ -309,10 +309,15 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                 <button
                   type="button"
                   onClick={handleToggleAppreciation}
-                  className={cn(
-                    "h-12 w-12 rounded-full flex flex-col items-center justify-center transition-all cursor-pointer select-none group",
+                  style={
                     isAppreciated
-                      ? "bg-[#8DFF00] text-[#090C09] shadow-xs"
+                      ? { backgroundColor: "#7110DE", color: "#FFFFFF" }
+                      : undefined
+                  }
+                  className={cn(
+                    "h-12 w-12 rounded-full flex flex-col items-center justify-center transition-all cursor-pointer select-none group border-0 shadow-xs",
+                    isAppreciated
+                      ? "bg-[#7110DE] text-white shadow-md scale-105"
                       : "bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
                   )}
                   title={isAppreciated ? "Unlike project" : "Like project"}
@@ -320,10 +325,15 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                   <Heart
                     className={cn(
                       "h-4 w-4 transition-transform duration-200 group-hover:scale-110",
-                      isAppreciated && "fill-current"
+                      isAppreciated ? "fill-white text-white scale-110" : "text-[var(--content-primary)]"
                     )}
                   />
-                  <span className="text-[10px] font-mono font-bold mt-0.5 leading-none">
+                  <span
+                    className={cn(
+                      "text-[10px] font-mono font-bold mt-0.5 leading-none",
+                      isAppreciated ? "text-white" : "text-[var(--content-primary)]"
+                    )}
+                  >
                     {project.appreciations}
                   </span>
                 </button>
@@ -406,7 +416,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                       className="object-cover transition-transform duration-300 group-hover:scale-110"
                     />
                   </div>
-                  <OnlineBadge userId={project.creator.id} username={project.creator.username} size="sm" className="absolute -bottom-0.5 -right-0.5 z-10" />
+                  <OnlineBadge userId={project.creator.id} username={project.creator.username} size="sm" className="absolute bottom-0 right-0 z-20" />
                 </Link>
               </div>
             </aside>
@@ -523,15 +533,20 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
         <button
           type="button"
           onClick={handleToggleAppreciation}
-          className={cn(
-            "h-12 min-h-[48px] px-4 rounded-full flex items-center gap-2 text-xs font-bold transition-all",
+          style={
             isAppreciated
-              ? "bg-[var(--accent)] text-[var(--primary-forest-green)]"
+              ? { backgroundColor: "#7110DE", color: "#FFFFFF" }
+              : undefined
+          }
+          className={cn(
+            "h-12 min-h-[48px] px-4 rounded-full flex items-center gap-2 text-xs font-bold transition-all cursor-pointer select-none border-0",
+            isAppreciated
+              ? "bg-[#7110DE] text-white shadow-md"
               : "bg-[var(--bg-neutral)] text-[var(--content-primary)]"
           )}
         >
-          <Heart className={cn("h-4 w-4", isAppreciated && "fill-current")} />
-          <span>{project.appreciations}</span>
+          <Heart className={cn("h-4 w-4", isAppreciated ? "fill-white text-white" : "text-[var(--content-primary)]")} />
+          <span className={cn(isAppreciated ? "text-white" : "text-[var(--content-primary)]")}>{project.appreciations}</span>
         </button>
 
         <button
@@ -605,7 +620,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
               className="object-cover"
             />
           </div>
-          <OnlineBadge userId={project.creator.id} username={project.creator.username} size="sm" className="absolute -bottom-0.5 -right-0.5 z-10" />
+          <OnlineBadge userId={project.creator.id} username={project.creator.username} size="sm" className="absolute bottom-0 right-0 z-20" />
         </Link>
       </div>
 

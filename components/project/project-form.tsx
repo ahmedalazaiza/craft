@@ -637,108 +637,49 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           {/* LEFT COLUMN: EDITORIAL FORM & AI METADATA (SCROLLABLE)                */}
           {/* ===================================================================== */}
           <section className="w-full lg:w-[48%] xl:w-[45%] h-full overflow-y-auto border-r border-[var(--border-neutral)] p-6 sm:p-8 space-y-6 bg-[var(--bg-screen)]">
-            {/* AI Analyzing Status Banner with "Fill manually" action & First-Time Onboarding Tooltip */}
+            {/* AI Analyzing Status Banner with "Fill manually" action */}
             {isAnalyzingAI && (
-              <div className="relative">
-                <div className="rounded-[20px] bg-[var(--accent)]/15 border border-[var(--accent)]/40 p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--accent)] text-[#090C09] shrink-0 shadow-2xs">
-                      <Sparkles className="h-4 w-4 fill-current animate-spin" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <h4 className="text-xs font-bold text-[var(--content-primary)] truncate">
-                          Layerat AI is analyzing your images...
-                        </h4>
-                        <button
-                          type="button"
-                          onClick={() => setShowAiGuideTooltip((prev) => !prev)}
-                          className="text-[var(--content-tertiary)] hover:text-[var(--content-primary)] transition-colors cursor-pointer p-0.5"
-                          title="How AI Auto-Drafting works"
-                        >
-                          <HelpCircle className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                      <p className="text-[11px] text-[var(--content-secondary)] truncate">
-                        Generating project title, description, category, and tags.
-                      </p>
-                    </div>
+              <div className="rounded-2xl border border-[var(--border-neutral)] bg-[var(--bg-neutral)]/60 backdrop-blur-xs p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs animate-scale-in">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#7110DE] text-white shrink-0 shadow-2xs">
+                    <Sparkles className="h-4 w-4 text-white animate-spin" />
                   </div>
-
-                  {/* Fill Manually Button & Floating Pointer Tooltip Container */}
-                  <div className="relative shrink-0 self-end sm:self-auto">
-                    <button
-                      type="button"
-                      onClick={handleFillManually}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--bg-screen)] hover:bg-[var(--bg-neutral)] border border-[var(--border-neutral)] hover:border-[var(--primary-forest-green)] px-3 py-1.5 text-xs font-bold text-[var(--content-primary)] transition-all cursor-pointer shadow-2xs hover:scale-[1.02] active:scale-[0.98]"
-                      title="Stop AI analysis and fill fields manually"
-                    >
-                      <Edit3 className="h-3.5 w-3.5 text-[var(--primary-forest-green)] dark:text-[var(--accent)]" />
-                      <span>Fill manually</span>
-                    </button>
-
-                    {/* Floating Tooltip Pointing Directly at "Fill Manually" Button */}
-                    {showAiGuideTooltip && (
-                      <div className="absolute right-0 top-full mt-3 z-40 w-72 sm:w-80 rounded-2xl bg-[#090C0A] text-white border border-white/20 p-4 shadow-2xl backdrop-blur-xl animate-scale-in text-left">
-                        {/* Upward Pointer Caret aligned with Fill Manually button */}
-                        <div className="absolute -top-1.5 right-6 h-3 w-3 rotate-45 bg-[#090C0A] border-l border-t border-white/25" />
-
-                        <div className="relative space-y-2.5">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--accent)] text-[#090C09] text-[10px] font-bold shadow-xs">
-                                ⚡
-                              </span>
-                              <h5 className="text-xs font-bold text-white tracking-wide">
-                                Want to type details yourself?
-                              </h5>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={dismissAiGuideTooltip}
-                              className="text-white/60 hover:text-white transition-colors cursor-pointer p-0.5"
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-
-                          <p className="text-[12px] text-white/80 leading-relaxed font-normal">
-                            Click <strong className="text-white font-bold">Fill manually</strong> at any time to skip AI and type your project details manually.
-                          </p>
-
-                          <div className="pt-1.5 flex items-center justify-between gap-2 border-t border-white/10">
-                            <span className="text-[10px] font-mono text-white/50">
-                              Quick tip
-                            </span>
-                            <button
-                              type="button"
-                              onClick={dismissAiGuideTooltip}
-                              className="rounded-lg bg-[var(--accent)] hover:bg-white text-[#090C09] px-3.5 py-1 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95"
-                            >
-                              Got it
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                  <div className="min-w-0">
+                    <h4 className="text-xs font-bold text-[var(--content-primary)] truncate">
+                      Layerat AI is analyzing your images...
+                    </h4>
+                    <p className="text-[11px] text-[var(--content-secondary)] truncate mt-0.5">
+                      Generating title, description, and tags automatically.
+                    </p>
                   </div>
                 </div>
+
+                {/* Fill Manually Button */}
+                <button
+                  type="button"
+                  onClick={handleFillManually}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--bg-screen)] hover:bg-[var(--bg-neutral)] border border-[var(--border-neutral)] hover:border-[var(--content-secondary)] px-3 py-1.5 text-xs font-semibold text-[var(--content-primary)] transition-all cursor-pointer shadow-2xs shrink-0 self-end sm:self-auto"
+                  title="Stop AI analysis and fill fields manually"
+                >
+                  <Edit3 className="h-3.5 w-3.5 text-[var(--content-secondary)]" />
+                  <span>Fill manually</span>
+                </button>
               </div>
             )}
 
             {/* AI Success Toast Banner */}
             {aiSuccessMessage && (
-              <div className="rounded-[20px] bg-emerald-500/10 border border-emerald-500/30 p-3.5 flex items-center justify-between gap-3 animate-scale-in">
-                <div className="flex items-center gap-2.5">
+              <div className="rounded-2xl bg-emerald-500/10 border border-emerald-500/25 p-3 flex items-center justify-between gap-3 animate-scale-in">
+                <div className="flex items-center gap-2.5 min-w-0">
                   <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  <span className="text-xs font-semibold text-emerald-800 dark:text-emerald-200">
+                  <span className="text-xs font-medium text-[var(--content-primary)] truncate">
                     {aiSuccessMessage}
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setAiSuccessMessage(null)}
-                  className="text-xs text-[var(--content-tertiary)] hover:text-[var(--content-primary)] cursor-pointer"
+                  className="text-[var(--content-tertiary)] hover:text-[var(--content-primary)] transition-colors p-1 cursor-pointer"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -828,7 +769,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                           className={cn(
                             "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all border",
                             isSelected
-                              ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-xs dark:bg-[var(--accent)] dark:text-[#090C09] font-bold scale-[1.02]"
+                              ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-xs dark:bg-[#7110DE] dark:text-white font-bold scale-[1.02]"
                               : "bg-[var(--bg-elevated)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)] hover:text-[var(--content-primary)]"
                           )}
                         >
@@ -1019,8 +960,8 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                         #{idx + 1}
                       </span>
                       {isCurrentCover && (
-                        <span className="rounded-lg bg-[var(--accent)] text-[#090C09] px-2.5 py-1 text-xs font-black shadow-xs flex items-center gap-1">
-                          <Star className="h-3 w-3 fill-current" />
+                        <span className="rounded-lg bg-[#7110DE] text-white px-2.5 py-1 text-xs font-bold shadow-xs flex items-center gap-1">
+                          <Star className="h-3 w-3 fill-white text-white" />
                           <span>Card Cover</span>
                         </span>
                       )}
@@ -1034,12 +975,12 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                         className={cn(
                           "h-8 px-3 rounded-full text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all",
                           isCurrentCover
-                            ? "bg-[var(--accent)] text-[#090C09] shadow-xs"
+                            ? "bg-[#7110DE] text-white shadow-xs"
                             : "bg-white/20 hover:bg-white text-white hover:text-black"
                         )}
                         title="Set as feed card cover thumbnail"
                       >
-                        <Star className={cn("h-3.5 w-3.5", isCurrentCover && "fill-current")} />
+                        <Star className={cn("h-3.5 w-3.5", isCurrentCover ? "fill-white text-white" : "text-white")} />
                         <span>{isCurrentCover ? "Active Cover" : "Make Cover"}</span>
                       </button>
 

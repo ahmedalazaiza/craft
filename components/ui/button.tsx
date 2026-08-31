@@ -31,9 +31,9 @@ export function buttonVariants({
     "inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-150 cursor-pointer disabled:pointer-events-none disabled:opacity-50 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--btn-cta-bg)]";
 
   const variantStyles = {
-    // Main Accent button — energetic neon lime with dark contrast label
+    // Main Accent button — energetic purple with high contrast text
     accent:
-      "bg-[var(--accent)] text-[#090C09] font-bold hover:bg-[var(--accent-hover)] active:bg-[var(--accent-active)] shadow-xs",
+      "bg-[var(--accent)] text-white font-bold hover:bg-[var(--accent-hover)] active:bg-[var(--accent-active)] shadow-xs",
     cta:
       "bg-[var(--btn-cta-bg)] text-[var(--btn-cta-fg)] font-semibold hover:bg-[var(--btn-cta-bg-hover)] active:bg-[var(--btn-cta-bg-active)] shadow-xs",
     "primary-cta":

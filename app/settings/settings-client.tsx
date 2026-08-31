@@ -48,7 +48,7 @@ import {
   Lock,
   Eye,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, normalizeUrl } from "@/lib/utils";
 
 type SettingsTab = "profile" | "security" | "preferences" | "danger";
 
@@ -171,7 +171,7 @@ export function SettingsClient() {
         bio: bio.trim(),
         location: location.trim(),
         city: location.trim(),
-        website: website.trim() || undefined,
+        website: normalizeUrl(website) || undefined,
         avatarUrl,
         skills,
       });
@@ -566,10 +566,10 @@ export function SettingsClient() {
                         Website or Portfolio URL
                       </label>
                       <Input
-                        type="url"
+                        type="text"
                         value={website}
                         onChange={(e) => setWebsite(e.target.value)}
-                        placeholder="https://studio.design"
+                        placeholder="www.yourdomain.com or https://..."
                         className="h-11 text-sm"
                       />
                     </div>

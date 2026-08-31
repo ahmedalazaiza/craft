@@ -424,11 +424,11 @@ export function FilterDrawer({
                         className={cn(
                           "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-all cursor-pointer",
                           isSelected
-                            ? "bg-[var(--accent)] text-[#090C09] ring-1 ring-[var(--accent)] font-bold"
+                            ? "bg-[#7110DE] text-white ring-1 ring-[#7110DE] font-bold"
                             : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:bg-[var(--bg-neutral-hover)]"
                         )}
                       >
-                        {isSelected && <Check className="h-3 w-3 text-[#090C09]" />}
+                        {isSelected && <Check className="h-3 w-3 text-white" />}
                         <span>{tool}</span>
                       </button>
                     );
@@ -539,7 +539,7 @@ export function FilterDrawer({
                             : "bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700"
                         )}
                       >
-                        <MapPin className="h-3 w-3 text-emerald-600 dark:text-[#8DFF00]" />
+                        <MapPin className="h-3 w-3 text-neutral-900 dark:text-white" />
                         <span>Filter by &ldquo;{locationQuery.trim()}&rdquo;</span>
                       </button>
                     )}

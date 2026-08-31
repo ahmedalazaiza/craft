@@ -125,16 +125,17 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
                 onClick={handleCreatorClick}
                 className="flex items-center gap-2 hover:opacity-80 transition-opacity group/creator cursor-pointer"
               >
-                <div className="relative h-7 w-7 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-1 ring-[var(--border-neutral)] shrink-0">
-                  <Image
-                    src={getValidAvatarUrl(liveProject.creator.avatarUrl)}
-                    alt={liveProject.creator.displayName}
-                    fill
-                    sizes="28px"
-                    className="object-cover"
-                  />
-                  <OnlineBadge userId={liveProject.creator.id} username={liveProject.creator.username} size="sm" className="absolute -bottom-0.5 -right-0.5 z-10" />
-
+                <div className="relative h-7 w-7 shrink-0">
+                  <div className="relative h-full w-full rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-1 ring-[var(--border-neutral)]">
+                    <Image
+                      src={getValidAvatarUrl(liveProject.creator.avatarUrl)}
+                      alt={liveProject.creator.displayName}
+                      fill
+                      sizes="28px"
+                      className="object-cover"
+                    />
+                  </div>
+                  <OnlineBadge userId={liveProject.creator.id} username={liveProject.creator.username} size="sm" className="absolute bottom-0 right-0 z-20" />
                 </div>
                 <div className="flex items-center gap-1 min-w-0">
                   <span className="type-title-group text-[var(--content-primary)] group-hover/creator:text-[var(--primary-forest-green)] transition-colors truncate max-w-[130px] sm:max-w-[150px]">

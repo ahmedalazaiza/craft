@@ -66,7 +66,7 @@ export default function AboutPage() {
           <Link
             href="/explore"
             prefetch={true}
-            className="inline-flex items-center justify-center gap-2 rounded-full font-bold bg-[#8DFF00] text-[#090C09] hover:bg-[#7ce000] px-7 py-3 text-sm shadow-xs transition-colors cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 rounded-full font-bold bg-[#7110DE] text-white hover:bg-[#5F0EBA] px-7 py-3 text-sm shadow-xs transition-colors cursor-pointer"
           >
             <Compass className="h-4 w-4" />
             <span>Explore Projects</span>

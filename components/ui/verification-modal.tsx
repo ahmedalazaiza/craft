@@ -113,11 +113,11 @@ export function VerificationModal({
         };
       case "follow":
         return {
-          glowColor: "rgba(141, 255, 0, 0.16)",
-          badgeBg: "bg-[#8DFF00]/10 text-[#2C6E00] dark:text-[#8DFF00] border-[#8DFF00]/25",
+          glowColor: "rgba(113, 16, 222, 0.16)",
+          badgeBg: "bg-[#7110DE]/10 text-[#7110DE] dark:text-[#7110DE] border-[#7110DE]/25",
           badgeIcon: <UserPlus className="h-3.5 w-3.5" />,
           badgeLabel: "Creator Network",
-          iconBg: "from-[#8DFF00]/25 to-[#8DFF00]/5 text-[#2C6E00] dark:text-[#8DFF00] ring-[#8DFF00]/25",
+          iconBg: "from-[#7110DE]/25 to-[#7110DE]/5 text-[#7110DE] dark:text-[#7110DE] ring-[#7110DE]/25",
           icon: <UserPlus className="h-7 w-7 stroke-[2.2]" />,
           title: "Follow Independent Studios",
           description: targetName
@@ -345,7 +345,7 @@ export function VerificationModal({
                 <Link
                   href="/login"
                   onClick={onClose}
-                  className="group relative flex items-center justify-center gap-2 w-full py-3.5 px-5 rounded-2xl font-bold text-sm bg-[var(--primary-forest-green)] text-[var(--bg-screen)] dark:bg-[#8DFF00] dark:text-[#090C09] shadow-[0_4px_14px_rgba(0,0,0,0.1)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer"
+                  className="group relative flex items-center justify-center gap-2 w-full py-3.5 px-5 rounded-2xl font-bold text-sm bg-[var(--primary-forest-green)] text-[var(--bg-screen)] dark:bg-[#7110DE] dark:text-white shadow-[0_4px_14px_rgba(0,0,0,0.1)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer"
                 >
                   <span>Log in to your account</span>
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />

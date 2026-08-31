@@ -35,25 +35,32 @@ export function AppreciationButton({
   };
 
   if (variant === "card") {
-    // Compact solid chip on project card top-right (solid #090C09 chip tokens, no glassmorphism)
+    // Compact solid chip on project card top-right
     return (
       <button
         type="button"
         onClick={handleClick}
         title={appreciated ? "Remove appreciation" : "Appreciate this project"}
+        style={
+          appreciated
+            ? { backgroundColor: "#7110DE", color: "#FFFFFF" }
+            : undefined
+        }
         className={cn(
-          "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold select-none transition-all duration-150 cursor-pointer shadow-xs",
-          "bg-[var(--chip-bg)] text-[var(--chip-fg)] hover:bg-[var(--chip-bg-hover)] border-none",
+          "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold select-none transition-all duration-150 cursor-pointer shadow-xs border-none",
+          appreciated
+            ? "bg-[#7110DE] text-white shadow-sm"
+            : "bg-[var(--chip-bg)] text-[var(--chip-fg)] hover:bg-[var(--chip-bg-hover)]",
           className
         )}
       >
         <Heart
           className={cn(
-            "h-3.5 w-3.5 transition-transform duration-150 text-[var(--chip-fg)]",
-            appreciated ? "fill-[var(--chip-fg)] scale-110" : "fill-none"
+            "h-3.5 w-3.5 transition-transform duration-150",
+            appreciated ? "fill-white text-white scale-110" : "fill-none text-[var(--chip-fg)]"
           )}
         />
-        <span className="text-[var(--chip-fg)] font-bold">
+        <span className="font-bold">
           {count}
         </span>
       </button>

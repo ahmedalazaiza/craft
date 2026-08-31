@@ -119,8 +119,8 @@ export function ShareModal({
 
             {/* Header */}
             <div className="flex items-center gap-3 mb-2">
-              <div className="h-10 w-10 rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] flex items-center justify-center shadow-xs">
-                <Share2 className="h-5 w-5 text-[var(--accent)]" />
+              <div className="h-10 w-10 rounded-2xl bg-[var(--chip-bg)] text-white flex items-center justify-center shadow-xs">
+                <Share2 className="h-5 w-5 text-white" />
               </div>
               <div>
                 <h2

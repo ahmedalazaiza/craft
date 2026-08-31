@@ -162,7 +162,7 @@ export function MeClient() {
                       className="object-cover"
                     />
                   </div>
-                  <OnlineBadge isOnline={user.isOnline} size="lg" className="absolute bottom-1 right-1 z-10" />
+                  <OnlineBadge isOnline={user.isOnline} size="lg" className="absolute bottom-1.5 right-1.5 z-20" />
                 </div>
 
                 <div className="flex items-center gap-2 justify-center">

@@ -113,17 +113,18 @@ export function CommentSection({ projectId, comments }: CommentSectionProps) {
             >
               <Link
                 href={`/u/${c.author.username}`}
-                className="relative h-10 w-10 shrink-0 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-1 ring-[var(--border-neutral)]"
+                className="relative h-10 w-10 shrink-0"
               >
-                <Image
-                  src={getValidAvatarUrl(c.author.avatarUrl)}
-                  alt={c.author.displayName}
-                  fill
-                  sizes="40px"
-                  className="object-cover"
-                />
-                <OnlineBadge userId={c.author.id} username={c.author.username} size="sm" className="absolute bottom-0 right-0 z-10" />
-
+                <div className="relative h-full w-full rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-1 ring-[var(--border-neutral)]">
+                  <Image
+                    src={getValidAvatarUrl(c.author.avatarUrl)}
+                    alt={c.author.displayName}
+                    fill
+                    sizes="40px"
+                    className="object-cover"
+                  />
+                </div>
+                <OnlineBadge userId={c.author.id} username={c.author.username} size="sm" className="absolute bottom-0 right-0 z-20" />
               </Link>
               <div className="flex-1">
                 <div className="flex items-baseline justify-between gap-2">

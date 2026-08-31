@@ -72,7 +72,7 @@ export function TopProgressBar() {
               duration: progress === 100 ? 0.2 : 0.4,
               ease: [0.16, 1, 0.3, 1],
             }}
-            className="h-full bg-gradient-to-r from-[#8DFF00] via-[#A8FF33] to-[#8DFF00] shadow-[0_0_12px_rgba(141,255,0,0.8)]"
+            className="h-full bg-gradient-to-r from-[#7110DE] via-[#9D4EDD] to-[#7110DE] shadow-[0_0_12px_rgba(113,16,222,0.8)]"
           />
         </div>
       )}

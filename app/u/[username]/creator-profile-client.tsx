@@ -28,7 +28,7 @@ import {
   Camera,
   Loader2,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, normalizeUrl, formatDisplayUrl } from "@/lib/utils";
 import { ShareModal } from "@/components/ui/share-modal";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
@@ -120,7 +120,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
         bio: editBio,
         location: editLocation,
         city: editLocation,
-        website: editWebsite,
+        website: normalizeUrl(editWebsite),
         avatarUrl: editAvatarUrl,
         skills: editSkills,
       });
@@ -215,8 +215,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                       </div>
                     )}
                   </div>
-                  <OnlineBadge userId={creator.id} username={creator.username} size="lg" className="absolute bottom-1 right-1 z-10" />
-
+                  <OnlineBadge userId={creator.id} username={creator.username} size="lg" className="absolute bottom-1.5 right-1.5 z-20" />
                 </div>
 
 
@@ -247,14 +246,14 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                     <>
                       <span className="text-[var(--content-tertiary)]">•</span>
                       <a
-                        href={creator.website}
+                        href={normalizeUrl(creator.website)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-[var(--content-link)] hover:underline font-medium"
+                        className="inline-flex items-center gap-1 text-[var(--content-link)] hover:underline font-medium truncate max-w-[200px]"
                       >
-                        <Globe className="h-3.5 w-3.5" />
-                        <span>Website</span>
-                        <ExternalLink className="h-3 w-3 opacity-60" />
+                        <Globe className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate">{formatDisplayUrl(creator.website)}</span>
+                        <ExternalLink className="h-3 w-3 opacity-60 shrink-0" />
                       </a>
                     </>
                   )}
@@ -654,10 +653,10 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                       Website URL
                     </label>
                     <Input
-                      type="url"
+                      type="text"
                       value={editWebsite}
                       onChange={(e) => setEditWebsite(e.target.value)}
-                      placeholder="https://studio.design"
+                      placeholder="www.yourdomain.com or https://..."
                     />
                   </div>
                 </div>

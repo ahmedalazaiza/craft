@@ -55,7 +55,7 @@ export default function TermsPage() {
       {/* Creator Pledge Highlight Card */}
       <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-[#141713] p-6 sm:p-8 space-y-3 shadow-xs">
         <div className="flex items-center gap-2 text-neutral-950 dark:text-white font-bold text-sm">
-          <ShieldCheck className="h-5 w-5 text-emerald-600 dark:text-[#8DFF00]" />
+          <ShieldCheck className="h-5 w-5 text-neutral-950 dark:text-white" />
           <span>The Layerat Creator Pledge</span>
         </div>
         <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed font-normal">

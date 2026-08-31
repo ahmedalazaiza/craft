@@ -58,15 +58,17 @@ export function CreatorListItem({
           )}
         >
           <div className="flex items-center gap-3">
-            <div className="relative h-9 w-9 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-1 ring-[var(--border-neutral)] shrink-0">
-              <Image
-                src={getValidAvatarUrl(creator.avatarUrl)}
-                alt={creator.displayName}
-                fill
-                sizes="36px"
-                className="object-cover"
-              />
-              <OnlineBadge userId={creator.id} username={creator.username} size="sm" className="absolute bottom-0 right-0 z-10" />
+            <div className="relative h-9 w-9 shrink-0">
+              <div className="relative h-full w-full rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-1 ring-[var(--border-neutral)]">
+                <Image
+                  src={getValidAvatarUrl(creator.avatarUrl)}
+                  alt={creator.displayName}
+                  fill
+                  sizes="36px"
+                  className="object-cover"
+                />
+              </div>
+              <OnlineBadge userId={creator.id} username={creator.username} size="sm" className="absolute bottom-0 right-0 z-20" />
             </div>
             <div>
               <div className="type-title-group text-[var(--content-primary)] flex items-center gap-1">
@@ -98,15 +100,17 @@ export function CreatorListItem({
         <div>
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="relative h-14 w-14 rounded-full overflow-hidden bg-neutral-100 dark:bg-neutral-800 ring-2 border border-neutral-200 dark:border-neutral-700 shrink-0">
-                <Image
-                  src={getValidAvatarUrl(creator.avatarUrl)}
-                  alt={creator.displayName}
-                  fill
-                  sizes="56px"
-                  className="object-cover"
-                />
-                <OnlineBadge userId={creator.id} username={creator.username} size="sm" className="absolute bottom-0.5 right-0.5 z-10" />
+              <div className="relative h-14 w-14 shrink-0">
+                <div className="relative h-full w-full rounded-full overflow-hidden bg-neutral-100 dark:bg-neutral-800 ring-2 border border-neutral-200 dark:border-neutral-700">
+                  <Image
+                    src={getValidAvatarUrl(creator.avatarUrl)}
+                    alt={creator.displayName}
+                    fill
+                    sizes="56px"
+                    className="object-cover"
+                  />
+                </div>
+                <OnlineBadge userId={creator.id} username={creator.username} size="sm" className="absolute bottom-0.5 right-0.5 z-20" />
               </div>
 
               <div>
