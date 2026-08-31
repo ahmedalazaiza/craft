@@ -83,7 +83,7 @@ export function VerificationBanner() {
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--accent)]/20 text-[var(--accent)]">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#7110DE] text-white shadow-2xs">
               <Mail className="h-3 w-3" />
             </span>
 
@@ -95,7 +95,7 @@ export function VerificationBanner() {
 
           <div className="flex items-center gap-3 shrink-0">
             {sendSuccess ? (
-              <span className="inline-flex items-center gap-1 text-[var(--accent)] font-semibold text-xs">
+              <span className="inline-flex items-center gap-1 text-emerald-400 font-semibold text-xs">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 <span>Link sent! Check inbox</span>
               </span>
@@ -104,7 +104,7 @@ export function VerificationBanner() {
                 type="button"
                 onClick={handleResend}
                 disabled={isSending || cooldown > 0}
-                className="font-bold text-[var(--accent)] hover:text-[var(--accent-hover)] underline underline-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-xs inline-flex items-center gap-1"
+                className="font-bold text-purple-300 hover:text-white underline underline-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-xs inline-flex items-center gap-1"
               >
                 {isSending ? (
                   "Sending..."

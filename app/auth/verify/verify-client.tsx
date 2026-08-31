@@ -94,7 +94,7 @@ export function VerifyClient() {
           ) : success ? (
             <>
               <CardHeader className="pb-4 pt-4">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-[#7110DE]/20 border border-[#7110DE]/30 text-[#7110DE] shadow-sm animate-bounce">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-[#7110DE]/20 border border-[#7110DE]/30 text-[#7110DE] dark:text-purple-300 shadow-sm animate-bounce">
                   <CheckCircle2 className="h-8 w-8" />
                 </div>
 

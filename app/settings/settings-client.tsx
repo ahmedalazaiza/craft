@@ -586,7 +586,7 @@ export function SettingsClient() {
                   {/* Submit Button & Status Indicator */}
                   <div className="flex items-center justify-between pt-4 border-t border-[var(--border-neutral)]">
                     {profileSavedSuccess ? (
-                      <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--sentiment-positive-bg)] dark:text-[var(--accent)] animate-scale-in">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 animate-scale-in">
                         <Check className="h-4 w-4" />
                         <span>Profile successfully updated!</span>
                       </span>
@@ -643,7 +643,7 @@ export function SettingsClient() {
                           {user.email || "No email on record"}
                         </span>
                         {user.isVerified !== false ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--sentiment-positive-bg)]/15 text-[var(--sentiment-positive-bg)] dark:text-[var(--accent)] px-2 py-0.5 text-[10px] font-bold">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 text-[10px] font-bold">
                             <CheckCircle2 className="h-3 w-3" />
                             Verified Email
                           </span>
@@ -706,7 +706,7 @@ export function SettingsClient() {
                   </div>
 
                   {resetSentSuccess && (
-                    <div className="rounded-xl border border-[var(--sentiment-positive-bg)]/30 bg-[var(--sentiment-positive-bg)]/10 p-3.5 text-xs text-[var(--sentiment-positive-bg)] dark:text-[var(--accent)] font-semibold flex items-center gap-2 animate-scale-in">
+                    <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-xs text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-2 animate-scale-in">
                       <CheckCircle2 className="h-4 w-4 shrink-0" />
                       <span>
                         Password reset link successfully dispatched to <strong>{user.email}</strong>. Open the link to update your credentials.
@@ -739,7 +739,7 @@ export function SettingsClient() {
                 </div>
 
                 {preferencesSavedNotice && (
-                  <div className="rounded-xl border border-[var(--sentiment-positive-bg)]/30 bg-[var(--sentiment-positive-bg)]/10 p-3 text-xs text-[var(--sentiment-positive-bg)] dark:text-[var(--accent)] font-semibold flex items-center gap-2 animate-scale-in">
+                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-2 animate-scale-in">
                     <Check className="h-4 w-4 shrink-0" />
                     <span>Preferences updated successfully.</span>
                   </div>

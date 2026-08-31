@@ -96,7 +96,7 @@ export function PasswordStrengthIndicator({
               )}
             >
               {passed ? (
-                <Check className="h-3 w-3 text-[var(--interactive-primary)] dark:text-[var(--accent)] stroke-[2.5]" />
+                <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400 stroke-[2.5]" />
               ) : (
                 <span className="h-1.5 w-1.5 rounded-full bg-[var(--border-neutral)]" />
               )}

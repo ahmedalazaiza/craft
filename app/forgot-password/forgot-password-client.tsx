@@ -110,7 +110,7 @@ export function ForgotPasswordClient() {
         <FadeIn className="w-full max-w-md">
           <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[28px] p-4 sm:p-6 text-center shadow-xl">
             <CardHeader className="pb-4 pt-4">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--accent)]/20 border border-[var(--accent)]/30 text-[#090C09] dark:text-[#7110DE] shadow-sm">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-[#7110DE]/15 border border-[#7110DE]/30 text-[#7110DE] dark:text-purple-300 shadow-sm">
                 <KeyRound className="h-8 w-8" />
               </div>
 

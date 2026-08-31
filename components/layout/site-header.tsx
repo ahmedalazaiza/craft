@@ -76,12 +76,12 @@ export function SiteHeader() {
                 className={cn(
                   "relative rounded-full px-3.5 py-1.5 text-xs font-bold transition-all flex items-center gap-1.5",
                   isHome
-                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs border border-[var(--primary-forest-green)]/30 dark:bg-[var(--accent)]/15 dark:border-[var(--accent)]/40 dark:text-[var(--accent)]"
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs border border-black/10 dark:bg-[#7110DE] dark:border-transparent dark:text-white"
                     : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
                 )}
               >
                 {isHome && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-white dark:bg-[var(--accent)] shadow-xs animate-pulse" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-white shadow-xs animate-pulse" />
                 )}
                 <span>Home</span>
               </Link>
@@ -91,12 +91,12 @@ export function SiteHeader() {
                 className={cn(
                   "relative rounded-full px-3.5 py-1.5 text-xs font-bold transition-all flex items-center gap-1.5",
                   isExplore
-                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs border border-[var(--primary-forest-green)]/30 dark:bg-[var(--accent)]/15 dark:border-[var(--accent)]/40 dark:text-[var(--accent)]"
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs border border-black/10 dark:bg-[#7110DE] dark:border-transparent dark:text-white"
                     : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
                 )}
               >
                 {isExplore && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-white dark:bg-[var(--accent)] shadow-xs animate-pulse" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-white shadow-xs animate-pulse" />
                 )}
                 <span>Explore</span>
               </Link>
@@ -106,12 +106,12 @@ export function SiteHeader() {
                 className={cn(
                   "relative rounded-full px-3.5 py-1.5 text-xs font-bold transition-all flex items-center gap-1.5",
                   isCreators
-                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs border border-[var(--primary-forest-green)]/30 dark:bg-[var(--accent)]/15 dark:border-[var(--accent)]/40 dark:text-[var(--accent)]"
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs border border-black/10 dark:bg-[#7110DE] dark:border-transparent dark:text-white"
                     : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
                 )}
               >
                 {isCreators && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-white dark:bg-[var(--accent)] shadow-xs animate-pulse" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-white shadow-xs animate-pulse" />
                 )}
                 <span>Creators</span>
               </Link>

@@ -114,10 +114,10 @@ export function VerificationModal({
       case "follow":
         return {
           glowColor: "rgba(113, 16, 222, 0.16)",
-          badgeBg: "bg-[#7110DE]/10 text-[#7110DE] dark:text-[#7110DE] border-[#7110DE]/25",
+          badgeBg: "bg-[#7110DE]/10 text-[#7110DE] dark:text-purple-300 border-[#7110DE]/25",
           badgeIcon: <UserPlus className="h-3.5 w-3.5" />,
           badgeLabel: "Creator Network",
-          iconBg: "from-[#7110DE]/25 to-[#7110DE]/5 text-[#7110DE] dark:text-[#7110DE] ring-[#7110DE]/25",
+          iconBg: "from-[#7110DE]/25 to-[#7110DE]/5 text-[#7110DE] dark:text-purple-300 ring-[#7110DE]/25",
           icon: <UserPlus className="h-7 w-7 stroke-[2.2]" />,
           title: "Follow Independent Studios",
           description: targetName
@@ -265,7 +265,7 @@ export function VerificationModal({
             <div className="mt-4.5 w-full rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]/50 p-3.5 space-y-2 text-left">
               {config.benefits.map((benefit, i) => (
                 <div key={i} className="flex items-center gap-2 text-xs text-[var(--content-secondary)]">
-                  <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[var(--accent)]/15 text-[var(--primary-forest-green)]">
+                  <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#7110DE]/15 text-[#7110DE] dark:text-purple-300">
                     <Zap className="h-2.5 w-2.5 fill-current" />
                   </div>
                   <span className="font-medium">{benefit}</span>

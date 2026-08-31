@@ -50,7 +50,7 @@ export function SiteFooter() {
                 <Link
                   href="/"
                   prefetch={true}
-                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors"
+                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-purple-300 transition-colors"
                 >
                   Home
                 </Link>
@@ -59,7 +59,7 @@ export function SiteFooter() {
                 <Link
                   href="/explore"
                   prefetch={true}
-                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors"
+                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-purple-300 transition-colors"
                 >
                   Explore Projects
                 </Link>
@@ -68,7 +68,7 @@ export function SiteFooter() {
                 <Link
                   href="/creators"
                   prefetch={true}
-                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors"
+                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-purple-300 transition-colors"
                 >
                   Discover Creators
                 </Link>
@@ -77,7 +77,7 @@ export function SiteFooter() {
                 <Link
                   href="/search"
                   prefetch={true}
-                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors"
+                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-purple-300 transition-colors"
                 >
                   Global Search
                 </Link>
@@ -95,7 +95,7 @@ export function SiteFooter() {
                 <Link
                   href="/about"
                   prefetch={true}
-                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors"
+                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-purple-300 transition-colors"
                 >
                   About Us
                 </Link>
@@ -104,7 +104,7 @@ export function SiteFooter() {
                 <Link
                   href="/team"
                   prefetch={true}
-                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors"
+                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-purple-300 transition-colors"
                 >
                   Our Team & Curators
                 </Link>
@@ -113,7 +113,7 @@ export function SiteFooter() {
                 <Link
                   href="/guidelines"
                   prefetch={true}
-                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors"
+                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-purple-300 transition-colors"
                 >
                   Community Guidelines
                 </Link>
@@ -131,7 +131,7 @@ export function SiteFooter() {
                 <Link
                   href="/terms"
                   prefetch={true}
-                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors"
+                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-purple-300 transition-colors"
                 >
                   Terms of Use
                 </Link>
@@ -140,7 +140,7 @@ export function SiteFooter() {
                 <Link
                   href="/privacy"
                   prefetch={true}
-                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors"
+                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-purple-300 transition-colors"
                 >
                   Privacy Policy
                 </Link>

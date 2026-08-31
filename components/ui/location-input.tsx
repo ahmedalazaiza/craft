@@ -109,12 +109,12 @@ export function LocationInput({
             type="button"
             onClick={() => handleAutoDetect(true)}
             disabled={isDetecting}
-            className="inline-flex items-center gap-1 text-[11px] font-medium text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-[var(--accent)] transition-colors cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-purple-300 transition-colors cursor-pointer disabled:opacity-50"
             title="Auto-detect location from IP"
           >
             {isDetecting ? (
               <>
-                <Loader2 className="h-3 w-3 animate-spin text-[var(--primary-forest-green)] dark:text-[var(--accent)]" />
+                <Loader2 className="h-3 w-3 animate-spin text-[var(--primary-forest-green)] dark:text-purple-300" />
                 <span>Detecting IP...</span>
               </>
             ) : (

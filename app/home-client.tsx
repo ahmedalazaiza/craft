@@ -121,33 +121,92 @@ export function HomeClient({
   return (
     <div className="flex flex-col gap-12 sm:gap-14 pb-14">
       {/* ========================================================================= */}
-      {/* CENTERED MONUMENTAL HERO SECTION                                          */}
+      {/* CENTERED MONUMENTAL HERO SECTION WITH AMBIENT AURA & PATTERN              */}
       {/* ========================================================================= */}
-      <section className="relative border-b border-[var(--border-neutral)] bg-[var(--bg-screen)] min-h-[calc(100vh-64px)] flex items-center justify-center pt-10 pb-12 sm:pt-14 sm:pb-16 lg:py-20 text-center">
+      <section className="relative overflow-hidden border-b border-[var(--border-neutral)] bg-[var(--bg-screen)] min-h-[calc(100vh-64px)] flex items-center justify-center pt-12 pb-14 sm:pt-16 sm:pb-20 lg:py-24 text-center">
+        {/* Ambient Animated Mesh Glows & Geometric Micro-Pattern */}
+        <div className="absolute inset-0 pointer-events-none -z-10 select-none overflow-hidden">
+          {/* Top Center Purple Luminous Aura */}
+          <motion.div
+            animate={{
+              scale: [1, 1.06, 1],
+              opacity: [0.35, 0.5, 0.35],
+            }}
+            transition={{
+              duration: 8,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="absolute -top-[12%] left-1/2 -translate-x-1/2 w-[650px] sm:w-[900px] h-[450px] sm:h-[600px] rounded-full bg-gradient-to-b from-[#7110DE]/20 via-[#7110DE]/10 to-transparent blur-[130px] dark:from-[#7110DE]/30 dark:via-[#7110DE]/15 dark:to-transparent"
+          />
+
+          {/* Left Subtle Ambient Indigo Aura */}
+          <motion.div
+            animate={{
+              x: [-20, 20, -20],
+              y: [-15, 15, -15],
+            }}
+            transition={{
+              duration: 11,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="absolute top-[20%] left-[8%] w-[380px] h-[380px] rounded-full bg-indigo-500/10 blur-[110px] dark:bg-indigo-500/15"
+          />
+
+          {/* Right Subtle Ambient Fuchsia Aura */}
+          <motion.div
+            animate={{
+              x: [20, -20, 20],
+              y: [15, -15, 15],
+            }}
+            transition={{
+              duration: 13,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="absolute top-[25%] right-[8%] w-[380px] h-[380px] rounded-full bg-fuchsia-500/10 blur-[110px] dark:bg-fuchsia-500/15"
+          />
+
+          {/* Modern Geometric Dot Pattern with Smooth Radial Vignette Mask */}
+          <div
+            className="absolute inset-0 opacity-[0.4] dark:opacity-[0.25]"
+            style={{
+              backgroundImage: `radial-gradient(circle, var(--content-tertiary) 1.2px, transparent 1.2px)`,
+              backgroundSize: "32px 32px",
+              maskImage: "radial-gradient(ellipse 70% 60% at 50% 45%, black 20%, transparent 80%)",
+              WebkitMaskImage: "radial-gradient(ellipse 70% 60% at 50% 45%, black 20%, transparent 80%)",
+            }}
+          />
+        </div>
+
         <div className="mx-auto max-w-5xl px-4 sm:px-6 w-full z-10 flex flex-col items-center justify-center text-center">
           {/* Eyebrow Pill */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="inline-flex items-center gap-2 rounded-full bg-[var(--chip-bg)] px-4 py-1.5 text-xs font-semibold text-[var(--chip-fg)] mb-6 sm:mb-8 shadow-xs border border-white/10 select-none mx-auto"
+            className="inline-flex items-center gap-2 rounded-full bg-[var(--bg-elevated)]/90 px-4 py-1.5 text-xs font-semibold text-[var(--content-primary)] mb-6 sm:mb-8 shadow-xs border border-[var(--border-neutral)] select-none mx-auto backdrop-blur-sm"
           >
-            <Sparkles className="h-3.5 w-3.5 text-white" />
-            <span>Layerat Platform</span>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#7110DE] opacity-60"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#7110DE]"></span>
+            </span>
+            <span className="font-bold">Layerat Platform</span>
             <span className="text-[var(--content-tertiary)]">•</span>
-            <span className="text-[var(--chip-fg)] font-normal">Independent Creators</span>
+            <span className="text-[var(--content-secondary)] font-normal">Independent Creators</span>
           </motion.div>
 
           {/* Monumental Centered Headline */}
           <h1
             className={cn(
               bricolage.className,
-              "text-[44px] sm:text-6xl md:text-7xl lg:text-[84px] xl:text-[92px] font-black tracking-[-0.04em] leading-[1.02] sm:leading-[0.96] text-[var(--primary-forest-green)] dark:text-white text-center w-full flex flex-col items-center justify-center max-w-4xl"
+              "text-[44px] sm:text-6xl md:text-7xl lg:text-[84px] xl:text-[92px] font-black tracking-[-0.04em] leading-[1.02] sm:leading-[0.96] text-[var(--content-primary)] text-center w-full flex flex-col items-center justify-center max-w-4xl"
             )}
           >
             <span className="block w-full text-center overflow-hidden">
               <motion.span
-                className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--primary-forest-green)] dark:text-white text-center"
+                className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--content-primary)] text-center"
                 initial={{ opacity: 0, y: "100%" }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{
@@ -158,7 +217,7 @@ export function HomeClient({
               >
                 <span>Showcase</span>
                 <span>your</span>
-                <span className="inline-flex items-center rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#7110DE] dark:text-white px-3 sm:px-4 py-0.5 sm:py-1 shadow-sm border border-white/10 dark:border-transparent tracking-tight font-black">
+                <span className="inline-flex items-center rounded-2xl bg-[#090C09] text-white dark:bg-[#7110DE]/20 dark:text-white dark:border dark:border-[#7110DE]/40 px-3.5 sm:px-4 py-0.5 sm:py-1 shadow-md shadow-black/10 dark:shadow-[0_0_24px_rgba(113,16,222,0.25)] tracking-tight font-black transition-transform hover:scale-105 duration-200">
                   work<span className="text-[#7110DE] dark:text-white">.</span>
                 </span>
               </motion.span>
@@ -166,7 +225,7 @@ export function HomeClient({
 
             <span className="block w-full text-center overflow-hidden mt-1 sm:mt-2">
               <motion.span
-                className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--primary-forest-green)] dark:text-white text-center"
+                className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--content-primary)] text-center"
                 initial={{ opacity: 0, y: "100%" }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{
@@ -177,7 +236,7 @@ export function HomeClient({
               >
                 <span>Connect</span>
                 <span>with</span>
-                <span className="inline-flex items-center rounded-2xl bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#7110DE] dark:text-white px-3 sm:px-4 py-0.5 sm:py-1 shadow-sm border border-white/10 dark:border-transparent tracking-tight font-black">
+                <span className="inline-flex items-center rounded-2xl bg-[#090C09] text-white dark:bg-[#7110DE]/20 dark:text-white dark:border dark:border-[#7110DE]/40 px-3.5 sm:px-4 py-0.5 sm:py-1 shadow-md shadow-black/10 dark:shadow-[0_0_24px_rgba(113,16,222,0.25)] tracking-tight font-black transition-transform hover:scale-105 duration-200">
                   makers<span className="text-[#7110DE] dark:text-white">.</span>
                 </span>
               </motion.span>
@@ -214,7 +273,7 @@ export function HomeClient({
               className={buttonVariants({
                 variant: "accent",
                 size: "lg",
-                className: "w-full sm:w-auto gap-2 shadow-sm font-bold justify-center px-8",
+                className: "w-full sm:w-auto gap-2 font-bold justify-center px-8 shadow-[0_4px_20px_rgba(113,16,222,0.3)] hover:shadow-[0_6px_28px_rgba(113,16,222,0.45)] transition-all hover:scale-102",
               })}
             >
               <span>Explore Projects</span>
@@ -226,10 +285,10 @@ export function HomeClient({
                 className={buttonVariants({
                   variant: "secondary",
                   size: "lg",
-                  className: "w-full sm:w-auto gap-2 font-semibold justify-center px-8",
+                  className: "w-full sm:w-auto gap-2 font-semibold justify-center px-8 hover:bg-[var(--bg-elevated)] transition-all hover:scale-102",
                 })}
               >
-                <Users className="h-4 w-4 text-[var(--primary-forest-green)]" />
+                <Users className="h-4 w-4 text-[var(--content-primary)]" />
                 <span>Explore Creators</span>
               </Link>
             ) : (
@@ -238,7 +297,7 @@ export function HomeClient({
                 className={buttonVariants({
                   variant: "secondary",
                   size: "lg",
-                  className: "w-full sm:w-auto font-semibold justify-center px-8",
+                  className: "w-full sm:w-auto font-semibold justify-center px-8 hover:bg-[var(--bg-elevated)] transition-all hover:scale-102",
                 })}
               >
                 Join as a Creator
@@ -246,18 +305,21 @@ export function HomeClient({
             )}
           </motion.div>
 
-          {/* Minimalist 3-Point Value Manifesto (Centered Balanced Grid) */}
-          <div className="mt-12 sm:mt-14 pt-10 sm:pt-12 border-t border-[var(--border-neutral)] grid grid-cols-1 sm:grid-cols-3 gap-8 w-full max-w-4xl text-center">
+          {/* Minimalist 3-Point Value Manifesto (Refined Glass Cards) */}
+          <div className="mt-14 sm:mt-16 pt-10 sm:pt-12 border-t border-[var(--border-neutral)] grid grid-cols-1 sm:grid-cols-3 gap-5 w-full max-w-4xl text-center">
             {FEATURE_POINTS.map((pt) => (
-              <div key={pt.num} className="space-y-2.5 flex flex-col items-center text-center">
-                <div className="inline-flex items-center gap-2 rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] px-3 py-1 text-xs font-mono font-bold tracking-wider">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
+              <div
+                key={pt.num}
+                className="group relative rounded-2xl p-5 bg-[var(--bg-elevated)]/40 border border-[var(--border-neutral)]/70 hover:border-[#7110DE]/30 hover:bg-[var(--bg-elevated)] transition-all duration-300 shadow-2xs hover:shadow-xs flex flex-col items-center text-center space-y-2.5 backdrop-blur-xs"
+              >
+                <div className="inline-flex items-center gap-2 rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] px-3 py-1 text-xs font-mono font-bold tracking-wider shadow-2xs group-hover:bg-[#7110DE] group-hover:text-white transition-colors">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#7110DE] group-hover:bg-white transition-colors" />
                   <span>{pt.num}</span>
                 </div>
                 <div className="text-sm font-bold text-[var(--content-primary)]">
                   {pt.title}
                 </div>
-                <p className="text-xs text-[var(--content-tertiary)] leading-relaxed max-w-xs">
+                <p className="text-xs text-[var(--content-secondary)] leading-relaxed max-w-xs">
                   {pt.desc}
                 </p>
               </div>

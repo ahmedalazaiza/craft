@@ -493,7 +493,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
               size="sm"
               disabled={isAnalyzingAI || isProcessingFiles}
               onClick={() => triggerAIAnalysis(galleryImages, true)}
-              className="gap-1.5 font-bold text-xs shadow-xs text-[var(--primary-forest-green)] dark:text-[var(--accent)] border-[var(--primary-forest-green)]/30 hover:bg-[var(--primary-forest-green)]/10"
+              className="gap-1.5 font-bold text-xs shadow-xs text-[var(--content-primary)] dark:text-purple-300 border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)]"
               title="Re-analyze uploaded visuals and auto-fill fields"
             >
               {isAnalyzingAI ? (
@@ -616,7 +616,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                   </div>
 
                   <div className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)]/15 border border-[var(--accent)]/40 px-4 py-2 text-xs font-bold text-[var(--content-primary)] shadow-2xs mt-2">
-                    <Sparkles className="h-4 w-4 text-[var(--primary-forest-green)] dark:text-[var(--accent)] fill-current shrink-0 animate-pulse" />
+                    <Sparkles className="h-4 w-4 text-[var(--primary-forest-green)] dark:text-purple-300 fill-current shrink-0 animate-pulse" />
                     <span>AI will auto-fill your title, description, category & tags</span>
                   </div>
 
@@ -691,7 +691,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
               <div className="flex items-center justify-between">
                 <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] flex items-center gap-1.5">
                   <span>Project Title</span>
-                  <span className="text-[10px] text-[var(--primary-forest-green)] dark:text-[var(--accent)] font-bold bg-[var(--primary-forest-green)]/10 dark:bg-[var(--accent)]/10 px-2 py-0.5 rounded-md">
+                  <span className="text-[10px] text-[var(--primary-forest-green)] dark:text-purple-300 font-bold bg-[var(--primary-forest-green)]/10 dark:bg-purple-900/40 px-2 py-0.5 rounded-md">
                     ✏️ Editable
                   </span>
                 </label>
@@ -753,7 +753,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                       Specialization ({specializations.length}/{availableSubCategories.length})
                     </label>
                     {specializations.length > 0 && (
-                      <span className="text-[10px] font-mono font-bold text-[var(--primary-forest-green)] dark:text-[var(--accent)]">
+                      <span className="text-[10px] font-mono font-bold text-[var(--primary-forest-green)] dark:text-purple-300">
                         {specializations.length} Selected
                       </span>
                     )}
@@ -802,7 +802,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
               {/* Tags Section */}
               <div className="space-y-2">
                 <div className="flex items-center gap-1.5">
-                  <Tag className="h-3.5 w-3.5 text-[var(--primary-forest-green)] dark:text-[var(--accent)]" />
+                  <Tag className="h-3.5 w-3.5 text-[var(--primary-forest-green)] dark:text-purple-300" />
                   <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-primary)]">
                     Project Tags
                   </label>
@@ -853,7 +853,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
               {/* Tools Section */}
               <div className="space-y-2">
                 <div className="flex items-center gap-1.5">
-                  <Wrench className="h-3.5 w-3.5 text-[var(--primary-forest-green)] dark:text-[var(--accent)]" />
+                  <Wrench className="h-3.5 w-3.5 text-[var(--primary-forest-green)] dark:text-purple-300" />
                   <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-primary)]">
                     Tools Used
                   </label>

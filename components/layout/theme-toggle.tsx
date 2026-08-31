@@ -52,7 +52,7 @@ export function ThemeToggle({ compact = false, className }: ThemeToggleProps) {
         aria-label="Toggle theme appearance"
       >
         {mounted && resolvedTheme === "dark" ? (
-          <Sun className="h-4 w-4 text-[var(--accent)]" />
+          <Sun className="h-4 w-4 text-amber-400 dark:text-amber-300" />
         ) : (
           <Moon className="h-4 w-4 text-[var(--primary-forest-green)]" />
         )}

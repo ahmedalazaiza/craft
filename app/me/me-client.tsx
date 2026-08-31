@@ -30,7 +30,7 @@ import {
   Check,
   FolderKanban,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, normalizeUrl, formatDisplayUrl } from "@/lib/utils";
 import { ShareModal } from "@/components/ui/share-modal";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
@@ -116,7 +116,7 @@ export function MeClient() {
       displayName: editName,
       bio: editBio,
       location: editLocation,
-      website: editWebsite,
+      website: normalizeUrl(editWebsite),
     });
     setIsEditingProfile(false);
   };
@@ -192,13 +192,13 @@ export function MeClient() {
                     <>
                       <span className="text-[var(--content-tertiary)]">•</span>
                       <a
-                        href={user.website}
+                        href={normalizeUrl(user.website)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-[var(--content-link)] hover:underline font-medium"
                       >
                         <Globe className="h-3.5 w-3.5" />
-                        <span>Website</span>
+                        <span>{formatDisplayUrl(user.website)}</span>
                         <ExternalLink className="h-3 w-3 opacity-60" />
                       </a>
                     </>
@@ -513,9 +513,10 @@ export function MeClient() {
                     Website URL
                   </label>
                   <Input
+                    type="text"
                     value={editWebsite}
                     onChange={(e) => setEditWebsite(e.target.value)}
-                    placeholder="https://yourportfolio.com"
+                    placeholder="www.yourportfolio.com or https://..."
                   />
                 </div>
 
