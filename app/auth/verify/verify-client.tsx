@@ -83,7 +83,7 @@ export function VerifyClient() {
         <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[28px] p-6 text-center shadow-2xl">
           {verifying ? (
             <div className="py-12 space-y-4">
-              <Loader2 className="h-10 w-10 text-[#7110DE] animate-spin mx-auto" />
+              <Loader2 className="h-10 w-10 text-[#962EE6] animate-spin mx-auto" />
               <h2 className="type-title-subsection text-[var(--content-primary)]">
                 Confirming your email...
               </h2>
@@ -94,7 +94,7 @@ export function VerifyClient() {
           ) : success ? (
             <>
               <CardHeader className="pb-4 pt-4">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-[#7110DE]/20 border border-[#7110DE]/30 text-[#7110DE] dark:text-purple-300 shadow-sm animate-bounce">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-[#962EE6]/20 border border-[#962EE6]/30 text-[#962EE6] dark:text-purple-300 shadow-sm animate-bounce">
                   <CheckCircle2 className="h-8 w-8" />
                 </div>
 

@@ -83,7 +83,7 @@ export function VerificationBanner() {
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#7110DE] text-white shadow-2xs">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#962EE6] text-white shadow-2xs">
               <Mail className="h-3 w-3" />
             </span>
 

@@ -320,7 +320,7 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
                   hasPublishedOnly: false,
                 });
               }}
-              className="mt-5 inline-flex items-center gap-2 rounded-full font-bold bg-[#7110DE] text-white hover:bg-[#5F0EBA] px-6 py-2.5 text-xs shadow-xs transition-colors cursor-pointer"
+              className="mt-5 inline-flex items-center gap-2 rounded-full font-bold bg-[#962EE6] text-white hover:bg-[#5F0EBA] px-6 py-2.5 text-xs shadow-xs transition-colors cursor-pointer"
             >
               Reset All Filters
             </button>

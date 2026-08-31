@@ -147,7 +147,7 @@ export function ResetPasswordClient() {
       <div className="flex min-h-[calc(100vh-14rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
         <FadeIn className="w-full max-w-md text-center">
           <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[28px] p-8">
-            <Loader2 className="h-10 w-10 text-[#7110DE] animate-spin mx-auto mb-4" />
+            <Loader2 className="h-10 w-10 text-[#962EE6] animate-spin mx-auto mb-4" />
             <h2 className="type-title-subsection text-[var(--content-primary)]">
               Verifying reset token...
             </h2>
@@ -213,7 +213,7 @@ export function ResetPasswordClient() {
         <FadeIn className="w-full max-w-md">
           <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[28px] p-6 sm:p-8 text-center shadow-xl">
             <CardHeader className="pb-4 pt-2">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#7110DE]/15 border border-[#7110DE]/30 text-[#7110DE] shadow-sm">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#962EE6]/15 border border-[#962EE6]/30 text-[#962EE6] shadow-sm">
                 <CheckCircle2 className="h-7 w-7" />
               </div>
 

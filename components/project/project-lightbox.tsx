@@ -114,8 +114,8 @@ export function ProjectLightbox({
           >
             {copied ? (
               <>
-                <Check className="h-4 w-4 text-[#7110DE]" />
-                <span className="text-[#7110DE]">Copied!</span>
+                <Check className="h-4 w-4 text-[#962EE6]" />
+                <span className="text-[#962EE6]">Copied!</span>
               </>
             ) : (
               <>

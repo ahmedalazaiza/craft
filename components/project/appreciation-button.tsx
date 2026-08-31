@@ -43,13 +43,13 @@ export function AppreciationButton({
         title={appreciated ? "Remove appreciation" : "Appreciate this project"}
         style={
           appreciated
-            ? { backgroundColor: "#7110DE", color: "#FFFFFF" }
+            ? { backgroundColor: "#962EE6", color: "#FFFFFF" }
             : undefined
         }
         className={cn(
           "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold select-none transition-all duration-150 cursor-pointer shadow-xs border-none",
           appreciated
-            ? "bg-[#7110DE] text-white shadow-sm"
+            ? "bg-[#962EE6] text-white shadow-sm"
             : "bg-[var(--chip-bg)] text-[var(--chip-fg)] hover:bg-[var(--chip-bg-hover)]",
           className
         )}

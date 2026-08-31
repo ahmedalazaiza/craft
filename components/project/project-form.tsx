@@ -641,7 +641,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
             {isAnalyzingAI && (
               <div className="rounded-2xl border border-[var(--border-neutral)] bg-[var(--bg-neutral)]/60 backdrop-blur-xs p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs animate-scale-in">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#7110DE] text-white shrink-0 shadow-2xs">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#962EE6] text-white shrink-0 shadow-2xs">
                     <Sparkles className="h-4 w-4 text-white animate-spin" />
                   </div>
                   <div className="min-w-0">
@@ -769,7 +769,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                           className={cn(
                             "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all border",
                             isSelected
-                              ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-xs dark:bg-[#7110DE] dark:text-white font-bold scale-[1.02]"
+                              ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-xs dark:bg-[#962EE6] dark:text-white font-bold scale-[1.02]"
                               : "bg-[var(--bg-elevated)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)] hover:text-[var(--content-primary)]"
                           )}
                         >
@@ -960,7 +960,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                         #{idx + 1}
                       </span>
                       {isCurrentCover && (
-                        <span className="rounded-lg bg-[#7110DE] text-white px-2.5 py-1 text-xs font-bold shadow-xs flex items-center gap-1">
+                        <span className="rounded-lg bg-[#962EE6] text-white px-2.5 py-1 text-xs font-bold shadow-xs flex items-center gap-1">
                           <Star className="h-3 w-3 fill-white text-white" />
                           <span>Card Cover</span>
                         </span>
@@ -975,7 +975,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                         className={cn(
                           "h-8 px-3 rounded-full text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all",
                           isCurrentCover
-                            ? "bg-[#7110DE] text-white shadow-xs"
+                            ? "bg-[#962EE6] text-white shadow-xs"
                             : "bg-white/20 hover:bg-white text-white hover:text-black"
                         )}
                         title="Set as feed card cover thumbnail"

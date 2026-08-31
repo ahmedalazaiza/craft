@@ -166,7 +166,7 @@ export function SignupClient() {
         <FadeIn className="w-full max-w-lg">
           <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[28px] p-4 sm:p-6 text-center shadow-xl">
             <CardHeader className="pb-4 pt-4">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--accent)]/20 border border-[var(--accent)]/30 text-[#090C09] dark:text-[#7110DE] shadow-sm">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--accent)]/20 border border-[var(--accent)]/30 text-[#090C09] dark:text-[#962EE6] shadow-sm">
                 <Inbox className="h-8 w-8" />
               </div>
 
@@ -195,7 +195,7 @@ export function SignupClient() {
             <CardContent className="space-y-5 pt-2">
               <div className="rounded-2xl bg-[var(--bg-neutral)]/50 border border-[var(--border-neutral)] p-4 text-left text-xs text-[var(--content-secondary)] space-y-2">
                 <p className="font-semibold text-[var(--content-primary)] flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-[#7110DE]" />
+                  <Sparkles className="h-3.5 w-3.5 text-[#962EE6]" />
                   <span>Why verify your email?</span>
                 </p>
                 <ul className="list-disc list-inside space-y-1 text-[11px] text-[var(--content-tertiary)] pl-1">
@@ -340,13 +340,13 @@ export function SignupClient() {
                   <div className="mt-2.5 min-h-[22px]">
                     {isCheckingUsername ? (
                       <div className="flex items-center gap-2 text-[11px] text-[var(--content-secondary)] animate-pulse">
-                        <Loader2 className="h-3.5 w-3.5 text-[#7110DE] animate-spin shrink-0" />
+                        <Loader2 className="h-3.5 w-3.5 text-[#962EE6] animate-spin shrink-0" />
                         <span>Verifying unique handle availability...</span>
                         <span className="h-3.5 w-20 rounded-md bg-[var(--bg-neutral)] inline-block" />
                       </div>
                     ) : (
                       <div className="flex items-center gap-1.5 text-[11px] text-[var(--content-tertiary)] animate-fade-in">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-[#7110DE] shrink-0" />
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[#962EE6] shrink-0" />
                         <span>Your unique handle will be:</span>
                         <span className="font-mono font-semibold text-[var(--content-primary)] bg-[var(--bg-neutral)] px-2 py-0.5 rounded-md">
                           @{resolvedUsername || slugifyUsername(displayName)}

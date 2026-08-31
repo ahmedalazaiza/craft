@@ -201,7 +201,7 @@ export function SearchField({
             <SlidersHorizontal className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Filter</span>
             {filterCount > 0 && (
-              <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#7110DE] px-1 text-[10px] font-bold text-white shadow-xs animate-in zoom-in-50">
+              <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#962EE6] px-1 text-[10px] font-bold text-white shadow-xs animate-in zoom-in-50">
                 {filterCount}
               </span>
             )}

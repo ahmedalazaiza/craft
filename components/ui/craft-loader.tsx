@@ -38,7 +38,7 @@ export function CraftLoader({
             repeat: Infinity,
             ease: "easeInOut",
           }}
-          className="absolute inset-0 rounded-2xl bg-[#7110DE]/25 blur-md"
+          className="absolute inset-0 rounded-2xl bg-[#962EE6]/25 blur-md"
         />
 
         {/* Outer Rotating/Pulsing Geometric Frame */}
@@ -52,7 +52,7 @@ export function CraftLoader({
             repeat: Infinity,
             ease: "easeInOut",
           }}
-          className="absolute inset-0 border border-[#7110DE]/40 bg-[var(--bg-neutral)]/80 backdrop-blur-xs shadow-xs"
+          className="absolute inset-0 border border-[#962EE6]/40 bg-[var(--bg-neutral)]/80 backdrop-blur-xs shadow-xs"
         />
 
         {/* Inner Counter-Rotating Diamond / Square */}
@@ -66,7 +66,7 @@ export function CraftLoader({
             repeat: Infinity,
             ease: "easeInOut",
           }}
-          className="absolute w-1/2 h-1/2 rounded-md border border-[#7110DE]/80 bg-[#7110DE]/10"
+          className="absolute w-1/2 h-1/2 rounded-md border border-[#962EE6]/80 bg-[#962EE6]/10"
         />
 
         {/* Core Glowing Orb */}
@@ -80,7 +80,7 @@ export function CraftLoader({
             repeat: Infinity,
             ease: "easeInOut",
           }}
-          className={cn("rounded-full bg-[#7110DE] shadow-[0_0_10px_#7110DE]", current.dot)}
+          className={cn("rounded-full bg-[#962EE6] shadow-[0_0_10px_#962EE6]", current.dot)}
         />
       </div>
 

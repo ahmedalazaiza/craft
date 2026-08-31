@@ -63,7 +63,7 @@
 :root,
 html[data-theme="light"] {
   /* Brand */
-  --primary-bright-green: #7110DE;
+  --primary-bright-green: #962EE6;
   --primary-forest-green: #090C09;
 
   /* Main CTA Button Tokens — mapped to --primary-forest-green with high-contrast text */
@@ -86,7 +86,7 @@ html[data-theme="light"] {
   --content-link-active: #090C09;
 
   /* Interactive */
-  --accent: #7110DE;
+  --accent: #962EE6;
   --accent-hover: #5F0EBA;
   --accent-active: #4F0B9C;
   --interactive-primary: #090C09;
@@ -127,8 +127,8 @@ html[data-theme="light"] {
 
 html[data-theme="dark"] {
   /* Brand */
-  --primary-bright-green: #7110DE;
-  --primary-forest-green: #7110DE;
+  --primary-bright-green: #962EE6;
+  --primary-forest-green: #962EE6;
 
   /* Main CTA Button Tokens — mapped to purple with light text */
   --btn-cta-bg: var(--primary-forest-green);
@@ -150,7 +150,7 @@ html[data-theme="dark"] {
   --content-link-active: #F3F4F0;
 
   /* Interactive */
-  --accent: #7110DE;
+  --accent: #962EE6;
   --accent-hover: #8A2BE2;
   --accent-active: #5F0EBA;
   --interactive-primary: #090C09;
@@ -169,24 +169,24 @@ html[data-theme="dark"] {
   --bg-elevated: #1A1D18;
   --bg-overlay: #00000080;
   --bg-dimmer: #121511D9;
-  --bg-neutral: #7110DE1A;
-  --bg-neutral-hover: #7110DE29;
-  --bg-neutral-active: #7110DE38;
+  --bg-neutral: #962EE61A;
+  --bg-neutral-hover: #962EE629;
+  --bg-neutral-active: #962EE638;
   --border-neutral: #FFFFFF1F;
   --base-contrast: #090C09;
   --base-dark: #121511;
   --base-light: #F3F4F0;
 
   /* Sentiment */
-  --sentiment-positive: #7110DE;
-  --sentiment-positive-bg: #7110DE;
+  --sentiment-positive: #962EE6;
+  --sentiment-positive-bg: #962EE6;
   --sentiment-positive-fg: #FFFFFF;
   --sentiment-warning: #EDC843;
   --sentiment-negative: #FF6B6B;
 
   /* Input Focus States — Refined Purple */
-  --input-focus-border: #7110DE;
-  --input-focus-ring: rgba(113, 16, 222, 0.28);
+  --input-focus-border: #962EE6;
+  --input-focus-ring: rgba(150, 46, 230, 0.28);
 }
 
 /* Base Body & UI Elements — strictly Inter / var(--font-body) */

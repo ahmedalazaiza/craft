@@ -144,7 +144,7 @@ export function LocationInput({
                 className={cn(
                   "rounded-full px-3 py-1 text-xs font-medium transition-all cursor-pointer inline-flex items-center gap-1",
                   isSelected
-                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#7110DE] dark:text-white font-bold shadow-xs ring-1 ring-black/10 dark:ring-[var(--accent)]"
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#962EE6] dark:text-white font-bold shadow-xs ring-1 ring-black/10 dark:ring-[var(--accent)]"
                     : "border border-[var(--border-neutral)] bg-[var(--bg-screen)] text-[var(--content-secondary)] hover:border-[var(--content-secondary)] hover:bg-[var(--bg-neutral)]"
                 )}
               >
@@ -203,7 +203,7 @@ export function LocationInput({
                 className={cn(
                   "flex items-center justify-between w-full text-left px-3 py-2 text-xs font-medium rounded-[12px] transition-colors cursor-pointer",
                   value?.toLowerCase() === city.toLowerCase()
-                    ? "bg-[#7110DE] text-white font-bold"
+                    ? "bg-[#962EE6] text-white font-bold"
                     : "text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
                 )}
               >

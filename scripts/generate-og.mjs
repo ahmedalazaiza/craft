@@ -21,21 +21,21 @@ async function generateOgImage() {
     <defs>
       <!-- Subtle Ambient Purple Mesh Glows -->
       <radialGradient id="glow-top" cx="50%" cy="0%" r="60%">
-        <stop offset="0%" stop-color="#7110DE" stop-opacity="0.08" />
+        <stop offset="0%" stop-color="#962EE6" stop-opacity="0.08" />
         <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
       </radialGradient>
       <radialGradient id="glow-bottom-right" cx="100%" cy="100%" r="50%">
-        <stop offset="0%" stop-color="#7110DE" stop-opacity="0.06" />
+        <stop offset="0%" stop-color="#962EE6" stop-opacity="0.06" />
         <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
       </radialGradient>
       <radialGradient id="glow-bottom-left" cx="0%" cy="100%" r="50%">
-        <stop offset="0%" stop-color="#7110DE" stop-opacity="0.04" />
+        <stop offset="0%" stop-color="#962EE6" stop-opacity="0.04" />
         <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
       </radialGradient>
 
       <!-- Dot Pattern -->
       <pattern id="dot-grid" width="28" height="28" patternUnits="userSpaceOnUse">
-        <circle cx="14" cy="14" r="1" fill="#7110DE" fill-opacity="0.08" />
+        <circle cx="14" cy="14" r="1" fill="#962EE6" fill-opacity="0.08" />
       </pattern>
     </defs>
 
@@ -56,7 +56,7 @@ async function generateOgImage() {
     <!-- Top Badge -->
     <g transform="translate(${width / 2}, 110)">
       <rect x="-160" y="-18" width="320" height="36" rx="18" fill="#F4F4F5" stroke="#E4E4E7" stroke-width="1" />
-      <circle cx="-135" cy="0" r="4" fill="#7110DE" />
+      <circle cx="-135" cy="0" r="4" fill="#962EE6" />
       <text x="-120" y="5" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="700" fill="#18181B" letter-spacing="0.5">THE CURATED CREATIVE PLATFORM</text>
     </g>
 

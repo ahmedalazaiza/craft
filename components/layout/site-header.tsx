@@ -65,7 +65,7 @@ export function SiteHeader() {
                 className={cn(
                   "relative rounded-full px-3.5 py-1.5 text-xs font-bold transition-all flex items-center gap-1.5",
                   isHome
-                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs border border-black/10 dark:bg-[#7110DE] dark:border-transparent dark:text-white"
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs border border-black/10 dark:bg-[#962EE6] dark:border-transparent dark:text-white"
                     : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
                 )}
               >
@@ -80,7 +80,7 @@ export function SiteHeader() {
                 className={cn(
                   "relative rounded-full px-3.5 py-1.5 text-xs font-bold transition-all flex items-center gap-1.5",
                   isExplore
-                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs border border-black/10 dark:bg-[#7110DE] dark:border-transparent dark:text-white"
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs border border-black/10 dark:bg-[#962EE6] dark:border-transparent dark:text-white"
                     : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
                 )}
               >
@@ -95,7 +95,7 @@ export function SiteHeader() {
                 className={cn(
                   "relative rounded-full px-3.5 py-1.5 text-xs font-bold transition-all flex items-center gap-1.5",
                   isCreators
-                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs border border-black/10 dark:bg-[#7110DE] dark:border-transparent dark:text-white"
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs border border-black/10 dark:bg-[#962EE6] dark:border-transparent dark:text-white"
                     : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
                 )}
               >

@@ -35,7 +35,7 @@ export function VerifiedBadge({
       <BadgeCheck
         className={cn(
           sizeClasses[size],
-          "fill-[#7110DE] text-white transition-transform duration-200 hover:scale-110 shrink-0"
+          "fill-[#962EE6] text-white transition-transform duration-200 hover:scale-110 shrink-0"
         )}
         strokeWidth={2.4}
       />

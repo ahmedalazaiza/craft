@@ -157,7 +157,7 @@ export function OnboardingClient() {
                   className={cn(
                     "flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer",
                     isCurrent
-                      ? "bg-[#7110DE] text-white shadow-xs"
+                      ? "bg-[#962EE6] text-white shadow-xs"
                       : isCompleted
                       ? "bg-[var(--bg-neutral)] text-[var(--content-primary)] border border-[var(--border-neutral)]"
                       : "text-[var(--content-tertiary)] hover:text-[var(--content-secondary)]"
@@ -167,9 +167,9 @@ export function OnboardingClient() {
                     className={cn(
                       "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold",
                       isCurrent
-                        ? "bg-white text-[#7110DE]"
+                        ? "bg-white text-[#962EE6]"
                         : isCompleted
-                        ? "bg-[#7110DE] text-white"
+                        ? "bg-[#962EE6] text-white"
                         : "bg-[var(--bg-neutral)] text-[var(--content-tertiary)]"
                     )}
                   >
@@ -332,7 +332,7 @@ export function OnboardingClient() {
                       transition={{ duration: 0.2 }}
                       className="space-y-6 text-center py-4"
                     >
-                      <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--chip-bg)] border border-[var(--border-neutral)] text-[var(--chip-fg)] dark:bg-[#7110DE]/20 dark:border-[#7110DE]/30 dark:text-[#7110DE] mx-auto shadow-sm animate-bounce">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--chip-bg)] border border-[var(--border-neutral)] text-[var(--chip-fg)] dark:bg-[#962EE6]/20 dark:border-[#962EE6]/30 dark:text-[#962EE6] mx-auto shadow-sm animate-bounce">
                         <Rocket className="h-8 w-8" />
                       </div>
 

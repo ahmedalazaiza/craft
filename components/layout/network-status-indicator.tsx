@@ -60,9 +60,9 @@ export function NetworkStatusIndicator() {
           animate={{ y: 0, opacity: 1, scale: 1 }}
           exit={{ y: 50, opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.25, ease: "easeOut" }}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 rounded-full bg-[var(--chip-bg)]/95 border border-[#7110DE]/40 px-4 py-2.5 text-xs text-white shadow-2xl backdrop-blur-md"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 rounded-full bg-[var(--chip-bg)]/95 border border-[#962EE6]/40 px-4 py-2.5 text-xs text-white shadow-2xl backdrop-blur-md"
         >
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#7110DE] text-white">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#962EE6] text-white">
             <Wifi className="h-3.5 w-3.5" />
           </div>
           <span className="font-medium text-white">

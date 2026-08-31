@@ -111,7 +111,7 @@ export function ForgotPasswordClient() {
         <FadeIn className="w-full max-w-md">
           <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[28px] p-4 sm:p-6 text-center shadow-xl">
             <CardHeader className="pb-4 pt-4">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-[#7110DE]/15 border border-[#7110DE]/30 text-[#7110DE] dark:text-purple-300 shadow-sm">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-[#962EE6]/15 border border-[#962EE6]/30 text-[#962EE6] dark:text-purple-300 shadow-sm">
                 <KeyRound className="h-8 w-8" />
               </div>
 
@@ -140,7 +140,7 @@ export function ForgotPasswordClient() {
             <CardContent className="space-y-5 pt-2">
               <div className="rounded-2xl bg-[var(--bg-neutral)]/60 border border-[var(--border-neutral)] p-4 text-left text-xs text-[var(--content-secondary)] space-y-2">
                 <p className="font-semibold text-[var(--content-primary)] flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-[#7110DE]" />
+                  <Sparkles className="h-3.5 w-3.5 text-[#962EE6]" />
                   <span>Important tips:</span>
                 </p>
                 <ul className="list-disc list-inside space-y-1 text-[11px] text-[var(--content-tertiary)] pl-1">
@@ -212,7 +212,7 @@ export function ForgotPasswordClient() {
 
                 <Link
                   href="/signup"
-                  className="font-semibold text-[#7110DE] hover:underline"
+                  className="font-semibold text-[#962EE6] hover:underline"
                 >
                   Create new account &rarr;
                 </Link>
@@ -312,7 +312,7 @@ export function ForgotPasswordClient() {
 
               <Link
                 href="/signup"
-                className="font-semibold text-[#7110DE] hover:underline"
+                className="font-semibold text-[#962EE6] hover:underline"
               >
                 Create account
               </Link>

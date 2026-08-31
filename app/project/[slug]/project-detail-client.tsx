@@ -311,13 +311,13 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                   onClick={handleToggleAppreciation}
                   style={
                     isAppreciated
-                      ? { backgroundColor: "#7110DE", color: "#FFFFFF" }
+                      ? { backgroundColor: "#962EE6", color: "#FFFFFF" }
                       : undefined
                   }
                   className={cn(
                     "h-12 w-12 rounded-full flex flex-col items-center justify-center transition-all cursor-pointer select-none group border-0 shadow-xs",
                     isAppreciated
-                      ? "bg-[#7110DE] text-white shadow-md scale-105"
+                      ? "bg-[#962EE6] text-white shadow-md scale-105"
                       : "bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
                   )}
                   title={isAppreciated ? "Unlike project" : "Like project"}
@@ -535,13 +535,13 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
           onClick={handleToggleAppreciation}
           style={
             isAppreciated
-              ? { backgroundColor: "#7110DE", color: "#FFFFFF" }
+              ? { backgroundColor: "#962EE6", color: "#FFFFFF" }
               : undefined
           }
           className={cn(
             "h-12 min-h-[48px] px-4 rounded-full flex items-center gap-2 text-xs font-bold transition-all cursor-pointer select-none border-0",
             isAppreciated
-              ? "bg-[#7110DE] text-white shadow-md"
+              ? "bg-[#962EE6] text-white shadow-md"
               : "bg-[var(--bg-neutral)] text-[var(--content-primary)]"
           )}
         >

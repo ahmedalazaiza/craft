@@ -424,7 +424,7 @@ export function FilterDrawer({
                         className={cn(
                           "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-all cursor-pointer",
                           isSelected
-                            ? "bg-[#7110DE] text-white ring-1 ring-[#7110DE] font-bold"
+                            ? "bg-[#962EE6] text-white ring-1 ring-[#962EE6] font-bold"
                             : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:bg-[var(--bg-neutral-hover)]"
                         )}
                       >

@@ -43,7 +43,7 @@ export function MobileBottomNav() {
           {isHome && (
             <motion.div
               layoutId="mobile-nav-pill"
-              className="absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--primary-forest-green)] dark:bg-[#7110DE]"
+              className="absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--primary-forest-green)] dark:bg-[#962EE6]"
               transition={{ type: "spring", stiffness: 380, damping: 30 }}
             />
           )}
@@ -65,7 +65,7 @@ export function MobileBottomNav() {
           {isExplore && (
             <motion.div
               layoutId="mobile-nav-pill"
-              className="absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--primary-forest-green)] dark:bg-[#7110DE]"
+              className="absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--primary-forest-green)] dark:bg-[#962EE6]"
               transition={{ type: "spring", stiffness: 380, damping: 30 }}
             />
           )}
@@ -102,7 +102,7 @@ export function MobileBottomNav() {
           {isCreators && (
             <motion.div
               layoutId="mobile-nav-pill"
-              className="absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--primary-forest-green)] dark:bg-[#7110DE]"
+              className="absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--primary-forest-green)] dark:bg-[#962EE6]"
               transition={{ type: "spring", stiffness: 380, damping: 30 }}
             />
           )}
@@ -120,7 +120,7 @@ export function MobileBottomNav() {
           )}
         >
           {user ? (
-            <div className={cn("relative h-6 w-6 rounded-full overflow-hidden border border-[var(--border-neutral)] transition-all mt-0.5", isMe && "ring-2 ring-[var(--primary-forest-green)] dark:ring-[#7110DE]")}>
+            <div className={cn("relative h-6 w-6 rounded-full overflow-hidden border border-[var(--border-neutral)] transition-all mt-0.5", isMe && "ring-2 ring-[var(--primary-forest-green)] dark:ring-[#962EE6]")}>
               <Image
                 src={getValidAvatarUrl(user.avatarUrl)}
                 alt={user.displayName}
@@ -136,7 +136,7 @@ export function MobileBottomNav() {
           {isMe && (
             <motion.div
               layoutId="mobile-nav-pill"
-              className="absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--primary-forest-green)] dark:bg-[#7110DE]"
+              className="absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--primary-forest-green)] dark:bg-[#962EE6]"
               transition={{ type: "spring", stiffness: 380, damping: 30 }}
             />
           )}

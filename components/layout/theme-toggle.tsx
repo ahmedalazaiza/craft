@@ -77,7 +77,7 @@ export function ThemeToggle({ compact = false, className }: ThemeToggleProps) {
                 className={cn(
                   "flex w-full items-center justify-between gap-2 rounded-xl px-2.5 py-1.5 text-xs font-semibold transition-colors cursor-pointer text-left focus-visible:outline-hidden",
                   isSelected
-                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#7110DE] dark:text-white font-bold"
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#962EE6] dark:text-white font-bold"
                     : "bg-transparent text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
                 )}
               >
