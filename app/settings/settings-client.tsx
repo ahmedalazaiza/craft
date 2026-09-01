@@ -368,7 +368,7 @@ export function SettingsClient() {
   }
 
   return (
-    <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-6 sm:py-10">
+    <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-4 sm:py-6">
       <FadeIn>
         {/* Breadcrumbs */}
         <Breadcrumbs

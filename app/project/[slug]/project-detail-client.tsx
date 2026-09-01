@@ -139,7 +139,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
   }, [project.coverImage, project.galleryImages]);
 
   return (
-    <article className="mx-auto max-w-[1400px] px-4 sm:px-6 py-6 pb-28 sm:pb-32">
+    <article className="mx-auto max-w-[1580px] px-4 sm:px-6 py-4 sm:py-6 pb-28 sm:pb-32">
       <FadeIn>
         {/* Breadcrumb Navigation */}
         <Breadcrumbs

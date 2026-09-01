@@ -599,7 +599,13 @@ export async function deleteProjectFromDb(id: string): Promise<boolean> {
       }
     }
 
-    // 2. Delete the project database record
+    // 2. Explicitly hard delete associated comments and appreciations
+    await Promise.allSettled([
+      supabase.from("comments").delete().eq("project_id", id),
+      supabase.from("appreciations").delete().eq("project_id", id),
+    ]);
+
+    // 3. Delete the project database record
     const { error } = await supabase
       .from("projects")
       .delete()
@@ -968,9 +974,16 @@ export async function deleteUserAccountInDb(userId: string): Promise<{ success: 
       console.warn("Storage purge warning during account deletion:", storageErr);
     }
 
-    // 2. Delete the profile record from public.profiles table
-    // All related tables (projects, appreciations, comments, follows, notifications)
-    // have ON DELETE CASCADE foreign key constraints on public.profiles(id).
+    // 2. Explicitly hard delete all user records across all tables (Fail-safe for full cleanup)
+    await Promise.allSettled([
+      supabase.from("notifications").delete().or(`recipient_id.eq.${userId},actor_id.eq.${userId}`),
+      supabase.from("follows").delete().or(`follower_id.eq.${userId},following_id.eq.${userId}`),
+      supabase.from("appreciations").delete().eq("user_id", userId),
+      supabase.from("comments").delete().eq("user_id", userId),
+      supabase.from("projects").delete().eq("creator_id", userId),
+    ]);
+
+    // 3. Delete the profile record from public.profiles table
     const { error: profileDeleteError } = await supabase
       .from("profiles")
       .delete()
@@ -981,7 +994,8 @@ export async function deleteUserAccountInDb(userId: string): Promise<{ success: 
       return { success: false, error: profileDeleteError.message };
     }
 
-    // 3. Sign out the user session immediately
+    // 4. Invalidate application cache and sign out session
+    invalidateAppCache();
     await supabase.auth.signOut();
 
     return { success: true };

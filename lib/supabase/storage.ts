@@ -152,33 +152,46 @@ export async function uploadMultipleMediaFiles(
 }
 
 /**
- * Delete media files from Supabase Storage bucket by their CDN URLs
+ * Delete media files from Supabase Storage bucket by their CDN URLs (Hard Delete)
  */
 export async function deleteStorageFiles(
   urls: string[],
-  bucket: "project-media" | "avatars" = "project-media"
+  defaultBucket: "project-media" | "avatars" = "project-media"
 ): Promise<boolean> {
   try {
     if (!urls || urls.length === 0) return true;
 
-    // Filter and extract storage paths from Supabase URLs
-    const paths = urls
-      .map((url) => {
-        if (!url || typeof url !== "string") return null;
-        // Matches /storage/v1/object/public/{bucket}/{path}
-        const match = url.match(/\/storage\/v1\/object\/public\/[^/]+\/(.+)$/);
-        return match ? match[1] : null;
-      })
-      .filter((p): p is string => Boolean(p));
+    // Group paths by bucket
+    const bucketPaths: Record<string, string[]> = {};
 
-    if (paths.length === 0) return true;
-
-    const { error } = await supabase.storage.from(bucket).remove(paths);
-    if (error) {
-      console.warn(`Supabase Storage remove warning:`, error.message);
-      return false;
+    for (const url of urls) {
+      if (!url || typeof url !== "string") continue;
+      // Extract bucket and path from URL: /storage/v1/object/public/{bucket}/{path}
+      const match = url.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/);
+      if (match) {
+        const bucket = match[1];
+        const path = match[2].split("?")[0]; // Remove query params if any
+        if (!bucketPaths[bucket]) bucketPaths[bucket] = [];
+        bucketPaths[bucket].push(path);
+      } else if (!url.startsWith("http://") && !url.startsWith("https://") && !url.startsWith("data:")) {
+        // Plain path passed
+        if (!bucketPaths[defaultBucket]) bucketPaths[defaultBucket] = [];
+        bucketPaths[defaultBucket].push(url);
+      }
     }
-    return true;
+
+    let allSuccess = true;
+    for (const [bucket, paths] of Object.entries(bucketPaths)) {
+      if (paths.length > 0) {
+        const { error } = await supabase.storage.from(bucket).remove(paths);
+        if (error) {
+          console.warn(`Supabase Storage remove warning for bucket ${bucket}:`, error.message);
+          allSuccess = false;
+        }
+      }
+    }
+
+    return allSuccess;
   } catch (err) {
     console.error("Failed to delete files from Supabase storage:", err);
     return false;

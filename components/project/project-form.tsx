@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { uploadMultipleMediaFiles } from "@/lib/supabase/storage";
+import { uploadMultipleMediaFiles, deleteStorageFiles } from "@/lib/supabase/storage";
 import {
   UploadCloud,
   Check,
@@ -185,6 +185,12 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     setGalleryImages(updated);
     if (coverImage === removedUrl) {
       setCoverImage(updated[0] || "");
+    }
+    // Hard delete image immediately from Supabase Storage bucket
+    if (removedUrl) {
+      deleteStorageFiles([removedUrl], "project-media").catch((err) =>
+        console.warn("Storage hard delete warning:", err)
+      );
     }
   };
 
@@ -402,6 +408,21 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
     setIsSaving(true);
     try {
+      // Clean up any previously uploaded images that were removed during this edit session
+      if (initialData) {
+        const previousImages = [
+          initialData.coverImage,
+          ...(initialData.galleryImages || []),
+        ].filter(Boolean);
+        const currentImageSet = new Set([finalCover, ...galleryImages]);
+        const orphanedImages = previousImages.filter((url) => !currentImageSet.has(url));
+        if (orphanedImages.length > 0) {
+          deleteStorageFiles(orphanedImages, "project-media").catch((e) =>
+            console.warn("Storage hard delete orphaned warning:", e)
+          );
+        }
+      }
+
       const saved = await saveProject({
         id: initialData?.id,
         title: title.trim(),
