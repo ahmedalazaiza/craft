@@ -392,15 +392,40 @@ export function SignupClient() {
                 <PasswordStrengthIndicator password={password} />
               </div>
 
-              <Button
-                type="submit"
-                variant="primary"
-                disabled={loading || !isFormValid}
-                className="w-full mt-2 font-semibold shadow-xs"
-              >
-                {loading ? "Creating account..." : "Join as a Creator"}
-                <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
+              <div className="pt-1">
+                <Button
+                  type="submit"
+                  variant="primary"
+                  disabled={loading || !isFormValid}
+                  className="w-full font-bold shadow-xs gap-2"
+                >
+                  {loading ? "Creating account..." : "Join as a Creator"}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+
+                <p className="mt-3 text-[11px] text-center text-[var(--content-tertiary)] leading-relaxed px-1">
+                  By clicking <strong className="font-semibold text-[var(--content-secondary)]">Join as a Creator</strong>, you agree to Layerat&apos;s{" "}
+                  <Link
+                    href="/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    prefetch={true}
+                    className="font-semibold text-[var(--content-primary)] hover:text-[#962EE6] underline underline-offset-2 transition-colors"
+                  >
+                    Terms of Use
+                  </Link>{" "}
+                  and acknowledge our{" "}
+                  <Link
+                    href="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    prefetch={true}
+                    className="font-semibold text-[var(--content-primary)] hover:text-[#962EE6] underline underline-offset-2 transition-colors"
+                  >
+                    Privacy Policy
+                  </Link>.
+                </p>
+              </div>
             </form>
 
             <div className="text-center pt-2">
