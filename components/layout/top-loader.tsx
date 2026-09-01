@@ -12,28 +12,14 @@ export function TopLoader() {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // When path or query params change, or initial db loading starts
-    if (isLoadingDb) {
-      setLoading(true);
-      setProgress(25);
-
-      const t1 = setTimeout(() => setProgress(65), 150);
-      const t2 = setTimeout(() => setProgress(85), 350);
-
-      return () => {
-        clearTimeout(t1);
-        clearTimeout(t2);
-      };
-    } else {
-      // Completed
-      setProgress(100);
-      const t3 = setTimeout(() => {
-        setLoading(false);
-        setProgress(0);
-      }, 300);
-      return () => clearTimeout(t3);
-    }
-  }, [pathname, searchParams, isLoadingDb]);
+    // Immediate completion on route change without lag
+    setProgress(100);
+    const timer = setTimeout(() => {
+      setLoading(false);
+      setProgress(0);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [pathname, searchParams]);
 
   if (!loading && progress === 0) return null;
 

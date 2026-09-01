@@ -53,12 +53,17 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
   return (
     <>
       <MotionCardWrapper className={className}>
-        <div
-          onClick={handleCardClick}
-          className="group flex flex-col h-full rounded-[20px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] overflow-hidden transition-all duration-200 hover:shadow-[0_8px_30px_rgba(14,15,12,0.06)] dark:hover:shadow-none dark:hover:border-[var(--content-primary)]/40 cursor-pointer select-none"
-        >
+        <div className="group relative flex flex-col h-full rounded-[20px] bg-[var(--bg-screen)] border border-[var(--border-neutral)] overflow-hidden transition-all duration-200 hover:shadow-[0_8px_30px_rgba(14,15,12,0.06)] dark:hover:shadow-none dark:hover:border-[var(--content-primary)]/40 select-none">
+          {/* Main Card Stretched Link for Instant Next.js Prefetching & 0ms Navigation */}
+          <Link
+            href={`/project/${liveProject.slug}`}
+            prefetch={true}
+            className="absolute inset-0 z-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#962EE6]"
+            aria-label={`View project: ${liveProject.title}`}
+          />
+
           {/* Dominant 4:3 Cover Image */}
-          <div className="relative aspect-[4/3] w-full overflow-hidden bg-[var(--bg-neutral)] block">
+          <div className="relative aspect-[4/3] w-full overflow-hidden bg-[var(--bg-neutral)] block pointer-events-none">
             <Image
               src={liveProject.coverImage}
               alt={liveProject.title}
@@ -68,27 +73,25 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
               priority={priority || liveProject.featured}
             />
 
-            {/* Solid Category Badge Top-Left (Readable on photos) */}
-            <div className="absolute top-3.5 left-3.5 z-10">
+            {/* Solid Category Badge Top-Left */}
+            <div className="absolute top-3.5 left-3.5 z-10 pointer-events-auto">
               <Badge variant="accent" size="default">
                 {liveProject.category}
               </Badge>
             </div>
 
             {/* Action Buttons Top-Right: Owner Edit + Quick Share + Appreciation */}
-            <div className="absolute top-3.5 right-3.5 z-10 flex items-center gap-1.5">
+            <div className="absolute top-3.5 right-3.5 z-10 flex items-center gap-1.5 pointer-events-auto">
               {isOwner && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    router.push(`/me/projects/${liveProject.id}`);
-                  }}
+                <Link
+                  href={`/me/projects/${liveProject.id}`}
+                  prefetch={true}
                   className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--bg-elevated)]/90 backdrop-blur-xs text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] transition-all shadow-xs cursor-pointer border border-[var(--border-neutral)]"
                   title="Edit case study"
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <Edit3 className="h-3.5 w-3.5" />
-                </button>
+                </Link>
               )}
 
               <button
@@ -109,7 +112,7 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
           </div>
 
           {/* Content Area */}
-          <div className="flex flex-1 flex-col justify-between p-4 sm:p-6">
+          <div className="relative z-0 flex flex-1 flex-col justify-between p-4 sm:p-6 pointer-events-none">
             <div>
               <h3 className="type-title-body line-clamp-1 text-[var(--content-primary)] group-hover:text-[var(--primary-forest-green)] transition-colors">
                 {liveProject.title}
@@ -120,9 +123,11 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
             </div>
 
             {/* Divider & Creator Row */}
-            <div className="mt-4 pt-3.5 border-t border-[var(--border-neutral)] flex items-center justify-between">
-              <div
-                onClick={handleCreatorClick}
+            <div className="mt-4 pt-3.5 border-t border-[var(--border-neutral)] flex items-center justify-between pointer-events-auto relative z-10">
+              <Link
+                href={`/u/${liveProject.creator.username}`}
+                prefetch={true}
+                onClick={(e) => e.stopPropagation()}
                 className="flex items-center gap-2 hover:opacity-80 transition-opacity group/creator cursor-pointer"
               >
                 <div className="relative h-7 w-7 shrink-0">
@@ -143,9 +148,9 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
                   </span>
                   {liveProject.creator.isVerified !== false && <VerifiedBadge size="sm" />}
                 </div>
-              </div>
+              </Link>
 
-              <span className="type-label text-[var(--content-tertiary)] shrink-0">
+              <span className="type-label text-[var(--content-tertiary)] shrink-0 pointer-events-none">
                 {liveProject.creator.city || liveProject.creator.location}
               </span>
             </div>
