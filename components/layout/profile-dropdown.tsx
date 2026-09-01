@@ -140,6 +140,7 @@ export function ProfileDropdown() {
             <div className="p-1.5 space-y-0.5">
               <Link
                 href={`/u/${user.username}`}
+                prefetch={true}
                 onClick={() => setIsOpen(false)}
                 className="flex items-center justify-between gap-2.5 rounded-[12px] px-3 py-2 text-xs font-medium text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-colors"
               >
@@ -152,6 +153,7 @@ export function ProfileDropdown() {
 
               <Link
                 href="/settings"
+                prefetch={true}
                 onClick={() => setIsOpen(false)}
                 className="flex items-center justify-between gap-2.5 rounded-[12px] px-3 py-2 text-xs font-medium text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-colors"
               >

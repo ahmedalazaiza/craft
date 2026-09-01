@@ -240,6 +240,7 @@ export function NotificationsPopover() {
                       <p className="text-xs leading-snug">
                         <Link
                           href={`/u/${notif.actor.username}`}
+                          prefetch={true}
                           onClick={(e) => {
                             e.stopPropagation();
                             setIsOpen(false);
@@ -254,6 +255,7 @@ export function NotificationsPopover() {
                             {notif.project && (
                               <Link
                                 href={`/project/${notif.project.slug}`}
+                                prefetch={true}
                                 onClick={(e) => {
                                    e.stopPropagation();
                                   setIsOpen(false);
@@ -271,6 +273,7 @@ export function NotificationsPopover() {
                             {notif.project && (
                               <Link
                                 href={`/project/${notif.project.slug}`}
+                                prefetch={true}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setIsOpen(false);

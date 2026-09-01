@@ -52,6 +52,7 @@ export function CreatorListItem({
       <>
         <Link
           href={`/u/${creator.username}`}
+          prefetch={true}
           className={cn(
             "flex items-center justify-between p-3 rounded-[14px] bg-[var(--bg-screen)] hover:bg-[var(--bg-neutral)] border border-[var(--border-neutral)] transition-all",
             className
@@ -92,6 +93,7 @@ export function CreatorListItem({
     <>
       <Link
         href={`/u/${creator.username}`}
+        prefetch={true}
         className={cn(
           "group flex flex-col justify-between rounded-2xl bg-white dark:bg-[#141713] border border-neutral-200 dark:border-neutral-800 p-4 sm:p-6 transition-all duration-200 hover:shadow-md hover:border-neutral-300 dark:hover:border-neutral-700",
           className

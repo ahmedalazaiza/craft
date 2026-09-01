@@ -243,6 +243,7 @@ export function SearchField({
                     <Link
                       key={project.id}
                       href={`/project/${project.slug}`}
+                      prefetch={true}
                       onClick={() => setIsOpen(false)}
                       className={cn(
                         "flex items-center justify-between gap-3 rounded-[12px] p-2.5 transition-colors",
@@ -295,6 +296,7 @@ export function SearchField({
                     <Link
                       key={creator.id}
                       href={`/u/${creator.username}`}
+                      prefetch={true}
                       onClick={() => setIsOpen(false)}
                       className={cn(
                         "flex items-center justify-between gap-3 rounded-[12px] p-2.5 transition-colors",

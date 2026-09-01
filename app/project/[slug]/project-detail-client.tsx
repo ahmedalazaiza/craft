@@ -209,6 +209,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--content-secondary)]">
                 <Link
                   href={`/u/${project.creator.username}`}
+                  prefetch={true}
                   className="flex items-center gap-2 hover:opacity-80 transition-opacity font-bold text-[var(--content-primary)]"
                 >
                   <div className="relative h-6 w-6 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-1 ring-[var(--border-neutral)]">
@@ -271,6 +272,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                   {/* Edit Case Study Link */}
                   <Link
                     href={`/me/projects/${project.id}`}
+                    prefetch={true}
                     className={buttonVariants({
                       variant: "secondary",
                       size: "default",
