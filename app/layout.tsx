@@ -10,6 +10,7 @@ import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { TopLoader } from "@/components/layout/top-loader";
 import { PageLoadingOverlay } from "@/components/layout/page-loading-overlay";
 import { NetworkStatusIndicator } from "@/components/layout/network-status-indicator";
+import { CookieConsentBanner } from "@/components/ui/cookie-consent-banner";
 
 import Script from "next/script";
 
@@ -159,6 +160,7 @@ export default function RootLayout({
             <SiteFooter />
             <MobileBottomNav />
             <NetworkStatusIndicator />
+            <CookieConsentBanner />
           </SessionProvider>
         </ThemeProvider>
       </body>

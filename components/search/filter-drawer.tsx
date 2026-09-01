@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { ProjectCategory, ProjectMedium } from "@/lib/types";
 import {
   MASTER_TAXONOMY,
@@ -168,17 +170,43 @@ export function FilterDrawer({
     });
   };
 
-  if (!isOpen) return null;
+  const [isMounted, setIsMounted] = useState(false);
 
-  return (
-    <div
-      className="fixed inset-0 z-[100] flex items-end sm:items-stretch justify-center sm:justify-end bg-[var(--base-dark)]/50 backdrop-blur-xs transition-opacity p-0"
-      onClick={onClose}
-    >
-      <div
-        className="relative flex max-h-[90vh] sm:max-h-full h-auto sm:h-full w-full max-w-lg flex-col rounded-t-[28px] sm:rounded-none bg-[var(--bg-screen)] border-t sm:border-t-0 sm:border-l border-[var(--border-neutral)] shadow-2xl p-5 sm:p-8 overflow-y-auto pb-safe"
-        onClick={(e) => e.stopPropagation()}
-      >
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Lock body scroll while filter drawer is open to prevent page layout jumps
+  useEffect(() => {
+    if (!isOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isOpen]);
+
+  if (!isMounted) return null;
+
+  return createPortal(
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-[99999] flex items-end sm:items-stretch justify-center sm:justify-end bg-[var(--base-dark)]/50 backdrop-blur-xs p-0"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ y: "100%", x: 0 }}
+            animate={{ y: 0, x: 0 }}
+            exit={{ y: "100%", x: 0 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="relative flex max-h-[90vh] sm:max-h-full h-auto sm:h-full w-full max-w-lg flex-col rounded-t-[28px] sm:rounded-none bg-[var(--bg-screen)] border-t sm:border-t-0 sm:border-l border-[var(--border-neutral)] shadow-2xl p-5 sm:p-8 overflow-y-auto pb-safe"
+            onClick={(e) => e.stopPropagation()}
+          >
         {/* Mobile Pull Handle Indicator */}
         <div className="w-12 h-1 rounded-full bg-[var(--border-neutral)] mx-auto mb-3 sm:hidden shrink-0" />
 
@@ -624,7 +652,10 @@ export function FilterDrawer({
             <span>Apply Filters</span>
           </Button>
         </div>
-      </div>
-    </div>
-  );
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>,
+document.body
+);
 }

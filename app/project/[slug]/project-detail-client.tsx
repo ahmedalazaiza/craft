@@ -170,6 +170,29 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
           </div>
         )}
 
+        {/* Private Draft Notice Banner for Author */}
+        {isDraft && isAuthor && (
+          <div className="mb-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-900 dark:text-amber-200 shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+              <p className="text-xs sm:text-sm font-semibold">
+                Private Draft Monograph • Visible only to you until published.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="accent"
+              size="sm"
+              disabled={isPublishing}
+              onClick={handlePublishProject}
+              className="text-xs font-bold gap-1.5 shrink-0"
+            >
+              {isPublishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+              <span>Publish Live</span>
+            </Button>
+          </div>
+        )}
+
         {/* =================================================================== */}
         {/* 1. PROJECT HEADER BAR: Info, Tags & Tools Chip Matrix, Metas        */}
         {/* =================================================================== */}
@@ -305,63 +328,72 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
             {/* ------------------------------------------------------------- */}
             {/* LEFT FLOATING STICKY ACTION RAIL (DESKTOP)                     */}
             {/* ------------------------------------------------------------- */}
-            <aside className="hidden md:flex flex-col items-center sticky top-28 shrink-0 z-30 select-none">
-              <div className="flex flex-col items-center gap-3 p-2 rounded-full bg-[var(--bg-screen)] border border-[var(--border-neutral)] shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
-                {/* 1. Like / Appreciation with Live Count */}
-                <button
-                  type="button"
-                  onClick={handleToggleAppreciation}
-                  style={
-                    isAppreciated
-                      ? { backgroundColor: "#962EE6", color: "#FFFFFF" }
-                      : undefined
-                  }
-                  className={cn(
-                    "h-12 w-12 rounded-full flex flex-col items-center justify-center transition-all cursor-pointer select-none group border-0 shadow-xs",
-                    isAppreciated
-                      ? "bg-[#962EE6] text-white shadow-md scale-105"
-                      : "bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
-                  )}
-                  title={isAppreciated ? "Unlike project" : "Like project"}
-                >
-                  <Heart
-                    className={cn(
-                      "h-4 w-4 transition-transform duration-200 group-hover:scale-110",
-                      isAppreciated ? "fill-white text-white scale-110" : "text-[var(--content-primary)]"
-                    )}
-                  />
-                  <span
-                    className={cn(
-                      "text-[10px] font-mono font-bold mt-0.5 leading-none",
-                      isAppreciated ? "text-white" : "text-[var(--content-primary)]"
-                    )}
-                  >
-                    {project.appreciations}
-                  </span>
-                </button>
+            <aside className="hidden md:flex flex-col items-center sticky top-28 h-fit shrink-0 z-20">
+              <div className="flex flex-col items-center gap-3 p-2 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)]/90 backdrop-blur-md shadow-sm">
+                {!isDraft && (
+                  <>
+                    {/* 1. Appreciation Button */}
+                    <button
+                      type="button"
+                      onClick={handleToggleAppreciation}
+                      disabled={Boolean(isAuthor)}
+                      style={
+                        isAppreciated
+                          ? { backgroundColor: "#962EE6", color: "#FFFFFF" }
+                          : undefined
+                      }
+                      className={cn(
+                        "h-12 w-12 rounded-full flex flex-col items-center justify-center transition-all cursor-pointer select-none group border-0 shadow-xs",
+                        isAppreciated
+                          ? "bg-[#962EE6] text-white shadow-md scale-105"
+                          : "bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]",
+                        isAuthor && "opacity-60 cursor-not-allowed"
+                      )}
+                      title={isAuthor ? "You cannot appreciate your own project" : isAppreciated ? "Unlike project" : "Appreciate project"}
+                      aria-label={isAuthor ? "You cannot appreciate your own project" : isAppreciated ? `Remove appreciation (${project.appreciations})` : `Appreciate project (${project.appreciations})`}
+                    >
+                      <Heart
+                        className={cn(
+                          "h-4 w-4 transition-transform duration-200 group-hover:scale-110",
+                          isAppreciated ? "fill-white text-white scale-110" : "text-[var(--content-primary)]"
+                        )}
+                      />
+                      <span
+                        className={cn(
+                          "text-[10px] font-mono font-bold mt-0.5 leading-none",
+                          isAppreciated ? "text-white" : "text-[var(--content-primary)]"
+                        )}
+                      >
+                        {project.appreciations}
+                      </span>
+                    </button>
 
-                {/* 2. Comment Button */}
-                <button
-                  type="button"
-                  onClick={handleScrollToComments}
-                  className="h-12 w-12 rounded-full bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] flex flex-col items-center justify-center transition-all cursor-pointer select-none group"
-                  title="Jump to discussion"
-                >
-                  <MessageSquare className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-                  <span className="text-[10px] font-mono font-bold mt-0.5 leading-none">
-                    {project.comments?.length || 0}
-                  </span>
-                </button>
+                    {/* 2. Comment Button */}
+                    <button
+                      type="button"
+                      onClick={handleScrollToComments}
+                      className="h-12 w-12 rounded-full bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] flex flex-col items-center justify-center transition-all cursor-pointer select-none group"
+                      title="Jump to discussion"
+                      aria-label="Jump to discussion"
+                    >
+                      <MessageSquare className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                      <span className="text-[10px] font-mono font-bold mt-0.5 leading-none">
+                        {project.comments?.length || 0}
+                      </span>
+                    </button>
 
-                {/* 3. Share Button */}
-                <button
-                  type="button"
-                  onClick={() => setIsShareModalOpen(true)}
-                  className="h-12 w-12 rounded-full bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] flex items-center justify-center transition-all cursor-pointer select-none group"
-                  title="Share project"
-                >
-                  <Share2 className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-                </button>
+                    {/* 3. Share Button */}
+                    <button
+                      type="button"
+                      onClick={() => setIsShareModalOpen(true)}
+                      className="h-12 w-12 rounded-full bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] flex items-center justify-center transition-all cursor-pointer select-none group"
+                      title="Share project"
+                      aria-label="Share project"
+                    >
+                      <Share2 className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                    </button>
+                  </>
+                )}
 
                 {/* 4. Author Action Icons */}
                 {isAuthor && (
@@ -371,8 +403,9 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                         type="button"
                         onClick={handlePublishProject}
                         disabled={isPublishing}
-                        className="h-12 w-12 rounded-full bg-[var(--primary-forest-green)] text-white hover:opacity-90 flex items-center justify-center transition-all cursor-pointer select-none group shadow-xs"
-                        title="Publish Project"
+                        className="h-12 w-12 rounded-full bg-[#962EE6] text-white hover:opacity-90 flex items-center justify-center transition-all cursor-pointer select-none group shadow-xs"
+                        title="Publish Project Live"
+                        aria-label="Publish Project Live"
                       >
                         {isPublishing ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -386,6 +419,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                       href={`/me/projects/${project.id}`}
                       className="h-12 w-12 rounded-full bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] flex items-center justify-center transition-all cursor-pointer select-none group"
                       title="Edit Case Study"
+                      aria-label="Edit Case Study"
                     >
                       <Edit3 className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
                     </Link>
@@ -393,8 +427,9 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                     <button
                       type="button"
                       onClick={() => setIsDeleteModalOpen(true)}
-                      className="h-12 w-12 rounded-full bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 flex items-center justify-center transition-all cursor-pointer select-none group"
+                      className="h-12 w-12 rounded-full bg-red-500/10 text-red-600 hover:bg-red-500/20 flex items-center justify-center transition-all cursor-pointer select-none group"
                       title="Delete Project"
+                      aria-label="Delete Project"
                     >
                       <Trash2 className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
                     </button>
@@ -515,13 +550,15 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                   </div>
                 )}
 
-                {/* Discussion / Comments Section */}
-                <div id="comments-section" className="pt-4">
-                  <CommentSection
-                    projectId={project.id}
-                    comments={project.comments || []}
-                  />
-                </div>
+                {/* Discussion / Comments Section (Hidden for drafts) */}
+                {!isDraft && (
+                  <div id="comments-section" className="pt-4">
+                    <CommentSection
+                      projectId={project.id}
+                      comments={project.comments || []}
+                    />
+                  </div>
+                )}
               </div>
             </main>
           </div>
@@ -532,42 +569,53 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
       {/* MOBILE BOTTOM FLOATING ACTION BAR                                     */}
       {/* ===================================================================== */}
       <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 p-1.5 rounded-full bg-[var(--bg-screen)]/95 backdrop-blur-md border border-[var(--border-neutral)] shadow-[0_12px_32px_rgba(0,0,0,0.18)]">
-        <button
-          type="button"
-          onClick={handleToggleAppreciation}
-          style={
-            isAppreciated
-              ? { backgroundColor: "#962EE6", color: "#FFFFFF" }
-              : undefined
-          }
-          className={cn(
-            "h-12 min-h-[48px] px-4 rounded-full flex items-center gap-2 text-xs font-bold transition-all cursor-pointer select-none border-0",
-            isAppreciated
-              ? "bg-[#962EE6] text-white shadow-md"
-              : "bg-[var(--bg-neutral)] text-[var(--content-primary)]"
-          )}
-        >
-          <Heart className={cn("h-4 w-4", isAppreciated ? "fill-white text-white" : "text-[var(--content-primary)]")} />
-          <span className={cn(isAppreciated ? "text-white" : "text-[var(--content-primary)]")}>{project.appreciations}</span>
-        </button>
+        {!isDraft && (
+          <>
+            <button
+              type="button"
+              onClick={handleToggleAppreciation}
+              disabled={Boolean(isAuthor)}
+              style={
+                isAppreciated
+                  ? { backgroundColor: "#962EE6", color: "#FFFFFF" }
+                  : undefined
+              }
+              className={cn(
+                "h-12 min-h-[48px] px-4 rounded-full flex items-center gap-2 text-xs font-bold transition-all cursor-pointer select-none border-0",
+                isAppreciated
+                  ? "bg-[#962EE6] text-white shadow-md"
+                  : "bg-[var(--bg-neutral)] text-[var(--content-primary)]",
+                isAuthor && "opacity-60 cursor-not-allowed"
+              )}
+              title={isAuthor ? "You cannot appreciate your own project" : isAppreciated ? "Unlike project" : "Appreciate project"}
+              aria-label={isAuthor ? "You cannot appreciate your own project" : isAppreciated ? `Remove appreciation (${project.appreciations})` : `Appreciate project (${project.appreciations})`}
+            >
+              <Heart className={cn("h-4 w-4", isAppreciated ? "fill-white text-white" : "text-[var(--content-primary)]")} />
+              <span className={cn(isAppreciated ? "text-white" : "text-[var(--content-primary)]")}>{project.appreciations}</span>
+            </button>
 
-        <button
-          type="button"
-          onClick={handleScrollToComments}
-          className="h-12 min-h-[48px] px-4 rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] flex items-center gap-2 text-xs font-bold"
-        >
-          <MessageSquare className="h-4 w-4" />
-          <span>{project.comments?.length || 0}</span>
-        </button>
+            <button
+              type="button"
+              onClick={handleScrollToComments}
+              className="h-12 min-h-[48px] px-4 rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] flex items-center gap-2 text-xs font-bold"
+              title="Jump to discussion"
+              aria-label="Jump to discussion"
+            >
+              <MessageSquare className="h-4 w-4" />
+              <span>{project.comments?.length || 0}</span>
+            </button>
 
-        <button
-          type="button"
-          onClick={() => setIsShareModalOpen(true)}
-          className="h-12 w-12 min-h-[48px] min-w-[48px] rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] flex items-center justify-center"
-          title="Share Project"
-        >
-          <Share2 className="h-4 w-4" />
-        </button>
+            <button
+              type="button"
+              onClick={() => setIsShareModalOpen(true)}
+              className="h-12 w-12 min-h-[48px] min-w-[48px] rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] flex items-center justify-center"
+              title="Share Project"
+              aria-label="Share Project"
+            >
+              <Share2 className="h-4 w-4" />
+            </button>
+          </>
+        )}
 
         {isAuthor && (
           <>
@@ -576,8 +624,9 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                 type="button"
                 onClick={handlePublishProject}
                 disabled={isPublishing}
-                className="h-12 min-h-[48px] px-3.5 rounded-full bg-[var(--primary-forest-green)] text-white hover:opacity-90 flex items-center gap-1.5 text-xs font-bold transition-all shrink-0"
-                title="Publish Project"
+                className="h-12 min-h-[48px] px-4 rounded-full bg-[#962EE6] text-white hover:opacity-90 flex items-center gap-1.5 text-xs font-bold transition-all shrink-0 shadow-xs"
+                title="Publish Project Live"
+                aria-label="Publish Project Live"
               >
                 {isPublishing ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -592,6 +641,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
               href={`/me/projects/${project.id}`}
               className="h-12 w-12 min-h-[48px] min-w-[48px] rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] flex items-center justify-center transition-all shrink-0"
               title="Edit Case Study"
+              aria-label="Edit Case Study"
             >
               <Edit3 className="h-4 w-4" />
             </Link>
@@ -599,8 +649,9 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
             <button
               type="button"
               onClick={() => setIsDeleteModalOpen(true)}
-              className="h-12 w-12 min-h-[48px] min-w-[48px] rounded-full bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 flex items-center justify-center transition-all shrink-0"
+              className="h-12 w-12 min-h-[48px] min-w-[48px] rounded-full bg-red-500/10 text-red-600 flex items-center justify-center"
               title="Delete Project"
+              aria-label="Delete Project"
             >
               <Trash2 className="h-4 w-4" />
             </button>

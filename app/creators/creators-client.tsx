@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "@/lib/session-context";
 import { bricolage } from "@/lib/fonts";
 import { CreatorListItem } from "@/components/creator/creator-list-item";
@@ -250,60 +251,70 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
         {/* ========================================================================= */}
         {/* ACTIVE FILTERS PILL BAR (If any active)                                   */}
         {/* ========================================================================= */}
-        {activeFilterCount > 0 && (
-          <div className="flex flex-wrap items-center gap-2 mb-8 p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800">
-            <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 mr-1">
-              Active filters:
-            </span>
-
-            {filters.discipline !== "All" && (
-              <FilterChip
-                active
-                onRemove={() => setFilters({ ...filters, discipline: "All" })}
-              >
-                Discipline: {filters.discipline}
-              </FilterChip>
-            )}
-
-            {filters.city !== "All" && (
-              <FilterChip
-                active
-                onRemove={() => setFilters({ ...filters, city: "All" })}
-              >
-                Location: {filters.city}
-              </FilterChip>
-            )}
-
-            {filters.hasPublishedOnly && (
-              <FilterChip
-                active
-                onRemove={() => setFilters({ ...filters, hasPublishedOnly: false })}
-              >
-                With Published Works
-              </FilterChip>
-            )}
-
-            <button
-              type="button"
-              onClick={() =>
-                setFilters({
-                  discipline: "All",
-                  city: "All",
-                  hasPublishedOnly: false,
-                })
-              }
-              className="text-xs text-neutral-900 dark:text-white hover:underline ml-auto font-bold cursor-pointer"
+        <AnimatePresence initial={false}>
+          {activeFilterCount > 0 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+              animate={{ opacity: 1, height: "auto", marginBottom: "2rem" }}
+              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              className="overflow-hidden"
             >
-              Clear all
-            </button>
-          </div>
-        )}
+              <div className="flex flex-wrap items-center gap-2 p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800">
+                <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 mr-1">
+                  Active filters:
+                </span>
+
+                {filters.discipline !== "All" && (
+                  <FilterChip
+                    active
+                    onRemove={() => setFilters({ ...filters, discipline: "All" })}
+                  >
+                    Discipline: {filters.discipline}
+                  </FilterChip>
+                )}
+
+                {filters.city !== "All" && (
+                  <FilterChip
+                    active
+                    onRemove={() => setFilters({ ...filters, city: "All" })}
+                  >
+                    Location: {filters.city}
+                  </FilterChip>
+                )}
+
+                {filters.hasPublishedOnly && (
+                  <FilterChip
+                    active
+                    onRemove={() => setFilters({ ...filters, hasPublishedOnly: false })}
+                  >
+                    With Published Projects
+                  </FilterChip>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFilters({
+                      discipline: "All",
+                      city: "All",
+                      hasPublishedOnly: false,
+                    })
+                  }
+                  className="text-xs text-neutral-900 dark:text-white hover:underline ml-auto font-bold cursor-pointer"
+                >
+                  Clear all
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* ========================================================================= */}
         {/* CREATORS GRID DISPLAY                                                     */}
         {/* ========================================================================= */}
         {filteredCreators.length === 0 ? (
-          <div className="rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#141713] p-12 text-center my-8 shadow-xs">
+          <div className="rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#141713] p-12 text-center my-8 shadow-xs min-h-[400px] flex flex-col items-center justify-center">
             <p className={cn(bricolage.className, "text-xl font-bold text-neutral-950 dark:text-white")}>
               No matching creators found
             </p>
@@ -326,7 +337,7 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[500px]">
             {filteredCreators.map((creator, idx) => (
               <StaggerGridItem key={creator.id} index={idx}>
                 <CreatorListItem creator={creator} />

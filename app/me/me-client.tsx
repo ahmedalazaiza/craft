@@ -138,7 +138,7 @@ export function MeClient() {
         <Breadcrumbs
           items={[
             { label: "My Profile", href: "/me" },
-            { label: activeTab === "published" ? "Published Works" : "Drafts", isCurrent: true },
+            { label: activeTab === "published" ? "Published Projects" : "Drafts", isCurrent: true },
           ]}
         />
 
@@ -154,32 +154,37 @@ export function MeClient() {
               {/* Creator Avatar & Identity */}
               <div className="flex flex-col items-center text-center">
                 <div className="relative mb-4">
-                  <div className="relative h-28 w-28 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-4 ring-[var(--border-neutral)] shadow-sm">
+                  <div className="relative h-24 w-24 rounded-full overflow-hidden border-2 border-[var(--border-neutral)] shadow-md bg-[var(--bg-neutral)]">
                     <Image
                       src={getValidAvatarUrl(user.avatarUrl)}
                       alt={user.displayName}
                       fill
-                      sizes="112px"
-                      priority
+                      sizes="96px"
                       className="object-cover"
+                      priority
                     />
                   </div>
-                  <OnlineBadge isOnline={user.isOnline} size="lg" className="absolute bottom-1.5 right-1.5 z-20" />
+                  <OnlineBadge
+                    userId={user.id}
+                    username={user.username}
+                    size="default"
+                    className="absolute bottom-1 right-1 z-20 ring-2 ring-[var(--bg-elevated)]"
+                  />
                 </div>
 
-                <div className="flex items-center gap-2 justify-center">
+                <div className="flex items-center gap-1.5 justify-center">
                   <h1
                     className={cn(
                       bricolage.className,
-                      "text-2xl font-bold text-[var(--content-primary)]"
+                      "text-xl font-bold text-[var(--content-primary)]"
                     )}
                   >
                     {user.displayName}
                   </h1>
-                  {user.isVerified !== false && <VerifiedBadge size="lg" />}
+                  {user.isVerified !== false && <VerifiedBadge size="default" />}
                 </div>
 
-                <p className="text-xs font-semibold text-[var(--content-tertiary)] mt-0.5">
+                <p className="type-body-small text-[var(--content-tertiary)] mt-0.5">
                   @{user.username}
                 </p>
 
@@ -187,7 +192,7 @@ export function MeClient() {
                 <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-[var(--content-secondary)] mt-3">
                   <span className="inline-flex items-center gap-1">
                     <MapPin className="h-3.5 w-3.5 text-[var(--content-tertiary)]" />
-                    <span>{user.location}</span>
+                    <span>{user.city || user.location || "Global"}</span>
                   </span>
 
                   {user.website && (
@@ -278,29 +283,29 @@ export function MeClient() {
               {/* Metrics Grid */}
               <div className="pt-2 border-t border-[var(--border-neutral)]">
                 <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="p-4 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
+                  <div className="p-3.5 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
                     <span className="block text-lg font-bold text-[var(--content-primary)]">
                       {publishedProjects.length}
                     </span>
-                    <span className="text-xs text-[var(--content-tertiary)] uppercase font-mono">
-                      Works
+                    <span className="text-[11px] text-[var(--content-tertiary)] uppercase font-mono">
+                      Projects
                     </span>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
+                  <div className="p-3.5 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
                     <span className="block text-lg font-bold text-[var(--content-primary)]">
                       {totalAppreciations}
                     </span>
-                    <span className="text-xs text-[var(--content-tertiary)] uppercase font-mono">
-                      Hearts
+                    <span className="text-[11px] text-[var(--content-tertiary)] uppercase font-mono">
+                      Appreciations
                     </span>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
+                  <div className="p-3.5 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
                     <span className="block text-lg font-bold text-[var(--content-primary)]">
                       {user.followersCount ?? 0}
                     </span>
-                    <span className="text-xs text-[var(--content-tertiary)] uppercase font-mono">
+                    <span className="text-[11px] text-[var(--content-tertiary)] uppercase font-mono">
                       Followers
                     </span>
                   </div>

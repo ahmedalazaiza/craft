@@ -107,66 +107,14 @@ export function SiteHeader() {
             </nav>
           </div>
 
-        {/* Center: Search Field */}
+        {/* Center: Search Field (Constant & Full Width) */}
         <div className="hidden lg:flex flex-1 max-w-md mx-4 items-center justify-center">
-          {!isScrolledPastHero ? (
-            <SearchField
-              compact
-              showFilterButton={false}
-              placeholder="Search projects, creators..."
-              className="w-full shadow-xs"
-            />
-          ) : (
-            <div className="relative">
-              <AnimatePresence mode="wait">
-                {isInlineSearchOpen ? (
-                  <motion.div
-                    key="expanded-input"
-                    initial={{ width: 44, opacity: 0 }}
-                    animate={{ width: 340, opacity: 1 }}
-                    exit={{ width: 44, opacity: 0 }}
-                    transition={{ duration: 0.22, ease: "easeOut" }}
-                    className="relative flex items-center"
-                  >
-                    <SearchField
-                      compact
-                      autoFocus
-                      showFilterButton={false}
-                      placeholder="Search projects, creators..."
-                      className="w-full shadow-md"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setIsInlineSearchOpen(false)}
-                      className="absolute right-3 p-1 rounded-full text-[var(--content-tertiary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-colors cursor-pointer"
-                      title="Close search"
-                      aria-label="Close search"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </motion.div>
-                ) : (
-                  <motion.button
-                    key="collapsed-icon"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.18 }}
-                    type="button"
-                    onClick={() => setIsInlineSearchOpen(true)}
-                    className="h-9 px-4 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)] text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] flex items-center gap-2.5 transition-all shadow-xs cursor-pointer select-none group"
-                    title="Search Layerat"
-                    aria-label="Search Layerat"
-                  >
-                    <Search className="h-4 w-4 text-[var(--content-tertiary)] group-hover:text-[var(--content-primary)] transition-colors" />
-                    <span className="text-xs font-medium text-[var(--content-tertiary)] group-hover:text-[var(--content-primary)] transition-colors">
-                      Search...
-                    </span>
-                  </motion.button>
-                )}
-              </AnimatePresence>
-            </div>
-          )}
+          <SearchField
+            compact
+            showFilterButton={false}
+            placeholder="Search projects, creators..."
+            className="w-full shadow-xs"
+          />
         </div>
 
         {/* Right: Actions */}

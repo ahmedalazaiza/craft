@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, Trash2, X, Loader2, ShieldAlert } from "lucide-react";
@@ -21,8 +22,13 @@ export function DeleteAccountModal({ isOpen, onClose }: DeleteAccountModalProps)
   const [confirmationInput, setConfirmationInput] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
-  if (!isOpen || !user) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !user || !mounted) return null;
 
   const expectedInput = user.username;
   const isMatch = confirmationInput.trim().toLowerCase() === expectedInput.toLowerCase();
@@ -50,9 +56,9 @@ export function DeleteAccountModal({ isOpen, onClose }: DeleteAccountModalProps)
     }
   };
 
-  return (
+  const modalContent = (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -69,12 +75,12 @@ export function DeleteAccountModal({ isOpen, onClose }: DeleteAccountModalProps)
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 12 }}
           transition={{ duration: 0.24, ease: "easeOut" }}
-          className="relative w-full max-w-lg overflow-hidden rounded-[28px] border border-rose-500/30 bg-[var(--bg-elevated)] p-6 sm:p-8 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.25)] dark:shadow-none z-10"
+          className="relative w-full max-w-lg overflow-hidden rounded-[28px] border border-red-500/30 bg-[var(--bg-elevated)] p-6 sm:p-8 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.25)] dark:shadow-none z-10"
         >
           {/* Header */}
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 shrink-0">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 shrink-0">
                 <AlertTriangle className="h-6 w-6 stroke-[2.2]" />
               </div>
               <div>
@@ -86,7 +92,7 @@ export function DeleteAccountModal({ isOpen, onClose }: DeleteAccountModalProps)
                 >
                   Delete Account
                 </h2>
-                <span className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 dark:text-rose-400">
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-400">
                   <ShieldAlert className="h-3.5 w-3.5" />
                   Irreversible Action
                 </span>
@@ -110,13 +116,13 @@ export function DeleteAccountModal({ isOpen, onClose }: DeleteAccountModalProps)
               Are you absolutely certain you want to delete your account? This action is{" "}
               <strong className="text-[var(--content-primary)] font-bold">permanent and irreversible</strong>.
             </p>
-            <div className="rounded-[16px] border border-rose-500/20 bg-rose-500/5 p-3.5 text-xs text-rose-700 dark:text-rose-300 space-y-1.5">
+            <div className="rounded-[16px] border border-red-500/20 bg-red-500/5 p-3.5 text-xs text-red-700 dark:text-red-300 space-y-1.5">
               <div className="font-bold flex items-center gap-1.5">
-                <span>The following data will be permanently wiped:</span>
+                <span>The following data and storage files will be permanently purged:</span>
               </div>
               <ul className="list-disc list-inside space-y-0.5 text-[11px] opacity-90 pl-1">
-                <li>Your public profile and studio moniker (@{user.username})</li>
-                <li>All published design monographs, case studies, and uploaded gallery images</li>
+                <li>Your public profile, studio avatar, and banner images</li>
+                <li>All design monographs, case studies, and uploaded gallery images from cloud storage</li>
                 <li>All comments, feedback notes, and peer discussions</li>
                 <li>All appreciations and studio follower connections</li>
               </ul>
@@ -149,7 +155,7 @@ export function DeleteAccountModal({ isOpen, onClose }: DeleteAccountModalProps)
             </div>
 
             {errorMessage && (
-              <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-600 dark:text-rose-400 font-medium">
+              <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-600 dark:text-red-400 font-medium">
                 {errorMessage}
               </div>
             )}
@@ -173,14 +179,14 @@ export function DeleteAccountModal({ isOpen, onClose }: DeleteAccountModalProps)
                 className={cn(
                   "inline-flex items-center justify-center gap-2 rounded-full h-12 min-h-[48px] px-6 text-sm font-bold transition-all w-full sm:w-auto select-none",
                   isMatch && !isDeleting
-                    ? "bg-rose-600 hover:bg-rose-700 text-white shadow-md cursor-pointer active:scale-98"
-                    : "bg-rose-500/20 text-rose-400/60 border border-rose-500/20 cursor-not-allowed pointer-events-none"
+                    ? "bg-red-600 hover:bg-red-700 text-white shadow-md cursor-pointer active:scale-98"
+                    : "bg-red-500/20 text-red-400/60 border border-red-500/20 cursor-not-allowed pointer-events-none"
                 )}
               >
                 {isDeleting ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Purging Account Data...</span>
+                    <span>Purging Account & Files...</span>
                   </>
                 ) : (
                   <>
@@ -195,4 +201,6 @@ export function DeleteAccountModal({ isOpen, onClose }: DeleteAccountModalProps)
       </div>
     </AnimatePresence>
   );
+
+  return createPortal(modalContent, document.body);
 }

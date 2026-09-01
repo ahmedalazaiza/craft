@@ -19,6 +19,7 @@ import { LocationInput } from "@/components/ui/location-input";
 import { SkillsPicker } from "@/components/onboarding/skills-picker";
 import { DeleteAccountModal } from "@/components/settings/delete-account-modal";
 import { PasswordResetModal } from "@/components/settings/password-reset-modal";
+import { ImageCropperModal } from "@/components/ui/image-cropper-modal";
 import { requestPasswordResetInDb, checkUsernameAvailability } from "@/lib/supabase/queries";
 import { uploadMediaFile } from "@/lib/supabase/storage";
 import { DEFAULT_AVATAR_URL, getValidAvatarUrl } from "@/lib/avatar";
@@ -179,6 +180,10 @@ export function SettingsClient() {
     };
   }, [searchParams]);
 
+  // Cropper Modal state for avatar
+  const [cropperSrc, setCropperSrc] = useState<string | null>(null);
+  const [isCropperOpen, setIsCropperOpen] = useState(false);
+
   // Cooldown countdown timer for password reset email
   useEffect(() => {
     if (resetCooldown <= 0) return;
@@ -188,15 +193,34 @@ export function SettingsClient() {
     return () => clearInterval(timer);
   }, [resetCooldown]);
 
-  // Handle Avatar Upload
-  const handleAvatarFile = async (file: File) => {
+  // Handle Avatar Selection -> Open Cropper
+  const handleAvatarFile = (file: File) => {
     if (!file.type.startsWith("image/")) {
       alert("Please upload a valid image file (PNG, JPG, WebP).");
       return;
     }
+    if (file.size > 15 * 1024 * 1024) {
+      alert("Image size should be under 15MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        setCropperSrc(e.target.result as string);
+        setIsCropperOpen(true);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAvatarCropComplete = async (croppedBlob: Blob) => {
+    setIsCropperOpen(false);
     setIsUploadingAvatar(true);
     try {
-      const cdnUrl = await uploadMediaFile(file, "project-media", "avatars");
+      const croppedFile = new File([croppedBlob], `avatar-${Date.now()}.webp`, {
+        type: "image/webp",
+      });
+      const cdnUrl = await uploadMediaFile(croppedFile, "avatars", "avatars");
       setAvatarUrl(cdnUrl);
       // Auto-update profile avatar
       await updateProfile({ avatarUrl: cdnUrl });
@@ -204,6 +228,7 @@ export function SettingsClient() {
       console.error("Avatar upload error:", err);
     } finally {
       setIsUploadingAvatar(false);
+      setCropperSrc(null);
     }
   };
 
@@ -421,7 +446,7 @@ export function SettingsClient() {
                 <FolderKanban className="h-4 w-4 text-[var(--primary-forest-green)]" />
                 <div className="text-left">
                   <span className="block text-xs font-bold text-[var(--content-primary)]">
-                    {publishedProjects.length} Works
+                    {publishedProjects.length} Projects
                   </span>
                   <span className="text-[10px] text-[var(--content-tertiary)] uppercase font-mono">
                     Published
@@ -433,7 +458,7 @@ export function SettingsClient() {
                 <Heart className="h-4 w-4 text-[var(--primary-forest-green)]" />
                 <div className="text-left">
                   <span className="block text-xs font-bold text-[var(--content-primary)]">
-                    {totalAppreciations} Hearts
+                    {totalAppreciations} Appreciations
                   </span>
                   <span className="text-[10px] text-[var(--content-tertiary)] uppercase font-mono">
                     Received
@@ -525,8 +550,8 @@ export function SettingsClient() {
                 className={cn(
                   "flex items-center gap-3 rounded-[14px] px-4 py-3 text-xs font-bold transition-all whitespace-nowrap cursor-pointer text-left w-full",
                   activeTab === "danger"
-                    ? "bg-rose-600 text-white shadow-xs"
-                    : "text-rose-600 dark:text-rose-400 hover:bg-rose-500/10"
+                    ? "bg-red-600 text-white shadow-xs"
+                    : "text-red-600 dark:text-red-400 hover:bg-red-500/10"
                 )}
               >
                 <Trash2 className="h-4 w-4 shrink-0" />
@@ -1011,13 +1036,13 @@ export function SettingsClient() {
             {/* 4. DANGER ZONE TAB                                           */}
             {/* ============================================================= */}
             {activeTab === "danger" && (
-              <Card elevated className="border border-rose-500/30 bg-rose-500/5 p-6 sm:p-8 rounded-[28px] shadow-sm space-y-6">
+              <Card elevated className="border border-red-500/30 bg-red-500/5 p-6 sm:p-8 rounded-[28px] shadow-sm space-y-6">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 shrink-0">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 shrink-0">
                     <AlertTriangle className="h-6 w-6 stroke-[2.2]" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-rose-600 dark:text-rose-400">
+                    <h2 className="text-xl font-bold text-red-600 dark:text-red-400">
                       Danger Zone
                     </h2>
                     <p className="mt-1 text-xs text-[var(--content-secondary)] leading-relaxed max-w-xl">
@@ -1026,7 +1051,7 @@ export function SettingsClient() {
                   </div>
                 </div>
 
-                <div className="rounded-[20px] border border-rose-500/20 bg-[var(--bg-elevated)] p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="rounded-[20px] border border-red-500/20 bg-[var(--bg-elevated)] p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div>
                     <div className="text-sm font-bold text-[var(--content-primary)]">
                       Permanently Delete Account
@@ -1039,7 +1064,7 @@ export function SettingsClient() {
                   <button
                     type="button"
                     onClick={() => setIsDeleteModalOpen(true)}
-                    className="inline-flex items-center justify-center gap-2 rounded-full h-11 px-5 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition-all cursor-pointer shrink-0"
+                    className="inline-flex items-center justify-center gap-2 rounded-full h-11 px-5 text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-sm transition-all cursor-pointer shrink-0"
                   >
                     <Trash2 className="h-4 w-4" />
                     <span>Delete My Account</span>
@@ -1066,6 +1091,22 @@ export function SettingsClient() {
           setActiveTab("security");
         }}
       />
+
+      {/* Profile Avatar Cropper Modal */}
+      {cropperSrc && (
+        <ImageCropperModal
+          isOpen={isCropperOpen}
+          imageSrc={cropperSrc}
+          aspectRatio={1}
+          cropShape="round"
+          title="Crop Profile Avatar"
+          onCropComplete={handleAvatarCropComplete}
+          onCancel={() => {
+            setIsCropperOpen(false);
+            setCropperSrc(null);
+          }}
+        />
+      )}
     </div>
   );
 }

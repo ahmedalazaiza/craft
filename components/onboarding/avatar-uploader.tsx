@@ -2,8 +2,10 @@
 
 import React, { useState, useRef } from "react";
 import Image from "next/image";
-import { Upload, Camera, RefreshCw, Trash2, User } from "lucide-react";
+import { Upload, Camera, RefreshCw, Trash2, User, Crop } from "lucide-react";
 import { DEFAULT_AVATAR_URL, getInitials } from "@/lib/avatar";
+import { uploadMediaFile } from "@/lib/supabase/storage";
+import { ImageCropperModal } from "@/components/ui/image-cropper-modal";
 import { cn } from "@/lib/utils";
 
 interface AvatarUploaderProps {
@@ -21,6 +23,10 @@ export function AvatarUploader({
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
+  // Cropper Modal state
+  const [cropperSrc, setCropperSrc] = useState<string | null>(null);
+  const [isCropperOpen, setIsCropperOpen] = useState(false);
+
   const isUsingDefault = !currentAvatar || currentAvatar === DEFAULT_AVATAR_URL;
   const initials = getInitials(displayName);
 
@@ -30,20 +36,37 @@ export function AvatarUploader({
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Image size should be under 5MB.");
+    if (file.size > 15 * 1024 * 1024) {
+      alert("Image size should be under 15MB.");
       return;
     }
 
-    setIsUploading(true);
     const reader = new FileReader();
     reader.onload = (e) => {
       if (e.target?.result) {
-        onAvatarChange(e.target.result as string);
+        setCropperSrc(e.target.result as string);
+        setIsCropperOpen(true);
       }
-      setIsUploading(false);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    setIsCropperOpen(false);
+    setIsUploading(true);
+
+    try {
+      const croppedFile = new File([croppedBlob], `avatar-${Date.now()}.webp`, {
+        type: "image/webp",
+      });
+      const cdnUrl = await uploadMediaFile(croppedFile, "avatars", "avatars");
+      onAvatarChange(cdnUrl);
+    } catch (err) {
+      console.error("Failed to upload cropped avatar:", err);
+    } finally {
+      setIsUploading(false);
+      setCropperSrc(null);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -102,8 +125,8 @@ export function AvatarUploader({
               type="button"
               onClick={() => fileInputRef.current?.click()}
               className="absolute bottom-0 right-0 h-9 w-9 rounded-full bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-all cursor-pointer border-2 border-[var(--bg-screen)]"
-              title="Upload custom photo"
-              aria-label="Upload custom photo"
+              title="Upload and crop photo"
+              aria-label="Upload and crop photo"
             >
               <Camera className="h-4 w-4 stroke-[2]" />
             </button>
@@ -113,7 +136,7 @@ export function AvatarUploader({
             <button
               type="button"
               onClick={handleResetToDefault}
-              className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-500 hover:text-rose-600 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-500 hover:text-red-600 transition-colors cursor-pointer"
             >
               <Trash2 className="h-3 w-3" />
               <span>Use default avatar</span>
@@ -142,6 +165,7 @@ export function AvatarUploader({
             onChange={(e) => {
               if (e.target.files && e.target.files[0]) {
                 handleFile(e.target.files[0]);
+                e.target.value = "";
               }
             }}
           />
@@ -153,12 +177,29 @@ export function AvatarUploader({
             <p className="text-xs sm:text-sm font-semibold text-[var(--content-primary)]">
               Drag and drop your photo here, or <span className="text-[var(--content-primary)] underline font-bold">browse files</span>
             </p>
-            <p className="text-[11px] text-[var(--content-tertiary)]">
-              Supports PNG, JPG, or WebP up to 5MB (Square recommended)
+            <p className="text-[11px] text-[var(--content-tertiary)] flex items-center justify-center gap-1">
+              <Crop className="h-3 w-3" />
+              <span>Interactive 1:1 image cropper will open to adjust framing</span>
             </p>
           </div>
         </div>
       </div>
+
+      {/* Image Cropper Modal */}
+      {cropperSrc && (
+        <ImageCropperModal
+          isOpen={isCropperOpen}
+          imageSrc={cropperSrc}
+          aspectRatio={1}
+          cropShape="round"
+          title="Crop Profile Avatar"
+          onCropComplete={handleCropComplete}
+          onCancel={() => {
+            setIsCropperOpen(false);
+            setCropperSrc(null);
+          }}
+        />
+      )}
 
       {/* Default Avatar Info Banner */}
       <div className="rounded-2xl border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-4 flex items-start gap-3">

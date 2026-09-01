@@ -246,7 +246,7 @@ export function SearchClient() {
             </p>
           </div>
         ) : (
-          <div className="space-y-14">
+          <div className="space-y-14 min-h-[500px]">
             {/* Projects Section */}
             {(activeTab === "all" || activeTab === "projects") &&
               filteredProjects.length > 0 && (

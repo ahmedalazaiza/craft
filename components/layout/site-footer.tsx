@@ -134,6 +134,19 @@ export function SiteFooter() {
                   Privacy Policy
                 </Link>
               </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (typeof window !== "undefined") {
+                      window.dispatchEvent(new CustomEvent("open-cookie-preferences"));
+                    }
+                  }}
+                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-purple-300 transition-colors cursor-pointer text-left"
+                >
+                  Cookie Settings
+                </button>
+              </li>
             </ul>
           </div>
         </div>
@@ -159,6 +172,17 @@ export function SiteFooter() {
             >
               Privacy
             </Link>
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("open-cookie-preferences"));
+                }
+              }}
+              className="hover:text-[var(--content-primary)] transition-colors cursor-pointer"
+            >
+              Cookies
+            </button>
             <Link
               href="/guidelines"
               prefetch={true}

@@ -12,7 +12,7 @@ export const SITE_URL =
   (process.env.VERCEL_PROJECT_PRODUCTION_URL
     ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
     : "") ||
-  "https://craft-mauve-seven.vercel.app";
+  "https://www.layerat.com";
 
 export function absoluteUrl(path: string = ""): string {
   const cleanPath = path.startsWith("/") ? path : `/${path}`;

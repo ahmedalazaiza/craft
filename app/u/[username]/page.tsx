@@ -1,9 +1,9 @@
 import React from "react";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { fetchCreatorByUsername } from "@/lib/supabase/queries";
 import { getProfileMetadata, generateProfileJsonLd, generateBreadcrumbJsonLd } from "@/lib/seo";
 import { CreatorProfileClient } from "./creator-profile-client";
+import { CreatorNotFoundClient } from "@/components/creator/creator-not-found-client";
 
 export const revalidate = 60;
 
@@ -17,8 +17,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!creator) {
     return {
-      title: "Creator Not Found",
-      description: "The requested creator profile could not be found.",
+      title: `@${username} · Results Not Found`,
+      description: `No creator profile found for @${username}. Search active designers and visual studios on Layerat.`,
     };
   }
 
@@ -30,7 +30,7 @@ export default async function UserProfilePage({ params }: PageProps) {
   const creator = await fetchCreatorByUsername(username);
 
   if (!creator) {
-    notFound();
+    return <CreatorNotFoundClient searchedUsername={username} />;
   }
 
   const profileJsonLd = generateProfileJsonLd(creator);

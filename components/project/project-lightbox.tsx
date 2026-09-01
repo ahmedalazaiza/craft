@@ -12,6 +12,7 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize2,
+  Loader2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -34,6 +35,7 @@ export function ProjectLightbox({
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [isLoadingImage, setIsLoadingImage] = useState(true);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   useEffect(() => {
@@ -45,10 +47,11 @@ export function ProjectLightbox({
   const safeIndex = Math.max(0, Math.min(currentIndex, total - 1));
   const currentImage = images[safeIndex];
 
-  // Reset zoom when navigating between images or closing
+  // Reset zoom & loading indicator when navigating between images or opening
   useEffect(() => {
     setIsZoomed(false);
-  }, [currentIndex, isOpen]);
+    setIsLoadingImage(true);
+  }, [safeIndex, isOpen]);
 
   const handleCopyLink = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -215,12 +218,27 @@ export function ProjectLightbox({
                 isZoomed ? "max-w-none max-h-none py-10" : "max-h-[78vh] max-w-[90vw]"
               )}
             >
+              {/* Sleek Loading Indicator */}
+              {isLoadingImage && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 shadow-xl">
+                    <Loader2 className="h-7 w-7 animate-spin text-[#962EE6] dark:text-purple-300" />
+                  </div>
+                  <span className="text-xs font-semibold text-white/70 tracking-wide">
+                    Loading high-res spread...
+                  </span>
+                </div>
+              )}
+
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={currentImage.url}
                 alt={currentImage.alt}
+                onLoad={() => setIsLoadingImage(false)}
+                onError={() => setIsLoadingImage(false)}
                 className={cn(
                   "rounded-[14px] shadow-2xl object-contain transition-all select-none",
+                  isLoadingImage ? "opacity-0" : "opacity-100",
                   isZoomed
                     ? "w-auto max-w-none h-auto"
                     : "max-h-[76vh] max-w-[88vw] w-auto h-auto"

@@ -10,9 +10,9 @@ interface TemplateProps {
 /**
  * Root Page Transition Template
  *
- * Next.js App Router re-mounts `template.tsx` on every route navigation,
- * providing a frictionless 60/120fps motion transition between all platform pages.
- * Initial SSR render paints with full opacity immediately (0ms LCP penalty).
+ * Provides a silky-smooth opacity fade transition between routes without
+ * introducing CSS `transform` or `will-change: transform` properties that
+ * interfere with `position: fixed` modal overlays and popups.
  */
 export default function Template({ children }: TemplateProps) {
   const shouldReduceMotion = useReducedMotion();
@@ -22,22 +22,17 @@ export default function Template({ children }: TemplateProps) {
     setHasMounted(true);
   }, []);
 
-  const transitionConfig = {
-    duration: shouldReduceMotion ? 0.15 : 0.28,
-    ease: [0.22, 1, 0.36, 1] as const,
-  };
-
   if (shouldReduceMotion) {
     return <div className="w-full flex-1 flex flex-col">{children}</div>;
   }
 
   return (
     <motion.div
-      initial={hasMounted ? { opacity: 0, y: 8 } : false}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -6 }}
-      transition={transitionConfig}
-      className="w-full flex-1 flex flex-col will-change-[transform,opacity]"
+      initial={hasMounted ? { opacity: 0 } : false}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className="w-full flex-1 flex flex-col"
     >
       {children}
     </motion.div>

@@ -2,13 +2,13 @@ import { supabase } from "./client";
 
 /**
  * Client-side fast image optimization
- * Resizes gigantic camera photos (e.g. 5000px / 12MB) to optimal web scale (e.g. 2000px / 350KB)
+ * Resizes camera photos to optimal web scale (e.g. 2000px / WebP) with high quality
  */
 export async function optimizeImage(
   file: File,
   maxWidth = 2000,
   maxHeight = 2000,
-  quality = 0.85
+  quality = 0.88
 ): Promise<{ blob: Blob; mimeType: string }> {
   // If it's already a small SVG or GIF, return as is
   if (file.type === "image/svg+xml" || file.type === "image/gif") {
@@ -55,10 +55,10 @@ export async function optimizeImage(
       ctx.imageSmoothingQuality = "high";
       ctx.drawImage(img, 0, 0, width, height);
 
-      // Try modern WebP, fall back to JPEG
+      // WebP compression for superior quality & small size
       canvas.toBlob(
         (blob) => {
-          if (blob && blob.size < file.size) {
+          if (blob) {
             resolve({ blob, mimeType: "image/webp" });
           } else {
             resolve({ blob: file, mimeType: file.type });
@@ -78,7 +78,7 @@ export async function optimizeImage(
 }
 
 /**
- * Upload a single media file directly to Supabase Storage
+ * Upload a single media file directly to Supabase Storage and return CDN URL
  */
 export async function uploadMediaFile(
   file: File,
@@ -86,8 +86,8 @@ export async function uploadMediaFile(
   folder = "projects"
 ): Promise<string> {
   try {
-    // 1. Optimize image client-side to ensure lightning speed and small payload
-    const { blob, mimeType } = await optimizeImage(file, 2000, 2000, 0.85);
+    // 1. Optimize image client-side to WebP
+    const { blob, mimeType } = await optimizeImage(file, 2000, 2000, 0.88);
 
     const ext = mimeType === "image/webp" ? "webp" : file.name.split(".").pop() || "jpg";
     const cleanFileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${ext}`;
@@ -102,13 +102,7 @@ export async function uploadMediaFile(
       });
 
     if (error) {
-      console.warn(`Supabase Storage upload warning (${error.message}). Generating optimized local URL.`);
-      // Fallback: convert optimized small blob to DataURL
-      return new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target?.result as string);
-        reader.readAsDataURL(blob);
-      });
+      console.warn(`Supabase Storage upload warning (${error.message}).`);
     }
 
     // 3. Return clean CDN Public URL
@@ -116,15 +110,13 @@ export async function uploadMediaFile(
       .from(bucket)
       .getPublicUrl(cleanFileName);
 
-    return publicUrlData.publicUrl;
+    return (
+      publicUrlData?.publicUrl ||
+      `https://ttjobsgglwgyioqlldqj.supabase.co/storage/v1/object/public/${bucket}/${cleanFileName}`
+    );
   } catch (err) {
     console.error("Failed to upload image to Supabase Storage:", err);
-    // Safe fallback
-    return new Promise<string>((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target?.result as string);
-      reader.readAsDataURL(file);
-    });
+    throw err;
   }
 }
 
@@ -157,4 +149,38 @@ export async function uploadMultipleMediaFiles(
   }
 
   return urls;
+}
+
+/**
+ * Delete media files from Supabase Storage bucket by their CDN URLs
+ */
+export async function deleteStorageFiles(
+  urls: string[],
+  bucket: "project-media" | "avatars" = "project-media"
+): Promise<boolean> {
+  try {
+    if (!urls || urls.length === 0) return true;
+
+    // Filter and extract storage paths from Supabase URLs
+    const paths = urls
+      .map((url) => {
+        if (!url || typeof url !== "string") return null;
+        // Matches /storage/v1/object/public/{bucket}/{path}
+        const match = url.match(/\/storage\/v1\/object\/public\/[^/]+\/(.+)$/);
+        return match ? match[1] : null;
+      })
+      .filter((p): p is string => Boolean(p));
+
+    if (paths.length === 0) return true;
+
+    const { error } = await supabase.storage.from(bucket).remove(paths);
+    if (error) {
+      console.warn(`Supabase Storage remove warning:`, error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("Failed to delete files from Supabase storage:", err);
+    return false;
+  }
 }

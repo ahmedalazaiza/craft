@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "@/lib/session-context";
 import { bricolage } from "@/lib/fonts";
 import { ProjectCard } from "@/components/project/project-card";
@@ -348,148 +349,168 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
             </div>
 
             {/* Dynamic Sub-Category Pill Strip (When Category Selected) */}
-            {availableSubCategories.length > 0 && (
-              <div className="flex items-center gap-1.5 overflow-x-auto py-1 pt-1 no-scrollbar border-t border-neutral-100 dark:border-neutral-800/60">
-                <span className="text-[11px] font-mono text-neutral-400 dark:text-neutral-500 font-bold uppercase tracking-wider shrink-0 mr-1">
-                  Focus:
-                </span>
-                {availableSubCategories.map((sub) => {
-                  const isSelected =
-                    (!filters.subCategory && sub === "All") ||
-                    filters.subCategory === sub;
-                  return (
-                    <button
-                      key={sub}
-                      type="button"
-                      onClick={() => setFilters({ ...filters, subCategory: sub })}
-                      className={cn(
-                        "rounded-full px-3 py-1 text-xs transition-all shrink-0 cursor-pointer font-medium select-none border",
-                        isSelected
-                          ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-bold border-transparent shadow-xs"
-                          : "bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                      )}
-                    >
-                      {sub}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            <AnimatePresence initial={false}>
+              {availableSubCategories.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex items-center gap-1.5 overflow-x-auto py-1 pt-1.5 no-scrollbar border-t border-neutral-100 dark:border-neutral-800/60">
+                    <span className="text-[11px] font-mono text-neutral-400 dark:text-neutral-500 font-bold uppercase tracking-wider shrink-0 mr-1">
+                      Focus:
+                    </span>
+                    {availableSubCategories.map((sub) => {
+                      const isSelected =
+                        (!filters.subCategory && sub === "All") ||
+                        filters.subCategory === sub;
+                      return (
+                        <button
+                          key={sub}
+                          type="button"
+                          onClick={() => setFilters({ ...filters, subCategory: sub })}
+                          className={cn(
+                            "rounded-full px-3 py-1 text-xs transition-all shrink-0 cursor-pointer font-medium select-none border",
+                            isSelected
+                              ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-bold border-transparent shadow-xs"
+                              : "bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                          )}
+                        >
+                          {sub}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
         {/* ========================================================================= */}
         {/* ACTIVE FILTERS PILL BAR (If any active)                                   */}
         {/* ========================================================================= */}
-        {activeFilterCount > 0 && (
-          <div className="flex flex-wrap items-center gap-2 mb-6 p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800">
-            <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 mr-1">
-              Active filters:
-            </span>
+        <AnimatePresence initial={false}>
+          {activeFilterCount > 0 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+              animate={{ opacity: 1, height: "auto", marginBottom: "1.5rem" }}
+              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              className="overflow-hidden"
+            >
+              <div className="flex flex-wrap items-center gap-2 p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800">
+                <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 mr-1">
+                  Active filters:
+                </span>
 
-            {/* Category Filter */}
-            {filters.category && filters.category !== "All" && (
-              <span className="inline-flex items-center gap-1 bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 px-3 py-1 rounded-full text-xs font-bold shadow-xs">
-                <span>Category: {activeTaxonomy?.shortName || filters.category}</span>
+                {/* Category Filter */}
+                {filters.category && filters.category !== "All" && (
+                  <span className="inline-flex items-center gap-1 bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 px-3 py-1 rounded-full text-xs font-bold shadow-xs">
+                    <span>Category: {activeTaxonomy?.shortName || filters.category}</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFilters({ ...filters, category: "All", subCategory: "All" })
+                      }
+                      className="hover:text-red-400 ml-0.5 cursor-pointer"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+
+                {/* Sub-Category Filter */}
+                {filters.subCategory && filters.subCategory !== "All" && (
+                  <span className="inline-flex items-center gap-1 bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 px-3 py-1 rounded-full text-xs font-bold shadow-xs">
+                    <span>Sub: {filters.subCategory}</span>
+                    <button
+                      type="button"
+                      onClick={() => setFilters({ ...filters, subCategory: "All" })}
+                      className="hover:text-red-400 ml-0.5 cursor-pointer"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+
+                {/* Medium Filter */}
+                {filters.medium && filters.medium !== "All" && (
+                  <span className="inline-flex items-center gap-1 bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 px-3 py-1 rounded-full text-xs font-semibold">
+                    <span>Format: {filters.medium}</span>
+                    <button
+                      type="button"
+                      onClick={() => setFilters({ ...filters, medium: "All" })}
+                      className="hover:text-red-400 ml-0.5 cursor-pointer"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+
+                {/* Tags Filters */}
+                {filters.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center gap-1 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white border border-neutral-300 dark:border-neutral-700 px-3 py-1 rounded-full text-xs font-semibold shadow-xs"
+                  >
+                    <span>#{tag}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeTag(tag)}
+                      className="hover:text-red-500 ml-0.5 cursor-pointer"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+
+                {/* Tools Filters */}
+                {(filters.tools || []).map((tool) => (
+                  <span
+                    key={tool}
+                    className="inline-flex items-center gap-1 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white border border-neutral-300 dark:border-neutral-700 px-3 py-1 rounded-full text-xs font-bold shadow-xs"
+                  >
+                    <span>{tool}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeTool(tool)}
+                      className="hover:text-red-500 ml-0.5 cursor-pointer"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+
+                {/* Reset All Button */}
                 <button
                   type="button"
                   onClick={() =>
-                    setFilters({ ...filters, category: "All", subCategory: "All" })
+                    setFilters({
+                      category: "All",
+                      subCategory: "All",
+                      tags: [],
+                      tools: [],
+                      medium: "All",
+                      sortBy: "newest",
+                    })
                   }
-                  className="hover:text-red-400 ml-0.5 cursor-pointer"
+                  className="text-xs text-neutral-900 dark:text-white hover:underline ml-auto font-bold cursor-pointer"
                 >
-                  <X className="h-3 w-3" />
+                  Clear all
                 </button>
-              </span>
-            )}
-
-            {/* Sub-Category Filter */}
-            {filters.subCategory && filters.subCategory !== "All" && (
-              <span className="inline-flex items-center gap-1 bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 px-3 py-1 rounded-full text-xs font-bold shadow-xs">
-                <span>Sub: {filters.subCategory}</span>
-                <button
-                  type="button"
-                  onClick={() => setFilters({ ...filters, subCategory: "All" })}
-                  className="hover:text-red-400 ml-0.5 cursor-pointer"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            )}
-
-            {/* Medium Filter */}
-            {filters.medium && filters.medium !== "All" && (
-              <span className="inline-flex items-center gap-1 bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 px-3 py-1 rounded-full text-xs font-semibold">
-                <span>Format: {filters.medium}</span>
-                <button
-                  type="button"
-                  onClick={() => setFilters({ ...filters, medium: "All" })}
-                  className="hover:text-red-400 ml-0.5 cursor-pointer"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            )}
-
-            {/* Tags Filters */}
-            {filters.tags.map((tag) => (
-              <span
-                key={tag}
-                className="inline-flex items-center gap-1 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white border border-neutral-300 dark:border-neutral-700 px-3 py-1 rounded-full text-xs font-semibold shadow-xs"
-              >
-                <span>#{tag}</span>
-                <button
-                  type="button"
-                  onClick={() => removeTag(tag)}
-                  className="hover:text-red-500 ml-0.5 cursor-pointer"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            ))}
-
-            {/* Tools Filters */}
-            {(filters.tools || []).map((tool) => (
-              <span
-                key={tool}
-                className="inline-flex items-center gap-1 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white border border-neutral-300 dark:border-neutral-700 px-3 py-1 rounded-full text-xs font-bold shadow-xs"
-              >
-                <span>{tool}</span>
-                <button
-                  type="button"
-                  onClick={() => removeTool(tool)}
-                  className="hover:text-red-500 ml-0.5 cursor-pointer"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            ))}
-
-            {/* Reset All Button */}
-            <button
-              type="button"
-              onClick={() =>
-                setFilters({
-                  category: "All",
-                  subCategory: "All",
-                  tags: [],
-                  tools: [],
-                  medium: "All",
-                  sortBy: "newest",
-                })
-              }
-              className="text-xs text-neutral-900 dark:text-white hover:underline ml-auto font-bold cursor-pointer"
-            >
-              Clear all
-            </button>
-          </div>
-        )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* ========================================================================= */}
         {/* PROJECTS GRID DISPLAY                                                     */}
         {/* ========================================================================= */}
         {filteredProjects.length === 0 ? (
-          <div className="rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#141713] p-12 text-center my-8 shadow-xs">
+          <div className="rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#141713] p-12 text-center my-8 shadow-xs min-h-[400px] flex flex-col items-center justify-center">
             <p className={cn(bricolage.className, "text-xl font-bold text-neutral-950 dark:text-white")}>
               No matching projects found
             </p>
@@ -515,7 +536,7 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 min-h-[500px]">
             {filteredProjects.map((project, idx) => (
               <StaggerGridItem key={project.id} index={idx}>
                 <ProjectCard project={project} />

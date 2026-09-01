@@ -140,19 +140,18 @@ export function StaggerGridItem({
     return <div className={className}>{children}</div>;
   }
 
-  const staggeredDelay = Math.min((index % 9) * 0.04, 0.32);
+  const staggeredDelay = Math.min((index % 8) * 0.025, 0.18);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-20px" }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       transition={{
-        duration: 0.35,
+        duration: 0.24,
         delay: staggeredDelay,
         ease: MOTION_EASE,
       }}
-      className={cn("h-full will-change-[transform,opacity]", className)}
+      className={cn("h-full", className)}
     >
       {children}
     </motion.div>

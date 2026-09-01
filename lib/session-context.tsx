@@ -465,9 +465,19 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const toggleAppreciation = (projectId: string): boolean => {
     const targetProject = projects.find((p) => p.id === projectId);
 
+    // Cannot appreciate draft projects
+    if (targetProject && targetProject.published === false) {
+      return false;
+    }
+
     // If guest or not verified, trigger verification modal
     if (!user || !user.isVerified) {
       openVerificationModal("like", targetProject?.title);
+      return false;
+    }
+
+    // Cannot appreciate own project
+    if (targetProject?.creator?.id === user.id) {
       return false;
     }
 

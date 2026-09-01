@@ -339,7 +339,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                       {publishedProjects.length}
                     </span>
                     <span className="text-[10px] text-[var(--content-tertiary)] uppercase font-mono">
-                      Works
+                      Projects
                     </span>
                   </div>
 
@@ -348,7 +348,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                       {totalAppreciations}
                     </span>
                     <span className="text-[10px] text-[var(--content-tertiary)] uppercase font-mono">
-                      Hearts
+                      Appreciations
                     </span>
                   </div>
 
@@ -382,7 +382,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
           </aside>
 
           {/* ===================================================================== */}
-          {/* RIGHT COLUMN: Works & Studio Dashboard (9 cols on desktop)            */}
+          {/* RIGHT COLUMN: Projects & Studio Dashboard (9 cols on desktop)         */}
           {/* ===================================================================== */}
           <main className="lg:col-span-8 xl:col-span-9 space-y-6 min-w-0">
             {/* Header & Tab Controls */}
@@ -400,7 +400,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                         : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
                     )}
                   >
-                    Published Works ({publishedProjects.length})
+                    Published Projects ({publishedProjects.length})
                   </button>
 
                   <button
@@ -425,7 +425,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                       "text-2xl sm:text-3xl font-bold text-[var(--content-primary)]"
                     )}
                   >
-                    Published Works ({publishedProjects.length})
+                    Published Projects ({publishedProjects.length})
                   </h2>
                   <p className="type-body-default text-[var(--content-tertiary)] mt-1">
                     Public case studies and visual monographs published by {creator.displayName}.

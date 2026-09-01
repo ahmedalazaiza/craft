@@ -116,6 +116,21 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
           {/* Content Area */}
           <div className="relative z-0 flex flex-1 flex-col justify-between p-4 sm:p-6 pointer-events-none">
             <div>
+              {/* Category above Title */}
+              <div className="mb-1.5 flex items-center gap-1.5">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#962EE6] dark:text-purple-400">
+                  {liveProject.category}
+                </span>
+                {liveProject.subCategory && (
+                  <>
+                    <span className="text-[10px] text-[var(--content-tertiary)]">•</span>
+                    <span className="text-[11px] font-medium text-[var(--content-tertiary)] truncate max-w-[180px]">
+                      {liveProject.subCategory}
+                    </span>
+                  </>
+                )}
+              </div>
+
               <h3 className="type-title-body line-clamp-1 text-[var(--content-primary)] group-hover:text-[var(--primary-forest-green)] transition-colors">
                 {liveProject.title}
               </h3>

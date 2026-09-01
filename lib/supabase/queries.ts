@@ -2,6 +2,7 @@ import { supabase } from "./client";
 import { Project, Creator, Comment, Notification, NotificationType } from "@/lib/types";
 import { DEFAULT_AVATAR_URL } from "@/lib/avatar";
 import { getAuthRedirectUrl } from "@/lib/seo";
+import { deleteStorageFiles } from "./storage";
 
 // =============================================================================
 // TYPE MAPPERS
@@ -576,10 +577,29 @@ export async function updateProjectInDb(id: string, updates: Partial<Project>): 
 }
 
 /**
- * Delete a project
+ * Delete a project and purge its cloud media files from Supabase Storage
  */
 export async function deleteProjectFromDb(id: string): Promise<boolean> {
   try {
+    // 1. Fetch images to purge from Supabase storage
+    const { data: projectRow } = await supabase
+      .from("projects")
+      .select("cover_image, gallery_images")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (projectRow) {
+      const mediaUrls: string[] = [];
+      if (projectRow.cover_image) mediaUrls.push(projectRow.cover_image);
+      if (Array.isArray(projectRow.gallery_images)) {
+        mediaUrls.push(...projectRow.gallery_images);
+      }
+      if (mediaUrls.length > 0) {
+        await deleteStorageFiles(mediaUrls, "project-media");
+      }
+    }
+
+    // 2. Delete the project database record
     const { error } = await supabase
       .from("projects")
       .delete()
@@ -905,7 +925,7 @@ export async function toggleFollowInDb(followerId: string, followingId: string):
 }
 
 /**
- * Permanently delete a user account and all associated data from Supabase
+ * Permanently delete a user account, storage media, and all associated data from Supabase
  * Cascades to all projects, appreciations, comments, follows, and notifications.
  */
 export async function deleteUserAccountInDb(userId: string): Promise<{ success: boolean; error?: string }> {
@@ -914,7 +934,41 @@ export async function deleteUserAccountInDb(userId: string): Promise<{ success: 
       return { success: false, error: "User ID is required." };
     }
 
-    // 1. Delete the profile record from public.profiles table
+    // 1. Purge all project media belonging to this user
+    try {
+      const { data: userProjects } = await supabase
+        .from("projects")
+        .select("cover_image, gallery_images")
+        .eq("creator_id", userId);
+
+      if (userProjects && userProjects.length > 0) {
+        const mediaUrls: string[] = [];
+        userProjects.forEach((p) => {
+          if (p.cover_image) mediaUrls.push(p.cover_image);
+          if (Array.isArray(p.gallery_images)) {
+            mediaUrls.push(...p.gallery_images);
+          }
+        });
+        if (mediaUrls.length > 0) {
+          await deleteStorageFiles(mediaUrls, "project-media");
+        }
+      }
+
+      // Purge avatar from avatars bucket
+      const { data: userProfile } = await supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (userProfile?.avatar_url) {
+        await deleteStorageFiles([userProfile.avatar_url], "avatars");
+      }
+    } catch (storageErr) {
+      console.warn("Storage purge warning during account deletion:", storageErr);
+    }
+
+    // 2. Delete the profile record from public.profiles table
     // All related tables (projects, appreciations, comments, follows, notifications)
     // have ON DELETE CASCADE foreign key constraints on public.profiles(id).
     const { error: profileDeleteError } = await supabase
@@ -927,7 +981,7 @@ export async function deleteUserAccountInDb(userId: string): Promise<{ success: 
       return { success: false, error: profileDeleteError.message };
     }
 
-    // 2. Sign out the user session immediately
+    // 3. Sign out the user session immediately
     await supabase.auth.signOut();
 
     return { success: true };

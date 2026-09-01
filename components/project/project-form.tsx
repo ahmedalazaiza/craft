@@ -81,11 +81,11 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   );
 
   const [tags, setTags] = useState<string[]>(
-    initialData?.tags || ["Design Systems", "Auto-layout", "Figma"]
+    initialData?.tags || []
   );
   const [newTag, setNewTag] = useState("");
   const [tools, setTools] = useState<string[]>(
-    initialData?.tools || ["Figma", "Webflow"]
+    initialData?.tools || []
   );
   const [newTool, setNewTool] = useState("");
 
@@ -389,6 +389,11 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
     if (galleryImages.length === 0) {
       alert("Please upload at least one image for your project.");
+      return;
+    }
+
+    if (specializations.length === 0) {
+      alert("Please select at least one specialization / discipline for your project.");
       return;
     }
 

@@ -46,14 +46,8 @@ export function OnboardingClient() {
   const [displayName, setDisplayName] = useState(user?.displayName || "");
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || DEFAULT_AVATAR_URL);
   const [location, setLocation] = useState(user?.location || "Worldwide");
-  const [skills, setSkills] = useState<string[]>(
-    user?.skills && user.skills.length > 0
-      ? user.skills
-      : ["Brand Identity", "UI/UX Design"]
-  );
-  const [bio, setBio] = useState(
-    user?.bio || "Independent designer crafting identity systems and digital experiences."
-  );
+  const [skills, setSkills] = useState<string[]>(user?.skills || []);
+  const [bio, setBio] = useState(user?.bio || "");
   const [website, setWebsite] = useState(user?.website || "");
 
   // Sync state when user session finishes loading from Supabase
@@ -69,7 +63,7 @@ export function OnboardingClient() {
       if (user.skills && user.skills.length > 0) {
         setSkills(user.skills);
       }
-      if (user.bio && user.bio !== "Independent designer crafting identity systems and digital experiences.") {
+      if (user.bio) {
         setBio(user.bio);
       }
       if (user.website) {
@@ -396,9 +390,10 @@ export function OnboardingClient() {
                       type="button"
                       variant="primary"
                       onClick={handleNext}
-                      className="gap-2 font-bold shadow-xs text-xs sm:text-sm"
+                      disabled={currentStep === 2 && skills.length === 0}
+                      className="gap-2 font-bold shadow-xs text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <span>Continue</span>
+                      <span>{currentStep === 2 && skills.length === 0 ? "Select at least 1 discipline" : "Continue"}</span>
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   ) : null}
