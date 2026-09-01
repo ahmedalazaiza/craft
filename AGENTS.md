@@ -36,3 +36,7 @@ Every single user request MUST pass through the following strict multi-stage pip
 
 **CRITICAL DIRECTIVE**: If ANY gate (DevOps, UX, Code Review) flags an issue, you MUST immediately rebuild and fix it internally before reporting back. Only deliver 100% perfected, fully verified work to the user.
 
+# Mandatory Supabase SQL Provisioning Rule
+
+Whenever any feature, bug fix, policy, schema alteration, storage change, or database logic requires running SQL commands in Supabase, you MUST provide the exact, copy-pasteable, idempotent SQL query directly in the response with clear instructions on how to execute it in the Supabase SQL Editor.
+
