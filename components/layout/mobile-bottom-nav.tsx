@@ -73,7 +73,7 @@ export function MobileBottomNav() {
 
         {/* 3. Center CTA: + Publish New Project */}
         <Link
-          href={user ? "/me/projects/new" : "/login"}
+          href="/me/projects/new"
           prefetch={true}
           className="relative -top-2 flex items-center justify-center min-h-[48px] min-w-[48px]"
           title="Publish Project"

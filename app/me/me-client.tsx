@@ -359,15 +359,16 @@ export function MeClient() {
                 </button>
               </div>
 
-              {/* + New Project CTA (Desktop only to prevent redundancy with mobile bottom nav bar) */}
+              {/* + New Project CTA */}
               {((activeTab === "published" && publishedProjects.length > 0) ||
                 (activeTab === "drafts" && draftProjects.length > 0)) && (
                 <Link
                   href="/me/projects/new"
+                  prefetch={true}
                   className={buttonVariants({
                     variant: "accent",
                     size: "sm",
-                    className: "hidden sm:inline-flex gap-2 font-bold shadow-xs",
+                    className: "inline-flex gap-1.5 font-bold shadow-xs text-xs sm:text-sm",
                   })}
                 >
                   <Plus className="h-4 w-4" />

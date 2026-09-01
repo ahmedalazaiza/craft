@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { SignupClient } from "./signup-client";
 
 export const metadata: Metadata = {
-  title: "Sign up",
-  description: "Join the Layerat studio collective and publish your design monographs.",
+  title: "Join as a Creator",
+  description: "Create your portfolio and publish your creative work on Layerat.",
   robots: {
     index: false,
     follow: false,
@@ -11,5 +12,9 @@ export const metadata: Metadata = {
 };
 
 export default function SignupPage() {
-  return <SignupClient />;
+  return (
+    <Suspense fallback={null}>
+      <SignupClient />
+    </Suspense>
+  );
 }

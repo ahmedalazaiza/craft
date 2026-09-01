@@ -227,9 +227,17 @@ export function SiteHeader() {
             </>
           ) : (
             <div className="hidden md:flex items-center gap-1.5 sm:gap-2">
-              {/* ThemeToggle for guests - Suspended for now as requested
-              <ThemeToggle />
-              */}
+              <Link
+                href="/me/projects/new"
+                className={buttonVariants({
+                  variant: "secondary",
+                  size: "sm",
+                  className: "hidden lg:inline-flex gap-1.5 h-9 px-3.5 shadow-xs font-semibold hover:bg-[var(--bg-elevated)]",
+                })}
+              >
+                <Plus className="h-4 w-4" />
+                <span>New project</span>
+              </Link>
 
               <Link
                 href="/login"

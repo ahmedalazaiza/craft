@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/session-context";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,8 +32,12 @@ import { generateUniqueUsername, slugifyUsername } from "@/lib/supabase/auth";
 import { bricolage } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 
+import { useRouter, useSearchParams } from "next/navigation";
+
 export function SignupClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectPath = searchParams.get("redirect") || "/me";
   const { signup } = useSession();
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
@@ -415,7 +418,7 @@ export function SignupClient() {
               <p className="type-body-default text-[var(--content-secondary)]">
                 Already have an account?{" "}
                 <Link
-                  href="/login"
+                  href={redirectPath !== "/me" ? `/login?redirect=${encodeURIComponent(redirectPath)}` : "/login"}
                   className="font-semibold text-[var(--content-link)] hover:text-[var(--content-link-hover)] underline underline-offset-4"
                 >
                   Log in
