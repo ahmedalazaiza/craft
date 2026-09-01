@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
@@ -34,10 +35,15 @@ export function DeleteProjectModal({
 }: DeleteProjectModalProps) {
   const router = useRouter();
   const { deleteProject } = useSession();
+  const [mounted, setMounted] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || !isOpen) return null;
 
   const handleDelete = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +72,7 @@ export function DeleteProjectModal({
     }
   };
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
@@ -87,46 +93,44 @@ export function DeleteProjectModal({
             <h2
               className={cn(
                 bricolage.className,
-                "text-2xl sm:text-3xl font-black text-[var(--content-primary)] tracking-tight leading-tight"
+                "text-2xl font-bold text-[var(--content-primary)] tracking-tight"
               )}
             >
-              Delete Project Permanently?
+              Delete Case Study?
             </h2>
+            <p className="text-sm font-semibold text-[var(--content-secondary)]">
+              &quot;{projectTitle}&quot;
+            </p>
           </div>
 
           <button
             type="button"
             onClick={onClose}
             disabled={isDeleting}
-            className="rounded-full p-2 text-[var(--content-tertiary)] hover:bg-[var(--bg-neutral)] hover:text-[var(--content-primary)] transition-colors cursor-pointer disabled:opacity-50 shrink-0"
+            className="rounded-full p-2 text-[var(--content-tertiary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-colors cursor-pointer disabled:opacity-50"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Description & Purge List */}
-        <div className="mt-5 space-y-4">
-          <p className="text-xs sm:text-sm text-[var(--content-secondary)] leading-relaxed">
-            Are you sure you want to delete{" "}
-            <span className="font-bold text-[var(--content-primary)] font-mono bg-[var(--bg-neutral)] px-2 py-0.5 rounded-md border border-[var(--border-neutral)]">
-              &quot;{projectTitle}&quot;
-            </span>
-            ? Everything associated with this project will be permanently erased:
+        {/* Content Body */}
+        <div className="mt-6 space-y-4">
+          <p className="text-xs text-[var(--content-secondary)] leading-relaxed">
+            Deleting this project will permanently remove it along with all related resources from Layerat servers:
           </p>
 
-          {/* Purge Checklist */}
-          <div className="rounded-2xl border border-[var(--border-neutral)] bg-[var(--bg-neutral)]/40 p-4 space-y-2.5 text-xs text-[var(--content-secondary)]">
+          <div className="space-y-2.5 rounded-2xl bg-[var(--bg-neutral)]/60 border border-[var(--border-neutral)] p-4 text-xs">
             <div className="flex items-center gap-2.5 text-[var(--content-primary)] font-medium">
               <ImageIcon className="h-4 w-4 text-rose-500 shrink-0" />
-              <span>All uploaded case study images & high-res media</span>
-            </div>
-            <div className="flex items-center gap-2.5 text-[var(--content-primary)] font-medium">
-              <Heart className="h-4 w-4 text-rose-500 shrink-0" />
-              <span>All community appreciations and likes</span>
+              <span>All uploaded project spreads and gallery assets</span>
             </div>
             <div className="flex items-center gap-2.5 text-[var(--content-primary)] font-medium">
               <MessageSquare className="h-4 w-4 text-rose-500 shrink-0" />
-              <span>All peer discussion comments & critique history</span>
+              <span>All community design feedback and comments</span>
+            </div>
+            <div className="flex items-center gap-2.5 text-[var(--content-primary)] font-medium">
+              <Heart className="h-4 w-4 text-rose-500 shrink-0" />
+              <span>All peer appreciations and saved bookmarks</span>
             </div>
             <div className="flex items-center gap-2.5 text-[var(--content-primary)] font-medium">
               <Globe className="h-4 w-4 text-rose-500 shrink-0" />
@@ -182,4 +186,6 @@ export function DeleteProjectModal({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, Check, Copy, Share2, MessageCircle, Send, Globe } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { bricolage } from "@/lib/fonts";
@@ -23,7 +24,12 @@ export function ShareModal({
   subtitle = "Share this profile with your network or copy the direct link.",
   creatorName,
 }: ShareModalProps) {
+  const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Close on Escape key
   useEffect(() => {
@@ -87,7 +93,7 @@ export function ShareModal({
     },
   ];
 
-  return (
+  const modalContent = (
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -202,4 +208,7 @@ export function ShareModal({
       )}
     </AnimatePresence>
   );
+
+  if (!mounted) return null;
+  return createPortal(modalContent, document.body);
 }

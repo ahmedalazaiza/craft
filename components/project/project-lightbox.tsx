@@ -1,9 +1,20 @@
 "use client";
 
 import React, { useEffect, useCallback, useState } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, X, Copy, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import {
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Copy,
+  Check,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface LightboxProps {
   isOpen: boolean;
@@ -20,9 +31,24 @@ export function ProjectLightbox({
   onClose,
   onNavigate,
 }: LightboxProps) {
-  const currentImage = images[currentIndex];
-  const total = images.length;
+  const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const total = images.length;
+  // Ensure valid safe index
+  const safeIndex = Math.max(0, Math.min(currentIndex, total - 1));
+  const currentImage = images[safeIndex];
+
+  // Reset zoom when navigating between images or closing
+  useEffect(() => {
+    setIsZoomed(false);
+  }, [currentIndex, isOpen]);
 
   const handleCopyLink = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -33,14 +59,16 @@ export function ProjectLightbox({
   };
 
   const handlePrev = useCallback(() => {
-    onNavigate((currentIndex - 1 + total) % total);
-  }, [currentIndex, total, onNavigate]);
+    if (total <= 1) return;
+    onNavigate((safeIndex - 1 + total) % total);
+  }, [safeIndex, total, onNavigate]);
 
   const handleNext = useCallback(() => {
-    onNavigate((currentIndex + 1) % total);
-  }, [currentIndex, total, onNavigate]);
+    if (total <= 1) return;
+    onNavigate((safeIndex + 1) % total);
+  }, [safeIndex, total, onNavigate]);
 
-  // Keyboard navigation
+  // Keyboard navigation & body scroll lock
   useEffect(() => {
     if (!isOpen) return;
 
@@ -54,127 +82,221 @@ export function ProjectLightbox({
       }
     };
 
-    // Lock body scroll while lightbox is open
+    const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = originalOverflow || "unset";
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen, onClose, handlePrev, handleNext]);
-
-  const [touchStartX, setTouchStartX] = React.useState<number | null>(null);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStartX(e.touches[0].clientX);
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX === null) return;
+    if (touchStartX === null || isZoomed) return;
     const touchEndX = e.changedTouches[0].clientX;
     const diff = touchStartX - touchEndX;
-    if (diff > 50) {
+    if (diff > 45) {
       handleNext();
-    } else if (diff < -50) {
+    } else if (diff < -45) {
       handlePrev();
     }
     setTouchStartX(null);
   };
 
-  if (!isOpen || !currentImage) return null;
+  if (!mounted || !isOpen || !currentImage) return null;
 
-  return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--base-dark)]/95 backdrop-blur-sm select-none animate-in fade-in duration-200"
-      onClick={onClose}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-    >
-      {/* Top Header Bar */}
-      <div
-        className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-6 py-5"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center gap-3">
-          <span className="rounded-full bg-white/10 px-3.5 py-1 text-xs font-semibold text-white">
-            {currentIndex + 1} / {total}
-          </span>
-          <span className="type-body-default text-white/80 hidden sm:inline truncate max-w-md">
-            {currentImage.alt}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleCopyLink}
-            className="flex items-center gap-1.5 rounded-full px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors cursor-pointer"
-            title="Copy image direct link"
+  const lightboxContent = (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-[99999] flex flex-col items-center justify-between bg-black/95 backdrop-blur-md select-none"
+          onClick={onClose}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          {/* TOP ACTION BAR */}
+          <div
+            className="w-full flex items-center justify-between px-4 sm:px-6 py-4 z-20 bg-gradient-to-b from-black/80 to-transparent"
+            onClick={(e) => e.stopPropagation()}
           >
-            {copied ? (
-              <>
-                <Check className="h-4 w-4 text-[#962EE6]" />
-                <span className="text-[#962EE6]">Copied!</span>
-              </>
-            ) : (
-              <>
-                <Copy className="h-4 w-4" />
-                <span className="hidden sm:inline">Copy Link</span>
-              </>
+            <div className="flex items-center gap-3">
+              <span className="rounded-full bg-white/15 px-3.5 py-1 text-xs font-bold text-white tracking-wide">
+                {safeIndex + 1} / {total}
+              </span>
+              <span className="text-white/80 text-xs sm:text-sm font-medium hidden sm:inline truncate max-w-sm md:max-w-lg">
+                {currentImage.alt}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* Zoom In/Out Toggle */}
+              <button
+                type="button"
+                onClick={() => setIsZoomed((prev) => !prev)}
+                className="flex items-center gap-1.5 rounded-full p-2.5 sm:px-3.5 sm:py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-all cursor-pointer"
+                title={isZoomed ? "Fit to screen (Zoom Out)" : "100% View (Zoom In)"}
+                aria-label="Toggle image zoom"
+              >
+                {isZoomed ? (
+                  <>
+                    <ZoomOut className="h-4 w-4" />
+                    <span className="hidden sm:inline">Fit</span>
+                  </>
+                ) : (
+                  <>
+                    <ZoomIn className="h-4 w-4" />
+                    <span className="hidden sm:inline">Zoom</span>
+                  </>
+                )}
+              </button>
+
+              {/* Copy Direct Image Link */}
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className="flex items-center gap-1.5 rounded-full p-2.5 sm:px-3.5 sm:py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-all cursor-pointer"
+                title="Copy direct image link"
+                aria-label="Copy image link"
+              >
+                {copied ? (
+                  <>
+                    <Check className="h-4 w-4 text-emerald-400" />
+                    <span className="text-emerald-400 hidden sm:inline">Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4" />
+                    <span className="hidden sm:inline">Copy link</span>
+                  </>
+                )}
+              </button>
+
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-full p-2.5 bg-white/15 hover:bg-white/25 text-white transition-all cursor-pointer ml-1"
+                title="Close (Esc)"
+                aria-label="Close image viewer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* MAIN IMAGE DISPLAY AREA */}
+          <div
+            className={cn(
+              "relative flex-1 w-full flex items-center justify-center p-2 sm:p-6 overflow-hidden",
+              isZoomed ? "overflow-auto cursor-zoom-out" : "cursor-zoom-in"
             )}
-          </button>
-
-          <button
-            onClick={onClose}
-            className="rounded-full p-2.5 bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
-            title="Close (Esc)"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-      </div>
-
-      {/* Main Image Container */}
-      <div
-        className="relative flex items-center justify-center p-4 sm:p-10 max-h-[85vh] max-w-[90vw]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Intrinsic Contained Image */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={currentImage.url}
-          alt={currentImage.alt}
-          className="max-h-[82vh] max-w-[88vw] w-auto h-auto object-contain rounded-[12px] shadow-2xl transition-all"
-        />
-      </div>
-
-      {/* Prev / Next Navigation Arrows */}
-      {total > 1 && (
-        <>
-          <button
             onClick={(e) => {
               e.stopPropagation();
-              handlePrev();
+              setIsZoomed((prev) => !prev);
             }}
-            className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 rounded-full p-3 bg-white/10 hover:bg-white/25 text-white transition-all cursor-pointer shadow-lg"
-            title="Previous (Left arrow)"
           >
-            <ChevronLeft className="h-6 w-6" />
-          </button>
+            <motion.div
+              key={currentImage.url}
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+              className={cn(
+                "relative flex items-center justify-center transition-transform duration-300",
+                isZoomed ? "max-w-none max-h-none py-10" : "max-h-[78vh] max-w-[90vw]"
+              )}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={currentImage.url}
+                alt={currentImage.alt}
+                className={cn(
+                  "rounded-[14px] shadow-2xl object-contain transition-all select-none",
+                  isZoomed
+                    ? "w-auto max-w-none h-auto"
+                    : "max-h-[76vh] max-w-[88vw] w-auto h-auto"
+                )}
+                draggable={false}
+              />
+            </motion.div>
+          </div>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNext();
-            }}
-            className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 rounded-full p-3 bg-white/10 hover:bg-white/25 text-white transition-all cursor-pointer shadow-lg"
-            title="Next (Right arrow)"
-          >
-            <ChevronRight className="h-6 w-6" />
-          </button>
-        </>
+          {/* PREV / NEXT NAVIGATION CONTROLS */}
+          {total > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePrev();
+                }}
+                className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 rounded-full p-3 sm:p-3.5 bg-black/60 hover:bg-white/20 text-white transition-all cursor-pointer backdrop-blur-md shadow-xl border border-white/10 active:scale-95"
+                title="Previous Image (← Left Arrow)"
+                aria-label="Previous image"
+              >
+                <ChevronLeft className="h-6 w-6 stroke-[2.5]" />
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleNext();
+                }}
+                className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 rounded-full p-3 sm:p-3.5 bg-black/60 hover:bg-white/20 text-white transition-all cursor-pointer backdrop-blur-md shadow-xl border border-white/10 active:scale-95"
+                title="Next Image (→ Right Arrow)"
+                aria-label="Next image"
+              >
+                <ChevronRight className="h-6 w-6 stroke-[2.5]" />
+              </button>
+            </>
+          )}
+
+          {/* BOTTOM THUMBNAILS CAROUSEL STRIP */}
+          {total > 1 && (
+            <div
+              className="w-full flex items-center justify-center py-4 px-4 z-20 bg-gradient-to-t from-black/80 to-transparent overflow-x-auto no-scrollbar gap-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-2 max-w-full overflow-x-auto py-1 px-2 rounded-2xl bg-black/40 backdrop-blur-md border border-white/10">
+                {images.map((img, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => onNavigate(idx)}
+                    className={cn(
+                      "relative h-12 w-16 sm:h-14 sm:w-20 shrink-0 rounded-lg overflow-hidden border-2 transition-all cursor-pointer",
+                      idx === safeIndex
+                        ? "border-[#962EE6] scale-105 shadow-md shadow-[#962EE6]/30 ring-2 ring-[#962EE6]/50"
+                        : "border-transparent opacity-50 hover:opacity-100 hover:border-white/30"
+                    )}
+                    title={`Go to image ${idx + 1}`}
+                    aria-label={`Thumbnail ${idx + 1}`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={img.url}
+                      alt={`Thumbnail ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </motion.div>
       )}
-    </div>
+    </AnimatePresence>
   );
+
+  return createPortal(lightboxContent, document.body);
 }
