@@ -258,7 +258,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                       size="default"
                       disabled={isPublishing}
                       onClick={handlePublishProject}
-                      className="shrink-0 gap-2 font-bold shadow-md bg-[var(--primary-forest-green)] hover:bg-[var(--primary-forest-green)]/90 text-white dark:bg-[var(--accent)] dark:text-[#090C09]"
+                      className="shrink-0 gap-2 font-bold shadow-md bg-[var(--primary-forest-green)] hover:bg-[var(--primary-forest-green)]/90 text-white dark:bg-[#962EE6] dark:hover:bg-[#801FD1] dark:text-white"
                     >
                       {isPublishing ? (
                         <Loader2 className="h-4 w-4 animate-spin" />

@@ -799,7 +799,7 @@ export function SettingsClient() {
                 <div className="p-5 rounded-[20px] border border-[var(--border-neutral)] bg-[var(--bg-elevated)] space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                     <div className="flex items-start gap-3.5">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--accent)] text-[#090C09] shrink-0 mt-0.5 shadow-xs">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#962EE6] text-white shrink-0 mt-0.5 shadow-xs">
                         <KeyRound className="h-5 w-5" />
                       </div>
                       <div>

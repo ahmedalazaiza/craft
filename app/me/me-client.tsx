@@ -380,7 +380,7 @@ export function MeClient() {
             {activeTab === "published" ? (
               publishedProjects.length === 0 ? (
                 <div className="flex min-h-[320px] flex-col items-center justify-center rounded-[24px] border border-dashed border-[var(--border-neutral)] bg-[var(--bg-neutral)]/30 p-10 text-center">
-                  <div className="h-12 w-12 rounded-full bg-[var(--accent)]/30 flex items-center justify-center text-[#090C09] mb-4">
+                  <div className="h-12 w-12 rounded-full bg-[#962EE6]/15 dark:bg-[#962EE6]/25 border border-[#962EE6]/30 flex items-center justify-center text-[#962EE6] dark:text-purple-300 mb-4">
                     <FolderKanban className="h-6 w-6" />
                   </div>
                   <h3 className="type-title-subsection text-[var(--content-primary)]">
