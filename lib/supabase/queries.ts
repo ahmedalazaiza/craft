@@ -822,7 +822,24 @@ export async function updateProfileInDb(id: string, updates: Partial<Creator>): 
     if (updates.city !== undefined) payload.city = updates.city;
     if (updates.website !== undefined) payload.website = updates.website;
     if (updates.skills !== undefined) payload.skills = updates.skills;
-    if (updates.avatarUrl !== undefined) payload.avatar_url = updates.avatarUrl;
+    if (updates.avatarUrl !== undefined) {
+      payload.avatar_url = updates.avatarUrl;
+      // Fetch previous avatar to hard delete old file from Supabase storage
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (
+        existingProfile?.avatar_url &&
+        existingProfile.avatar_url !== updates.avatarUrl
+      ) {
+        deleteStorageFiles([existingProfile.avatar_url], "avatars").catch((err) =>
+          console.warn("Failed to delete old avatar from storage:", err)
+        );
+      }
+    }
     if (updates.isOnline !== undefined) payload.is_online = updates.isOnline;
 
     const { error } = await supabase
@@ -979,7 +996,7 @@ export async function deleteUserAccountInDb(userId: string): Promise<{ success: 
       supabase.from("notifications").delete().or(`recipient_id.eq.${userId},actor_id.eq.${userId}`),
       supabase.from("follows").delete().or(`follower_id.eq.${userId},following_id.eq.${userId}`),
       supabase.from("appreciations").delete().eq("user_id", userId),
-      supabase.from("comments").delete().eq("user_id", userId),
+      supabase.from("comments").delete().eq("author_id", userId),
       supabase.from("projects").delete().eq("creator_id", userId),
     ]);
 

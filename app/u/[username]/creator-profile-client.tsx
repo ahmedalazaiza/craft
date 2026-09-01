@@ -102,7 +102,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
     }
     setIsUploadingAvatar(true);
     try {
-      const cdnUrl = await uploadMediaFile(file, "project-media", "avatars");
+      const cdnUrl = await uploadMediaFile(file, "avatars", "avatars");
       setEditAvatarUrl(cdnUrl);
     } catch (err) {
       console.error("Avatar upload error:", err);
