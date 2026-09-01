@@ -1,10 +1,11 @@
 "use client";
 
 import React from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-// Standard easing curve (restrained, no bounce)
-export const MOTION_EASE = [0.16, 1, 0.3, 1] as const;
+// Standard luxury easing curve (Apple / Linear standard - snappy, restrained)
+export const MOTION_EASE = [0.22, 1, 0.36, 1] as const;
 
 export interface FadeInProps {
   delay?: number;
@@ -17,11 +18,29 @@ export interface FadeInProps {
 export function FadeIn({
   children,
   className,
+  delay = 0,
+  duration = 0.35,
+  yOffset = 10,
 }: FadeInProps) {
+  const shouldReduceMotion = useReducedMotion();
+
+  if (shouldReduceMotion) {
+    return <div className={cn("w-full", className)}>{children}</div>;
+  }
+
   return (
-    <div className={cn("w-full", className)}>
+    <motion.div
+      initial={{ opacity: 0, y: yOffset }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration,
+        delay,
+        ease: MOTION_EASE,
+      }}
+      className={cn("w-full will-change-[transform,opacity]", className)}
+    >
       {children}
-    </div>
+    </motion.div>
   );
 }
 
@@ -30,16 +49,41 @@ export interface ScrollRevealSectionProps {
   className?: string;
   delay?: number;
   yOffset?: number;
+  id?: string;
 }
 
 export function ScrollRevealSection({
   children,
   className,
+  delay = 0,
+  yOffset = 14,
+  id,
 }: ScrollRevealSectionProps) {
+  const shouldReduceMotion = useReducedMotion();
+
+  if (shouldReduceMotion) {
+    return (
+      <section id={id} className={className}>
+        {children}
+      </section>
+    );
+  }
+
   return (
-    <section className={className}>
+    <motion.section
+      id={id}
+      initial={{ opacity: 0, y: yOffset }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{
+        duration: 0.45,
+        delay,
+        ease: MOTION_EASE,
+      }}
+      className={cn("will-change-[transform,opacity]", className)}
+    >
       {children}
-    </section>
+    </motion.section>
   );
 }
 
@@ -53,11 +97,29 @@ export interface ScrollRevealDivProps {
 export function ScrollRevealDiv({
   children,
   className,
+  delay = 0,
+  yOffset = 12,
 }: ScrollRevealDivProps) {
+  const shouldReduceMotion = useReducedMotion();
+
+  if (shouldReduceMotion) {
+    return <div className={className}>{children}</div>;
+  }
+
   return (
-    <div className={className}>
+    <motion.div
+      initial={{ opacity: 0, y: yOffset }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{
+        duration: 0.4,
+        delay,
+        ease: MOTION_EASE,
+      }}
+      className={cn("will-change-[transform,opacity]", className)}
+    >
       {children}
-    </div>
+    </motion.div>
   );
 }
 
@@ -70,11 +132,30 @@ export interface StaggerGridItemProps {
 export function StaggerGridItem({
   children,
   className,
+  index = 0,
 }: StaggerGridItemProps) {
+  const shouldReduceMotion = useReducedMotion();
+
+  if (shouldReduceMotion) {
+    return <div className={className}>{children}</div>;
+  }
+
+  const staggeredDelay = Math.min((index % 9) * 0.04, 0.32);
+
   return (
-    <div className={className}>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-20px" }}
+      transition={{
+        duration: 0.35,
+        delay: staggeredDelay,
+        ease: MOTION_EASE,
+      }}
+      className={cn("h-full will-change-[transform,opacity]", className)}
+    >
       {children}
-    </div>
+    </motion.div>
   );
 }
 
@@ -88,37 +169,71 @@ export function MotionCardWrapper({
   className,
 }: MotionCardProps) {
   return (
-    <div className={cn("h-full transition-transform duration-200 hover:-translate-y-1", className)}>
+    <motion.div
+      whileHover={{ y: -3 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className={cn("h-full will-change-transform", className)}
+    >
       {children}
-    </div>
-  );
-}
-
-export function HeroFeaturedParallax({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={className}>
-      {children}
-    </div>
+    </motion.div>
   );
 }
 
 export function GalleryItemReveal({
   children,
   className,
+  index = 0,
 }: {
   children: React.ReactNode;
   className?: string;
   index?: number;
 }) {
+  const shouldReduceMotion = useReducedMotion();
+
+  if (shouldReduceMotion) {
+    return <div className={className}>{children}</div>;
+  }
+
+  const delay = Math.min((index % 6) * 0.05, 0.25);
+
   return (
-    <div className={className}>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.98 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true, margin: "-20px" }}
+      transition={{
+        duration: 0.35,
+        delay,
+        ease: MOTION_EASE,
+      }}
+      className={cn("will-change-[transform,opacity]", className)}
+    >
       {children}
-    </div>
+    </motion.div>
+  );
+}
+
+export function PageTransition({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const shouldReduceMotion = useReducedMotion();
+
+  return (
+    <motion.div
+      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -6 }}
+      transition={{
+        duration: shouldReduceMotion ? 0.15 : 0.28,
+        ease: MOTION_EASE,
+      }}
+      className={cn("w-full flex-1 will-change-[transform,opacity]", className)}
+    >
+      {children}
+    </motion.div>
   );
 }
