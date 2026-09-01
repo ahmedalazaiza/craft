@@ -182,12 +182,7 @@ export function HomeClient({
 
         <div className="mx-auto max-w-5xl px-4 sm:px-6 w-full z-10 flex flex-col items-center justify-center text-center">
           {/* Eyebrow Pill */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="inline-flex items-center gap-2 rounded-full bg-[var(--bg-elevated)]/90 px-4 py-1.5 text-xs font-semibold text-[var(--content-primary)] mb-6 sm:mb-8 shadow-xs border border-[var(--border-neutral)] select-none mx-auto backdrop-blur-sm"
-          >
+          <div className="inline-flex items-center gap-2 rounded-full bg-[var(--bg-elevated)]/90 px-4 py-1.5 text-xs font-semibold text-[var(--content-primary)] mb-6 sm:mb-8 shadow-xs border border-[var(--border-neutral)] select-none mx-auto backdrop-blur-sm">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#962EE6] opacity-60"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#962EE6]"></span>
@@ -195,7 +190,7 @@ export function HomeClient({
             <span className="font-bold">Layerat Platform</span>
             <span className="text-[var(--content-tertiary)]">•</span>
             <span className="text-[var(--content-secondary)] font-normal">Independent Creators</span>
-          </motion.div>
+          </div>
 
           {/* Monumental Centered Headline */}
           <h1
@@ -205,69 +200,33 @@ export function HomeClient({
             )}
           >
             <span className="block w-full text-center overflow-hidden">
-              <motion.span
-                className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--content-primary)] text-center"
-                initial={{ opacity: 0, y: "100%" }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 0.6,
-                  delay: 0.08,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
-              >
+              <span className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--content-primary)] text-center">
                 <span>Showcase</span>
                 <span>your</span>
                 <span className="inline-flex items-center rounded-2xl bg-[#090C09] text-white dark:bg-[#962EE6]/20 dark:text-white dark:border dark:border-[#962EE6]/40 px-3.5 sm:px-4 py-0.5 sm:py-1 shadow-md shadow-black/10 dark:shadow-[0_0_24px_rgba(150,46,230,0.25)] tracking-tight font-black transition-transform hover:scale-105 duration-200">
                   work<span className="text-[#962EE6] dark:text-white">.</span>
                 </span>
-              </motion.span>
+              </span>
             </span>
 
             <span className="block w-full text-center overflow-hidden mt-1 sm:mt-2">
-              <motion.span
-                className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--content-primary)] text-center"
-                initial={{ opacity: 0, y: "100%" }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 0.6,
-                  delay: 0.18,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
-              >
+              <span className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--content-primary)] text-center">
                 <span>Connect</span>
                 <span>with</span>
                 <span className="inline-flex items-center rounded-2xl bg-[#090C09] text-white dark:bg-[#962EE6]/20 dark:text-white dark:border dark:border-[#962EE6]/40 px-3.5 sm:px-4 py-0.5 sm:py-1 shadow-md shadow-black/10 dark:shadow-[0_0_24px_rgba(150,46,230,0.25)] tracking-tight font-black transition-transform hover:scale-105 duration-200">
                   makers<span className="text-[#962EE6] dark:text-white">.</span>
                 </span>
-              </motion.span>
+              </span>
             </span>
           </h1>
 
           {/* Subtitle */}
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 0.5,
-              delay: 0.28,
-              ease: [0.16, 1, 0.3, 1],
-            }}
-            className="mt-6 sm:mt-8 text-base sm:text-xl text-[var(--content-secondary)] max-w-2xl leading-relaxed font-normal text-center mx-auto"
-          >
+          <p className="mt-6 sm:mt-8 text-base sm:text-xl text-[var(--content-secondary)] max-w-2xl leading-relaxed font-normal text-center mx-auto">
             A modern portfolio platform to publish your projects, build your studio profile, and discover inspiring work from designers worldwide.
-          </motion.p>
+          </p>
 
           {/* Action Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 0.5,
-              delay: 0.38,
-              ease: [0.16, 1, 0.3, 1],
-            }}
-            className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto mx-auto max-w-md sm:max-w-none"
-          >
+          <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto mx-auto max-w-md sm:max-w-none">
             <Link
               href="/explore"
               className={buttonVariants({
@@ -303,7 +262,7 @@ export function HomeClient({
                 Join as a Creator
               </Link>
             )}
-          </motion.div>
+          </div>
 
           {/* Minimalist 3-Point Value Manifesto (Refined Glass Cards) */}
           <div className="mt-14 sm:mt-16 pt-10 sm:pt-12 border-t border-[var(--border-neutral)] grid grid-cols-1 sm:grid-cols-3 gap-5 w-full max-w-4xl text-center">

@@ -77,6 +77,7 @@ export function MobileBottomNav() {
           prefetch={true}
           className="relative -top-2 flex items-center justify-center min-h-[48px] min-w-[48px]"
           title="Publish Project"
+          aria-label="Publish Project"
         >
           <motion.div
             whileTap={{ scale: 0.92 }}

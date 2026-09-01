@@ -37,6 +37,7 @@ export function AppreciationButton({
         type="button"
         onClick={handleClick}
         title={appreciated ? "Remove appreciation" : "Appreciate this project"}
+        aria-label={appreciated ? `Remove appreciation (${count})` : `Appreciate this project (${count})`}
         style={
           appreciated
             ? { backgroundColor: "#962EE6", color: "#FFFFFF" }

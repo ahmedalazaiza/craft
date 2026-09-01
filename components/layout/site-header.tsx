@@ -140,6 +140,7 @@ export function SiteHeader() {
                       onClick={() => setIsInlineSearchOpen(false)}
                       className="absolute right-3 p-1 rounded-full text-[var(--content-tertiary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-colors cursor-pointer"
                       title="Close search"
+                      aria-label="Close search"
                     >
                       <X className="h-4 w-4" />
                     </button>

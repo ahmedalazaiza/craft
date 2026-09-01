@@ -88,6 +88,7 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
                   prefetch={true}
                   className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--bg-elevated)]/90 backdrop-blur-xs text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] transition-all shadow-xs cursor-pointer border border-[var(--border-neutral)]"
                   title="Edit case study"
+                  aria-label="Edit case study"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <Edit3 className="h-3.5 w-3.5" />
@@ -99,6 +100,7 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
                 onClick={handleShareClick}
                 className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--bg-elevated)]/90 backdrop-blur-xs text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-elevated)] transition-all shadow-xs cursor-pointer border border-[var(--border-neutral)]"
                 title="Share project"
+                aria-label="Share project"
               >
                 <Share2 className="h-3.5 w-3.5" />
               </button>
