@@ -147,12 +147,12 @@ export function SearchField({
       <form
         onSubmit={handleSearchSubmit}
         className={cn(
-          "flex items-center gap-2 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-screen)] transition-all shadow-xs",
+          "flex items-center rounded-full border border-[var(--border-neutral)] bg-[var(--bg-screen)] transition-all shadow-xs",
           isOpen && "ring-2 ring-[var(--btn-cta-bg)] border-[var(--btn-cta-bg)]",
-          compact ? "h-10 px-4" : "h-12 px-4"
+          compact ? "h-10 pl-4 pr-1.5" : "h-12 pl-4 pr-1.5"
         )}
       >
-        <Search className="h-4 w-4 text-[var(--content-tertiary)] shrink-0" />
+        <Search className="h-4 w-4 text-[var(--content-tertiary)] shrink-0 mr-2.5" />
 
         <input
           ref={inputRef}
@@ -169,54 +169,60 @@ export function SearchField({
           }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="flex-1 bg-transparent text-base md:text-sm text-[var(--content-primary)] placeholder:text-[var(--content-tertiary)] focus:outline-none"
+          className="flex-1 min-w-0 bg-transparent text-base md:text-sm text-[var(--content-primary)] placeholder:text-[var(--content-tertiary)] focus:outline-none [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden [&::-ms-clear]:hidden appearance-none"
         />
 
+        {/* Clear Button — positioned immediately after text input */}
         {query && (
           <button
             type="button"
             onClick={() => {
               setQuery("");
               setIsOpen(false);
+              inputRef.current?.focus();
             }}
-            className="rounded-full p-1 text-[var(--content-tertiary)] hover:bg-[var(--bg-neutral)] hover:text-[var(--content-primary)] cursor-pointer"
+            className="shrink-0 ml-1 rounded-full p-1 text-[var(--content-tertiary)] hover:bg-[var(--bg-neutral)] hover:text-[var(--content-primary)] cursor-pointer transition-colors"
+            aria-label="Clear search"
           >
             <X className="h-3.5 w-3.5" />
           </button>
         )}
 
-        {/* Filter Button */}
-        {showFilterButton && onOpenFilter && (
-          <button
-            type="button"
-            onClick={onOpenFilter}
-            className={cn(
-              "relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer",
-              hasActiveFilters
-                ? "bg-[var(--chip-bg)] text-[var(--chip-fg)]"
-                : "bg-[var(--bg-neutral)] text-[var(--content-primary)] hover:bg-[var(--bg-neutral-hover)]"
-            )}
-            title="Open filter panel"
-          >
-            <SlidersHorizontal className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Filter</span>
-            {filterCount > 0 && (
-              <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#962EE6] px-1 text-[10px] font-bold text-white shadow-xs animate-in zoom-in-50">
-                {filterCount}
-              </span>
-            )}
-          </button>
-        )}
+        {/* Action buttons group — separated from input area */}
+        <div className="flex items-center gap-1.5 shrink-0 ml-2">
+          {/* Filter Button */}
+          {showFilterButton && onOpenFilter && (
+            <button
+              type="button"
+              onClick={onOpenFilter}
+              className={cn(
+                "relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer",
+                hasActiveFilters
+                  ? "bg-[var(--chip-bg)] text-[var(--chip-fg)]"
+                  : "bg-[var(--bg-neutral)] text-[var(--content-primary)] hover:bg-[var(--bg-neutral-hover)]"
+              )}
+              title="Open filter panel"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Filter</span>
+              {filterCount > 0 && (
+                <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#962EE6] px-1 text-[10px] font-bold text-white shadow-xs animate-in zoom-in-50">
+                  {filterCount}
+                </span>
+              )}
+            </button>
+          )}
 
-        {/* Search Submit Action Button */}
-        <Button
-          type="submit"
-          variant="primary"
-          size="sm"
-          className="h-8 px-4 text-xs shrink-0 font-semibold transition-all shadow-xs"
-        >
-          <span>Search</span>
-        </Button>
+          {/* Search Submit Action Button */}
+          <Button
+            type="submit"
+            variant="primary"
+            size="sm"
+            className={cn("shrink-0 text-xs font-semibold transition-all shadow-xs", compact ? "h-7 px-3.5" : "h-8 px-4")}
+          >
+            <span>Search</span>
+          </Button>
+        </div>
       </form>
 
       {/* Autosuggest / Autocomplete Dropdown */}

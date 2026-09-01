@@ -6,36 +6,52 @@ async function generateOgImage() {
   const width = 1200;
   const height = 630;
 
-  // Read full logo image
-  const logoFullPath = path.join(process.cwd(), "public", "logo-full.png");
-  const logoBuffer = fs.readFileSync(logoFullPath);
+  // Read the official full-color SVG logo
+  const logoSvgPath = path.join(process.cwd(), "public", "logo.svg");
+  const logoSvgContent = fs.readFileSync(logoSvgPath, "utf-8");
 
-  // Resize logo for OG prominence (width: 620px)
-  const resizedLogo = await sharp(logoBuffer)
-    .resize({ width: 640, fit: "contain" })
+  // Rasterize the SVG logo at high resolution (2x for sharpness)
+  const logoRaster = await sharp(Buffer.from(logoSvgContent))
+    .resize({ width: 1200, fit: "contain" })
+    .png()
     .toBuffer();
 
-  // Create SVG background overlay with typography, subtle gradients, and luxury details
+  // Get dimensions of rasterized logo
+  const logoMeta = await sharp(logoRaster).metadata();
+  const logoW = logoMeta.width || 1200;
+  const logoH = logoMeta.height || 600;
+
+  // We want the logo to be ~500px wide in the final image, centered
+  const targetLogoWidth = 520;
+  const scale = targetLogoWidth / logoW;
+  const targetLogoHeight = Math.round(logoH * scale);
+
+  const resizedLogo = await sharp(logoRaster)
+    .resize({ width: targetLogoWidth, height: targetLogoHeight, fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 0 } })
+    .png()
+    .toBuffer();
+
+  // Create SVG overlay with clean white background, subtle accent details, and tagline
   const svgOverlay = `
   <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <!-- Subtle Ambient Purple Mesh Glows -->
       <radialGradient id="glow-top" cx="50%" cy="0%" r="60%">
-        <stop offset="0%" stop-color="#962EE6" stop-opacity="0.08" />
-        <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
-      </radialGradient>
-      <radialGradient id="glow-bottom-right" cx="100%" cy="100%" r="50%">
         <stop offset="0%" stop-color="#962EE6" stop-opacity="0.06" />
         <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
       </radialGradient>
-      <radialGradient id="glow-bottom-left" cx="0%" cy="100%" r="50%">
-        <stop offset="0%" stop-color="#962EE6" stop-opacity="0.04" />
+      <radialGradient id="glow-bottom-right" cx="90%" cy="100%" r="45%">
+        <stop offset="0%" stop-color="#962EE6" stop-opacity="0.05" />
+        <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+      </radialGradient>
+      <radialGradient id="glow-left" cx="10%" cy="60%" r="40%">
+        <stop offset="0%" stop-color="#962EE6" stop-opacity="0.03" />
         <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
       </radialGradient>
 
       <!-- Dot Pattern -->
-      <pattern id="dot-grid" width="28" height="28" patternUnits="userSpaceOnUse">
-        <circle cx="14" cy="14" r="1" fill="#962EE6" fill-opacity="0.08" />
+      <pattern id="dot-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+        <circle cx="16" cy="16" r="0.8" fill="#962EE6" fill-opacity="0.06" />
       </pattern>
     </defs>
 
@@ -45,47 +61,38 @@ async function generateOgImage() {
     <!-- Ambient Glows -->
     <rect width="100%" height="100%" fill="url(#glow-top)" />
     <rect width="100%" height="100%" fill="url(#glow-bottom-right)" />
-    <rect width="100%" height="100%" fill="url(#glow-bottom-left)" />
+    <rect width="100%" height="100%" fill="url(#glow-left)" />
 
     <!-- Subtle Dot Grid -->
-    <rect width="100%" height="100%" fill="url(#dot-grid)" opacity="0.75" />
+    <rect width="100%" height="100%" fill="url(#dot-grid)" opacity="0.6" />
 
     <!-- Elegant Inner Frame -->
-    <rect x="36" y="36" width="${width - 72}" height="${height - 72}" rx="32" fill="none" stroke="#EAEAEA" stroke-width="1.5" />
+    <rect x="32" y="32" width="${width - 64}" height="${height - 64}" rx="28" fill="none" stroke="#E8E8EC" stroke-width="1" />
 
-    <!-- Top Badge -->
-    <g transform="translate(${width / 2}, 110)">
-      <rect x="-160" y="-18" width="320" height="36" rx="18" fill="#F4F4F5" stroke="#E4E4E7" stroke-width="1" />
-      <circle cx="-135" cy="0" r="4" fill="#962EE6" />
-      <text x="-120" y="5" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="700" fill="#18181B" letter-spacing="0.5">THE CURATED CREATIVE PLATFORM</text>
-    </g>
-
-    <!-- Bottom Tagline & Meta Strip -->
-    <g transform="translate(${width / 2}, 460)">
-      <!-- Main Tagline -->
-      <text x="0" y="0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="800" fill="#090C09" letter-spacing="-0.5">
+    <!-- Bottom Tagline -->
+    <g transform="translate(${width / 2}, 450)">
+      <text x="0" y="0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="26" font-weight="800" fill="#090C09" letter-spacing="-0.3">
         The Portfolio Platform for Designers &amp; Creators
       </text>
 
-      <!-- Sub-Pills / Disciplines -->
-      <text x="0" y="40" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#71717A" letter-spacing="0.2">
-        UI/UX Design • Brand Identity • Visual Case Studies • Typography • 3D Motion
+      <!-- Sub-categories -->
+      <text x="0" y="38" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="500" fill="#71717A" letter-spacing="0.3">
+        UI/UX Design  •  Brand Identity  •  Visual Case Studies  •  Typography  •  3D &amp; Motion
       </text>
     </g>
 
-    <!-- Bottom URL Footer Indicator -->
-    <g transform="translate(${width / 2}, 555)">
-      <text x="0" y="0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="700" fill="#A1A1AA" letter-spacing="0.5">
+    <!-- Bottom URL -->
+    <g transform="translate(${width / 2}, 552)">
+      <text x="0" y="0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="600" fill="#A1A1AA" letter-spacing="0.8">
         layerat.com
       </text>
     </g>
   </svg>
   `;
 
-  // Get metadata of resized logo to center it vertically
-  const logoMeta = await sharp(resizedLogo).metadata();
-  const logoLeft = Math.round((width - (logoMeta.width || 640)) / 2);
-  const logoTop = 205;
+  // Center the logo vertically in the upper portion
+  const logoLeft = Math.round((width - targetLogoWidth) / 2);
+  const logoTop = Math.round(130);
 
   const finalImage = await sharp(Buffer.from(svgOverlay))
     .composite([
@@ -95,7 +102,7 @@ async function generateOgImage() {
         left: logoLeft,
       },
     ])
-    .png()
+    .png({ quality: 95 })
     .toBuffer();
 
   const outPath = path.join(process.cwd(), "public", "og-image.png");
@@ -105,7 +112,9 @@ async function generateOgImage() {
   const appOgPath = path.join(process.cwd(), "app", "opengraph-image.png");
   fs.writeFileSync(appOgPath, finalImage);
 
-  console.log("Successfully generated:", outPath, "and", appOgPath);
+  console.log(`✅ Generated OG images (${width}x${height}):`);
+  console.log(`   → ${outPath}`);
+  console.log(`   → ${appOgPath}`);
 }
 
 generateOgImage().catch(console.error);
