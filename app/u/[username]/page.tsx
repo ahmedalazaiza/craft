@@ -5,8 +5,7 @@ import { fetchCreatorByUsername } from "@/lib/supabase/queries";
 import { getProfileMetadata, generateProfileJsonLd, generateBreadcrumbJsonLd } from "@/lib/seo";
 import { CreatorProfileClient } from "./creator-profile-client";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 interface PageProps {
   params: Promise<{ username: string }>;

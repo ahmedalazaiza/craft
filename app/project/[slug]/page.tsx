@@ -5,8 +5,7 @@ import { fetchProjectBySlug } from "@/lib/supabase/queries";
 import { getProjectMetadata, generateProjectJsonLd, generateBreadcrumbJsonLd } from "@/lib/seo";
 import { ProjectDetailClient } from "./project-detail-client";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 interface PageProps {
   params: Promise<{ slug: string }>;
