@@ -27,11 +27,7 @@ export function AppreciationButton({
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
-    const success = toggleAppreciation(projectId);
-    if (!success) {
-      router.push("/login");
-    }
+    toggleAppreciation(projectId);
   };
 
   if (variant === "card") {

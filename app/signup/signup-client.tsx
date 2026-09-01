@@ -244,24 +244,15 @@ export function SignupClient() {
                 </Button>
 
                 <Link
-                  href="/login"
+                  href="/"
+                  prefetch={true}
                   className={buttonVariants({
                     variant: "accent",
-                    className: "w-full font-bold shadow-xs gap-2",
+                    className: "w-full font-bold shadow-xs gap-2 bg-[#962EE6] hover:bg-[#801FD1] text-white",
                   })}
                 >
-                  <span>Proceed to Log In</span>
+                  <span>Explore Platform</span>
                   <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-
-              <div className="text-center pt-2">
-                <Link
-                  href="/explore"
-                  className="text-xs font-semibold text-[var(--content-tertiary)] hover:text-[var(--content-primary)] transition-colors inline-flex items-center gap-1"
-                >
-                  <span>Or browse projects while waiting</span>
-                  <ExternalLink className="h-3 w-3" />
                 </Link>
               </div>
             </CardContent>

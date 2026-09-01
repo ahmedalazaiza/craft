@@ -418,9 +418,12 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
       } else {
         router.push("/me");
       }
-    } catch (err) {
-      console.error("Failed to save project:", err);
-      alert("Failed to save project. Please try again.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "";
+      if (!msg.includes("verification")) {
+        console.error("Failed to save project:", err);
+        alert("Failed to save project. Please try again.");
+      }
     } finally {
       setIsSaving(false);
     }

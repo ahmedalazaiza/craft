@@ -2,32 +2,28 @@
 
 import React, { useState, useEffect } from "react";
 import { useSession } from "@/lib/session-context";
-import { Mail, X, CheckCircle2, Clock } from "lucide-react";
+import { Mail, CheckCircle2, Clock, Sparkles } from "lucide-react";
 import { getResendStatus, sendVerificationEmail } from "@/lib/resend-limiter";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function VerificationBanner() {
-  const { user } = useSession();
-  const [isDismissed, setIsDismissed] = useState(true);
+  const { user, openVerificationModal } = useSession();
   const [isSending, setIsSending] = useState(false);
   const [sendSuccess, setSendSuccess] = useState(false);
   const [cooldown, setCooldown] = useState(0);
 
-  const userEmail = user?.email || (typeof window !== "undefined" ? localStorage.getItem("craft_last_registered_email") || "" : "");
+  const userEmail =
+    user?.email ||
+    (typeof window !== "undefined"
+      ? localStorage.getItem("craft_last_registered_email") || ""
+      : "");
 
-  useEffect(() => {
-    // Check sessionStorage to see if dismissed for current tab session
-    const dismissedInSession = sessionStorage.getItem("craft_hide_verification_banner");
-    if (!dismissedInSession && user && !user.isVerified) {
-      setIsDismissed(false);
-    } else {
-      setIsDismissed(true);
-    }
-  }, [user]);
+  // Show persistently if user is logged in but not verified, or just registered
+  const isPendingVerification = (user && !user.isVerified) || (!user && userEmail.length > 0);
 
   // Rate limiter cooldown countdown
   useEffect(() => {
-    if (!userEmail || isDismissed) return;
+    if (!userEmail) return;
 
     const updateCooldown = () => {
       const status = getResendStatus(userEmail);
@@ -37,18 +33,10 @@ export function VerificationBanner() {
     updateCooldown();
     const timer = setInterval(updateCooldown, 1000);
     return () => clearInterval(timer);
-  }, [userEmail, isDismissed]);
+  }, [userEmail]);
 
-  const handleDismiss = () => {
-    setIsDismissed(true);
-    try {
-      sessionStorage.setItem("craft_hide_verification_banner", "true");
-    } catch {
-      // ignore
-    }
-  };
-
-  const handleResend = async () => {
+  const handleResend = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!userEmail || cooldown > 0 || isSending) return;
 
     setIsSending(true);
@@ -68,8 +56,7 @@ export function VerificationBanner() {
     }
   };
 
-  // Only render if user is logged in, not verified, and hasn't dismissed in current session
-  if (!user || user.isVerified || isDismissed) {
+  if (!isPendingVerification) {
     return null;
   }
 
@@ -79,17 +66,17 @@ export function VerificationBanner() {
         initial={{ height: 0, opacity: 0 }}
         animate={{ height: "auto", opacity: 1 }}
         exit={{ height: 0, opacity: 0 }}
-        className="relative z-50 bg-[var(--chip-bg)] text-[var(--chip-fg)] border-b border-white/10 px-4 py-2.5 sm:px-6 shadow-sm"
+        className="relative z-50 bg-[#150D21] dark:bg-[#10071C] text-white border-b border-[#962EE6]/30 px-4 py-2.5 sm:px-6 shadow-xs"
       >
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#962EE6] text-white shadow-2xs">
+        <div className="mx-auto flex max-w-[1580px] items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#962EE6] text-white shadow-xs animate-pulse">
               <Mail className="h-3 w-3" />
             </span>
 
             <p className="truncate font-medium text-white/90">
-              <strong className="text-white">Account activation required:</strong> Please verify your email{" "}
-              {userEmail && <span className="underline opacity-80">({userEmail})</span>} to unlock appreciation, following, and project publishing.
+              <strong className="text-white font-bold">Email Verification Required:</strong> Please confirm your email{" "}
+              {userEmail && <span className="font-mono text-[#DEB2FF] underline">({userEmail})</span>} to unlock appreciation, following creators, and publishing projects.
             </p>
           </div>
 
@@ -104,14 +91,14 @@ export function VerificationBanner() {
                 type="button"
                 onClick={handleResend}
                 disabled={isSending || cooldown > 0}
-                className="font-bold text-purple-300 hover:text-white underline underline-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-xs inline-flex items-center gap-1"
+                className="font-bold text-[#DEB2FF] hover:text-white underline underline-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-xs inline-flex items-center gap-1"
               >
                 {isSending ? (
                   "Sending..."
                 ) : cooldown > 0 ? (
                   <>
                     <Clock className="h-3 w-3" />
-                    <span>Resend ({cooldown}s)</span>
+                    <span>Resend in {cooldown}s</span>
                   </>
                 ) : (
                   "Resend activation link"
@@ -121,12 +108,11 @@ export function VerificationBanner() {
 
             <button
               type="button"
-              onClick={handleDismiss}
-              className="rounded p-1 text-white/50 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-              title="Dismiss for this session"
-              aria-label="Dismiss banner"
+              onClick={() => openVerificationModal("publish")}
+              className="hidden sm:inline-flex items-center gap-1 rounded-full bg-[#962EE6] hover:bg-[#801FD1] text-white px-3 py-1 font-bold text-[11px] shadow-xs transition-all cursor-pointer"
             >
-              <X className="h-3.5 w-3.5" />
+              <Sparkles className="h-3 w-3" />
+              <span>Perks</span>
             </button>
           </div>
         </div>
@@ -134,3 +120,4 @@ export function VerificationBanner() {
     </AnimatePresence>
   );
 }
+

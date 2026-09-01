@@ -457,9 +457,15 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
-  // Action: Appreciate Project (Instant Optimistic Feedback & DB Persistence)
+  // Action: Appreciate Project (Instant Optimistic Feedback & DB Persistence - Verified Users Only)
   const toggleAppreciation = (projectId: string): boolean => {
     const targetProject = projects.find((p) => p.id === projectId);
+
+    // If guest or not verified, trigger verification modal
+    if (!user || !user.isVerified) {
+      openVerificationModal("like", targetProject?.title);
+      return false;
+    }
 
     setAppreciatedProjectIds((prev) => {
       const next = new Set(prev);
@@ -551,18 +557,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // GATED ACTION: Save Project (Requires authentication)
+  // GATED ACTION: Save Project (Requires verified creator account)
   const saveProject = async (projectData: Partial<Project> & { title: string }): Promise<Project> => {
-    if (!user) {
-      openVerificationModal("publish");
-      throw new Error("Authentication is required before publishing projects.");
-    }
-
-    // Auto-verify authenticated user so they are never blocked
-    if (!user.isVerified) {
-      const verifiedUser = { ...user, isVerified: true };
-      setUser(verifiedUser);
-      updateProfileInDb(user.id, { isVerified: true }).catch(() => {});
+    if (!user || !user.isVerified) {
+      openVerificationModal("publish", projectData.title);
+      throw new Error("Email verification is required before publishing projects.");
     }
 
     if (projectData.id) {
