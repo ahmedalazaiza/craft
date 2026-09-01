@@ -678,11 +678,118 @@ export async function toggleAppreciationInDb(projectId: string, userId: string):
 }
 
 /**
+ * Real-time username validation and database availability check
+ */
+export interface UsernameCheckResult {
+  available: boolean;
+  status: "available" | "taken" | "invalid" | "reserved" | "current";
+  message: string;
+}
+
+export const RESERVED_USERNAMES = new Set([
+  "admin", "administrator", "layerat", "craft", "explore", "creators",
+  "settings", "login", "signup", "api", "about", "team", "me", "search",
+  "terms", "privacy", "guidelines", "auth", "help", "support", "dashboard",
+  "user", "profile", "app", "studio", "root", "null", "undefined"
+]);
+
+export async function checkUsernameAvailability(
+  rawUsername: string,
+  currentUserId?: string
+): Promise<UsernameCheckResult> {
+  const clean = rawUsername.trim().toLowerCase().replace(/^@+/, "");
+
+  if (!clean) {
+    return {
+      available: false,
+      status: "invalid",
+      message: "Username cannot be empty."
+    };
+  }
+
+  // Format validation: 3 to 30 alphanumeric + underscores
+  const regex = /^[a-z0-9_]{3,30}$/;
+  if (!regex.test(clean)) {
+    if (clean.length < 3) {
+      return {
+        available: false,
+        status: "invalid",
+        message: "Username must be at least 3 characters."
+      };
+    }
+    if (clean.length > 30) {
+      return {
+        available: false,
+        status: "invalid",
+        message: "Username cannot exceed 30 characters."
+      };
+    }
+    return {
+      available: false,
+      status: "invalid",
+      message: "Only lowercase letters, numbers, and underscores allowed."
+    };
+  }
+
+  // Reserved handles check
+  if (RESERVED_USERNAMES.has(clean)) {
+    return {
+      available: false,
+      status: "reserved",
+      message: `@${clean} is a reserved system handle.`
+    };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, username")
+      .ilike("username", clean)
+      .maybeSingle();
+
+    if (error) {
+      console.warn("Notice querying username availability:", error.message || error);
+    }
+
+    if (data) {
+      if (currentUserId && data.id === currentUserId) {
+        return {
+          available: true,
+          status: "current",
+          message: "This is your current handle."
+        };
+      }
+      return {
+        available: false,
+        status: "taken",
+        message: `@${clean} is already taken.`
+      };
+    }
+
+    return {
+      available: true,
+      status: "available",
+      message: `@${clean} is available!`
+    };
+  } catch (err) {
+    console.warn("Failed to check username availability:", err);
+    return {
+      available: true,
+      status: "available",
+      message: `@${clean} appears available.`
+    };
+  }
+}
+
+/**
  * Update creator profile
  */
 export async function updateProfileInDb(id: string, updates: Partial<Creator>): Promise<boolean> {
   try {
     const payload: Record<string, unknown> = {};
+    if (updates.username !== undefined) {
+      payload.username = updates.username.toLowerCase().trim().replace(/^@+/, "");
+    }
     if (updates.displayName !== undefined) payload.display_name = updates.displayName;
     if (updates.bio !== undefined) payload.bio = updates.bio;
     if (updates.location !== undefined) payload.location = updates.location;
@@ -691,7 +798,6 @@ export async function updateProfileInDb(id: string, updates: Partial<Creator>): 
     if (updates.skills !== undefined) payload.skills = updates.skills;
     if (updates.avatarUrl !== undefined) payload.avatar_url = updates.avatarUrl;
     if (updates.isOnline !== undefined) payload.is_online = updates.isOnline;
-
 
     const { error } = await supabase
       .from("profiles")

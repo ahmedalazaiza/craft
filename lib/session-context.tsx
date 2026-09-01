@@ -65,7 +65,7 @@ interface SessionContextType {
   addComment: (projectId: string, content: string) => Promise<void>;
   saveProject: (projectData: Partial<Project> & { title: string }) => Promise<Project>;
   deleteProject: (id: string) => Promise<boolean>;
-  updateProfile: (updatedData: Partial<Creator>) => Promise<void>;
+  updateProfile: (updatedData: Partial<Creator>) => Promise<boolean>;
   deleteAccount: () => Promise<boolean>;
 }
 
@@ -637,14 +637,44 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     return await deleteProjectFromDb(id);
   };
 
-  const updateProfile = async (updatedData: Partial<Creator>) => {
-    if (!user) return;
-    const updated = { ...user, ...updatedData };
+  const updateProfile = async (updatedData: Partial<Creator>): Promise<boolean> => {
+    if (!user) return false;
+    const cleanUsername = updatedData.username
+      ? updatedData.username.toLowerCase().trim().replace(/^@+/, "")
+      : user.username;
+
+    const updated: Creator = {
+      ...user,
+      ...updatedData,
+      ...(updatedData.username ? { username: cleanUsername } : {}),
+    };
+
     setUser(updated);
     setCreators((prev) => prev.map((c) => (c.id === user.id ? updated : c)));
 
+    // Immediately reflect new username/profile across all projects in memory
+    setProjects((prev) =>
+      prev.map((p) =>
+        p.creator.id === user.id || p.creator.username.toLowerCase() === user.username.toLowerCase()
+          ? {
+              ...p,
+              creator: {
+                ...p.creator,
+                ...updatedData,
+                ...(updatedData.username ? { username: cleanUsername } : {}),
+              },
+            }
+          : p
+      )
+    );
+
     // Persist to Supabase
-    updateProfileInDb(user.id, updatedData).catch(console.error);
+    const success = await updateProfileInDb(user.id, {
+      ...updatedData,
+      ...(updatedData.username ? { username: cleanUsername } : {}),
+    });
+
+    return success;
   };
 
   const deleteAccount = async (): Promise<boolean> => {

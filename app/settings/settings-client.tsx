@@ -19,7 +19,7 @@ import { LocationInput } from "@/components/ui/location-input";
 import { SkillsPicker } from "@/components/onboarding/skills-picker";
 import { DeleteAccountModal } from "@/components/settings/delete-account-modal";
 import { PasswordResetModal } from "@/components/settings/password-reset-modal";
-import { requestPasswordResetInDb } from "@/lib/supabase/queries";
+import { requestPasswordResetInDb, checkUsernameAvailability } from "@/lib/supabase/queries";
 import { uploadMediaFile } from "@/lib/supabase/storage";
 import { DEFAULT_AVATAR_URL, getValidAvatarUrl } from "@/lib/avatar";
 import { supabase } from "@/lib/supabase/client";
@@ -61,6 +61,10 @@ export function SettingsClient() {
 
   // Profile Edit State
   const [displayName, setDisplayName] = useState(user?.displayName || "");
+  const [username, setUsername] = useState(user?.username || "");
+  const [usernameStatus, setUsernameStatus] = useState<"current" | "available" | "taken" | "invalid" | "reserved" | "checking">("current");
+  const [usernameMessage, setUsernameMessage] = useState<string>("");
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [bio, setBio] = useState(user?.bio || "");
   const [location, setLocation] = useState(user?.location || user?.city || "");
   const [website, setWebsite] = useState(user?.website || "");
@@ -93,6 +97,7 @@ export function SettingsClient() {
   useEffect(() => {
     if (user) {
       setDisplayName(user.displayName);
+      setUsername(user.username);
       setBio(user.bio || "");
       setLocation(user.location || user.city || "");
       setWebsite(user.website || "");
@@ -100,6 +105,53 @@ export function SettingsClient() {
       setSkills(user.skills || []);
     }
   }, [user]);
+
+  // Real-time username availability debounce checker
+  useEffect(() => {
+    if (!user) return;
+    const clean = username.trim().toLowerCase().replace(/^@+/, "");
+
+    // If identical to current username
+    if (clean === user.username.toLowerCase()) {
+      setUsernameStatus("current");
+      setUsernameMessage("Your current active handle.");
+      setIsCheckingUsername(false);
+      return;
+    }
+
+    // Quick regex validation before DB query
+    if (!clean) {
+      setUsernameStatus("invalid");
+      setUsernameMessage("Username cannot be empty.");
+      setIsCheckingUsername(false);
+      return;
+    }
+
+    if (!/^[a-z0-9_]{3,30}$/.test(clean)) {
+      setUsernameStatus("invalid");
+      if (clean.length < 3) {
+        setUsernameMessage("Must be at least 3 characters.");
+      } else if (clean.length > 30) {
+        setUsernameMessage("Cannot exceed 30 characters.");
+      } else {
+        setUsernameMessage("Only letters (a-z), numbers, and underscores (_).");
+      }
+      setIsCheckingUsername(false);
+      return;
+    }
+
+    setIsCheckingUsername(true);
+    setUsernameStatus("checking");
+
+    const timer = setTimeout(async () => {
+      const res = await checkUsernameAvailability(clean, user.id);
+      setIsCheckingUsername(false);
+      setUsernameStatus(res.status);
+      setUsernameMessage(res.message);
+    }, 280);
+
+    return () => clearTimeout(timer);
+  }, [username, user]);
 
   // Check for password reset trigger from URL or Auth State
   useEffect(() => {
@@ -163,11 +215,28 @@ export function SettingsClient() {
       return;
     }
 
+    const cleanUsername = username.trim().toLowerCase().replace(/^@+/, "");
+    if (!cleanUsername) {
+      alert("Username cannot be empty.");
+      return;
+    }
+
+    if (
+      usernameStatus === "taken" ||
+      usernameStatus === "invalid" ||
+      usernameStatus === "reserved" ||
+      isCheckingUsername
+    ) {
+      alert(usernameMessage || "Please choose a valid and available username handle.");
+      return;
+    }
+
     setIsSavingProfile(true);
     setProfileSavedSuccess(false);
     try {
-      await updateProfile({
+      const success = await updateProfile({
         displayName: displayName.trim(),
+        username: cleanUsername,
         bio: bio.trim(),
         location: location.trim(),
         city: location.trim(),
@@ -175,8 +244,11 @@ export function SettingsClient() {
         avatarUrl,
         skills,
       });
-      setProfileSavedSuccess(true);
-      setTimeout(() => setProfileSavedSuccess(false), 3000);
+
+      if (success) {
+        setProfileSavedSuccess(true);
+        setTimeout(() => setProfileSavedSuccess(false), 3500);
+      }
     } catch (err) {
       console.error("Failed to update profile:", err);
     } finally {
@@ -507,17 +579,79 @@ export function SettingsClient() {
                     </div>
 
                     <div>
-                      <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5 text-xs">
-                        Studio Username (@handle)
-                      </label>
-                      <Input
-                        value={`@${user.username}`}
-                        disabled
-                        className="h-11 text-sm font-mono bg-[var(--bg-neutral)]/50 text-[var(--content-secondary)] cursor-not-allowed"
-                      />
-                      <span className="text-[10px] text-[var(--content-tertiary)] mt-1 block">
-                        Unique handle assigned at registration.
-                      </span>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="type-body-default-bold text-[var(--content-primary)] text-xs">
+                          Studio Username (@handle)
+                        </label>
+                        <span className="text-[10px] text-[var(--content-tertiary)] font-mono">
+                          layerat.com/u/{username.toLowerCase().trim().replace(/^@+/, "") || "username"}
+                        </span>
+                      </div>
+
+                      <div className="relative flex items-center">
+                        <span className="absolute left-3.5 text-sm font-mono font-bold text-[var(--content-tertiary)] select-none">
+                          @
+                        </span>
+                        <Input
+                          value={username}
+                          onChange={(e) => {
+                            const raw = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "");
+                            setUsername(raw);
+                          }}
+                          placeholder="username"
+                          required
+                          maxLength={30}
+                          className={cn(
+                            "h-11 pl-8 pr-9 text-sm font-mono transition-all",
+                            usernameStatus === "available" && "border-emerald-500 focus-visible:ring-emerald-500 bg-emerald-500/5",
+                            (usernameStatus === "taken" || usernameStatus === "reserved") && "border-rose-500 focus-visible:ring-rose-500 bg-rose-500/5",
+                            usernameStatus === "invalid" && username.length > 0 && "border-amber-500 focus-visible:ring-amber-500 bg-amber-500/5"
+                          )}
+                        />
+                        <div className="absolute right-3 flex items-center gap-1.5 pointer-events-none">
+                          {isCheckingUsername && (
+                            <Loader2 className="h-4 w-4 animate-spin text-[#962EE6]" />
+                          )}
+                          {!isCheckingUsername && usernameStatus === "available" && (
+                            <CheckCircle2 className="h-4 w-4 text-emerald-500 animate-in zoom-in-50" />
+                          )}
+                          {!isCheckingUsername && (usernameStatus === "taken" || usernameStatus === "reserved") && (
+                            <AlertCircle className="h-4 w-4 text-rose-500 animate-in zoom-in-50" />
+                          )}
+                          {!isCheckingUsername && usernameStatus === "invalid" && username.length > 0 && (
+                            <AlertTriangle className="h-4 w-4 text-amber-500 animate-in zoom-in-50" />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Real-time Status Message */}
+                      <div className="mt-1.5 min-h-[18px] flex items-center gap-1.5 text-[11px]">
+                        {isCheckingUsername ? (
+                          <span className="text-[var(--content-tertiary)] flex items-center gap-1">
+                            <span>Checking handle availability...</span>
+                          </span>
+                        ) : usernameStatus === "available" ? (
+                          <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1 animate-in fade-in-50">
+                            <span>✓ @{username} is available!</span>
+                          </span>
+                        ) : usernameStatus === "taken" ? (
+                          <span className="text-rose-600 dark:text-rose-400 font-semibold flex items-center gap-1 animate-in fade-in-50">
+                            <span>✕ @{username} is already taken by another creator.</span>
+                          </span>
+                        ) : usernameStatus === "reserved" ? (
+                          <span className="text-rose-600 dark:text-rose-400 font-semibold flex items-center gap-1 animate-in fade-in-50">
+                            <span>✕ This handle is reserved by Layerat.</span>
+                          </span>
+                        ) : usernameStatus === "invalid" && username.length > 0 ? (
+                          <span className="text-amber-600 dark:text-amber-400 font-medium">
+                            {usernameMessage}
+                          </span>
+                        ) : (
+                          <span className="text-[var(--content-tertiary)]">
+                            Letters, numbers, and underscores (3–30 characters).
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 
