@@ -12,18 +12,15 @@ export function VerificationBanner() {
   const [sendSuccess, setSendSuccess] = useState(false);
   const [cooldown, setCooldown] = useState(0);
 
-  const userEmail =
-    user?.email ||
-    (typeof window !== "undefined"
-      ? localStorage.getItem("craft_last_registered_email") || ""
-      : "");
-
-  // Show persistently if user is logged in but not verified, or just registered
-  const isPendingVerification = (user && !user.isVerified) || (!user && userEmail.length > 0);
+  // STRICT LOGIC: The verification banner MUST ONLY appear if a user is actively logged in
+  // AND their account is NOT verified in the database.
+  // When logged out (user === null) or verified (user.isVerified === true), return null immediately.
+  const isPendingVerification = Boolean(user && !user.isVerified);
+  const userEmail = user?.email || "";
 
   // Rate limiter cooldown countdown
   useEffect(() => {
-    if (!userEmail) return;
+    if (!isPendingVerification || !userEmail) return;
 
     const updateCooldown = () => {
       const status = getResendStatus(userEmail);
@@ -33,7 +30,7 @@ export function VerificationBanner() {
     updateCooldown();
     const timer = setInterval(updateCooldown, 1000);
     return () => clearInterval(timer);
-  }, [userEmail]);
+  }, [isPendingVerification, userEmail]);
 
   const handleResend = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -75,7 +72,7 @@ export function VerificationBanner() {
             </span>
 
             <p className="truncate font-medium text-white/90">
-              <strong className="text-white font-bold">Email Verification Required:</strong> Please confirm your email{" "}
+              <strong className="text-white font-bold">Account Activation Required:</strong> Please confirm your email{" "}
               {userEmail && <span className="font-mono text-[#DEB2FF] underline">({userEmail})</span>} to unlock appreciation, following creators, and publishing projects.
             </p>
           </div>
@@ -120,4 +117,3 @@ export function VerificationBanner() {
     </AnimatePresence>
   );
 }
-

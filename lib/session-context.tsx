@@ -357,6 +357,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     if (user) {
       updateProfileInDb(user.id, { isOnline: false }).catch(() => {});
     }
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("craft_last_registered_email");
+      sessionStorage.removeItem("craft_hide_verification_banner");
+    }
     await authSignOut();
     setUser(null);
     setNotifications([]);

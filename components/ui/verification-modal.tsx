@@ -45,11 +45,7 @@ export function VerificationModal({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
 
-  const userEmail =
-    user?.email ||
-    (typeof window !== "undefined"
-      ? localStorage.getItem("craft_last_registered_email") || ""
-      : "");
+  const userEmail = user?.email || "";
 
   // Update rate limiter cooldown timer
   useEffect(() => {
