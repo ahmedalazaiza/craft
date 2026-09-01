@@ -279,22 +279,33 @@ DROP POLICY IF EXISTS "Users can update own notifications" ON public.notificatio
 CREATE POLICY "Users can update own notifications" ON public.notifications FOR UPDATE USING (auth.uid() = recipient_id);
 
 -- =============================================================================
--- 8. STORAGE BUCKETS & POLICIES
+-- 8. STORAGE BUCKETS & POLICIES (Hard Delete, Upload & Read)
 -- =============================================================================
 
 INSERT INTO storage.buckets (id, name, public) 
 VALUES ('project-media', 'project-media', true)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET public = true;
 
 INSERT INTO storage.buckets (id, name, public) 
 VALUES ('avatars', 'avatars', true)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET public = true;
 
 DROP POLICY IF EXISTS "Public storage read" ON storage.objects;
-CREATE POLICY "Public storage read" ON storage.objects FOR SELECT USING (bucket_id IN ('project-media', 'avatars'));
+CREATE POLICY "Public storage read" ON storage.objects 
+FOR SELECT USING (bucket_id IN ('project-media', 'avatars'));
 
 DROP POLICY IF EXISTS "Public storage insert" ON storage.objects;
-CREATE POLICY "Public storage insert" ON storage.objects FOR INSERT WITH CHECK (bucket_id IN ('project-media', 'avatars'));
+CREATE POLICY "Public storage insert" ON storage.objects 
+FOR INSERT WITH CHECK (bucket_id IN ('project-media', 'avatars'));
+
+DROP POLICY IF EXISTS "Public storage update" ON storage.objects;
+CREATE POLICY "Public storage update" ON storage.objects 
+FOR UPDATE USING (bucket_id IN ('project-media', 'avatars')) 
+WITH CHECK (bucket_id IN ('project-media', 'avatars'));
+
+DROP POLICY IF EXISTS "Public storage delete" ON storage.objects;
+CREATE POLICY "Public storage delete" ON storage.objects 
+FOR DELETE USING (bucket_id IN ('project-media', 'avatars'));
 
 -- =============================================================================
 -- INITIAL LIVE SEED DATA (ALL 6 CREATORS)
