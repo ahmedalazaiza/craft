@@ -21,7 +21,6 @@ export function mapProfileToCreator(row: any, currentUserId?: string): Creator {
       city: "",
       skills: [],
       isVerified: false,
-      isOnline: false,
       followersCount: 0,
       isCurrentUser: false,
     };
@@ -43,7 +42,6 @@ export function mapProfileToCreator(row: any, currentUserId?: string): Creator {
     website: row.website || undefined,
     skills: row.skills || [],
     isVerified: Boolean(row.is_verified),
-    isOnline: row.is_online ?? false,
     followersCount: liveFollowers,
     isCurrentUser: currentUserId ? row.id === currentUserId : false,
   };
@@ -67,9 +65,18 @@ export function mapProjectRow(row: any, currentUserId?: string): Project {
     : [];
 
   const liveAppreciations =
-    Array.isArray(row.appreciations) && row.appreciations.length > 0 && typeof row.appreciations[0].count === "number"
+    typeof row.appreciations_count === "number"
+      ? row.appreciations_count
+      : Array.isArray(row.appreciations) && row.appreciations.length > 0 && typeof row.appreciations[0].count === "number"
       ? row.appreciations[0].count
-      : (row.appreciations_count ?? 0);
+      : 0;
+
+  const liveViews =
+    typeof row.views_count === "number"
+      ? row.views_count
+      : typeof row.views === "number"
+      ? row.views
+      : 0;
 
   return {
     id: row.id,
@@ -89,7 +96,10 @@ export function mapProjectRow(row: any, currentUserId?: string): Project {
     medium: row.medium,
     published: row.published ?? true,
     publishedAt: formatTimeAgo(new Date(row.published_at || row.created_at || Date.now())),
+    createdAt: row.created_at || row.published_at,
+    updatedAt: row.updated_at,
     appreciations: liveAppreciations,
+    views: liveViews,
     comments,
     featured: row.featured ?? false,
   };
@@ -410,7 +420,6 @@ async function resolveValidCreatorId(
           city: creator?.city || "Global",
           skills: creator?.skills || ["Design"],
           is_verified: true,
-          is_online: true,
           followers_count: 0,
         })
         .select("id")
@@ -505,6 +514,7 @@ export async function insertProject(project: Partial<Project> & { creatorId?: st
       featured: project.featured ?? false,
       creator_id: finalCreatorId,
       appreciations_count: 0,
+      views_count: 0,
       published_at: new Date().toISOString(),
     };
 
@@ -869,7 +879,6 @@ export async function updateProfileInDb(id: string, updates: Partial<Creator>): 
         );
       }
     }
-    if (updates.isOnline !== undefined) payload.is_online = updates.isOnline;
 
     const { error } = await supabase
       .from("profiles")
@@ -886,23 +895,6 @@ export async function updateProfileInDb(id: string, updates: Partial<Creator>): 
   }
 }
 
-/**
- * Fetch list of creator IDs that a user follows
- */
-export async function fetchFollowingIds(userId: string): Promise<Set<string>> {
-  try {
-    const { data, error } = await supabase
-      .from("follows")
-      .select("following_id")
-      .eq("follower_id", userId);
-
-    if (error || !data) return new Set();
-
-    return new Set(data.map((row) => row.following_id));
-  } catch {
-    return new Set();
-  }
-}
 
 export async function fetchUserFollows(userId: string): Promise<string[]> {
   try {
@@ -1198,5 +1190,20 @@ export async function markAllNotificationsReadInDb(recipientId: string): Promise
     console.error("Failed to mark all notifications as read:", err);
   }
 }
+
+/**
+ * Increment view count for a project in Supabase
+ */
+export async function incrementProjectViewsInDb(projectId: string): Promise<void> {
+  try {
+    if (!projectId) return;
+    await supabase.rpc("increment_project_views", {
+      p_project_id: projectId,
+    });
+  } catch {
+    // Non-blocking view increment
+  }
+}
+
 
 

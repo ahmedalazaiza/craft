@@ -222,7 +222,7 @@ export function ProjectLightbox({
               {isLoadingImage && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10">
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 shadow-xl">
-                    <Loader2 className="h-7 w-7 animate-spin text-[#962EE6] dark:text-purple-300" />
+                    <Loader2 className="h-7 w-7 animate-spin text-white" />
                   </div>
                   <span className="text-xs font-semibold text-white/70 tracking-wide">
                     Loading high-res spread...
@@ -294,7 +294,7 @@ export function ProjectLightbox({
                     className={cn(
                       "relative h-12 w-16 sm:h-14 sm:w-20 shrink-0 rounded-lg overflow-hidden border-2 transition-all cursor-pointer",
                       idx === safeIndex
-                        ? "border-[#962EE6] scale-105 shadow-md shadow-[#962EE6]/30 ring-2 ring-[#962EE6]/50"
+                        ? "border-white scale-105 shadow-md ring-2 ring-white/50"
                         : "border-transparent opacity-50 hover:opacity-100 hover:border-white/30"
                     )}
                     title={`Go to image ${idx + 1}`}

@@ -32,7 +32,7 @@ export function TopLoader() {
       aria-valuenow={progress}
     >
       <div
-        className="h-full bg-gradient-to-r from-[var(--primary-forest-green)] via-[#962EE6] to-[var(--primary-forest-green)] shadow-[0_0_10px_#962EE6] transition-all duration-300 ease-out"
+        className="h-full bg-gradient-to-r from-[var(--brand-secondary)] to-[var(--brand-secondary-light)] shadow-[0_0_10px_var(--brand-secondary-glow)] transition-all duration-300 ease-out"
         style={{
           width: `${progress}%`,
           opacity: progress === 100 ? 0 : 1,

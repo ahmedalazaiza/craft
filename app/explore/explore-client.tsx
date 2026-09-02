@@ -9,6 +9,7 @@ import { ProjectGridSkeleton } from "@/components/project/project-grid-skeleton"
 import { SearchField } from "@/components/search/search-field";
 import { FilterDrawer, ProjectFilters } from "@/components/search/filter-drawer";
 import { FilterChip } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { FadeIn, StaggerGridItem } from "@/components/ui/motion-wrapper";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { ProjectCategory, Project } from "@/lib/types";
@@ -16,16 +17,13 @@ import {
   MASTER_TAXONOMY,
   normalizeCategory,
   getCategoryTaxonomy,
-  getSubCategoriesForCategory,
 } from "@/lib/taxonomy";
 import {
-  FolderKanban,
   Sparkles,
-  SlidersHorizontal,
   ArrowUpDown,
-  Layers,
   X,
 } from "lucide-react";
+import { sortProjects } from "@/lib/ranking";
 import { cn } from "@/lib/utils";
 
 interface ExploreClientProps {
@@ -44,7 +42,7 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
     tags: [],
     tools: [],
     medium: "All",
-    sortBy: "newest",
+    sortBy: "curated",
   });
 
   // 1. Initialize filter and search state from URL query on client mount
@@ -80,7 +78,7 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
     if (newFilters.category && newFilters.category !== "All") params.set("category", newFilters.category);
     if (newFilters.subCategory && newFilters.subCategory !== "All") params.set("subCategory", newFilters.subCategory);
     if (newFilters.medium && newFilters.medium !== "All") params.set("medium", newFilters.medium);
-    if (newFilters.sortBy && newFilters.sortBy !== "newest") params.set("sort", newFilters.sortBy);
+    if (newFilters.sortBy && newFilters.sortBy !== "curated") params.set("sort", newFilters.sortBy);
     if (newFilters.tags && newFilters.tags.length > 0) params.set("tags", newFilters.tags.join(","));
     if (newFilters.tools && newFilters.tools.length > 0) params.set("tools", newFilters.tools.join(","));
 
@@ -108,17 +106,12 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
     return getCategoryTaxonomy(filters.category);
   }, [filters.category]);
 
-  const availableSubCategories = useMemo(() => {
-    if (activeTaxonomy) {
-      return ["All", ...activeTaxonomy.subCategories];
-    }
-    return [];
-  }, [activeTaxonomy]);
+
 
   // Filter and sort projects
   const filteredProjects = useMemo(() => {
-    return publishedProjects
-      .filter((p) => {
+    return sortProjects(
+      publishedProjects.filter((p) => {
         // Search text matching
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase();
@@ -181,21 +174,12 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
           if (!hasAllTools) return false;
         }
 
-        return true;
-      })
-      .sort((a, b) => {
-        if (filters.sortBy === "appreciated") {
-          return b.appreciations - a.appreciations;
-        }
-        // default newest
-        return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
-      });
+          return true;
+        })
+    );
   }, [publishedProjects, searchQuery, filters]);
 
-  // Distinct categories count
-  const distinctCategoriesCount = useMemo(() => {
-    return new Set(publishedProjects.map((p) => normalizeCategory(p.category))).size;
-  }, [publishedProjects]);
+
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -226,25 +210,17 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
   // Guard skeleton: Only show skeleton during cold empty fetch
   if (isLoadingDb && projects.length === 0) {
     return (
-      <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-6 animate-pulse">
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-[var(--border-neutral)] mb-6">
-          <div className="space-y-3">
-            <div className="h-6 w-32 rounded-full bg-[var(--bg-neutral)]" />
-            <div className="h-10 w-64 rounded-2xl bg-[var(--bg-neutral)]" />
-            <div className="h-4 w-full max-w-xl rounded-full bg-[var(--bg-neutral)]/70" />
-          </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="h-14 w-36 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]" />
-            <div className="h-14 w-36 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]" />
-          </div>
+      <div className="w-full px-4 sm:px-6 lg:px-[140px] py-4 sm:py-6 animate-pulse">
+        <div className="flex items-center gap-2 mb-6">
+          <div className="h-4 w-28 rounded-full bg-[var(--bg-neutral)]" />
         </div>
-        <div className="space-y-4 mb-6">
-          <div className="h-12 w-full rounded-2xl bg-[var(--bg-neutral)]" />
-          <div className="flex items-center gap-2 overflow-hidden pb-3 border-b border-[var(--border-neutral)]">
-            {["w-14", "w-28", "w-32", "w-24", "w-24", "w-28", "w-36", "w-20"].map((w, idx) => (
-              <div key={idx} className={`h-8 ${w} shrink-0 rounded-full bg-[var(--bg-neutral)]/70`} />
-            ))}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 sm:pb-8 border-b border-[var(--border-neutral)] mb-8">
+          <div className="space-y-3 max-w-xl">
+            <div className="h-6 w-36 rounded-full bg-[var(--bg-neutral)]" />
+            <div className="h-10 w-72 rounded-2xl bg-[var(--bg-neutral)]" />
+            <div className="h-4 w-full max-w-lg rounded-full bg-[var(--bg-neutral)]/70" />
           </div>
+          <div className="h-12 w-full lg:w-[420px] rounded-full bg-[var(--bg-neutral)] shrink-0" />
         </div>
         <ProjectGridSkeleton count={8} columns={4} />
       </div>
@@ -252,7 +228,7 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
   }
 
   return (
-    <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-4 sm:py-6">
+    <div className="w-full px-4 sm:px-6 lg:px-[140px] py-4 sm:py-6">
       <FadeIn>
         {/* Breadcrumbs Navigation */}
         <Breadcrumbs
@@ -263,10 +239,10 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
         />
 
         {/* ========================================================================= */}
-        {/* BALANCED 2-COLUMN HEADER (Title on Left + Quick Metrics Cards on Right)   */}
+        {/* BALANCED 2-COLUMN HEADER (Title on Left + Search on Right)                */}
         {/* ========================================================================= */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-neutral-200 dark:border-neutral-800 mb-6">
-          <div className="max-w-2xl">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 sm:pb-8 border-b border-neutral-200 dark:border-neutral-800 mb-8">
+          <div className="max-w-xl">
             <div className="inline-flex items-center gap-2 rounded-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-3 py-1 text-[11px] font-mono font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-300 mb-3 shadow-xs">
               <Sparkles className="h-3 w-3 text-neutral-900 dark:text-white" />
               <span>Project Showcase</span>
@@ -276,7 +252,7 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
             <h1
               className={cn(
                 bricolage.className,
-                "text-3xl sm:text-4xl lg:text-[44px] font-black text-neutral-950 dark:text-white leading-tight tracking-tight"
+                "text-3xl sm:text-4xl lg:text-[40px] font-black text-neutral-950 dark:text-white leading-tight tracking-tight"
               )}
             >
               Explore Projects
@@ -286,42 +262,10 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
             </p>
           </div>
 
-          {/* Right-aligned Showcase Metrics */}
-          <div className="grid grid-cols-2 sm:flex sm:items-center gap-2.5 sm:gap-4 shrink-0 w-full sm:w-auto">
-            <div className="flex items-center gap-2.5 rounded-2xl bg-white dark:bg-[#141713] border border-neutral-200 dark:border-neutral-800 px-3.5 sm:px-4 py-2.5 shadow-xs">
-              <FolderKanban className="h-4 w-4 text-neutral-900 dark:text-white shrink-0" />
-              <div className="text-left min-w-0">
-                <span className="block text-xs font-bold text-neutral-950 dark:text-white truncate">
-                  {publishedProjects.length} Projects
-                </span>
-                <span className="text-[10px] text-neutral-400 dark:text-neutral-500 uppercase font-mono truncate block">
-                  {distinctCategoriesCount} Categories
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 rounded-2xl bg-white dark:bg-[#141713] border border-neutral-200 dark:border-neutral-800 px-3.5 sm:px-4 py-2.5 shadow-xs">
-              <Layers className="h-4 w-4 text-neutral-900 dark:text-white shrink-0" />
-              <div className="text-left min-w-0">
-                <span className="block text-xs font-bold text-neutral-950 dark:text-white truncate">
-                  100% Intrinsic
-                </span>
-                <span className="text-[10px] text-neutral-400 dark:text-neutral-500 uppercase font-mono truncate block">
-                  Zero Compression
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ========================================================================= */}
-        {/* UNIFIED INTERACTIVE SEARCH & CATEGORY TOOLBAR                             */}
-        {/* ========================================================================= */}
-        <div className="space-y-4 mb-6">
-          {/* Main Search Input Strip */}
-          <div className="w-full">
+          {/* Right: Search Input (Vertically Centered with Title & Description) */}
+          <div className="w-full lg:w-[420px] xl:w-[480px] shrink-0">
             <SearchField
-              placeholder="Search projects by title, creator, tool, or tag..."
+              placeholder="Search projects by title, creator, or tag..."
               initialQuery={searchQuery}
               onSearchChange={handleSearchChange}
               onOpenFilter={() => setIsFilterOpen(true)}
@@ -330,107 +274,42 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
               className="w-full"
             />
           </div>
+        </div>
 
-          {/* Category Chips Bar with Sort and Count info */}
-          <div className="space-y-3 pb-3 border-b border-neutral-200 dark:border-neutral-800">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              {/* Scrollable Quick Category Pills (13 Categories) */}
-              <div className="flex items-center gap-1.5 overflow-x-auto py-1 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleFiltersChange({ ...filters, category: "All", subCategory: "All" })
-                  }
-                  className={cn(
-                    "rounded-full px-3.5 py-1.5 text-xs transition-all shrink-0 cursor-pointer font-semibold select-none",
-                    !filters.category || filters.category === "All"
-                      ? "bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-xs font-bold"
-                      : "bg-neutral-100 dark:bg-neutral-800/80 text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                  )}
-                >
-                  All
-                </button>
-                {MASTER_TAXONOMY.map((cat) => {
-                  const isSelected =
-                    filters.category === cat.name || filters.category === cat.shortName;
-                  return (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() =>
-                        handleFiltersChange({
-                          ...filters,
-                          category: cat.name,
-                          subCategory: "All",
-                        })
-                      }
-                      className={cn(
-                        "rounded-full px-3.5 py-1.5 text-xs transition-all shrink-0 cursor-pointer select-none",
-                        isSelected
-                          ? "bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-bold shadow-xs"
-                          : "bg-neutral-100 dark:bg-neutral-800/80 text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700 font-medium"
-                      )}
-                      title={cat.name}
-                    >
-                      {cat.shortName}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Sort Toggle Controls on Right */}
-              <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleFiltersChange({
-                      ...filters,
-                      sortBy:
-                        filters.sortBy === "newest" ? "appreciated" : "newest",
-                    })
-                  }
-                  className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-3.5 py-1.5 text-xs font-semibold text-neutral-800 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all shadow-xs cursor-pointer"
-                  title="Change sorting order"
-                >
-                  <ArrowUpDown className="h-3.5 w-3.5 text-neutral-400 dark:text-neutral-500" />
-                  <span>
-                    {filters.sortBy === "appreciated"
-                      ? "Most Appreciated"
-                      : "Newest First"}
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            {/* Dynamic Sub-Category Pill Strip (When Category Selected) */}
-            {availableSubCategories.length > 0 && (
-              <div className="flex items-center gap-1.5 overflow-x-auto py-1 pt-1.5 no-scrollbar border-t border-neutral-100 dark:border-neutral-800/60 -mx-4 px-4 sm:mx-0 sm:px-0 animate-fade-in">
-                <span className="text-[11px] font-mono text-neutral-400 dark:text-neutral-500 font-bold uppercase tracking-wider shrink-0 mr-1">
-                  Focus:
-                </span>
-                {availableSubCategories.map((sub) => {
-                  const isSelected =
-                    (!filters.subCategory && sub === "All") ||
-                    filters.subCategory === sub;
-                  return (
-                    <button
-                      key={sub}
-                      type="button"
-                      onClick={() => handleFiltersChange({ ...filters, subCategory: sub })}
-                      className={cn(
-                        "rounded-full px-3 py-1 text-xs transition-all shrink-0 cursor-pointer font-medium select-none border",
-                        isSelected
-                          ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-bold border-transparent shadow-xs"
-                          : "bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                      )}
-                    >
-                      {sub}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+        {/* ========================================================================= */}
+        {/* SUBHEADER TOOLBAR: Results Count & Sort Controls                          */}
+        {/* ========================================================================= */}
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <div className="text-xs font-semibold text-[var(--content-secondary)]">
+            Showing <strong className="text-[var(--content-primary)] font-bold">{filteredProjects.length}</strong> {filteredProjects.length === 1 ? "project" : "projects"}
           </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              const nextSort =
+                filters.sortBy === "curated"
+                  ? "newest"
+                  : filters.sortBy === "newest"
+                  ? "appreciated"
+                  : "curated";
+              handleFiltersChange({
+                ...filters,
+                sortBy: nextSort,
+              });
+            }}
+            className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-3.5 py-1.5 text-xs font-semibold text-neutral-800 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all shadow-xs cursor-pointer"
+            title="Cycle sorting order"
+          >
+            <ArrowUpDown className="h-3.5 w-3.5 text-neutral-400 dark:text-neutral-500" />
+            <span>
+              {filters.sortBy === "appreciated"
+                ? "Most Appreciated"
+                : filters.sortBy === "newest"
+                ? "Newest First"
+                : "Curated & Trending"}
+            </span>
+          </button>
         </div>
 
         {/* ========================================================================= */}
@@ -553,8 +432,9 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
             <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-2 max-w-md mx-auto leading-relaxed">
               Try adjusting your search keywords, clearing tags, or switching to &ldquo;All Categories&rdquo;.
             </p>
-            <button
+            <Button
               type="button"
+              variant="accent"
               onClick={() => {
                 handleSearchChange("");
                 handleFiltersChange({
@@ -566,10 +446,10 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
                   sortBy: "newest",
                 });
               }}
-              className="mt-5 inline-flex items-center gap-2 rounded-full font-bold bg-[#962EE6] text-white hover:bg-[#5F0EBA] px-6 py-2.5 text-xs shadow-xs transition-colors cursor-pointer"
+              className="mt-5 rounded-full px-6 text-xs font-bold"
             >
               Reset All Filters
-            </button>
+            </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 min-h-[500px]">

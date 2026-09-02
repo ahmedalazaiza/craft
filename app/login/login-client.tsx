@@ -49,7 +49,7 @@ export function LoginClient() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-14rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-[calc(100vh-14rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-[80px]">
       <FadeIn className="w-full max-w-md">
         <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[24px] p-2">
           <CardHeader className="text-center pb-4 pt-6 sm:pt-7">

@@ -14,7 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { FadeIn } from "@/components/ui/motion-wrapper";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
-import { OnlineBadge } from "@/components/ui/online-badge";
 import { LocationInput } from "@/components/ui/location-input";
 import { SkillsPicker } from "@/components/onboarding/skills-picker";
 import { DeleteAccountModal } from "@/components/settings/delete-account-modal";
@@ -23,6 +22,7 @@ import { ImageCropperModal } from "@/components/ui/image-cropper-modal";
 import { requestPasswordResetInDb, checkUsernameAvailability } from "@/lib/supabase/queries";
 import { uploadMediaFile } from "@/lib/supabase/storage";
 import { DEFAULT_AVATAR_URL, getValidAvatarUrl } from "@/lib/avatar";
+import { toast } from "@/components/ui/toast";
 import { supabase } from "@/lib/supabase/client";
 import {
   User,
@@ -196,11 +196,11 @@ export function SettingsClient() {
   // Handle Avatar Selection -> Open Cropper
   const handleAvatarFile = (file: File) => {
     if (!file.type.startsWith("image/")) {
-      alert("Please upload a valid image file (PNG, JPG, WebP).");
+      toast.error("Please upload a valid image file (PNG, JPG, WebP).", "Invalid File Type");
       return;
     }
     if (file.size > 15 * 1024 * 1024) {
-      alert("Image size should be under 15MB.");
+      toast.warning("Image size should be under 15MB.", "File Too Large");
       return;
     }
     const reader = new FileReader();
@@ -224,8 +224,10 @@ export function SettingsClient() {
       setAvatarUrl(cdnUrl);
       // Auto-update profile avatar
       await updateProfile({ avatarUrl: cdnUrl });
+      toast.success("Avatar photo updated smoothly!", "Avatar Saved");
     } catch (err) {
       console.error("Avatar upload error:", err);
+      toast.error("Failed to upload avatar image. Please try again.", "Upload Error");
     } finally {
       setIsUploadingAvatar(false);
       setCropperSrc(null);
@@ -236,13 +238,13 @@ export function SettingsClient() {
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!displayName.trim()) {
-      alert("Display name cannot be empty.");
+      toast.error("Display name cannot be empty.", "Name Required");
       return;
     }
 
     const cleanUsername = username.trim().toLowerCase().replace(/^@+/, "");
     if (!cleanUsername) {
-      alert("Username cannot be empty.");
+      toast.error("Username cannot be empty.", "Username Required");
       return;
     }
 
@@ -252,7 +254,7 @@ export function SettingsClient() {
       usernameStatus === "reserved" ||
       isCheckingUsername
     ) {
-      alert(usernameMessage || "Please choose a valid and available username handle.");
+      toast.error(usernameMessage || "Please choose a valid and available username handle.", "Invalid Username");
       return;
     }
 
@@ -317,7 +319,7 @@ export function SettingsClient() {
 
   if (isLoadingDb) {
     return (
-      <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-12 flex items-center justify-center min-h-[50vh]">
+      <div className="w-full px-4 sm:px-6 lg:px-[140px] py-12 flex items-center justify-center min-h-[50vh]">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-[var(--primary-forest-green)]" />
           <span className="text-xs font-semibold text-[var(--content-tertiary)]">
@@ -331,10 +333,10 @@ export function SettingsClient() {
   // Guest State -> Auth Required
   if (!user) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-20 text-center">
-        <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] p-10 rounded-[28px] shadow-sm">
-          <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--bg-neutral)] border border-[var(--border-neutral)] mx-auto mb-4 text-[var(--primary-forest-green)]">
-            <User className="h-8 w-8" />
+      <div className="w-full px-4 sm:px-6 lg:px-[140px] py-20 text-center">
+        <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] p-10 rounded-[28px] shadow-sm max-w-2xl mx-auto">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--brand-secondary-subtle)] border border-[var(--brand-secondary)]/20 text-[var(--brand-secondary)] mx-auto mb-4 shadow-xs">
+            <User className="h-7 w-7" strokeWidth={2} />
           </div>
           <h1 className="type-title-section text-[var(--content-primary)] font-bold text-2xl">
             Account Settings Authentication Required
@@ -368,7 +370,7 @@ export function SettingsClient() {
   }
 
   return (
-    <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-4 sm:py-6">
+    <div className="w-full px-4 sm:px-6 lg:px-[140px] py-4 sm:py-6">
       <FadeIn>
         {/* Breadcrumbs */}
         <Breadcrumbs
@@ -410,7 +412,6 @@ export function SettingsClient() {
                     </div>
                   )}
                 </div>
-                <OnlineBadge userId={user.id} username={user.username} size="lg" className="absolute bottom-0 right-0 z-10" />
               </div>
 
               {/* Text Info */}
@@ -635,7 +636,7 @@ export function SettingsClient() {
                         />
                         <div className="absolute right-3 flex items-center gap-1.5 pointer-events-none">
                           {isCheckingUsername && (
-                            <Loader2 className="h-4 w-4 animate-spin text-[#962EE6]" />
+                            <Loader2 className="h-4 w-4 animate-spin text-[var(--content-primary)]" />
                           )}
                           {!isCheckingUsername && usernameStatus === "available" && (
                             <CheckCircle2 className="h-4 w-4 text-emerald-500 animate-in zoom-in-50" />
@@ -824,7 +825,7 @@ export function SettingsClient() {
                 <div className="p-5 rounded-[20px] border border-[var(--border-neutral)] bg-[var(--bg-elevated)] space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                     <div className="flex items-start gap-3.5">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#962EE6] text-white shrink-0 mt-0.5 shadow-xs">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--content-primary)] text-[var(--bg-screen)] shrink-0 mt-0.5 shadow-xs">
                         <KeyRound className="h-5 w-5" />
                       </div>
                       <div>

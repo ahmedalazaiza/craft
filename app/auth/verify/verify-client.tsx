@@ -78,12 +78,12 @@ export function VerifyClient() {
   }, [success, countdown, router]);
 
   return (
-    <div className="flex min-h-[calc(100vh-14rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-[calc(100vh-14rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-[140px]">
       <FadeIn className="w-full max-w-md">
         <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[28px] p-6 text-center shadow-2xl">
           {verifying ? (
             <div className="py-12 space-y-4">
-              <Loader2 className="h-10 w-10 text-[#962EE6] animate-spin mx-auto" />
+              <Loader2 className="h-10 w-10 text-[var(--content-primary)] animate-spin mx-auto" />
               <h2 className="type-title-subsection text-[var(--content-primary)]">
                 Confirming your email...
               </h2>
@@ -94,12 +94,12 @@ export function VerifyClient() {
           ) : success ? (
             <>
               <CardHeader className="pb-4 pt-4">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-[#962EE6]/20 border border-[#962EE6]/30 text-[#962EE6] dark:text-purple-300 shadow-sm animate-bounce">
-                  <CheckCircle2 className="h-8 w-8" />
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--brand-secondary-subtle)] border border-[var(--brand-secondary)]/20 text-[var(--brand-secondary)] shadow-xs">
+                  <CheckCircle2 className="h-7 w-7" strokeWidth={2} />
                 </div>
 
                 <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip-bg)] px-3 py-1 text-[11px] font-semibold text-[var(--chip-fg)] mx-auto mb-3 shadow-xs">
-                  <Sparkles className="h-3.5 w-3.5 text-white" />
+                  <Sparkles className="h-3.5 w-3.5 text-[var(--brand-secondary-light)]" />
                   <span>Account Verified</span>
                 </div>
 

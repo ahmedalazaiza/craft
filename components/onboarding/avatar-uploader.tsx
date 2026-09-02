@@ -6,6 +6,7 @@ import { Upload, Camera, RefreshCw, Trash2, User, Crop } from "lucide-react";
 import { DEFAULT_AVATAR_URL, getInitials } from "@/lib/avatar";
 import { uploadMediaFile } from "@/lib/supabase/storage";
 import { ImageCropperModal } from "@/components/ui/image-cropper-modal";
+import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
 interface AvatarUploaderProps {
@@ -32,12 +33,12 @@ export function AvatarUploader({
 
   const handleFile = (file: File) => {
     if (!file.type.startsWith("image/")) {
-      alert("Please upload a valid image file (PNG, JPG, WebP).");
+      toast.error("Please upload a valid image file (PNG, JPG, WebP).", "Invalid File Type");
       return;
     }
 
     if (file.size > 15 * 1024 * 1024) {
-      alert("Image size should be under 15MB.");
+      toast.warning("Image size should be under 15MB.", "File Too Large");
       return;
     }
 

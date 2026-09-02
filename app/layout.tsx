@@ -11,6 +11,7 @@ import { TopLoader } from "@/components/layout/top-loader";
 import { PageLoadingOverlay } from "@/components/layout/page-loading-overlay";
 import { NetworkStatusIndicator } from "@/components/layout/network-status-indicator";
 import { CookieConsentBanner } from "@/components/ui/cookie-consent-banner";
+import { ToastContainer } from "@/components/ui/toast";
 
 import Script from "next/script";
 
@@ -161,6 +162,7 @@ export default function RootLayout({
             <MobileBottomNav />
             <NetworkStatusIndicator />
             <CookieConsentBanner />
+            <ToastContainer />
           </SessionProvider>
         </ThemeProvider>
       </body>

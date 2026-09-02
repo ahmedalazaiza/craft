@@ -34,16 +34,16 @@ export function MobileBottomNav() {
           className={cn(
             "relative flex flex-col items-center justify-center min-h-[48px] min-w-[48px] w-12 h-12 rounded-full transition-all duration-200",
             isHome
-              ? "text-[var(--primary-forest-green)] dark:text-white font-bold"
+              ? "text-[var(--content-primary)] font-bold"
               : "text-[var(--content-tertiary)] hover:text-[var(--content-primary)]"
           )}
         >
-          <Home className={cn("h-5 w-5 transition-transform", isHome ? "scale-110 text-[var(--primary-forest-green)] dark:text-white stroke-[2.5]" : "stroke-[1.8]")} />
+          <Home className={cn("h-5 w-5 transition-transform", isHome ? "scale-110 text-[var(--content-primary)] stroke-[2.5]" : "stroke-[1.8]")} />
           <span className="text-xs mt-0.5 tracking-tight font-medium">Home</span>
           {isHome && (
             <motion.div
               layoutId="mobile-nav-pill"
-              className="absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--primary-forest-green)] dark:bg-[#962EE6]"
+              className="absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--content-primary)]"
               transition={{ type: "spring", stiffness: 380, damping: 30 }}
             />
           )}
@@ -56,28 +56,28 @@ export function MobileBottomNav() {
           className={cn(
             "relative flex flex-col items-center justify-center min-h-[48px] min-w-[48px] w-12 h-12 rounded-full transition-all duration-200",
             isExplore
-              ? "text-[var(--primary-forest-green)] dark:text-white font-bold"
+              ? "text-[var(--content-primary)] font-bold"
               : "text-[var(--content-tertiary)] hover:text-[var(--content-primary)]"
           )}
         >
-          <Compass className={cn("h-5 w-5 transition-transform", isExplore ? "scale-110 text-[var(--primary-forest-green)] dark:text-white stroke-[2.5]" : "stroke-[1.8]")} />
+          <Compass className={cn("h-5 w-5 transition-transform", isExplore ? "scale-110 text-[var(--content-primary)] stroke-[2.5]" : "stroke-[1.8]")} />
           <span className="text-xs mt-0.5 tracking-tight font-medium">Explore</span>
           {isExplore && (
             <motion.div
               layoutId="mobile-nav-pill"
-              className="absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--primary-forest-green)] dark:bg-[#962EE6]"
+              className="absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--content-primary)]"
               transition={{ type: "spring", stiffness: 380, damping: 30 }}
             />
           )}
         </Link>
 
-        {/* 3. Center CTA: + Publish New Project */}
+        {/* 3. Center CTA: + Publish New Project or Sign In */}
         <Link
-          href="/me/projects/new"
+          href={user ? "/me/projects/new" : "/login"}
           prefetch={true}
           className="relative -top-2 flex items-center justify-center min-h-[48px] min-w-[48px]"
-          title="Publish Project"
-          aria-label="Publish Project"
+          title={user ? "Publish Project" : "Log In"}
+          aria-label={user ? "Publish Project" : "Log In"}
         >
           <motion.div
             whileTap={{ scale: 0.92 }}
@@ -94,16 +94,16 @@ export function MobileBottomNav() {
           className={cn(
             "relative flex flex-col items-center justify-center min-h-[48px] min-w-[48px] w-12 h-12 rounded-full transition-all duration-200",
             isCreators
-              ? "text-[var(--primary-forest-green)] dark:text-white font-bold"
+              ? "text-[var(--content-primary)] font-bold"
               : "text-[var(--content-tertiary)] hover:text-[var(--content-primary)]"
           )}
         >
-          <Users className={cn("h-5 w-5 transition-transform", isCreators ? "scale-110 text-[var(--primary-forest-green)] dark:text-white stroke-[2.5]" : "stroke-[1.8]")} />
+          <Users className={cn("h-5 w-5 transition-transform", isCreators ? "scale-110 text-[var(--content-primary)] stroke-[2.5]" : "stroke-[1.8]")} />
           <span className="text-xs mt-0.5 tracking-tight font-medium">Creators</span>
           {isCreators && (
             <motion.div
               layoutId="mobile-nav-pill"
-              className="absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--primary-forest-green)] dark:bg-[#962EE6]"
+              className="absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--content-primary)]"
               transition={{ type: "spring", stiffness: 380, damping: 30 }}
             />
           )}
@@ -116,12 +116,12 @@ export function MobileBottomNav() {
           className={cn(
             "relative flex flex-col items-center justify-center min-h-[48px] min-w-[48px] w-12 h-12 rounded-full transition-all duration-200",
             isMe
-              ? "text-[var(--primary-forest-green)] dark:text-white font-bold"
+              ? "text-[var(--content-primary)] font-bold"
               : "text-[var(--content-tertiary)] hover:text-[var(--content-primary)]"
           )}
         >
           {user ? (
-            <div className={cn("relative h-6 w-6 rounded-full overflow-hidden border border-[var(--border-neutral)] transition-all mt-0.5", isMe && "ring-2 ring-[var(--primary-forest-green)] dark:ring-[#962EE6]")}>
+            <div className={cn("relative h-6 w-6 rounded-full overflow-hidden border border-[var(--border-neutral)] transition-all mt-0.5", isMe && "ring-2 ring-[var(--content-primary)]")}>
               <Image
                 src={getValidAvatarUrl(user.avatarUrl)}
                 alt={user.displayName}
@@ -131,13 +131,13 @@ export function MobileBottomNav() {
               />
             </div>
           ) : (
-            <User className={cn("h-5 w-5 transition-transform", isMe ? "scale-110 text-[var(--primary-forest-green)] dark:text-white stroke-[2.5]" : "stroke-[1.8]")} />
+            <User className={cn("h-5 w-5 transition-transform", isMe ? "scale-110 text-[var(--content-primary)] stroke-[2.5]" : "stroke-[1.8]")} />
           )}
           <span className="text-xs mt-0.5 tracking-tight font-medium">{user ? "Studio" : "Login"}</span>
           {isMe && (
             <motion.div
               layoutId="mobile-nav-pill"
-              className="absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--primary-forest-green)] dark:bg-[#962EE6]"
+              className="absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--content-primary)]"
               transition={{ type: "spring", stiffness: 380, damping: 30 }}
             />
           )}

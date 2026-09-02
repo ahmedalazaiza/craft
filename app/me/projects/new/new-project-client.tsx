@@ -24,8 +24,8 @@ export function NewProjectClient() {
     return (
       <div className="mx-auto max-w-2xl px-4 py-16 sm:py-24 text-center">
         <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] p-8 sm:p-12 rounded-[28px] shadow-sm">
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-3xl bg-[#962EE6]/15 dark:bg-[#962EE6]/25 border border-[#962EE6]/30 text-[#962EE6] dark:text-purple-300 shadow-sm">
-            <Sparkles className="h-8 w-8" />
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--brand-secondary-subtle)] border border-[var(--brand-secondary)]/20 text-[var(--brand-secondary)] shadow-xs">
+            <Sparkles className="h-7 w-7" strokeWidth={2} />
           </div>
           <h1
             className={cn(

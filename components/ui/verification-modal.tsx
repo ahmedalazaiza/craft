@@ -8,6 +8,7 @@ import {
   Mail,
   Heart,
   UserPlus,
+  User,
   MessageSquare,
   Sparkles,
   X,
@@ -15,14 +16,13 @@ import {
   AlertCircle,
   ArrowRight,
   Clock,
-  ShieldCheck,
-  Compass,
-  Zap,
-  Lock,
+  FolderKanban,
+  Check,
 } from "lucide-react";
 import { getResendStatus, sendVerificationEmail } from "@/lib/resend-limiter";
 import { bricolage } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
+import { Button, buttonVariants } from "@/components/ui/button";
 
 export type GatedActionType = "like" | "follow" | "comment" | "publish";
 
@@ -90,12 +90,12 @@ export function VerificationModal({
     switch (action) {
       case "like":
         return {
-          glowColor: "rgba(244, 63, 94, 0.15)",
-          badgeBg: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
-          badgeIcon: <Heart className="h-3.5 w-3.5 fill-current" />,
+          glowColor: "rgba(133, 16, 222, 0.12)",
+          badgeBg: "bg-[var(--brand-secondary-subtle)] text-[var(--brand-secondary)] border-[var(--brand-secondary)]/20",
+          badgeIcon: <Heart className="h-3.5 w-3.5 text-[var(--brand-secondary)]" />,
           badgeLabel: "Appreciation Access",
-          iconBg: "from-rose-500/20 to-rose-600/5 text-rose-500 ring-rose-500/20",
-          icon: <Heart className="h-7 w-7 fill-rose-500/25 stroke-[2.2]" />,
+          icon: <Heart className="h-7 w-7 text-[var(--brand-secondary)]" />,
+          targetIcon: <FolderKanban className="h-3.5 w-3.5 text-[var(--content-primary)]" />,
           title: "Appreciate & Save Works",
           description: targetName
             ? `Sign in or verify your email to appreciate and bookmark this case study.`
@@ -109,13 +109,13 @@ export function VerificationModal({
         };
       case "follow":
         return {
-          glowColor: "rgba(150, 46, 230, 0.16)",
-          badgeBg: "bg-[#962EE6]/10 text-[#962EE6] dark:text-purple-300 border-[#962EE6]/25",
-          badgeIcon: <UserPlus className="h-3.5 w-3.5" />,
+          glowColor: "rgba(133, 16, 222, 0.12)",
+          badgeBg: "bg-[var(--brand-secondary-subtle)] text-[var(--brand-secondary)] border-[var(--brand-secondary)]/20",
+          badgeIcon: <UserPlus className="h-3.5 w-3.5 text-[var(--brand-secondary)]" />,
           badgeLabel: "Creator Network",
-          iconBg: "from-[#962EE6]/25 to-[#962EE6]/5 text-[#962EE6] dark:text-purple-300 ring-[#962EE6]/25",
-          icon: <UserPlus className="h-7 w-7 stroke-[2.2]" />,
-          title: "Follow Independent Studios",
+          icon: <UserPlus className="h-7 w-7 text-[var(--brand-secondary)]" />,
+          targetIcon: <User className="h-3.5 w-3.5 text-[var(--content-primary)]" />,
+          title: "Follow Independent Creators",
           description: targetName
             ? `Sign in to follow ${targetName} and catch their latest monographs in your feed.`
             : "Sign in to follow verified designers and build your design network.",
@@ -128,12 +128,12 @@ export function VerificationModal({
         };
       case "comment":
         return {
-          glowColor: "rgba(59, 130, 246, 0.15)",
-          badgeBg: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
-          badgeIcon: <MessageSquare className="h-3.5 w-3.5 fill-current" />,
+          glowColor: "rgba(133, 16, 222, 0.12)",
+          badgeBg: "bg-[var(--brand-secondary-subtle)] text-[var(--brand-secondary)] border-[var(--brand-secondary)]/20",
+          badgeIcon: <MessageSquare className="h-3.5 w-3.5 text-[var(--brand-secondary)]" />,
           badgeLabel: "Critique & Discussion",
-          iconBg: "from-blue-500/20 to-blue-600/5 text-blue-500 ring-blue-500/20",
-          icon: <MessageSquare className="h-7 w-7 fill-blue-500/25 stroke-[2.2]" />,
+          icon: <MessageSquare className="h-7 w-7 text-[var(--brand-secondary)]" />,
+          targetIcon: <MessageSquare className="h-3.5 w-3.5 text-[var(--content-primary)]" />,
           title: "Join the Conversation",
           description: "Sign in to leave constructive feedback, discuss typography & craft, and interact with creators.",
           targetLabel: "Discussion",
@@ -145,12 +145,12 @@ export function VerificationModal({
         };
       case "publish":
         return {
-          glowColor: "rgba(16, 185, 129, 0.15)",
-          badgeBg: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
-          badgeIcon: <Sparkles className="h-3.5 w-3.5" />,
+          glowColor: "rgba(133, 16, 222, 0.12)",
+          badgeBg: "bg-[var(--brand-secondary-subtle)] text-[var(--brand-secondary)] border-[var(--brand-secondary)]/20",
+          badgeIcon: <Sparkles className="h-3.5 w-3.5 text-[var(--brand-secondary)]" />,
           badgeLabel: "Studio Publishing",
-          iconBg: "from-emerald-500/20 to-emerald-600/5 text-emerald-500 ring-emerald-500/20",
-          icon: <Sparkles className="h-7 w-7 stroke-[2.2]" />,
+          icon: <Sparkles className="h-7 w-7 text-[var(--brand-secondary)]" />,
+          targetIcon: <Sparkles className="h-3.5 w-3.5 text-[var(--content-primary)]" />,
           title: "Publish Visual Case Studies",
           description: "Verify your email to release high-resolution monographs, branding archives, and interactive kinetic streams.",
           targetLabel: "Studio",
@@ -204,15 +204,9 @@ export function VerificationModal({
 
           {/* Header Content */}
           <div className="relative flex flex-col items-center text-center">
-            {/* Layered Luxury Hero Icon */}
-            <div className="relative mb-5">
-              <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-b from-[var(--bg-neutral)] to-[var(--bg-screen)] border border-[var(--border-neutral)] shadow-[0_8px_20px_rgba(0,0,0,0.06)] ring-4 ring-[var(--bg-neutral)]/50">
-                {config.icon}
-              </div>
-              {/* Floating Sparkle Micro-badge */}
-              <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-[var(--bg-elevated)] border border-[var(--border-neutral)] shadow-xs">
-                <Lock className="h-3 w-3 text-[var(--content-tertiary)]" />
-              </div>
+            {/* Clean Modern Hero Icon Container */}
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--brand-secondary-subtle)] border border-[var(--brand-secondary)]/25 text-[var(--brand-secondary)] shadow-xs">
+              {config.icon}
             </div>
 
             {/* Action Category Pill */}
@@ -240,7 +234,7 @@ export function VerificationModal({
             {targetName ? (
               <div className="mt-3 w-full rounded-2xl bg-[var(--bg-neutral)]/70 border border-[var(--border-neutral)]/80 px-3.5 py-2.5 flex items-center gap-2.5 text-left">
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--bg-screen)] border border-[var(--border-neutral)] text-[var(--content-secondary)]">
-                  <Compass className="h-3.5 w-3.5" />
+                  {config.targetIcon}
                 </div>
                 <div className="min-w-0 flex-1">
                   <span className="block text-[10px] font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
@@ -261,8 +255,8 @@ export function VerificationModal({
             <div className="mt-4.5 w-full rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]/50 p-3.5 space-y-2 text-left">
               {config.benefits.map((benefit, i) => (
                 <div key={i} className="flex items-center gap-2 text-xs text-[var(--content-secondary)]">
-                  <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#962EE6]/15 text-[#962EE6] dark:text-purple-300">
-                    <Zap className="h-2.5 w-2.5 fill-current" />
+                  <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[var(--brand-secondary-subtle)] text-[var(--brand-secondary)]">
+                    <Check className="h-2.5 w-2.5 stroke-[3]" />
                   </div>
                   <span className="font-medium">{benefit}</span>
                 </div>
@@ -305,11 +299,12 @@ export function VerificationModal({
                 )}
 
                 <div className="space-y-2 pt-1">
-                  <button
+                  <Button
                     type="button"
+                    variant="primary"
                     disabled={isSending || cooldown > 0}
                     onClick={handleResend}
-                    className="w-full inline-flex items-center justify-center gap-2 py-3 px-5 rounded-2xl font-bold text-sm bg-[var(--btn-cta-bg)] text-[var(--btn-cta-fg)] hover:bg-[var(--btn-cta-bg-hover)] active:bg-[var(--btn-cta-bg-active)] disabled:opacity-50 shadow-xs transition-all cursor-pointer"
+                    className="w-full font-bold shadow-xs"
                   >
                     {isSending ? (
                       "Sending link..."
@@ -324,15 +319,16 @@ export function VerificationModal({
                         <span>Resend Verification Email</span>
                       </>
                     )}
-                  </button>
+                  </Button>
 
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
                     onClick={onClose}
-                    className="w-full py-2.5 text-xs font-medium text-[var(--content-tertiary)] hover:text-[var(--content-primary)] transition-colors cursor-pointer"
+                    className="w-full font-semibold text-xs"
                   >
                     Dismiss for now
-                  </button>
+                  </Button>
                 </div>
               </>
             ) : (
@@ -341,16 +337,24 @@ export function VerificationModal({
                 <Link
                   href="/login"
                   onClick={onClose}
-                  className="group relative flex items-center justify-center gap-2 w-full py-3.5 px-5 rounded-2xl font-bold text-sm bg-[var(--primary-forest-green)] text-[var(--bg-screen)] dark:bg-[#962EE6] dark:text-white shadow-[0_4px_14px_rgba(0,0,0,0.1)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer"
+                  className={buttonVariants({
+                    variant: "primary",
+                    size: "default",
+                    className: "w-full font-bold shadow-xs gap-2",
+                  })}
                 >
                   <span>Log in to your account</span>
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  <ArrowRight className="h-4 w-4" />
                 </Link>
 
                 <Link
                   href="/signup"
                   onClick={onClose}
-                  className="flex items-center justify-center w-full py-3 px-5 rounded-2xl font-semibold text-sm bg-[var(--bg-neutral)]/80 hover:bg-[var(--bg-neutral)] border border-[var(--border-neutral)] text-[var(--content-primary)] hover:scale-[1.005] active:scale-[0.99] transition-all cursor-pointer"
+                  className={buttonVariants({
+                    variant: "secondary",
+                    size: "default",
+                    className: "w-full font-semibold",
+                  })}
                 >
                   Create a free account
                 </Link>

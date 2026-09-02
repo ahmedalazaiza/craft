@@ -118,7 +118,7 @@ export default function TeamPage() {
   ]);
 
   return (
-    <div className="mx-auto max-w-[1280px] px-4 sm:px-6 py-4 sm:py-6 space-y-16">
+    <div className="w-full px-4 sm:px-6 lg:px-[140px] py-4 sm:py-6 space-y-16">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}

@@ -5,7 +5,7 @@ import { ProjectCardSkeleton } from "@/components/project/project-card-skeleton"
 
 export function MyProfileSkeleton() {
   return (
-    <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-4 sm:py-6 animate-pulse">
+    <div className="w-full px-4 sm:px-6 lg:px-[140px] py-4 sm:py-6 animate-pulse">
       {/* Breadcrumbs Skeleton */}
       <div className="flex items-center gap-2 mb-6">
         <div className="h-4 w-20 rounded-full bg-[var(--bg-neutral)]" />

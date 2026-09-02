@@ -112,12 +112,12 @@ export function LocationInput({
             type="button"
             onClick={() => setIsConsentOpen(true)}
             disabled={isDetecting}
-            className="inline-flex items-center gap-1 text-[11px] font-medium text-[var(--content-secondary)] hover:text-[#962EE6] dark:hover:text-purple-300 transition-colors cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors cursor-pointer disabled:opacity-50"
             title="Request location access to detect city"
           >
             {isDetecting ? (
               <>
-                <Loader2 className="h-3 w-3 animate-spin text-[#962EE6] dark:text-purple-300" />
+                <Loader2 className="h-3 w-3 animate-spin text-[var(--content-primary)]" />
                 <span>Detecting Location...</span>
               </>
             ) : (
@@ -147,11 +147,11 @@ export function LocationInput({
                 className={cn(
                   "rounded-full px-3 py-1 text-xs font-medium transition-all cursor-pointer inline-flex items-center gap-1",
                   isSelected
-                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#962EE6] dark:text-white font-bold shadow-xs ring-1 ring-black/10 dark:ring-[var(--accent)]"
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] font-bold shadow-xs"
                     : "border border-[var(--border-neutral)] bg-[var(--bg-screen)] text-[var(--content-secondary)] hover:border-[var(--content-secondary)] hover:bg-[var(--bg-neutral)]"
                 )}
               >
-                {isDetected && <Sparkles className="h-2.5 w-2.5 text-emerald-600 dark:text-white shrink-0" />}
+                {isDetected && <Sparkles className="h-2.5 w-2.5 text-[var(--content-primary)] shrink-0" />}
                 <span>{loc}</span>
                 {isSelected && <Check className="h-3 w-3 shrink-0 stroke-[3]" />}
               </button>
@@ -206,7 +206,7 @@ export function LocationInput({
                 className={cn(
                   "flex items-center justify-between w-full text-left px-3 py-2 text-xs font-medium rounded-[12px] transition-colors cursor-pointer",
                   value?.toLowerCase() === city.toLowerCase()
-                    ? "bg-[#962EE6] text-white font-bold"
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] font-bold"
                     : "text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
                 )}
               >
@@ -245,7 +245,7 @@ export function LocationInput({
                   className="relative w-full max-w-md rounded-3xl border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 shadow-2xl z-10 space-y-5"
                 >
                   <div className="flex items-start gap-3.5">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#962EE6]/15 text-[#962EE6]">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--bg-neutral)] text-[var(--content-primary)]">
                       <ShieldCheck className="h-5 w-5" />
                     </div>
                     <div className="space-y-1">
@@ -265,7 +265,7 @@ export function LocationInput({
 
                   <div className="rounded-2xl bg-[var(--bg-neutral)]/70 border border-[var(--border-neutral)] p-3.5 text-[11px] text-[var(--content-secondary)] space-y-1.5">
                     <div className="flex items-center gap-1.5 font-semibold text-[var(--content-primary)]">
-                      <MapPin className="h-3.5 w-3.5 text-emerald-600" />
+                      <MapPin className="h-3.5 w-3.5 text-[var(--content-primary)]" />
                       <span>Privacy & Legal Guarantee</span>
                     </div>
                     <p className="leading-relaxed">
@@ -283,14 +283,16 @@ export function LocationInput({
                     >
                       Cancel
                     </Button>
-                    <button
+                    <Button
                       type="button"
+                      variant="accent"
+                      size="sm"
                       onClick={performLocationDetection}
-                      className="inline-flex items-center gap-1.5 rounded-full font-bold bg-[#962EE6] text-white hover:bg-[#5F0EBA] px-5 py-2 text-xs shadow-xs transition-colors cursor-pointer"
+                      className="rounded-full px-5 font-bold text-xs shadow-xs"
                     >
                       <Sparkles className="h-3.5 w-3.5" />
                       <span>Allow & Detect Location</span>
-                    </button>
+                    </Button>
                   </div>
                 </motion.div>
               </div>

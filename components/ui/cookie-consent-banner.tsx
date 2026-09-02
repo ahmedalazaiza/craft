@@ -105,7 +105,7 @@ export function CookieConsentBanner() {
             {/* Header */}
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#962EE6]/15 text-[#962EE6] dark:text-purple-300 shrink-0">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--bg-neutral)] text-[var(--content-primary)] shrink-0">
                   <Cookie className="h-5 w-5" />
                 </div>
                 <div>
@@ -140,7 +140,7 @@ export function CookieConsentBanner() {
               <Link
                 href="/privacy"
                 target="_blank"
-                className="font-semibold text-[#962EE6] underline underline-offset-2 hover:opacity-80 transition-opacity"
+                className="font-semibold text-[var(--content-primary)] underline underline-offset-2 hover:opacity-80 transition-opacity"
               >
                 Privacy Policy
               </Link>{" "}
@@ -148,7 +148,7 @@ export function CookieConsentBanner() {
               <Link
                 href="/terms"
                 target="_blank"
-                className="font-semibold text-[#962EE6] underline underline-offset-2 hover:opacity-80 transition-opacity"
+                className="font-semibold text-[var(--content-primary)] underline underline-offset-2 hover:opacity-80 transition-opacity"
               >
                 Terms of Use
               </Link>.
@@ -166,14 +166,14 @@ export function CookieConsentBanner() {
                 <div className="flex items-center justify-between p-2.5 rounded-xl bg-[var(--bg-neutral)]/60">
                   <div className="space-y-0.5">
                     <span className="font-bold text-[var(--content-primary)] flex items-center gap-1.5">
-                      <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                      <ShieldCheck className="h-3.5 w-3.5 text-[var(--content-primary)]" />
                       Strictly Essential
                     </span>
                     <p className="text-[11px] text-[var(--content-tertiary)]">
                       Required for secure authentication and studio project drafts.
                     </p>
                   </div>
-                  <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                  <span className="text-[11px] font-bold text-[var(--content-primary)] bg-[var(--bg-neutral)] px-2 py-0.5 rounded-full border border-[var(--border-neutral)]">
                     Always Active
                   </span>
                 </div>
@@ -197,7 +197,7 @@ export function CookieConsentBanner() {
                         analytics: e.target.checked,
                       }))
                     }
-                    className="h-4 w-4 rounded accent-[#962EE6] cursor-pointer"
+                    className="h-4 w-4 rounded accent-[var(--content-primary)] cursor-pointer"
                   />
                 </div>
 
@@ -220,7 +220,7 @@ export function CookieConsentBanner() {
                         functional: e.target.checked,
                       }))
                     }
-                    className="h-4 w-4 rounded accent-[#962EE6] cursor-pointer"
+                    className="h-4 w-4 rounded accent-[var(--content-primary)] cursor-pointer"
                   />
                 </div>
               </motion.div>

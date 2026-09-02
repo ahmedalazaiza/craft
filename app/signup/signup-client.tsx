@@ -163,16 +163,16 @@ export function SignupClient() {
   // =========================================================================
   if (isRegistered) {
     return (
-      <div className="flex min-h-[calc(100vh-14rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+      <div className="flex min-h-[calc(100vh-14rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-[140px]">
         <FadeIn className="w-full max-w-lg">
           <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[28px] p-4 sm:p-6 text-center shadow-xl">
             <CardHeader className="pb-4 pt-4">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-[#962EE6]/15 dark:bg-[#962EE6]/25 border border-[#962EE6]/30 text-[#962EE6] dark:text-purple-300 shadow-sm">
-                <Inbox className="h-8 w-8" />
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--brand-secondary-subtle)] border border-[var(--brand-secondary)]/20 text-[var(--brand-secondary)] shadow-xs">
+                <Inbox className="h-7 w-7" strokeWidth={2} />
               </div>
 
               <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip-bg)] px-3 py-1 text-[11px] font-semibold text-[var(--chip-fg)] mx-auto mb-3 shadow-xs">
-                <ShieldCheck className="h-3.5 w-3.5 text-white" />
+                <ShieldCheck className="h-3.5 w-3.5" />
                 <span>Verification Link Dispatched</span>
               </div>
 
@@ -196,7 +196,7 @@ export function SignupClient() {
             <CardContent className="space-y-5 pt-2">
               <div className="rounded-2xl bg-[var(--bg-neutral)]/50 border border-[var(--border-neutral)] p-4 text-left text-xs text-[var(--content-secondary)] space-y-2">
                 <p className="font-semibold text-[var(--content-primary)] flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-[#962EE6]" />
+                  <Sparkles className="h-3.5 w-3.5 text-[var(--brand-secondary)]" />
                   <span>Why verify your email?</span>
                 </p>
                 <ul className="list-disc list-inside space-y-1 text-[11px] text-[var(--content-tertiary)] pl-1">
@@ -249,7 +249,7 @@ export function SignupClient() {
                   prefetch={true}
                   className={buttonVariants({
                     variant: "accent",
-                    className: "w-full font-bold shadow-xs gap-2 bg-[#962EE6] hover:bg-[#801FD1] text-white",
+                    className: "w-full font-bold shadow-xs gap-2",
                   })}
                 >
                   <span>Explore Platform</span>
@@ -267,7 +267,7 @@ export function SignupClient() {
   // VIEW: SIGN UP FORM
   // =========================================================================
   return (
-    <div className="flex min-h-[calc(100vh-14rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-[calc(100vh-14rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-[140px]">
       <FadeIn className="w-full max-w-md">
         <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[24px] p-2">
           <CardHeader className="text-center pb-4 pt-6 sm:pt-7">
@@ -317,13 +317,13 @@ export function SignupClient() {
                   <div className="mt-2.5 min-h-[22px]">
                     {isCheckingUsername ? (
                       <div className="flex items-center gap-2 text-[11px] text-[var(--content-secondary)] animate-pulse">
-                        <Loader2 className="h-3.5 w-3.5 text-[#962EE6] animate-spin shrink-0" />
+                        <Loader2 className="h-3.5 w-3.5 text-[var(--content-primary)] animate-spin shrink-0" />
                         <span>Verifying unique handle availability...</span>
                         <span className="h-3.5 w-20 rounded-md bg-[var(--bg-neutral)] inline-block" />
                       </div>
                     ) : (
                       <div className="flex items-center gap-1.5 text-[11px] text-[var(--content-tertiary)] animate-fade-in">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-[#962EE6] shrink-0" />
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[var(--content-primary)] shrink-0" />
                         <span>Your unique handle will be:</span>
                         <span className="font-mono font-semibold text-[var(--content-primary)] bg-[var(--bg-neutral)] px-2 py-0.5 rounded-md">
                           @{resolvedUsername || slugifyUsername(displayName)}
@@ -396,7 +396,7 @@ export function SignupClient() {
                     target="_blank"
                     rel="noopener noreferrer"
                     prefetch={true}
-                    className="font-semibold text-[var(--content-primary)] hover:text-[#962EE6] underline underline-offset-2 transition-colors"
+                    className="font-semibold text-[var(--content-primary)] hover:underline underline-offset-2 transition-colors"
                   >
                     Terms of Use
                   </Link>{" "}
@@ -406,7 +406,7 @@ export function SignupClient() {
                     target="_blank"
                     rel="noopener noreferrer"
                     prefetch={true}
-                    className="font-semibold text-[var(--content-primary)] hover:text-[#962EE6] underline underline-offset-2 transition-colors"
+                    className="font-semibold text-[var(--content-primary)] hover:underline underline-offset-2 transition-colors"
                   >
                     Privacy Policy
                   </Link>.

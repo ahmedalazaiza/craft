@@ -193,7 +193,7 @@ export function ImageCropperModal({
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#962EE6]/15 text-[#962EE6] dark:text-purple-300">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--bg-neutral)] text-[var(--content-primary)]">
                 <Crop className="h-5 w-5" />
               </div>
               <div>
@@ -256,7 +256,7 @@ export function ImageCropperModal({
                   "border-2 border-white shadow-[0_0_0_9999px_rgba(0,0,0,0.65)] shrink-0",
                   aspectRatio === 1
                     ? cropShape === "round"
-                      ? "rounded-full ring-2 ring-[#962EE6]/80"
+                      ? "rounded-full ring-2 ring-white/80"
                       : "rounded-2xl"
                     : "w-[90%] h-36 rounded-xl"
                 )}
@@ -282,7 +282,7 @@ export function ImageCropperModal({
                 step="0.05"
                 value={scale}
                 onChange={(e) => setScale(parseFloat(e.target.value))}
-                className="w-full accent-[#962EE6] cursor-pointer"
+                className="w-full accent-[var(--content-primary)] cursor-pointer"
               />
               <ZoomIn className="h-4 w-4 text-[var(--content-tertiary)] shrink-0" />
 
@@ -309,15 +309,16 @@ export function ImageCropperModal({
             >
               Cancel
             </Button>
-            <button
+            <Button
               type="button"
+              variant="accent"
               disabled={isProcessing}
               onClick={handleCrop}
-              className="inline-flex items-center gap-1.5 rounded-full font-bold bg-[#962EE6] text-white hover:bg-[#5F0EBA] px-6 py-2.5 text-xs shadow-md transition-colors cursor-pointer disabled:opacity-50"
+              className="rounded-full px-6 font-bold text-xs shadow-md"
             >
               <Check className="h-4 w-4" />
               <span>{isProcessing ? "Cropping..." : "Apply & Save Crop"}</span>
-            </button>
+            </Button>
           </div>
         </motion.div>
       </div>

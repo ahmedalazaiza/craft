@@ -9,11 +9,13 @@ import { CreatorGridSkeleton } from "@/components/creator/creator-grid-skeleton"
 import { SearchField } from "@/components/search/search-field";
 import { FilterDrawer, CreatorFilters } from "@/components/search/filter-drawer";
 import { FilterChip } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { FadeIn, StaggerGridItem } from "@/components/ui/motion-wrapper";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Creator } from "@/lib/types";
 import { MASTER_TAXONOMY, normalizeCategory, getCategoryTaxonomy } from "@/lib/taxonomy";
-import { Sparkles, Users, Globe } from "lucide-react";
+import { computeCreatorRank } from "@/lib/ranking";
+import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CreatorsClientProps {
@@ -75,68 +77,101 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
   };
 
   const filteredCreators = useMemo(() => {
-    return creators.filter((creator) => {
-      // Unconditional rule: Exclude any creator with 0 published projects
-      const creatorProjects = projects.filter(
-        (p) => p.creator.id === creator.id && p.published
-      );
-      if (creatorProjects.length === 0) {
-        return false;
-      }
+    const hasSearchQuery = searchQuery.trim().length > 0;
+    const q = searchQuery.toLowerCase().trim();
 
-      // Search text matching
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchName = creator.displayName.toLowerCase().includes(q);
-        const matchUsername = creator.username.toLowerCase().includes(q);
-        const matchBio = creator.bio.toLowerCase().includes(q);
-        const matchCity = (creator.city || "").toLowerCase().includes(q);
-        const matchSkills = creator.skills.some((s) => s.toLowerCase().includes(q));
-        if (!matchName && !matchUsername && !matchBio && !matchCity && !matchSkills) {
+    return creators
+      .filter((creator) => {
+        // Find published projects belonging to this creator
+        const creatorProjects = projects.filter(
+          (p) =>
+            p.creator &&
+            (p.creator.id === creator.id ||
+              p.creator.username.toLowerCase() === creator.username.toLowerCase()) &&
+            p.published
+        );
+
+        // Visibility Rule: In the general directory (no search query), creators with 0 published works are hidden
+        if (!hasSearchQuery && creatorProjects.length === 0) {
           return false;
         }
-      }
 
-      // Discipline filter matching (checks exact skill or normalized category match)
-      const activeDiscipline = filters.discipline;
-      if (activeDiscipline && activeDiscipline !== "All") {
-        const targetTax = getCategoryTaxonomy(activeDiscipline);
-        const matchDiscipline = creator.skills.some((skill) => {
-          if (skill.toLowerCase() === activeDiscipline.toLowerCase()) return true;
-          if (targetTax) {
-            if (skill.toLowerCase() === targetTax.name.toLowerCase()) return true;
-            if (skill.toLowerCase() === targetTax.shortName.toLowerCase()) return true;
-            if (targetTax.subCategories.some((sub) => sub.toLowerCase() === skill.toLowerCase())) return true;
-            if (targetTax.tags.some((tag) => tag.toLowerCase() === skill.toLowerCase())) return true;
+        // If explicit toggle "hasPublishedOnly" is active
+        if (filters.hasPublishedOnly && creatorProjects.length === 0) {
+          return false;
+        }
+
+        // Search text matching (when searching, search by name, handle, bio, city, or skills)
+        if (hasSearchQuery) {
+          const matchName = creator.displayName.toLowerCase().includes(q);
+          const matchUsername = creator.username.toLowerCase().includes(q);
+          const matchBio = creator.bio.toLowerCase().includes(q);
+          const matchCity = (creator.city || "").toLowerCase().includes(q);
+          const matchSkills = creator.skills.some((s) => s.toLowerCase().includes(q));
+          if (!matchName && !matchUsername && !matchBio && !matchCity && !matchSkills) {
+            return false;
           }
-          return false;
-        });
-        if (!matchDiscipline) return false;
-      }
-
-      // Location filter (supports exact city, country, or partial string match)
-      if (filters.city && filters.city !== "All") {
-        const target = filters.city.toLowerCase().trim();
-        const cCity = (creator.city || "").toLowerCase().trim();
-        const cLoc = (creator.location || "").toLowerCase().trim();
-        const targetMainCity = target.split(",")[0].trim();
-
-        const match =
-          cCity === target ||
-          cLoc === target ||
-          cCity.includes(target) ||
-          cLoc.includes(target) ||
-          target.includes(cCity) ||
-          target.includes(cLoc) ||
-          (targetMainCity && (cCity.includes(targetMainCity) || cLoc.includes(targetMainCity)));
-
-        if (!match) {
-          return false;
         }
-      }
 
-      return true;
-    });
+        // Discipline filter matching (checks exact skill or normalized category match)
+        const activeDiscipline = filters.discipline;
+        if (activeDiscipline && activeDiscipline !== "All") {
+          const targetTax = getCategoryTaxonomy(activeDiscipline);
+          const matchDiscipline = creator.skills.some((skill) => {
+            if (skill.toLowerCase() === activeDiscipline.toLowerCase()) return true;
+            if (targetTax) {
+              if (skill.toLowerCase() === targetTax.name.toLowerCase()) return true;
+              if (skill.toLowerCase() === targetTax.shortName.toLowerCase()) return true;
+              if (targetTax.subCategories.some((sub) => sub.toLowerCase() === skill.toLowerCase())) return true;
+              if (targetTax.tags.some((tag) => tag.toLowerCase() === skill.toLowerCase())) return true;
+            }
+            return false;
+          });
+          if (!matchDiscipline) return false;
+        }
+
+        // Location filter (supports exact city, country, or partial string match)
+        if (filters.city && filters.city !== "All") {
+          const target = filters.city.toLowerCase().trim();
+          const cCity = (creator.city || "").toLowerCase().trim();
+          const cLoc = (creator.location || "").toLowerCase().trim();
+          const targetMainCity = target.split(",")[0].trim();
+
+          const match =
+            cCity === target ||
+            cLoc === target ||
+            cCity.includes(target) ||
+            cLoc.includes(target) ||
+            target.includes(cCity) ||
+            target.includes(cLoc) ||
+            (targetMainCity && (cCity.includes(targetMainCity) || cLoc.includes(targetMainCity)));
+
+          if (!match) {
+            return false;
+          }
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        const aProjects = projects.filter(
+          (p) =>
+            p.creator &&
+            (p.creator.id === a.id || p.creator.username.toLowerCase() === a.username.toLowerCase()) &&
+            p.published
+        );
+        const bProjects = projects.filter(
+          (p) =>
+            p.creator &&
+            (p.creator.id === b.id || p.creator.username.toLowerCase() === b.username.toLowerCase()) &&
+            p.published
+        );
+
+        const scoreA = computeCreatorRank(a, aProjects, hasSearchQuery ? q : undefined);
+        const scoreB = computeCreatorRank(b, bProjects, hasSearchQuery ? q : undefined);
+
+        return scoreB - scoreA;
+      });
   }, [creators, projects, searchQuery, filters]);
 
   const activeFilterCount =
@@ -144,31 +179,19 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
     (filters.city !== "All" ? 1 : 0) +
     (filters.hasPublishedOnly ? 1 : 0);
 
-  // Distinct cities count for directory stats
-  const uniqueCitiesCount = new Set(creators.map((u) => u.city)).size;
+
 
   if (isLoadingDb && creators.length === 0) {
     return (
-      <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-4 sm:py-6 space-y-6 animate-pulse">
+      <div className="w-full px-4 sm:px-6 lg:px-[140px] py-4 sm:py-6 space-y-6 animate-pulse">
         <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Creators" }]} />
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-8 border-b border-[var(--border-neutral)] mb-8">
-          <div className="space-y-3 max-w-2xl">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 sm:pb-8 border-b border-[var(--border-neutral)] mb-8">
+          <div className="space-y-3 max-w-xl">
             <div className="h-6 w-36 rounded-full bg-[var(--bg-neutral)]" />
             <div className="h-10 sm:h-12 w-80 max-w-full rounded-2xl bg-[var(--bg-neutral)]" />
-            <div className="h-4 w-full max-w-xl rounded-full bg-[var(--bg-neutral)]/70" />
+            <div className="h-4 w-full max-w-lg rounded-full bg-[var(--bg-neutral)]/70" />
           </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="h-14 w-36 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]" />
-            <div className="h-14 w-36 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]" />
-          </div>
-        </div>
-        <div className="space-y-4 mb-6">
-          <div className="h-12 w-full rounded-2xl bg-[var(--bg-neutral)]" />
-          <div className="flex items-center gap-2 overflow-hidden pb-3 border-b border-[var(--border-neutral)]">
-            {["w-14", "w-32", "w-28", "w-28", "w-24", "w-32", "w-28"].map((w, idx) => (
-              <div key={idx} className={`h-8 ${w} shrink-0 rounded-full bg-[var(--bg-neutral)]/70`} />
-            ))}
-          </div>
+          <div className="h-12 w-full lg:w-[420px] rounded-full bg-[var(--bg-neutral)] shrink-0" />
         </div>
         <CreatorGridSkeleton count={6} />
       </div>
@@ -176,7 +199,7 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
   }
 
   return (
-    <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-4 sm:py-6">
+    <div className="w-full px-4 sm:px-6 lg:px-[140px] py-4 sm:py-6">
       <FadeIn>
         {/* Breadcrumbs Navigation */}
         <Breadcrumbs
@@ -187,10 +210,10 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
         />
 
         {/* ========================================================================= */}
-        {/* UNIFIED BALANCED HEADER (Title & Description on Left + Stats on Right)   */}
+        {/* BALANCED 2-COLUMN HEADER (Title & Description on Left + Search on Right)  */}
         {/* ========================================================================= */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-8 border-b border-neutral-200 dark:border-neutral-800 mb-8">
-          <div className="max-w-2xl">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 sm:pb-8 border-b border-neutral-200 dark:border-neutral-800 mb-8">
+          <div className="max-w-xl">
             <div className="inline-flex items-center gap-2 rounded-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-3 py-1 text-[11px] font-mono font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-300 mb-3 shadow-xs">
               <Sparkles className="h-3 w-3 text-neutral-900 dark:text-white" />
               <span>Creator Directory</span>
@@ -198,7 +221,7 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
             <h1
               className={cn(
                 bricolage.className,
-                "text-3xl sm:text-4xl lg:text-[44px] font-black text-neutral-950 dark:text-white leading-tight tracking-tight"
+                "text-3xl sm:text-4xl lg:text-[40px] font-black text-neutral-950 dark:text-white leading-tight tracking-tight"
               )}
             >
               Discover Global Creators
@@ -208,40 +231,8 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
             </p>
           </div>
 
-          {/* Right-aligned Directory Stats Cards */}
-          <div className="grid grid-cols-2 sm:flex sm:items-center gap-2.5 sm:gap-4 shrink-0 w-full sm:w-auto">
-            <div className="flex items-center gap-2.5 rounded-2xl bg-white dark:bg-[#141713] border border-neutral-200 dark:border-neutral-800 px-3.5 sm:px-4 py-2.5 shadow-xs">
-              <Users className="h-4 w-4 text-neutral-900 dark:text-white shrink-0" />
-              <div className="text-left min-w-0">
-                <span className="block text-xs font-bold text-neutral-950 dark:text-white truncate">
-                  {filteredCreators.length} Active Creators
-                </span>
-                <span className="text-[10px] text-neutral-400 dark:text-neutral-500 uppercase font-mono truncate block">
-                  {MASTER_TAXONOMY.length} Disciplines
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 rounded-2xl bg-white dark:bg-[#141713] border border-neutral-200 dark:border-neutral-800 px-3.5 sm:px-4 py-2.5 shadow-xs">
-              <Globe className="h-4 w-4 text-neutral-900 dark:text-white shrink-0" />
-              <div className="text-left min-w-0">
-                <span className="block text-xs font-bold text-neutral-950 dark:text-white truncate">
-                  {uniqueCitiesCount} Cities
-                </span>
-                <span className="text-[10px] text-neutral-400 dark:text-neutral-500 uppercase font-mono truncate block">
-                  Worldwide
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ========================================================================= */}
-        {/* UNIFIED INTERACTIVE SEARCH & DISCIPLINE FILTER TOOLBAR                    */}
-        {/* ========================================================================= */}
-        <div className="space-y-4 mb-8">
-          {/* Main Search Input */}
-          <div className="w-full">
+          {/* Right: Search Input (Vertically Centered with Title & Description) */}
+          <div className="w-full lg:w-[420px] xl:w-[480px] shrink-0">
             <SearchField
               placeholder="Search creators by name, username, bio, discipline, or city..."
               initialQuery={searchQuery}
@@ -252,41 +243,14 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
               className="w-full"
             />
           </div>
+        </div>
 
-          {/* Quick Discipline Pills Strip (13 Categories) */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 pt-1 no-scrollbar border-b border-neutral-200 dark:border-neutral-800 -mx-4 px-4 sm:mx-0 sm:px-0">
-            <button
-              type="button"
-              onClick={() => handleFiltersChange({ ...filters, discipline: "All" })}
-              className={cn(
-                "rounded-full px-3.5 py-1.5 text-xs transition-all shrink-0 cursor-pointer font-semibold select-none",
-                filters.discipline === "All"
-                  ? "bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-bold shadow-xs"
-                  : "bg-neutral-100 dark:bg-neutral-800/80 text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700"
-              )}
-            >
-              All
-            </button>
-            {MASTER_TAXONOMY.map((cat) => {
-              const isSelected =
-                filters.discipline === cat.name || filters.discipline === cat.shortName;
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => handleFiltersChange({ ...filters, discipline: cat.name })}
-                  className={cn(
-                    "rounded-full px-3.5 py-1.5 text-xs transition-all shrink-0 cursor-pointer select-none",
-                    isSelected
-                      ? "bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-bold shadow-xs"
-                      : "bg-neutral-100 dark:bg-neutral-800/80 text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700 font-medium"
-                  )}
-                  title={cat.name}
-                >
-                  {cat.shortName}
-                </button>
-              );
-            })}
+        {/* ========================================================================= */}
+        {/* SUBHEADER TOOLBAR: Results Count                                          */}
+        {/* ========================================================================= */}
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <div className="text-xs font-semibold text-[var(--content-secondary)]">
+            Showing <strong className="text-[var(--content-primary)] font-bold">{filteredCreators.length}</strong> {filteredCreators.length === 1 ? "creator" : "creators"}
           </div>
         </div>
 
@@ -354,8 +318,9 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
             <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-2 max-w-md mx-auto leading-relaxed font-normal">
               Try adjusting your search query, changing the discipline pill, or resetting filters.
             </p>
-            <button
+            <Button
               type="button"
+              variant="accent"
               onClick={() => {
                 handleSearchChange("");
                 handleFiltersChange({
@@ -364,13 +329,13 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
                   hasPublishedOnly: false,
                 });
               }}
-              className="mt-5 inline-flex items-center gap-2 rounded-full font-bold bg-[#962EE6] text-white hover:bg-[#5F0EBA] px-6 py-2.5 text-xs shadow-xs transition-colors cursor-pointer"
+              className="mt-5 rounded-full px-6 text-xs font-bold"
             >
               Reset All Filters
-            </button>
+            </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[500px]">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 min-h-[500px]">
             {filteredCreators.map((creator, idx) => (
               <StaggerGridItem key={creator.id} index={idx}>
                 <CreatorListItem creator={creator} />

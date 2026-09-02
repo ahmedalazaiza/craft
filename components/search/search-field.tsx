@@ -211,7 +211,7 @@ export function SearchField({
               <SlidersHorizontal className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Filter</span>
               {filterCount > 0 && (
-                <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#962EE6] px-1 text-[10px] font-bold text-white shadow-xs animate-in zoom-in-50">
+                <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--content-primary)] px-1 text-[10px] font-bold text-[var(--bg-screen)] shadow-xs animate-in zoom-in-50">
                   {filterCount}
                 </span>
               )}
@@ -237,7 +237,7 @@ export function SearchField({
           {matchedProjects.length > 0 && (
             <div className="mb-3">
               <div className="flex items-center gap-1.5 px-3 py-1.5 type-label font-semibold text-[var(--content-tertiary)] uppercase tracking-wider">
-                <FolderKanban className="h-3.5 w-3.5 text-[var(--primary-forest-green)]" />
+                <FolderKanban className="h-3.5 w-3.5 text-[var(--content-primary)]" />
                 <span>Projects</span>
               </div>
               <div className="space-y-1">
@@ -290,7 +290,7 @@ export function SearchField({
           {matchedCreators.length > 0 && (
             <div>
               <div className="flex items-center gap-1.5 px-3 py-1.5 type-label font-semibold text-[var(--content-tertiary)] uppercase tracking-wider border-t border-[var(--border-neutral)] pt-2.5">
-                <User className="h-3.5 w-3.5 text-[var(--primary-forest-green)]" />
+                <User className="h-3.5 w-3.5 text-[var(--content-primary)]" />
                 <span>Creators</span>
               </div>
               <div className="space-y-1">

@@ -54,7 +54,7 @@ export default async function CreatorsPage() {
       />
       <Suspense
         fallback={
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 text-center">
+          <div className="w-full px-4 sm:px-6 lg:px-[140px] py-16 text-center">
             <div className="type-body-large text-[var(--content-tertiary)]">
               Loading creators...
             </div>

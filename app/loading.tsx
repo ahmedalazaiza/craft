@@ -6,7 +6,7 @@ export default function HomeLoading() {
     <div className="animate-pulse">
       {/* Hero Section Skeleton */}
       <section className="relative overflow-hidden py-16 sm:py-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center space-y-6">
+        <div className="w-full px-4 sm:px-6 lg:px-[140px] text-center space-y-6">
           {/* Badge */}
           <div className="flex justify-center">
             <div className="h-7 w-48 rounded-full bg-[var(--bg-neutral)]" />
@@ -28,7 +28,7 @@ export default function HomeLoading() {
       </section>
 
       {/* Featured Projects Skeleton */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 space-y-6">
+      <section className="w-full px-4 sm:px-6 lg:px-[140px] py-12 space-y-6">
         <div className="flex items-center justify-between">
           <div className="h-8 w-48 rounded-xl bg-[var(--bg-neutral)]" />
           <div className="h-8 w-24 rounded-full bg-[var(--bg-neutral)]/60" />
@@ -37,7 +37,7 @@ export default function HomeLoading() {
       </section>
 
       {/* Featured Creators Skeleton */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 space-y-6">
+      <section className="w-full px-4 sm:px-6 lg:px-[140px] py-12 space-y-6">
         <div className="flex items-center justify-between">
           <div className="h-8 w-52 rounded-xl bg-[var(--bg-neutral)]" />
           <div className="h-8 w-24 rounded-full bg-[var(--bg-neutral)]/60" />

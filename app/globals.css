@@ -6,27 +6,40 @@
   --font-display: var(--font-display), "Bricolage Grotesque", sans-serif;
   --font-sans: var(--font-body), Inter, sans-serif;
 
-  --color-primary-bright-green: var(--primary-bright-green);
-  --color-primary-forest-green: var(--primary-forest-green);
+  /* Brand Colors */
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-secondary-hover: var(--brand-secondary-hover);
+  --color-brand-secondary-light: var(--brand-secondary-light);
+  --color-brand-secondary-subtle: var(--brand-secondary-subtle);
+  --color-brand-secondary-glow: var(--brand-secondary-glow);
+
+  /* Content / Typography */
   --color-content-primary: var(--content-primary);
   --color-content-secondary: var(--content-secondary);
   --color-content-tertiary: var(--content-tertiary);
   --color-content-link: var(--content-link);
   --color-content-link-hover: var(--content-link-hover);
-  --color-content-link-active: var(--content-link-active);
+
+  /* Primary Action Buttons */
+  --color-btn-cta-bg: var(--btn-cta-bg);
+  --color-btn-cta-fg: var(--btn-cta-fg);
+  --color-btn-cta-bg-hover: var(--btn-cta-bg-hover);
+  --color-btn-cta-bg-active: var(--btn-cta-bg-active);
+
+  /* Chips & Badges */
+  --color-chip-bg: var(--chip-bg);
+  --color-chip-fg: var(--chip-fg);
+  --color-chip-bg-hover: var(--chip-bg-hover);
+
+  /* Interactive Elements */
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
-  --color-accent-active: var(--accent-active);
   --color-interactive-primary: var(--interactive-primary);
-  --color-interactive-primary-hover: var(--interactive-primary-hover);
-  --color-interactive-primary-active: var(--interactive-primary-active);
-  --color-interactive-primary-foreground: var(--interactive-primary-foreground);
   --color-interactive-secondary: var(--interactive-secondary);
-  --color-interactive-secondary-hover: var(--interactive-secondary-hover);
-  --color-interactive-secondary-active: var(--interactive-secondary-active);
   --color-negative: var(--negative);
-  --color-negative-hover: var(--negative-hover);
-  --color-negative-active: var(--negative-active);
+
+  /* Surfaces & Backgrounds */
   --color-bg-screen: var(--bg-screen);
   --color-bg-elevated: var(--bg-elevated);
   --color-bg-overlay: var(--bg-overlay);
@@ -35,158 +48,192 @@
   --color-bg-neutral-hover: var(--bg-neutral-hover);
   --color-bg-neutral-active: var(--bg-neutral-active);
   --color-border-neutral: var(--border-neutral);
-  --color-base-contrast: var(--base-contrast);
-  --color-base-dark: var(--base-dark);
-  --color-base-light: var(--base-light);
+
+  /* Sentiment & Status */
   --color-sentiment-positive: var(--sentiment-positive);
   --color-sentiment-warning: var(--sentiment-warning);
   --color-sentiment-negative: var(--sentiment-negative);
 
-  --color-btn-cta-bg: var(--btn-cta-bg);
-  --color-btn-cta-fg: var(--btn-cta-fg);
-  --color-btn-cta-bg-hover: var(--btn-cta-bg-hover);
-  --color-btn-cta-bg-active: var(--btn-cta-bg-active);
-
-  --color-chip-bg: var(--chip-bg);
-  --color-chip-fg: var(--chip-fg);
-  --color-chip-bg-hover: var(--chip-bg-hover);
-
-  --color-sentiment-positive-bg: var(--sentiment-positive-bg);
-  --color-sentiment-positive-fg: var(--sentiment-positive-fg);
-
-  --color-tag-cyan: #A0E1E1;
-  --color-tag-orange: #FFC091;
-  --color-tag-pink: #FFD7EF;
-  --color-tag-yellow: #FFEB69;
+  /* Legacy Compatibility Aliases */
+  --color-primary-bright-green: var(--primary-bright-green);
+  --color-primary-forest-green: var(--primary-forest-green);
 }
 
 :root,
 html[data-theme="light"] {
-  /* Brand */
-  --primary-bright-green: #962EE6;
-  --primary-forest-green: #090C09;
+  /* ========================================================================= */
+  /* 1. BRAND TOKENS (LIGHT MODE)                                              */
+  /* ========================================================================= */
+  --brand-primary: #000000;
+  --brand-secondary: #8510DE;
+  --brand-secondary-hover: #7209B7;
+  --brand-secondary-light: #B159F3;
+  --brand-secondary-subtle: rgba(133, 16, 222, 0.08);
+  --brand-secondary-glow: rgba(177, 89, 243, 0.25);
 
-  /* Main CTA Button Tokens — mapped to --primary-forest-green with high-contrast text */
-  --btn-cta-bg: var(--primary-forest-green);
+  /* ========================================================================= */
+  /* 2. MAIN CTA BUTTON TOKENS (SOLID BLACK)                                   */
+  /* ========================================================================= */
+  --btn-cta-bg: #000000;
   --btn-cta-fg: #FFFFFF;
-  --btn-cta-bg-hover: #000000;
-  --btn-cta-bg-active: #090C09;
+  --btn-cta-bg-hover: #27272A;
+  --btn-cta-bg-active: #3F3F46;
 
-  /* Chip / Badge Tokens */
-  --chip-bg: #090C09;
-  --chip-fg: #F3F4F0;
-  --chip-bg-hover: #000000;
+  /* ========================================================================= */
+  /* 3. CHIP / BADGE TOKENS                                                    */
+  /* ========================================================================= */
+  --chip-bg: #000000;
+  --chip-fg: #FFFFFF;
+  --chip-bg-hover: #27272A;
 
-  /* Content */
-  --content-primary: #090C09;
-  --content-secondary: #454745;
-  --content-tertiary: #5A5D5A;
-  --content-link: #090C09;
-  --content-link-hover: #000000;
-  --content-link-active: #090C09;
+  /* ========================================================================= */
+  /* 4. CONTENT / TYPOGRAPHY TOKENS                                            */
+  /* ========================================================================= */
+  --content-primary: #09090B;
+  --content-secondary: #52525B;
+  --content-tertiary: #71717A;
+  --content-link: #09090B;
+  --content-link-hover: #27272A;
+  --content-link-active: #09090B;
 
-  /* Interactive */
-  --accent: #962EE6;
-  --accent-hover: #5F0EBA;
-  --accent-active: #4F0B9C;
-  --interactive-primary: #090C09;
-  --interactive-primary-hover: #000000;
-  --interactive-primary-active: #000000;
+  /* ========================================================================= */
+  /* 5. INTERACTIVE & ACCENT TOKENS                                            */
+  /* ========================================================================= */
+  --accent: #000000;
+  --accent-hover: #27272A;
+  --accent-active: #3F3F46;
+  --interactive-primary: #000000;
+  --interactive-primary-hover: #27272A;
+  --interactive-primary-active: #3F3F46;
   --interactive-primary-foreground: #FFFFFF;
-  --interactive-secondary: #868685;
-  --interactive-secondary-hover: #6C6C6B;
-  --interactive-secondary-active: #525251;
+  --interactive-secondary: #71717A;
+  --interactive-secondary-hover: #52525B;
+  --interactive-secondary-active: #3F3F46;
   --negative: #E74848;
   --negative-hover: #D03238;
   --negative-active: #BF1E2C;
 
-  /* Surface */
+  /* ========================================================================= */
+  /* 6. SURFACE & BACKGROUND TOKENS                                            */
+  /* ========================================================================= */
   --bg-screen: #FFFFFF;
   --bg-elevated: #FFFFFF;
-  --bg-overlay: #090C0914;
-  --bg-dimmer: #FFFFFFB2;
-  --bg-neutral: #090C0914;
-  --bg-neutral-hover: #090C0921;
-  --bg-neutral-active: #090C092E;
-  --border-neutral: #090C091F;
+  --bg-overlay: rgba(0, 0, 0, 0.08);
+  --bg-dimmer: rgba(255, 255, 255, 0.85);
+  --bg-neutral: rgba(0, 0, 0, 0.05);
+  --bg-neutral-hover: rgba(0, 0, 0, 0.08);
+  --bg-neutral-active: rgba(0, 0, 0, 0.12);
+  --border-neutral: rgba(0, 0, 0, 0.1);
   --base-contrast: #FFFFFF;
-  --base-dark: #121511;
+  --base-dark: #09090B;
   --base-light: #FFFFFF;
 
-  /* Sentiment */
-  --sentiment-positive: #2F5711;
-  --sentiment-positive-bg: #2F5711;
+  /* ========================================================================= */
+  /* 7. SENTIMENT & STATUS TOKENS                                              */
+  /* ========================================================================= */
+  --sentiment-positive: #10B981;
+  --sentiment-positive-bg: #000000;
   --sentiment-positive-fg: #FFFFFF;
-  --sentiment-warning: #EDC843;
-  --sentiment-negative: #A8200D;
+  --sentiment-warning: #F59E0B;
+  --sentiment-negative: #E74848;
 
-  /* Input Focus States — Dark Forest Green */
-  --input-focus-border: #162E1C;
-  --input-focus-ring: rgba(22, 46, 28, 0.16);
+  /* ========================================================================= */
+  /* 8. INPUT FOCUS STATES                                                     */
+  /* ========================================================================= */
+  --input-focus-border: #000000;
+  --input-focus-ring: rgba(0, 0, 0, 0.15);
+
+  /* Legacy Aliases */
+  --primary-bright-green: #000000;
+  --primary-forest-green: #000000;
 }
 
 html[data-theme="dark"] {
-  /* Brand */
-  --primary-bright-green: #962EE6;
-  --primary-forest-green: #962EE6;
+  /* ========================================================================= */
+  /* 1. BRAND TOKENS (DARK MODE)                                               */
+  /* ========================================================================= */
+  --brand-primary: #FFFFFF;
+  --brand-secondary: #B159F3;
+  --brand-secondary-hover: #CF91FF;
+  --brand-secondary-light: #DEB2FF;
+  --brand-secondary-subtle: rgba(177, 89, 243, 0.15);
+  --brand-secondary-glow: rgba(177, 89, 243, 0.35);
 
-  /* Main CTA Button Tokens — mapped to purple with light text */
-  --btn-cta-bg: var(--primary-forest-green);
-  --btn-cta-fg: #FFFFFF;
-  --btn-cta-bg-hover: #8A2BE2;
-  --btn-cta-bg-active: #5F0EBA;
+  /* ========================================================================= */
+  /* 2. MAIN CTA BUTTON TOKENS (SOLID WHITE)                                   */
+  /* ========================================================================= */
+  --btn-cta-bg: #FFFFFF;
+  --btn-cta-fg: #000000;
+  --btn-cta-bg-hover: #E4E4E7;
+  --btn-cta-bg-active: #D4D4D8;
 
-  /* Chip / Badge Tokens */
-  --chip-bg: #090C09;
-  --chip-fg: #F3F4F0;
-  --chip-bg-hover: #000000;
+  /* ========================================================================= */
+  /* 3. CHIP / BADGE TOKENS                                                    */
+  /* ========================================================================= */
+  --chip-bg: #FFFFFF;
+  --chip-fg: #000000;
+  --chip-bg-hover: #E4E4E7;
 
-  /* Content */
-  --content-primary: #F3F4F0;
-  --content-secondary: #C4C7C0;
-  --content-tertiary: #8B8E87;
-  --content-link: #9D4EDD;
-  --content-link-hover: #B76DF2;
-  --content-link-active: #F3F4F0;
+  /* ========================================================================= */
+  /* 4. CONTENT / TYPOGRAPHY TOKENS                                            */
+  /* ========================================================================= */
+  --content-primary: #FAFAFA;
+  --content-secondary: #A1A1AA;
+  --content-tertiary: #71717A;
+  --content-link: #FAFAFA;
+  --content-link-hover: #D4D4D8;
+  --content-link-active: #FFFFFF;
 
-  /* Interactive */
-  --accent: #962EE6;
-  --accent-hover: #8A2BE2;
-  --accent-active: #5F0EBA;
-  --interactive-primary: #090C09;
-  --interactive-primary-hover: #000000;
-  --interactive-primary-active: #000000;
-  --interactive-primary-foreground: #FFFFFF;
-  --interactive-secondary: #8B8E87;
-  --interactive-secondary-hover: #A4A7A0;
-  --interactive-secondary-active: #C4C7C0;
-  --negative: #E74848;
-  --negative-hover: #FF6B6B;
-  --negative-active: #BF1E2C;
+  /* ========================================================================= */
+  /* 5. INTERACTIVE & ACCENT TOKENS                                            */
+  /* ========================================================================= */
+  --accent: #FFFFFF;
+  --accent-hover: #E4E4E7;
+  --accent-active: #D4D4D8;
+  --interactive-primary: #FFFFFF;
+  --interactive-primary-hover: #E4E4E7;
+  --interactive-primary-active: #D4D4D8;
+  --interactive-primary-foreground: #000000;
+  --interactive-secondary: #71717A;
+  --interactive-secondary-hover: #A1A1AA;
+  --interactive-secondary-active: #D4D4D8;
+  --negative: #FF6B6B;
+  --negative-hover: #FA5252;
+  --negative-active: #E03131;
 
-  /* Surface */
-  --bg-screen: #121511;
-  --bg-elevated: #1A1D18;
-  --bg-overlay: #00000080;
-  --bg-dimmer: #121511D9;
-  --bg-neutral: #962EE61A;
-  --bg-neutral-hover: #962EE629;
-  --bg-neutral-active: #962EE638;
-  --border-neutral: #FFFFFF1F;
-  --base-contrast: #090C09;
-  --base-dark: #121511;
-  --base-light: #F3F4F0;
+  /* ========================================================================= */
+  /* 6. SURFACE & BACKGROUND TOKENS                                            */
+  /* ========================================================================= */
+  --bg-screen: #09090B;
+  --bg-elevated: #121215;
+  --bg-overlay: rgba(0, 0, 0, 0.7);
+  --bg-dimmer: rgba(9, 9, 11, 0.85);
+  --bg-neutral: rgba(255, 255, 255, 0.08);
+  --bg-neutral-hover: rgba(255, 255, 255, 0.14);
+  --bg-neutral-active: rgba(255, 255, 255, 0.2);
+  --border-neutral: rgba(255, 255, 255, 0.12);
+  --base-contrast: #09090B;
+  --base-dark: #09090B;
+  --base-light: #FAFAFA;
 
-  /* Sentiment */
-  --sentiment-positive: #962EE6;
-  --sentiment-positive-bg: #962EE6;
-  --sentiment-positive-fg: #FFFFFF;
-  --sentiment-warning: #EDC843;
+  /* ========================================================================= */
+  /* 7. SENTIMENT & STATUS TOKENS                                              */
+  /* ========================================================================= */
+  --sentiment-positive: #10B981;
+  --sentiment-positive-bg: #FFFFFF;
+  --sentiment-positive-fg: #000000;
+  --sentiment-warning: #F59E0B;
   --sentiment-negative: #FF6B6B;
 
-  /* Input Focus States — Refined Purple */
-  --input-focus-border: #962EE6;
-  --input-focus-ring: rgba(150, 46, 230, 0.28);
+  /* ========================================================================= */
+  /* 8. INPUT FOCUS STATES                                                     */
+  /* ========================================================================= */
+  --input-focus-border: #FFFFFF;
+  --input-focus-ring: rgba(255, 255, 255, 0.2);
+
+  /* Legacy Aliases */
+  --primary-bright-green: #FFFFFF;
+  --primary-forest-green: #FFFFFF;
 }
 
 /* Base Body & UI Elements — strictly Inter / var(--font-body) */

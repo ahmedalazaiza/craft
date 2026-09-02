@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS public.projects (
     featured BOOLEAN DEFAULT false,
     creator_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
     appreciations_count INTEGER DEFAULT 0,
+    views_count INTEGER DEFAULT 0,
     published_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
@@ -129,9 +130,22 @@ CREATE INDEX IF NOT EXISTS idx_follows_follower_id ON public.follows(follower_id
 CREATE INDEX IF NOT EXISTS idx_notifications_recipient ON public.notifications(recipient_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_notifications_unread ON public.notifications(recipient_id, read);
 
--- =============================================================================
--- AUTOMATED TRIGGERS FOR METRICS
--- =============================================================================
+-- Ensure metrics columns exist idempotently on existing databases
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS appreciations_count INTEGER DEFAULT 0;
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS views_count INTEGER DEFAULT 0;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS followers_count INTEGER DEFAULT 0;
+
+-- Atomic increment for project views (Security Definer RPC)
+CREATE OR REPLACE FUNCTION public.increment_project_views(p_project_id UUID)
+RETURNS void AS $$
+BEGIN
+    UPDATE public.projects
+    SET views_count = COALESCE(views_count, 0) + 1
+    WHERE id = p_project_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION public.increment_project_views(UUID) TO anon, authenticated, service_role;
 
 -- Auto update appreciations_count on projects
 CREATE OR REPLACE FUNCTION update_project_appreciations_count()

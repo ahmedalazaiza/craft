@@ -29,12 +29,12 @@ import {
   Settings,
   Check,
   FolderKanban,
+  Users,
 } from "lucide-react";
 import { cn, normalizeUrl, formatDisplayUrl } from "@/lib/utils";
 import { ShareModal } from "@/components/ui/share-modal";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
-import { OnlineBadge } from "@/components/ui/online-badge";
 import { getValidAvatarUrl } from "@/lib/avatar";
 import { CreatorProfileSkeleton } from "@/components/creator/creator-profile-skeleton";
 import { EditProfileModal } from "@/components/creator/edit-profile-modal";
@@ -133,7 +133,7 @@ export function MeClient() {
   };
 
   return (
-    <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-4 sm:py-6">
+    <div className="w-full px-4 sm:px-6 lg:px-[140px] py-4 sm:py-6">
       <FadeIn>
         {/* Breadcrumbs Navigation */}
         <Breadcrumbs
@@ -165,12 +165,6 @@ export function MeClient() {
                       priority
                     />
                   </div>
-                  <OnlineBadge
-                    userId={user.id}
-                    username={user.username}
-                    size="default"
-                    className="absolute bottom-1 right-1 z-20 ring-2 ring-[var(--bg-elevated)]"
-                  />
                 </div>
 
                 <div className="flex items-center gap-1.5 justify-center">
@@ -271,43 +265,46 @@ export function MeClient() {
                 </Link>
               </div>
 
-              {/* Bio Statement */}
-              <div className="pt-2 border-t border-[var(--border-neutral)]">
-                <span className="type-label font-semibold text-[var(--content-tertiary)] uppercase tracking-wider block mb-2">
-                  About
+              {/* Bio */}
+              <div className="space-y-1.5">
+                <span className="type-label font-semibold text-[var(--content-tertiary)] uppercase tracking-wider block">
+                  Bio
                 </span>
-                <p className="text-sm text-[var(--content-secondary)] leading-relaxed">
+                <p className="text-xs sm:text-sm text-[var(--content-secondary)] leading-relaxed">
                   {user.bio}
                 </p>
               </div>
 
-              {/* Metrics Grid */}
+              {/* Metrics Grid with Icons */}
               <div className="pt-2 border-t border-[var(--border-neutral)]">
                 <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="p-3.5 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
-                    <span className="block text-lg font-bold text-[var(--content-primary)]">
+                  <div
+                    title="Projects"
+                    className="p-3 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)] flex flex-col items-center justify-center gap-1.5"
+                  >
+                    <FolderKanban className="h-4 w-4 text-[var(--content-secondary)] shrink-0" />
+                    <span className="text-base sm:text-lg font-bold text-[var(--content-primary)] font-mono leading-none">
                       {publishedProjects.length}
                     </span>
-                    <span className="text-[11px] text-[var(--content-tertiary)] uppercase font-mono">
-                      Projects
-                    </span>
                   </div>
 
-                  <div className="p-3.5 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
-                    <span className="block text-lg font-bold text-[var(--content-primary)]">
+                  <div
+                    title="Appreciations"
+                    className="p-3 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)] flex flex-col items-center justify-center gap-1.5"
+                  >
+                    <Heart className="h-4 w-4 text-[var(--content-secondary)] shrink-0" />
+                    <span className="text-base sm:text-lg font-bold text-[var(--content-primary)] font-mono leading-none">
                       {totalAppreciations}
                     </span>
-                    <span className="text-[11px] text-[var(--content-tertiary)] uppercase font-mono">
-                      Appreciations
-                    </span>
                   </div>
 
-                  <div className="p-3.5 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
-                    <span className="block text-lg font-bold text-[var(--content-primary)]">
+                  <div
+                    title="Followers"
+                    className="p-3 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)] flex flex-col items-center justify-center gap-1.5"
+                  >
+                    <Users className="h-4 w-4 text-[var(--content-secondary)] shrink-0" />
+                    <span className="text-base sm:text-lg font-bold text-[var(--content-primary)] font-mono leading-none">
                       {user.followersCount ?? 0}
-                    </span>
-                    <span className="text-[11px] text-[var(--content-tertiary)] uppercase font-mono">
-                      Followers
                     </span>
                   </div>
                 </div>
@@ -387,7 +384,7 @@ export function MeClient() {
             {activeTab === "published" ? (
               publishedProjects.length === 0 ? (
                 <div className="flex min-h-[320px] flex-col items-center justify-center rounded-[24px] border border-dashed border-[var(--border-neutral)] bg-[var(--bg-neutral)]/30 p-10 text-center">
-                  <div className="h-12 w-12 rounded-full bg-[#962EE6]/15 dark:bg-[#962EE6]/25 border border-[#962EE6]/30 flex items-center justify-center text-[#962EE6] dark:text-purple-300 mb-4">
+                  <div className="h-12 w-12 rounded-full bg-[var(--bg-neutral)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-primary)] mb-4">
                     <FolderKanban className="h-6 w-6" />
                   </div>
                   <h3 className="type-title-subsection text-[var(--content-primary)]">

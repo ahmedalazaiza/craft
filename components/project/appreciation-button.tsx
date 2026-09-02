@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 interface AppreciationButtonProps {
   projectId: string;
   count: number;
-  variant?: "full" | "card";
+  variant?: "full" | "card" | "icon";
   className?: string;
 }
 
@@ -30,6 +30,29 @@ export function AppreciationButton({
     toggleAppreciation(projectId);
   };
 
+  if (variant === "icon") {
+    return (
+      <button
+        type="button"
+        onClick={handleClick}
+        title={appreciated ? "Remove appreciation" : "Appreciate this project"}
+        aria-label={appreciated ? `Remove appreciation (${count})` : `Appreciate this project (${count})`}
+        className={cn(
+          "flex h-8 w-8 items-center justify-center rounded-full bg-white/95 dark:bg-neutral-900/95 text-neutral-900 dark:text-white hover:bg-white backdrop-blur-md transition-all duration-150 cursor-pointer shadow-md hover:scale-110 active:scale-95",
+          appreciated && "text-[var(--brand-secondary)]",
+          className
+        )}
+      >
+        <Heart
+          className={cn(
+            "h-4 w-4 transition-transform duration-150",
+            appreciated ? "fill-[var(--brand-secondary)] text-[var(--brand-secondary)] scale-110" : "fill-none text-current"
+          )}
+        />
+      </button>
+    );
+  }
+
   if (variant === "card") {
     // Compact solid chip on project card top-right
     return (
@@ -38,23 +61,18 @@ export function AppreciationButton({
         onClick={handleClick}
         title={appreciated ? "Remove appreciation" : "Appreciate this project"}
         aria-label={appreciated ? `Remove appreciation (${count})` : `Appreciate this project (${count})`}
-        style={
-          appreciated
-            ? { backgroundColor: "#962EE6", color: "#FFFFFF" }
-            : undefined
-        }
         className={cn(
           "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold select-none transition-all duration-150 cursor-pointer shadow-xs border-none",
           appreciated
-            ? "bg-[#962EE6] text-white shadow-sm"
-            : "bg-[var(--chip-bg)] text-[var(--chip-fg)] hover:bg-[var(--chip-bg-hover)]",
+            ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-sm scale-105"
+            : "bg-[var(--chip-bg)]/80 text-[var(--chip-fg)] hover:bg-[var(--chip-bg)]",
           className
         )}
       >
         <Heart
           className={cn(
             "h-3.5 w-3.5 transition-transform duration-150",
-            appreciated ? "fill-white text-white scale-110" : "fill-none text-[var(--chip-fg)]"
+            appreciated ? "fill-current text-[var(--chip-fg)] scale-110" : "fill-none text-[var(--chip-fg)]"
           )}
         />
         <span className="font-bold">

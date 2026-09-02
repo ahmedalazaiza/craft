@@ -166,7 +166,7 @@ export function Logo({
       <Link
         href={linkHref}
         prefetch={true}
-        className="inline-flex items-center group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#962EE6] rounded-lg"
+        className="inline-flex items-center group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--input-focus-ring)] rounded-lg"
         aria-label="Layerat Home"
       >
         {renderContent()}

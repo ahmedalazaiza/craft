@@ -144,10 +144,10 @@ export function ResetPasswordClient() {
   // =========================================================================
   if (checkingSession) {
     return (
-      <div className="flex min-h-[calc(100vh-14rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+      <div className="flex min-h-[calc(100vh-14rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-[140px]">
         <FadeIn className="w-full max-w-md text-center">
           <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[28px] p-8">
-            <Loader2 className="h-10 w-10 text-[#962EE6] animate-spin mx-auto mb-4" />
+            <Loader2 className="h-10 w-10 text-[var(--content-primary)] animate-spin mx-auto mb-4" />
             <h2 className="type-title-subsection text-[var(--content-primary)]">
               Verifying reset token...
             </h2>
@@ -165,7 +165,7 @@ export function ResetPasswordClient() {
   // =========================================================================
   if (!isSessionValid && !isUpdated) {
     return (
-      <div className="flex min-h-[calc(100vh-14rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+      <div className="flex min-h-[calc(100vh-14rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-[140px]">
         <FadeIn className="w-full max-w-md text-center">
           <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[28px] p-6 sm:p-8 shadow-xl">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400">
@@ -209,16 +209,16 @@ export function ResetPasswordClient() {
   // =========================================================================
   if (isUpdated) {
     return (
-      <div className="flex min-h-[calc(100vh-14rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+      <div className="flex min-h-[calc(100vh-14rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-[140px]">
         <FadeIn className="w-full max-w-md">
           <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[28px] p-6 sm:p-8 text-center shadow-xl">
             <CardHeader className="pb-4 pt-2">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#962EE6]/15 border border-[#962EE6]/30 text-[#962EE6] shadow-sm">
-                <CheckCircle2 className="h-7 w-7" />
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--brand-secondary-subtle)] border border-[var(--brand-secondary)]/20 text-[var(--brand-secondary)] shadow-xs">
+                <CheckCircle2 className="h-7 w-7" strokeWidth={2} />
               </div>
 
               <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip-bg)] px-3 py-1 text-[11px] font-semibold text-[var(--chip-fg)] mx-auto mb-3 shadow-xs">
-                <ShieldCheck className="h-3.5 w-3.5 text-white" />
+                <ShieldCheck className="h-3.5 w-3.5" />
                 <span>Security Updated</span>
               </div>
 
@@ -256,7 +256,7 @@ export function ResetPasswordClient() {
   // VIEW: RESET FORM
   // =========================================================================
   return (
-    <div className="flex min-h-[calc(100vh-14rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-[calc(100vh-14rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-[140px]">
       <FadeIn className="w-full max-w-md">
         {/* Breadcrumbs */}
         <Breadcrumbs

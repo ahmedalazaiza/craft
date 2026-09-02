@@ -42,8 +42,6 @@ interface SessionContextType {
   isAuthReady: boolean;
   appreciatedProjectIds: Set<string>;
   followingCreatorIds: Set<string>;
-  onlineUserIds: Set<string>;
-  isUserOnline: (userIdOrUsername?: string) => boolean;
   notifications: Notification[];
   unreadNotificationsCount: number;
   isVerificationModalOpen: boolean;
@@ -120,8 +118,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [isLoadingDb, setIsLoadingDb] = useState<boolean>(true);
   const [appreciatedProjectIds, setAppreciatedProjectIds] = useState<Set<string>>(new Set());
   const [followingCreatorIds, setFollowingCreatorIds] = useState<Set<string>>(new Set());
-  const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
-  const [onlineUsernames, setOnlineUsernames] = useState<Set<string>>(new Set());
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   // Verification Gate Modal State
@@ -139,112 +135,29 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setIsVerificationModalOpen(false);
   };
 
-  // Helper to check if any user/creator is currently active online
-  const isUserOnline = useCallback(
-    (identifier?: string): boolean => {
-      if (!identifier) return true;
-      const idLower = identifier.toLowerCase();
-      // Current active session user is always online
-      if (user && (user.id === identifier || user.username.toLowerCase() === idLower)) {
-        return true;
-      }
-      // Presence room active users
-      if (onlineUserIds.has(identifier) || onlineUsernames.has(idLower)) {
-        return true;
-      }
-      // Check database / creator state (defaults to true for active platform creators)
-      const found = creators.find(
-        (c) => c.id === identifier || c.username.toLowerCase() === idLower
-      );
-      return found?.isOnline !== false;
-    },
-    [user, onlineUserIds, onlineUsernames, creators]
-  );
-
-  // Live Supabase Presence Room for Realtime Online Status
+  // Realtime notifications subscription for active session user
   useEffect(() => {
-    const presenceKey = user ? user.id : `guest_${Math.random().toString(36).substring(2, 9)}`;
-    const presenceChannel = supabase.channel("craft_online_room", {
-      config: {
-        presence: {
-          key: presenceKey,
+    if (!user) return;
+
+    const notifChannel = supabase
+      .channel(`notifications-recipient-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `recipient_id=eq.${user.id}`,
         },
-      },
-    });
-
-    presenceChannel
-      .on("presence", { event: "sync" }, () => {
-        const state = presenceChannel.presenceState();
-        const activeIds = new Set<string>();
-        const activeUsernames = new Set<string>();
-
-        Object.values(state).forEach((presences) => {
-          (presences as Array<{ user_id?: string; username?: string }>).forEach((p) => {
-            if (p.user_id) activeIds.add(p.user_id);
-            if (p.username) activeUsernames.add(p.username.toLowerCase());
-          });
-        });
-
-        if (user) {
-          activeIds.add(user.id);
-          activeUsernames.add(user.username.toLowerCase());
+        async () => {
+          const freshNotifs = await fetchUserNotifications(user.id);
+          setNotifications(freshNotifs);
         }
-
-        setOnlineUserIds(activeIds);
-        setOnlineUsernames(activeUsernames);
-      })
-      .subscribe(async (status) => {
-        if (status === "SUBSCRIBED" && user) {
-          await presenceChannel.track({
-            user_id: user.id,
-            username: user.username,
-            online_at: new Date().toISOString(),
-          });
-          // Update DB profile is_online flag
-          updateProfileInDb(user.id, { isOnline: true }).catch(() => {});
-        }
-      });
-
-    // Subscribe to realtime notifications specifically for this logged-in recipient
-    let notifChannel: ReturnType<typeof supabase.channel> | null = null;
-    if (user) {
-      notifChannel = supabase
-        .channel(`notifications-recipient-${user.id}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "notifications",
-            filter: `recipient_id=eq.${user.id}`,
-          },
-          async () => {
-            const freshNotifs = await fetchUserNotifications(user.id);
-            setNotifications(freshNotifs);
-          }
-        )
-        .subscribe();
-    }
-
-    const handleBeforeUnload = () => {
-      if (user) {
-        presenceChannel.untrack().catch(() => {});
-        updateProfileInDb(user.id, { isOnline: false }).catch(() => {});
-      }
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
+      )
+      .subscribe();
 
     return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      if (user) {
-        presenceChannel.untrack().catch(() => {});
-        updateProfileInDb(user.id, { isOnline: false }).catch(() => {});
-      }
-      supabase.removeChannel(presenceChannel);
-      if (notifChannel) {
-        supabase.removeChannel(notifChannel);
-      }
+      supabase.removeChannel(notifChannel);
     };
   }, [user]);
 
@@ -354,9 +267,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
-    if (user) {
-      updateProfileInDb(user.id, { isOnline: false }).catch(() => {});
-    }
     if (typeof window !== "undefined") {
       localStorage.removeItem("craft_last_registered_email");
       sessionStorage.removeItem("craft_hide_verification_banner");
@@ -578,7 +488,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       throw new Error("Email verification is required before publishing projects.");
     }
 
-    if (projectData.id) {
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const isRealDbId = Boolean(projectData.id && UUID_REGEX.test(projectData.id));
+
+    if (projectData.id && isRealDbId) {
       // Update existing project
       let updated: Project | undefined;
       setProjects((prev) =>
@@ -591,8 +504,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         })
       );
 
-      // Async update in Supabase
-      updateProjectInDb(projectData.id, projectData).catch(console.error);
+      // Persist update in Supabase
+      try {
+        await updateProjectInDb(projectData.id, projectData);
+      } catch (err) {
+        console.error("Failed to update project in Supabase:", err);
+      }
 
       return updated || (projectData as Project);
     } else {
@@ -624,6 +541,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         published: projectData.published ?? true,
         publishedAt: projectData.published ? "Just now" : "Draft",
         appreciations: 0,
+        views: 0,
         comments: [],
       };
 
@@ -720,8 +638,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         isAuthReady,
         appreciatedProjectIds,
         followingCreatorIds,
-        onlineUserIds,
-        isUserOnline,
         notifications,
 
         unreadNotificationsCount,

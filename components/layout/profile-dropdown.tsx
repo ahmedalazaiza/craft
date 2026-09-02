@@ -22,7 +22,6 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
-import { OnlineBadge } from "@/components/ui/online-badge";
 import { getValidAvatarUrl } from "@/lib/avatar";
 
 export function ProfileDropdown() {
@@ -92,8 +91,6 @@ export function ProfileDropdown() {
             className="object-cover"
           />
         </div>
-        {/* Dynamic Online Indicator */}
-        <OnlineBadge isOnline={user.isOnline} size="sm" className="absolute bottom-0 right-0 z-20" />
       </button>
 
       {/* Dropdown Menu Popover */}
@@ -118,7 +115,6 @@ export function ProfileDropdown() {
                     className="object-cover"
                   />
                 </div>
-                <OnlineBadge isOnline={user.isOnline} size="sm" className="absolute bottom-0 right-0 z-20" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">

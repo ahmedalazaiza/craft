@@ -127,20 +127,21 @@ export function HomeClient({
         {/* Ambient Animated Mesh Glows & Geometric Micro-Pattern */}
         <div className="absolute inset-0 pointer-events-none -z-10 select-none overflow-hidden">
           {/* Top Center Purple Luminous Aura */}
+          {/* Center Brand Ambient Aura with Violet Glow */}
           <motion.div
             animate={{
-              scale: [1, 1.06, 1],
-              opacity: [0.35, 0.5, 0.35],
+              scale: [1, 1.08, 1],
+              opacity: [0.4, 0.65, 0.4],
             }}
             transition={{
-              duration: 8,
+              duration: 9,
               repeat: Infinity,
               ease: "easeInOut",
             }}
-            className="absolute -top-[12%] left-1/2 -translate-x-1/2 w-[650px] sm:w-[900px] h-[450px] sm:h-[600px] rounded-full bg-gradient-to-b from-[#962EE6]/20 via-[#962EE6]/10 to-transparent blur-[130px] dark:from-[#962EE6]/30 dark:via-[#962EE6]/15 dark:to-transparent"
+            className="absolute -top-[15%] left-1/2 -translate-x-1/2 w-[700px] sm:w-[950px] h-[450px] sm:h-[600px] rounded-full bg-gradient-to-b from-[var(--brand-secondary-subtle)] via-[var(--brand-secondary-glow)]/15 to-transparent blur-[140px]"
           />
 
-          {/* Left Subtle Ambient Indigo Aura */}
+          {/* Left Subtle Ambient Neutral Aura */}
           <motion.div
             animate={{
               x: [-20, 20, -20],
@@ -151,10 +152,10 @@ export function HomeClient({
               repeat: Infinity,
               ease: "easeInOut",
             }}
-            className="absolute top-[20%] left-[8%] w-[380px] h-[380px] rounded-full bg-indigo-500/10 blur-[110px] dark:bg-indigo-500/15"
+            className="absolute top-[20%] left-[8%] w-[380px] h-[380px] rounded-full bg-[var(--brand-secondary-subtle)]/40 blur-[120px]"
           />
 
-          {/* Right Subtle Ambient Fuchsia Aura */}
+          {/* Right Subtle Ambient Neutral Aura */}
           <motion.div
             animate={{
               x: [20, -20, 20],
@@ -165,7 +166,7 @@ export function HomeClient({
               repeat: Infinity,
               ease: "easeInOut",
             }}
-            className="absolute top-[25%] right-[8%] w-[380px] h-[380px] rounded-full bg-fuchsia-500/10 blur-[110px] dark:bg-fuchsia-500/15"
+            className="absolute top-[25%] right-[8%] w-[380px] h-[380px] rounded-full bg-[var(--border-neutral)]/20 blur-[110px]"
           />
 
           {/* Modern Geometric Dot Pattern with Smooth Radial Vignette Mask */}
@@ -180,12 +181,12 @@ export function HomeClient({
           />
         </div>
 
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 w-full z-10 flex flex-col items-center justify-center text-center">
+        <div className="w-full px-4 sm:px-6 lg:px-[140px] z-10 flex flex-col items-center justify-center text-center">
           {/* Eyebrow Pill */}
           <div className="inline-flex items-center gap-2 rounded-full bg-[var(--bg-elevated)]/90 px-4 py-1.5 text-xs font-semibold text-[var(--content-primary)] mb-6 sm:mb-8 shadow-xs border border-[var(--border-neutral)] select-none mx-auto backdrop-blur-sm">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#962EE6] opacity-60"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#962EE6]"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--brand-secondary)] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--brand-secondary)]"></span>
             </span>
             <span className="font-bold">Layerat Platform</span>
             <span className="text-[var(--content-tertiary)]">•</span>
@@ -203,8 +204,8 @@ export function HomeClient({
               <span className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--content-primary)] text-center">
                 <span>Showcase</span>
                 <span>your</span>
-                <span className="inline-flex items-center rounded-2xl bg-[#090C09] text-white dark:bg-[#962EE6]/20 dark:text-white dark:border dark:border-[#962EE6]/40 px-3.5 sm:px-4 py-0.5 sm:py-1 shadow-md shadow-black/10 dark:shadow-[0_0_24px_rgba(150,46,230,0.25)] tracking-tight font-black transition-transform hover:scale-105 duration-200">
-                  work<span className="text-[#962EE6] dark:text-white">.</span>
+                <span className="inline-flex items-center rounded-2xl bg-black text-white dark:bg-white dark:text-black px-3.5 sm:px-4 py-0.5 sm:py-1 shadow-md tracking-tight font-black transition-transform hover:scale-105 duration-200">
+                  work.
                 </span>
               </span>
             </span>
@@ -213,8 +214,8 @@ export function HomeClient({
               <span className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--content-primary)] text-center">
                 <span>Connect</span>
                 <span>with</span>
-                <span className="inline-flex items-center rounded-2xl bg-[#090C09] text-white dark:bg-[#962EE6]/20 dark:text-white dark:border dark:border-[#962EE6]/40 px-3.5 sm:px-4 py-0.5 sm:py-1 shadow-md shadow-black/10 dark:shadow-[0_0_24px_rgba(150,46,230,0.25)] tracking-tight font-black transition-transform hover:scale-105 duration-200">
-                  makers<span className="text-[#962EE6] dark:text-white">.</span>
+                <span className="inline-flex items-center rounded-2xl bg-black text-white dark:bg-white dark:text-black px-3.5 sm:px-4 py-0.5 sm:py-1 shadow-md tracking-tight font-black transition-transform hover:scale-105 duration-200">
+                  makers.
                 </span>
               </span>
             </span>
@@ -232,7 +233,7 @@ export function HomeClient({
               className={buttonVariants({
                 variant: "accent",
                 size: "lg",
-                className: "w-full sm:w-auto gap-2 font-bold justify-center px-8 shadow-[0_4px_20px_rgba(150,46,230,0.3)] hover:shadow-[0_6px_28px_rgba(150,46,230,0.45)] transition-all hover:scale-102",
+                className: "w-full sm:w-auto gap-2 font-bold justify-center px-8 shadow-md transition-all hover:scale-102",
               })}
             >
               <span>Explore Projects</span>
@@ -269,10 +270,10 @@ export function HomeClient({
             {FEATURE_POINTS.map((pt) => (
               <div
                 key={pt.num}
-                className="group relative rounded-2xl p-5 bg-[var(--bg-elevated)]/40 border border-[var(--border-neutral)]/70 hover:border-[#962EE6]/30 hover:bg-[var(--bg-elevated)] transition-all duration-300 shadow-2xs hover:shadow-xs flex flex-col items-center text-center space-y-2.5 backdrop-blur-xs"
+                className="group relative rounded-2xl p-5 bg-[var(--bg-elevated)]/40 border border-[var(--border-neutral)]/70 hover:border-[var(--border-neutral)] hover:bg-[var(--bg-elevated)] transition-all duration-300 shadow-2xs hover:shadow-xs flex flex-col items-center text-center space-y-2.5 backdrop-blur-xs"
               >
-                <div className="inline-flex items-center gap-2 rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] px-3 py-1 text-xs font-mono font-bold tracking-wider shadow-2xs group-hover:bg-[#962EE6] group-hover:text-white transition-colors">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#962EE6] group-hover:bg-white transition-colors" />
+                <div className="inline-flex items-center gap-2 rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] px-3 py-1 text-xs font-mono font-bold tracking-wider shadow-2xs transition-colors">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--chip-fg)] transition-colors" />
                   <span>{pt.num}</span>
                 </div>
                 <div className="text-sm font-bold text-[var(--content-primary)]">
@@ -291,11 +292,11 @@ export function HomeClient({
       {/* SECTION 1: FEATURED PROJECTS (4 Projects Grid)                            */}
       {/* ========================================================================= */}
       {featuredProjects.length > 0 && (
-        <section className="mx-auto max-w-[1580px] px-4 sm:px-6 w-full">
+        <section className="w-full px-4 sm:px-6 lg:px-[140px]">
           <div className="flex items-baseline justify-between mb-5 pb-2.5 border-b border-[var(--border-neutral)]">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="h-2 w-2 rounded-full bg-[#962EE6]" />
+                <span className="h-2 w-2 rounded-full bg-[var(--content-primary)]" />
                 <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
                   Hand-Curated
                 </span>
@@ -342,7 +343,7 @@ export function HomeClient({
         return (
           <section
             key={section.taxonomy.id}
-            className="mx-auto max-w-[1580px] px-4 sm:px-6 w-full"
+            className="w-full px-4 sm:px-6 lg:px-[140px]"
           >
             <div className="flex items-baseline justify-between mb-5 pb-2.5 border-b border-[var(--border-neutral)]">
               <div>
@@ -388,8 +389,12 @@ export function HomeClient({
       {/* HIGH-CONVERSION CREATOR CTA SECTION (Only for Guests / Not Logged In)     */}
       {/* ========================================================================= */}
       {!user && (
-        <section className="mx-auto max-w-[1580px] px-4 sm:px-6 w-full pt-6 pb-10">
+        <section className="w-full px-4 sm:px-6 lg:px-[140px] pt-6 pb-10">
           <div className="relative rounded-[32px] bg-neutral-950 dark:bg-[#121511] text-white border border-neutral-800 px-6 py-12 sm:px-12 sm:py-16 lg:py-20 overflow-hidden shadow-xl text-center">
+            {/* Ambient Brand Violet Glows */}
+            <div className="absolute -right-16 -bottom-16 w-80 h-80 rounded-full bg-[var(--brand-secondary-glow)]/20 blur-3xl pointer-events-none" />
+            <div className="absolute -left-16 -top-16 w-80 h-80 rounded-full bg-[var(--brand-secondary-subtle)]/40 blur-3xl pointer-events-none" />
+
             <div className="relative z-10 max-w-2xl mx-auto flex flex-col items-center space-y-6">
               {/* Eyebrow */}
               <span className="inline-block text-[11px] font-mono font-semibold uppercase tracking-widest text-neutral-400">

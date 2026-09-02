@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { LocationInput } from "@/components/ui/location-input";
 import { ImageCropperModal } from "@/components/ui/image-cropper-modal";
 import { MASTER_TAXONOMY } from "@/lib/taxonomy";
+import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
 interface EditProfileModalProps {
@@ -86,7 +87,7 @@ export function EditProfileModal({
 
   const handleAvatarFileSelected = (file: File) => {
     if (!file.type.startsWith("image/")) {
-      alert("Please upload a valid image file (PNG, JPG, WebP).");
+      toast.error("Please upload a valid image file (PNG, JPG, WebP).", "Invalid File");
       return;
     }
     const reader = new FileReader();
@@ -108,8 +109,10 @@ export function EditProfileModal({
       });
       const cdnUrl = await uploadMediaFile(file, "avatars", "avatars");
       setEditAvatarUrl(cdnUrl);
+      toast.success("Profile photo updated!", "Avatar Ready");
     } catch (err) {
       console.error("Avatar upload error:", err);
+      toast.error("Failed to upload avatar image. Please try again.", "Upload Error");
     } finally {
       setIsUploadingAvatar(false);
       setCropperSrc(null);
@@ -121,7 +124,7 @@ export function EditProfileModal({
       setEditSkills(editSkills.filter((s) => s !== skill));
     } else {
       if (editSkills.length >= 12) {
-        alert("Maximum 12 disciplines allowed.");
+        toast.warning("Maximum 12 disciplines allowed.", "Discipline Limit");
         return;
       }
       setEditSkills([...editSkills, skill]);
@@ -137,7 +140,7 @@ export function EditProfileModal({
       return;
     }
     if (editSkills.length >= 12) {
-      alert("Maximum 12 disciplines allowed.");
+      toast.warning("Maximum 12 disciplines allowed.", "Discipline Limit");
       return;
     }
     setEditSkills([...editSkills, clean]);
@@ -147,7 +150,7 @@ export function EditProfileModal({
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editName.trim()) {
-      alert("Display name cannot be empty.");
+      toast.error("Display name cannot be empty.", "Name Required");
       return;
     }
     setIsSaving(true);
@@ -161,10 +164,11 @@ export function EditProfileModal({
         avatarUrl: editAvatarUrl,
         skills: editSkills,
       });
+      toast.success("Profile successfully updated!", "Profile Saved");
       onClose();
     } catch (err) {
       console.error("Failed to update profile:", err);
-      alert("Failed to update profile. Please try again.");
+      toast.error("Failed to update profile. Please try again.", "Update Failed");
     } finally {
       setIsSaving(false);
     }
@@ -198,7 +202,7 @@ export function EditProfileModal({
               {/* Top Sticky Header */}
               <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-neutral)] shrink-0 bg-[var(--bg-elevated)]">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#962EE6]/15 text-[#962EE6] dark:text-purple-300">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--bg-neutral)] text-[var(--content-primary)]">
                     <Edit3 className="h-4.5 w-4.5" />
                   </div>
                   <div>
@@ -208,10 +212,10 @@ export function EditProfileModal({
                         "text-lg sm:text-xl font-bold text-[var(--content-primary)]"
                       )}
                     >
-                      Edit Studio Profile
+                      Edit Creator Profile
                     </h2>
-                    <p className="text-[11px] text-[var(--content-secondary)]">
-                      Update your public creator identity, bio, and disciplines
+                    <p className="text-xs text-[var(--content-secondary)]">
+                      Update your public identity, bio, and social presence.
                     </p>
                   </div>
                 </div>
@@ -220,10 +224,10 @@ export function EditProfileModal({
                   type="button"
                   onClick={onClose}
                   disabled={isSaving}
-                  className="rounded-full p-1.5 text-[var(--content-tertiary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-colors cursor-pointer disabled:opacity-50"
+                  className="rounded-full p-2 text-[var(--content-tertiary)] hover:bg-[var(--bg-neutral)] hover:text-[var(--content-primary)] transition-colors cursor-pointer disabled:opacity-50"
                   aria-label="Close modal"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-4 w-4" />
                 </button>
               </div>
 
@@ -237,7 +241,7 @@ export function EditProfileModal({
                 <div className="flex flex-col items-center justify-center pb-2">
                   <div
                     onClick={() => avatarFileInputRef.current?.click()}
-                    className="group relative h-24 w-24 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-4 ring-[var(--border-neutral)] hover:ring-[#962EE6] transition-all cursor-pointer shadow-md"
+                    className="group relative h-24 w-24 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-4 ring-[var(--border-neutral)] hover:ring-[var(--content-primary)] transition-all cursor-pointer shadow-md"
                     title="Click to change profile picture"
                   >
                     <Image
@@ -256,7 +260,7 @@ export function EditProfileModal({
 
                     {isUploadingAvatar && (
                       <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white">
-                        <Loader2 className="h-6 w-6 animate-spin text-[#962EE6]" />
+                        <Loader2 className="h-6 w-6 animate-spin text-white" />
                       </div>
                     )}
                   </div>
@@ -264,7 +268,7 @@ export function EditProfileModal({
                   <button
                     type="button"
                     onClick={() => avatarFileInputRef.current?.click()}
-                    className="mt-2.5 text-xs font-semibold text-[#962EE6] dark:text-purple-300 hover:underline cursor-pointer inline-flex items-center gap-1"
+                    className="mt-2.5 text-xs font-semibold text-[var(--content-primary)] hover:underline cursor-pointer inline-flex items-center gap-1"
                   >
                     <Camera className="h-3.5 w-3.5" />
                     <span>Change Profile Photo</span>
@@ -358,7 +362,7 @@ export function EditProfileModal({
                       <button
                         type="button"
                         onClick={() => setEditSkills([])}
-                        className="text-[11px] font-semibold text-[#962EE6] dark:text-purple-300 hover:underline cursor-pointer"
+                        className="text-[11px] font-semibold text-[var(--content-primary)] hover:underline cursor-pointer"
                       >
                         Clear all
                       </button>
@@ -373,7 +377,7 @@ export function EditProfileModal({
                           key={skill}
                           type="button"
                           onClick={() => toggleSkill(skill)}
-                          className="inline-flex items-center gap-1 rounded-full bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 px-3 py-1 text-xs font-bold shadow-xs hover:opacity-85 transition-opacity cursor-pointer"
+                          className="inline-flex items-center gap-1 rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] px-3 py-1 text-xs font-bold shadow-xs hover:opacity-85 transition-opacity cursor-pointer"
                         >
                           <span>{skill}</span>
                           <X className="h-3 w-3 shrink-0 stroke-[3]" />
@@ -398,7 +402,7 @@ export function EditProfileModal({
                             className={cn(
                               "rounded-full px-3 py-1 text-xs transition-all cursor-pointer inline-flex items-center gap-1",
                               isSelected
-                                ? "bg-[#962EE6] text-white font-bold shadow-xs"
+                                ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] font-bold shadow-xs"
                                 : "border border-[var(--border-neutral)] bg-[var(--bg-screen)] text-[var(--content-secondary)] hover:border-[var(--content-secondary)] hover:bg-[var(--bg-neutral)]"
                             )}
                           >
@@ -454,11 +458,12 @@ export function EditProfileModal({
                 >
                   Cancel
                 </Button>
-                <button
+                <Button
                   type="submit"
                   form="edit-profile-form"
+                  variant="accent"
                   disabled={isSaving || isUploadingAvatar}
-                  className="inline-flex items-center gap-2 rounded-full font-bold bg-[#962EE6] text-white hover:bg-[#5F0EBA] px-6 py-2.5 text-xs shadow-md transition-all cursor-pointer disabled:opacity-50"
+                  className="rounded-full px-6 font-bold text-xs shadow-md"
                 >
                   {isSaving ? (
                     <>
@@ -471,7 +476,7 @@ export function EditProfileModal({
                       <span>Save Changes</span>
                     </>
                   )}
-                </button>
+                </Button>
               </div>
             </motion.div>
           </div>

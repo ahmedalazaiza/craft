@@ -36,8 +36,8 @@ export function CreatorNotFoundClient({ searchedUsername }: CreatorNotFoundClien
       <div className="w-full max-w-2xl text-center space-y-8">
         {/* Icon & Title */}
         <div className="space-y-4">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-[var(--bg-neutral)] border border-[var(--border-neutral)] text-[var(--content-secondary)] shadow-sm">
-            <UserX className="h-10 w-10 text-[#962EE6] dark:text-purple-400" />
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--brand-secondary-subtle)] border border-[var(--brand-secondary)]/20 text-[var(--brand-secondary)] shadow-xs">
+            <UserX className="h-8 w-8" strokeWidth={1.8} />
           </div>
 
           <div className="space-y-2">
@@ -70,7 +70,7 @@ export function CreatorNotFoundClient({ searchedUsername }: CreatorNotFoundClien
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search by creator name, handle, or discipline..."
-              className="w-full rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)] pl-11 pr-4 py-3 text-xs sm:text-sm text-[var(--content-primary)] shadow-sm focus:border-[#962EE6] focus:ring-2 focus:ring-[#962EE6]/20 focus:outline-hidden transition-all"
+              className="w-full rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)] pl-11 pr-4 py-3 text-xs sm:text-sm text-[var(--content-primary)] shadow-sm focus:border-[var(--input-focus-border)] focus:ring-2 focus:ring-[var(--input-focus-ring)] focus:outline-hidden transition-all"
             />
           </div>
           <Button

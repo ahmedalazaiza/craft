@@ -9,7 +9,6 @@ import { Comment } from "@/lib/types";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
-import { OnlineBadge } from "@/components/ui/online-badge";
 import { getValidAvatarUrl } from "@/lib/avatar";
 import { Send, MessageSquare } from "lucide-react";
 
@@ -124,7 +123,6 @@ export function CommentSection({ projectId, comments }: CommentSectionProps) {
                     className="object-cover"
                   />
                 </div>
-                <OnlineBadge userId={c.author.id} username={c.author.username} size="sm" className="absolute bottom-0 right-0 z-20" />
               </Link>
               <div className="flex-1">
                 <div className="flex items-baseline justify-between gap-2">

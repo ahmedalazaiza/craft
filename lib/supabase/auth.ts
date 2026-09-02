@@ -154,7 +154,6 @@ export async function signUpWithEmail(
       city: "Global",
       skills: [],
       is_verified: isEmailConfirmed,
-      is_online: true,
       followers_count: 0,
     };
 
@@ -244,7 +243,6 @@ export async function signInWithEmail(
         city: "Global",
         skills: ["Design"],
         isVerified: isEmailConfirmed,
-        isOnline: true,
         followersCount: 0,
         isCurrentUser: true,
       };
@@ -255,7 +253,6 @@ export async function signInWithEmail(
         username: fallbackUsername,
         display_name: fallbackName,
         is_verified: isEmailConfirmed,
-        is_online: true,
       });
     }
 
@@ -335,7 +332,6 @@ export async function getCurrentAuthUser(): Promise<Creator | null> {
       city: "Global",
       skills: ["Design"],
       is_verified: isEmailConfirmed,
-      is_online: true,
       followers_count: 0,
     };
 
@@ -353,7 +349,6 @@ export async function getCurrentAuthUser(): Promise<Creator | null> {
       city: newProfileRow.city,
       skills: newProfileRow.skills,
       isVerified: isEmailConfirmed,
-      isOnline: true,
       followersCount: 0,
       isCurrentUser: true,
     };

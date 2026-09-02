@@ -68,16 +68,7 @@ export function NotificationsPopover() {
   };
 
   const getNotificationIconBg = (type: NotificationType) => {
-    switch (type) {
-      case "appreciation":
-        return "bg-[#962EE6]";
-      case "comment":
-        return "bg-[#962EE6]";
-      case "follow":
-        return "bg-[#962EE6]";
-      case "publish":
-        return "bg-[#962EE6]";
-    }
+    return "bg-[var(--content-primary)]";
   };
 
   return (
@@ -97,7 +88,7 @@ export function NotificationsPopover() {
       >
         <Bell className="h-4 w-4" />
         {unreadNotificationsCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#962EE6] px-1 text-[10px] font-black text-white ring-2 ring-[var(--bg-screen)] shadow-xs">
+          <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--content-primary)] px-1 text-[10px] font-black text-[var(--bg-screen)] ring-2 ring-[var(--bg-screen)] shadow-xs">
             {unreadNotificationsCount}
           </span>
         )}
@@ -323,7 +314,7 @@ export function NotificationsPopover() {
 
                     {/* Unread indicator */}
                     {!notif.read && (
-                      <span className="h-2 w-2 rounded-full bg-[#962EE6] shrink-0 self-center shadow-xs" />
+                      <span className="h-2 w-2 rounded-full bg-[var(--content-primary)] shrink-0 self-center shadow-xs" />
                     )}
                   </div>
                 ))

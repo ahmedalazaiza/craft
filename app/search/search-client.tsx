@@ -14,6 +14,7 @@ import { FilterChip } from "@/components/ui/badge";
 import { FadeIn, StaggerGridItem } from "@/components/ui/motion-wrapper";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Search, FolderKanban, Users } from "lucide-react";
+import { sortProjects, computeCreatorRank } from "@/lib/ranking";
 import { cn } from "@/lib/utils";
 
 const FILTER_CATEGORIES: (ProjectCategory | "All")[] = [
@@ -50,9 +51,8 @@ export function SearchClient() {
   const filteredProjects = useMemo(() => {
     const query = q.toLowerCase();
 
-    return projects
-      .filter((p) => p.published)
-      .filter((p) => {
+    return sortProjects(
+      projects.filter((p) => {
         // Query match
         if (query) {
           const matchTitle = p.title.toLowerCase().includes(query);
@@ -83,29 +83,43 @@ export function SearchClient() {
 
         return true;
       })
-      .sort((a, b) => {
-        if (filters.sortBy === "appreciated") {
-          return b.appreciations - a.appreciations;
-        }
-        return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
-      });
+    );
   }, [projects, q, filters]);
 
-  // Filter creators by query
+  // Filter creators by query (includes creators even if 0 projects) and sort by relevance score
   const filteredCreators = useMemo(() => {
-    const query = q.toLowerCase();
+    const query = q.toLowerCase().trim();
 
-    return creators.filter((creator) => {
+    return creators
+      .filter((creator) => {
+        if (!query) return true;
+        const matchName = creator.displayName.toLowerCase().includes(query);
+        const matchUsername = creator.username.toLowerCase().includes(query);
+        const matchBio = creator.bio.toLowerCase().includes(query);
+        const matchCity = (creator.city || "").toLowerCase().includes(query);
+        const matchSkills = creator.skills.some((s) => s.toLowerCase().includes(query));
+        return matchName || matchUsername || matchBio || matchCity || matchSkills;
+      })
+      .sort((a, b) => {
+        const aProjects = projects.filter(
+          (p) =>
+            p.creator &&
+            (p.creator.id === a.id || p.creator.username.toLowerCase() === a.username.toLowerCase()) &&
+            p.published
+        );
+        const bProjects = projects.filter(
+          (p) =>
+            p.creator &&
+            (p.creator.id === b.id || p.creator.username.toLowerCase() === b.username.toLowerCase()) &&
+            p.published
+        );
 
-      if (!query) return true;
-      const matchName = creator.displayName.toLowerCase().includes(query);
-      const matchUsername = creator.username.toLowerCase().includes(query);
-      const matchBio = creator.bio.toLowerCase().includes(query);
-      const matchCity = creator.city.toLowerCase().includes(query);
-      const matchSkills = creator.skills.some((s) => s.toLowerCase().includes(query));
-      return matchName || matchUsername || matchBio || matchCity || matchSkills;
-    });
-  }, [q]);
+        const scoreA = computeCreatorRank(a, aProjects, query || undefined);
+        const scoreB = computeCreatorRank(b, bProjects, query || undefined);
+
+        return scoreB - scoreA;
+      });
+  }, [creators, projects, q]);
 
   const totalResults = filteredProjects.length + filteredCreators.length;
 
@@ -117,7 +131,7 @@ export function SearchClient() {
 
   if (isLoadingDb && projects.length === 0) {
     return (
-      <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-4 sm:py-6 space-y-6 animate-pulse">
+      <div className="w-full px-4 sm:px-6 lg:px-[140px] py-4 sm:py-6 space-y-6 animate-pulse">
         <Breadcrumbs items={[{ label: "Search", href: "/search" }, { label: q ? `"${q}"` : "All Results" }]} />
         <div className="max-w-3xl mb-8 space-y-3">
           <div className="h-4 w-28 rounded-full bg-[var(--bg-neutral)]" />
@@ -129,7 +143,7 @@ export function SearchClient() {
   }
 
   return (
-    <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-4 sm:py-6">
+    <div className="w-full px-4 sm:px-6 lg:px-[140px] py-4 sm:py-6">
       <FadeIn>
         {/* Breadcrumbs Navigation */}
         <Breadcrumbs

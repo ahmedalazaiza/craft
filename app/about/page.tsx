@@ -3,6 +3,7 @@ import Link from "next/link";
 import { constructMetadata, generateBreadcrumbJsonLd } from "@/lib/seo";
 import { bricolage } from "@/lib/fonts";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Compass,
   ArrowRight,
@@ -28,7 +29,7 @@ export default function AboutPage() {
   ]);
 
   return (
-    <div className="mx-auto max-w-[1280px] px-4 sm:px-6 py-4 sm:py-6 space-y-20">
+    <div className="w-full px-4 sm:px-6 lg:px-[140px] py-4 sm:py-6 space-y-20">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
@@ -66,7 +67,11 @@ export default function AboutPage() {
           <Link
             href="/explore"
             prefetch={true}
-            className="inline-flex items-center justify-center gap-2 rounded-full font-bold bg-[#962EE6] text-white hover:bg-[#5F0EBA] px-7 py-3 text-sm shadow-xs transition-colors cursor-pointer"
+            className={buttonVariants({
+              variant: "primary",
+              size: "default",
+              className: "gap-2 shadow-xs",
+            })}
           >
             <Compass className="h-4 w-4" />
             <span>Explore Projects</span>
@@ -74,7 +79,11 @@ export default function AboutPage() {
           <Link
             href="/creators"
             prefetch={true}
-            className="inline-flex items-center justify-center gap-2 rounded-full font-semibold border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-800 px-6 py-3 text-sm transition-colors shadow-xs"
+            className={buttonVariants({
+              variant: "secondary",
+              size: "default",
+              className: "gap-2 shadow-xs",
+            })}
           >
             <span>Discover Creators</span>
             <ArrowRight className="h-4 w-4" />

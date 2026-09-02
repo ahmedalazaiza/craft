@@ -14,7 +14,6 @@ export interface Creator {
   isCurrentUser?: boolean;
   followersCount?: number;
   isVerified?: boolean;
-  isOnline?: boolean;
 }
 
 export interface Comment {
@@ -77,10 +76,10 @@ export interface Project {
   medium: ProjectMedium;
   published: boolean;
   publishedAt: string;
-  status?: "published" | "draft" | "pending";
   createdAt?: string;
   updatedAt?: string;
   appreciations: number;
+  views?: number;
   comments: Comment[];
   featured?: boolean;
 }

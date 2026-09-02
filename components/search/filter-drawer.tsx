@@ -26,7 +26,7 @@ export interface ProjectFilters {
   tags: string[];
   tools?: string[];
   medium?: ProjectMedium | "All";
-  sortBy: "newest" | "appreciated";
+  sortBy: "curated" | "newest" | "appreciated";
 }
 
 export interface CreatorFilters {
@@ -156,7 +156,7 @@ export function FilterDrawer({
       tags: [],
       tools: [],
       medium: "All",
-      sortBy: "newest",
+      sortBy: "curated",
     });
   };
 
@@ -213,7 +213,7 @@ export function FilterDrawer({
         {/* Header */}
         <div className="flex items-center justify-between pb-4 sm:pb-5 border-b border-[var(--border-neutral)] shrink-0">
           <div className="flex items-center gap-2.5">
-            <SlidersHorizontal className="h-5 w-5 text-[var(--primary-forest-green)]" />
+            <SlidersHorizontal className="h-5 w-5 text-[var(--content-primary)]" />
             <h2 className="type-title-subsection text-[var(--content-primary)] font-bold text-base sm:text-lg">
               {mode === "projects" ? "Filter Projects" : "Filter Creators"}
             </h2>
@@ -235,7 +235,21 @@ export function FilterDrawer({
                 <label className="type-body-default-bold text-[var(--content-primary)] block mb-2.5 text-xs uppercase tracking-wider font-mono">
                   Sort Order
                 </label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onProjectFiltersChange({ ...projectFilters, sortBy: "curated" })
+                    }
+                    className={cn(
+                      "flex h-10 items-center justify-center rounded-[12px] text-xs font-semibold border transition-all cursor-pointer",
+                      projectFilters.sortBy === "curated" || !projectFilters.sortBy
+                        ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-xs"
+                        : "bg-[var(--bg-screen)] text-[var(--content-primary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)]"
+                    )}
+                  >
+                    Curated
+                  </button>
                   <button
                     type="button"
                     onClick={() =>
@@ -248,7 +262,7 @@ export function FilterDrawer({
                         : "bg-[var(--bg-screen)] text-[var(--content-primary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)]"
                     )}
                   >
-                    Newest First
+                    Newest
                   </button>
                   <button
                     type="button"
@@ -265,7 +279,7 @@ export function FilterDrawer({
                         : "bg-[var(--bg-screen)] text-[var(--content-primary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)]"
                     )}
                   >
-                    Most Appreciated
+                    Appreciated
                   </button>
                 </div>
               </div>
@@ -452,11 +466,11 @@ export function FilterDrawer({
                         className={cn(
                           "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-all cursor-pointer",
                           isSelected
-                            ? "bg-[#962EE6] text-white ring-1 ring-[#962EE6] font-bold"
+                            ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] font-bold shadow-xs"
                             : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:bg-[var(--bg-neutral-hover)]"
                         )}
                       >
-                        {isSelected && <Check className="h-3 w-3 text-white" />}
+                        {isSelected && <Check className="h-3 w-3 stroke-[2.5]" />}
                         <span>{tool}</span>
                       </button>
                     );
@@ -619,7 +633,7 @@ export function FilterDrawer({
                         hasPublishedOnly: e.target.checked,
                       })
                     }
-                    className="h-4 w-4 rounded-[4px] border-[var(--border-neutral)] text-[var(--primary-forest-green)] focus:ring-[var(--primary-forest-green)] accent-[var(--primary-forest-green)]"
+                    className="h-4 w-4 rounded-[4px] border-[var(--border-neutral)] text-[var(--content-primary)] focus:ring-[var(--content-primary)] accent-[var(--content-primary)]"
                   />
                   <span className="type-body-default text-[var(--content-primary)] font-medium text-xs sm:text-sm">
                     Only show creators with published work

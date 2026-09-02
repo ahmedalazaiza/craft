@@ -52,9 +52,9 @@ export function ThemeToggle({ compact = false, className }: ThemeToggleProps) {
         aria-label="Toggle theme appearance"
       >
         {mounted && resolvedTheme === "dark" ? (
-          <Sun className="h-4 w-4 text-amber-400 dark:text-amber-300" />
+          <Sun className="h-4 w-4 text-[var(--content-primary)]" />
         ) : (
-          <Moon className="h-4 w-4 text-[var(--primary-forest-green)]" />
+          <Moon className="h-4 w-4 text-[var(--content-primary)]" />
         )}
       </button>
 
@@ -77,7 +77,7 @@ export function ThemeToggle({ compact = false, className }: ThemeToggleProps) {
                 className={cn(
                   "flex w-full items-center justify-between gap-2 rounded-xl px-2.5 py-1.5 text-xs font-semibold transition-colors cursor-pointer text-left focus-visible:outline-hidden",
                   isSelected
-                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#962EE6] dark:text-white font-bold"
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] font-bold"
                     : "bg-transparent text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
                 )}
               >

@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import { Plus, X, Check, Sparkles, Layers, Tag, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MASTER_TAXONOMY, ALL_SUB_CATEGORIES } from "@/lib/taxonomy";
+import { toast } from "@/components/ui/toast";
 
 interface SkillsPickerProps {
   selectedSkills: string[];
@@ -19,7 +20,7 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
       onChange(selectedSkills.filter((s) => s !== skill));
     } else {
       if (selectedSkills.length >= 12) {
-        alert("You can select up to 12 key disciplines & specialties.");
+        toast.warning("You can select up to 12 key disciplines & specialties.", "Discipline Limit");
         return;
       }
       onChange([...selectedSkills, skill]);
@@ -37,7 +38,7 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
     }
 
     if (selectedSkills.length >= 12) {
-      alert("You can select up to 12 key disciplines.");
+      toast.warning("You can select up to 12 key disciplines.", "Discipline Limit");
       return;
     }
 
@@ -89,7 +90,7 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
                 key={skill}
                 type="button"
                 onClick={() => toggleSkill(skill)}
-                className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#962EE6] dark:text-white px-3 py-1 text-xs font-bold shadow-xs animate-scale-in"
+                className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] px-3 py-1 text-xs font-bold shadow-xs animate-scale-in"
               >
                 <span>{skill}</span>
                 <X className="h-3 w-3 opacity-60 hover:opacity-100" />
@@ -151,7 +152,7 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium cursor-pointer transition-all border",
                   isSelected
-                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] dark:bg-[#962EE6] dark:text-white font-bold border-transparent shadow-xs scale-102"
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] font-bold border-transparent shadow-xs scale-102"
                     : "bg-[var(--bg-elevated)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)] hover:text-[var(--content-primary)] hover:border-[var(--content-secondary)]"
                 )}
               >
@@ -186,7 +187,7 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
           type="button"
           onClick={handleAddCustom}
           disabled={!customInput.trim()}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--bg-neutral)] border border-[var(--border-neutral)] px-4 py-2 text-xs font-semibold text-[var(--content-primary)] hover:bg-[#962EE6] hover:text-white hover:border-transparent transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--bg-neutral)] border border-[var(--border-neutral)] px-4 py-2 text-xs font-semibold text-[var(--content-primary)] hover:bg-[var(--chip-bg)] hover:text-[var(--chip-fg)] hover:border-transparent transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
         >
           <Plus className="h-3.5 w-3.5" />
           <span>Add</span>

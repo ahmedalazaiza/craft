@@ -63,23 +63,23 @@ export function VerificationBanner() {
         initial={{ height: 0, opacity: 0 }}
         animate={{ height: "auto", opacity: 1 }}
         exit={{ height: 0, opacity: 0 }}
-        className="relative z-50 bg-[#150D21] dark:bg-[#10071C] text-white border-b border-[#962EE6]/30 px-4 py-2.5 sm:px-6 shadow-xs"
+        className="relative z-50 bg-neutral-950 text-white border-b border-neutral-800 px-4 py-2.5 sm:px-6 lg:px-[80px] shadow-xs"
       >
-        <div className="mx-auto flex max-w-[1580px] items-center justify-between gap-3 text-xs">
+        <div className="flex w-full items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#962EE6] text-white shadow-xs animate-pulse">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-black shadow-xs animate-pulse">
               <Mail className="h-3 w-3" />
             </span>
 
             <p className="truncate font-medium text-white/90">
               <strong className="text-white font-bold">Account Activation Required:</strong> Please confirm your email{" "}
-              {userEmail && <span className="font-mono text-[#DEB2FF] underline">({userEmail})</span>} to unlock appreciation, following creators, and publishing projects.
+              {userEmail && <span className="font-mono text-neutral-300 underline">({userEmail})</span>} to unlock appreciation, following creators, and publishing projects.
             </p>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
             {sendSuccess ? (
-              <span className="inline-flex items-center gap-1 text-emerald-400 font-semibold text-xs">
+              <span className="inline-flex items-center gap-1 text-neutral-200 font-semibold text-xs">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 <span>Link sent! Check inbox</span>
               </span>
@@ -88,7 +88,7 @@ export function VerificationBanner() {
                 type="button"
                 onClick={handleResend}
                 disabled={isSending || cooldown > 0}
-                className="font-bold text-[#DEB2FF] hover:text-white underline underline-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-xs inline-flex items-center gap-1"
+                className="font-bold text-neutral-300 hover:text-white underline underline-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-xs inline-flex items-center gap-1"
               >
                 {isSending ? (
                   "Sending..."
@@ -106,7 +106,7 @@ export function VerificationBanner() {
             <button
               type="button"
               onClick={() => openVerificationModal("publish")}
-              className="hidden sm:inline-flex items-center gap-1 rounded-full bg-[#962EE6] hover:bg-[#801FD1] text-white px-3 py-1 font-bold text-[11px] shadow-xs transition-all cursor-pointer"
+              className="hidden sm:inline-flex items-center gap-1 rounded-full bg-white hover:bg-neutral-200 text-black px-3 py-1 font-bold text-[11px] shadow-xs transition-all cursor-pointer"
             >
               <Sparkles className="h-3 w-3" />
               <span>Perks</span>

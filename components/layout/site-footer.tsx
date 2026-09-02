@@ -7,8 +7,8 @@ import { Logo } from "@/components/ui/logo";
 
 export function SiteFooter() {
   return (
-    <footer className="w-full border-t border-[var(--border-neutral)] bg-[var(--bg-screen)] pt-12 pb-8 transition-colors">
-      <div className="mx-auto max-w-[1580px] px-4 sm:px-6 space-y-12">
+    <footer className="border-t border-[var(--border-neutral)] bg-[var(--bg-screen)] pt-12 pb-16">
+      <div className="w-full px-4 sm:px-6 lg:px-[80px] space-y-12">
         {/* Main 4-Column Navigation Grid */}
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 pb-12 border-b border-[var(--border-neutral)]">
           {/* Column 1: Brand & Ethos */}
@@ -39,7 +39,7 @@ export function SiteFooter() {
                 <Link
                   href="/"
                   prefetch={true}
-                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-purple-300 transition-colors"
+                  className="text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors"
                 >
                   Home
                 </Link>
@@ -48,7 +48,7 @@ export function SiteFooter() {
                 <Link
                   href="/explore"
                   prefetch={true}
-                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-purple-300 transition-colors"
+                  className="text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors"
                 >
                   Explore Projects
                 </Link>
@@ -57,7 +57,7 @@ export function SiteFooter() {
                 <Link
                   href="/creators"
                   prefetch={true}
-                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-purple-300 transition-colors"
+                  className="text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors"
                 >
                   Discover Creators
                 </Link>
@@ -66,7 +66,7 @@ export function SiteFooter() {
                 <Link
                   href="/search"
                   prefetch={true}
-                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-purple-300 transition-colors"
+                  className="text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors"
                 >
                   Global Search
                 </Link>
@@ -84,7 +84,7 @@ export function SiteFooter() {
                 <Link
                   href="/about"
                   prefetch={true}
-                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-purple-300 transition-colors"
+                  className="text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors"
                 >
                   About Us
                 </Link>
@@ -93,7 +93,7 @@ export function SiteFooter() {
                 <Link
                   href="/team"
                   prefetch={true}
-                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-purple-300 transition-colors"
+                  className="text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors"
                 >
                   Our Team & Curators
                 </Link>
@@ -102,7 +102,7 @@ export function SiteFooter() {
                 <Link
                   href="/guidelines"
                   prefetch={true}
-                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-purple-300 transition-colors"
+                  className="text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors"
                 >
                   Community Guidelines
                 </Link>
@@ -120,7 +120,7 @@ export function SiteFooter() {
                 <Link
                   href="/terms"
                   prefetch={true}
-                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-purple-300 transition-colors"
+                  className="text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors"
                 >
                   Terms of Use
                 </Link>
@@ -129,7 +129,7 @@ export function SiteFooter() {
                 <Link
                   href="/privacy"
                   prefetch={true}
-                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-purple-300 transition-colors"
+                  className="text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors"
                 >
                   Privacy Policy
                 </Link>
@@ -142,7 +142,7 @@ export function SiteFooter() {
                       window.dispatchEvent(new CustomEvent("open-cookie-preferences"));
                     }
                   }}
-                  className="text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-purple-300 transition-colors cursor-pointer text-left"
+                  className="text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors cursor-pointer text-left"
                 >
                   Cookie Settings
                 </button>

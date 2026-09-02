@@ -30,7 +30,6 @@ import {
 import { bricolage } from "@/lib/fonts";
 import { cn, normalizeUrl, formatDisplayUrl } from "@/lib/utils";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
-import { OnlineBadge } from "@/components/ui/online-badge";
 import { LocationInput } from "@/components/ui/location-input";
 
 export function OnboardingClient() {
@@ -116,7 +115,7 @@ export function OnboardingClient() {
   ];
 
   return (
-    <div className="mx-auto max-w-[1280px] px-4 sm:px-6 py-8 sm:py-12">
+    <div className="w-full px-4 sm:px-6 lg:px-[140px] py-8 sm:py-12">
       <FadeIn>
         {/* Header Title & Progress Indicator */}
         <div className="max-w-2xl mx-auto text-center mb-8">
@@ -151,7 +150,7 @@ export function OnboardingClient() {
                   className={cn(
                     "flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer",
                     isCurrent
-                      ? "bg-[#962EE6] text-white shadow-xs"
+                      ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
                       : isCompleted
                       ? "bg-[var(--bg-neutral)] text-[var(--content-primary)] border border-[var(--border-neutral)]"
                       : "text-[var(--content-tertiary)] hover:text-[var(--content-secondary)]"
@@ -161,9 +160,9 @@ export function OnboardingClient() {
                     className={cn(
                       "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold",
                       isCurrent
-                        ? "bg-white text-[#962EE6]"
+                        ? "bg-[var(--chip-fg)] text-[var(--chip-bg)]"
                         : isCompleted
-                        ? "bg-[#962EE6] text-white"
+                        ? "bg-[var(--chip-bg)] text-[var(--chip-fg)]"
                         : "bg-[var(--bg-neutral)] text-[var(--content-tertiary)]"
                     )}
                   >
@@ -325,7 +324,7 @@ export function OnboardingClient() {
                       transition={{ duration: 0.2 }}
                       className="space-y-6 text-center py-4"
                     >
-                      <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--chip-bg)] border border-[var(--border-neutral)] text-[var(--chip-fg)] dark:bg-[#962EE6]/20 dark:border-[#962EE6]/30 dark:text-[#962EE6] mx-auto shadow-sm animate-bounce">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--chip-bg)] border border-[var(--border-neutral)] text-[var(--chip-fg)] mx-auto shadow-sm animate-bounce">
                         <Rocket className="h-8 w-8" />
                       </div>
 
@@ -449,8 +448,6 @@ export function OnboardingClient() {
                       </span>
                     </div>
                   </div>
-
-                  <OnlineBadge isOnline={true} />
                 </div>
 
                 {/* Bio */}

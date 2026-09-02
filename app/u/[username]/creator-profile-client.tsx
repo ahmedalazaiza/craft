@@ -24,6 +24,8 @@ import {
   Share2,
   Settings,
   FolderKanban,
+  Heart,
+  Users,
   X,
   Camera,
   Loader2,
@@ -32,11 +34,11 @@ import { cn, normalizeUrl, formatDisplayUrl } from "@/lib/utils";
 import { ShareModal } from "@/components/ui/share-modal";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
-import { OnlineBadge } from "@/components/ui/online-badge";
 import { uploadMediaFile } from "@/lib/supabase/storage";
 import { DEFAULT_AVATAR_URL, getValidAvatarUrl } from "@/lib/avatar";
 import { LocationInput } from "@/components/ui/location-input";
 import { EditProfileModal } from "@/components/creator/edit-profile-modal";
+import { toast } from "@/components/ui/toast";
 import { getCanonicalShareUrl } from "@/lib/seo";
 
 export function CreatorProfileClient({ initialCreator }: { initialCreator: Creator }) {
@@ -98,15 +100,17 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
 
   const handleAvatarFile = async (file: File) => {
     if (!file.type.startsWith("image/")) {
-      alert("Please upload a valid image file (PNG, JPG, WebP).");
+      toast.error("Please upload a valid image file (PNG, JPG, WebP).", "Invalid File");
       return;
     }
     setIsUploadingAvatar(true);
     try {
       const cdnUrl = await uploadMediaFile(file, "avatars", "avatars");
       setEditAvatarUrl(cdnUrl);
+      toast.success("Profile photo updated!", "Avatar Ready");
     } catch (err) {
       console.error("Avatar upload error:", err);
+      toast.error("Failed to upload avatar image. Please try again.", "Upload Error");
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -125,9 +129,11 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
         avatarUrl: editAvatarUrl,
         skills: editSkills,
       });
+      toast.success("Profile updated successfully!", "Profile Saved");
       setIsEditingProfile(false);
     } catch (err) {
       console.error("Failed to update profile:", err);
+      toast.error("Failed to update profile. Please try again.", "Update Failed");
     } finally {
       setIsSaving(false);
     }
@@ -149,9 +155,9 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
         if (sortBy === "appreciated") {
           return b.appreciations - a.appreciations;
         }
-        return (
-          new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
-        );
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return timeB - timeA;
       });
   }, [allCreatorProjects, sortBy]);
 
@@ -170,7 +176,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
   const followersCount = creator.followersCount ?? 0;
 
   return (
-    <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-4 sm:py-6">
+    <div className="w-full px-4 sm:px-6 lg:px-[140px] py-4 sm:py-6">
       <FadeIn>
         {/* Breadcrumbs Navigation */}
         <Breadcrumbs
@@ -217,7 +223,6 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                       </div>
                     )}
                   </div>
-                  <OnlineBadge userId={creator.id} username={creator.username} size="lg" className="absolute bottom-1.5 right-1.5 z-20" />
                 </div>
 
 
@@ -333,33 +338,36 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                 </p>
               </div>
 
-              {/* Metrics Grid */}
+              {/* Metrics Grid with Icons */}
               <div className="pt-2 border-t border-[var(--border-neutral)]">
                 <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="p-3 rounded-[16px] bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
-                    <span className="block text-lg font-bold text-[var(--content-primary)]">
+                  <div
+                    title="Projects"
+                    className="p-3 rounded-[16px] bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)] flex flex-col items-center justify-center gap-1.5"
+                  >
+                    <FolderKanban className="h-4 w-4 text-[var(--content-secondary)] shrink-0" />
+                    <span className="text-base sm:text-lg font-bold text-[var(--content-primary)] font-mono leading-none">
                       {publishedProjects.length}
                     </span>
-                    <span className="text-[10px] text-[var(--content-tertiary)] uppercase font-mono">
-                      Projects
-                    </span>
                   </div>
 
-                  <div className="p-3 rounded-[16px] bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
-                    <span className="block text-lg font-bold text-[var(--content-primary)]">
+                  <div
+                    title="Appreciations"
+                    className="p-3 rounded-[16px] bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)] flex flex-col items-center justify-center gap-1.5"
+                  >
+                    <Heart className="h-4 w-4 text-[var(--content-secondary)] shrink-0" />
+                    <span className="text-base sm:text-lg font-bold text-[var(--content-primary)] font-mono leading-none">
                       {totalAppreciations}
                     </span>
-                    <span className="text-[10px] text-[var(--content-tertiary)] uppercase font-mono">
-                      Appreciations
-                    </span>
                   </div>
 
-                  <div className="p-3 rounded-[16px] bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
-                    <span className="block text-lg font-bold text-[var(--content-primary)]">
+                  <div
+                    title="Followers"
+                    className="p-3 rounded-[16px] bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)] flex flex-col items-center justify-center gap-1.5"
+                  >
+                    <Users className="h-4 w-4 text-[var(--content-secondary)] shrink-0" />
+                    <span className="text-base sm:text-lg font-bold text-[var(--content-primary)] font-mono leading-none">
                       {followersCount}
-                    </span>
-                    <span className="text-[10px] text-[var(--content-tertiary)] uppercase font-mono">
-                      Followers
                     </span>
                   </div>
                 </div>
