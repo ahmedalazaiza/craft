@@ -921,3 +921,39 @@ DROP TRIGGER IF EXISTS on_auth_user_confirmed ON auth.users;
 CREATE TRIGGER on_auth_user_confirmed
 AFTER UPDATE OF email_confirmed_at ON auth.users
 FOR EACH ROW EXECUTE FUNCTION public.handle_user_email_confirmed();
+
+-- =============================================================================
+-- HARD DELETE ACCOUNT RPC (Completely Purges auth.users & public tables)
+-- =============================================================================
+CREATE OR REPLACE FUNCTION public.delete_user_account()
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
+    current_user_id UUID;
+BEGIN
+    current_user_id := auth.uid();
+    
+    IF current_user_id IS NULL THEN
+        RAISE EXCEPTION 'Not authenticated or user session missing.';
+    END IF;
+
+    -- 1. Delete all user data from public tables
+    DELETE FROM public.notifications WHERE recipient_id = current_user_id OR actor_id = current_user_id;
+    DELETE FROM public.follows WHERE follower_id = current_user_id OR following_id = current_user_id;
+    DELETE FROM public.appreciations WHERE user_id = current_user_id;
+    DELETE FROM public.comments WHERE author_id = current_user_id;
+    DELETE FROM public.projects WHERE creator_id = current_user_id;
+    DELETE FROM public.profiles WHERE id = current_user_id;
+
+    -- 2. Hard delete authentication record from auth.users
+    DELETE FROM auth.users WHERE id = current_user_id;
+
+    RETURN true;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.delete_user_account() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.delete_user_account() TO anon;

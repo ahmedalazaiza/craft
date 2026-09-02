@@ -991,27 +991,33 @@ export async function deleteUserAccountInDb(userId: string): Promise<{ success: 
       console.warn("Storage purge warning during account deletion:", storageErr);
     }
 
-    // 2. Explicitly hard delete all user records across all tables (Fail-safe for full cleanup)
-    await Promise.allSettled([
-      supabase.from("notifications").delete().or(`recipient_id.eq.${userId},actor_id.eq.${userId}`),
-      supabase.from("follows").delete().or(`follower_id.eq.${userId},following_id.eq.${userId}`),
-      supabase.from("appreciations").delete().eq("user_id", userId),
-      supabase.from("comments").delete().eq("author_id", userId),
-      supabase.from("projects").delete().eq("creator_id", userId),
-    ]);
+    // 2. Call secure PostgreSQL RPC to purge user from auth.users and all tables
+    const { error: rpcError } = await supabase.rpc("delete_user_account");
 
-    // 3. Delete the profile record from public.profiles table
-    const { error: profileDeleteError } = await supabase
-      .from("profiles")
-      .delete()
-      .eq("id", userId);
+    if (rpcError) {
+      console.warn("RPC delete_user_account notice (fallback to direct table delete):", rpcError.message);
+      // Fallback: Explicitly hard delete all user records across all tables
+      await Promise.allSettled([
+        supabase.from("notifications").delete().or(`recipient_id.eq.${userId},actor_id.eq.${userId}`),
+        supabase.from("follows").delete().or(`follower_id.eq.${userId},following_id.eq.${userId}`),
+        supabase.from("appreciations").delete().eq("user_id", userId),
+        supabase.from("comments").delete().eq("author_id", userId),
+        supabase.from("projects").delete().eq("creator_id", userId),
+      ]);
 
-    if (profileDeleteError) {
-      console.error("Error deleting profile record from Supabase:", profileDeleteError);
-      return { success: false, error: profileDeleteError.message };
+      // Delete the profile record from public.profiles table
+      const { error: profileDeleteError } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("id", userId);
+
+      if (profileDeleteError) {
+        console.error("Error deleting profile record from Supabase:", profileDeleteError);
+        return { success: false, error: profileDeleteError.message };
+      }
     }
 
-    // 4. Invalidate application cache and sign out session
+    // 3. Invalidate application cache and sign out session
     invalidateAppCache();
     await supabase.auth.signOut();
 
