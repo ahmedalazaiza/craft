@@ -73,7 +73,7 @@ export function DeleteProjectModal({
   };
 
   const modalContent = (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
       {/* Backdrop */}
       <div
         onClick={!isDeleting ? onClose : undefined}
@@ -81,7 +81,12 @@ export function DeleteProjectModal({
       />
 
       {/* Modal Container */}
-      <div className="relative w-full max-w-lg overflow-hidden rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-screen)] p-6 sm:p-8 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.25)] dark:shadow-none z-10 animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-lg overflow-hidden rounded-t-[28px] sm:rounded-[28px] border-t sm:border border-[var(--border-neutral)] bg-[var(--bg-screen)] p-6 sm:p-8 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.25)] dark:shadow-none z-10 animate-in fade-in zoom-in-95 duration-200 pb-safe">
+        {/* Mobile Pull Handle Indicator */}
+        <div className="flex sm:hidden justify-center pt-1 pb-4 -mt-2 shrink-0">
+          <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
+        </div>
+
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-2">

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import {
   Creator,
   Project,
@@ -33,6 +33,7 @@ import {
 } from "./supabase/auth";
 import { supabase } from "./supabase/client";
 import { VerificationModal, GatedActionType } from "@/components/ui/verification-modal";
+import { MobileBlockSheet } from "@/components/ui/mobile-block-sheet";
 
 interface SessionContextType {
   user: Creator | null;
@@ -49,6 +50,9 @@ interface SessionContextType {
   verificationModalTargetName?: string;
   openVerificationModal: (action: GatedActionType, targetName?: string) => void;
   closeVerificationModal: () => void;
+  isMobilePublishBlockOpen: boolean;
+  openMobilePublishBlock: () => void;
+  closeMobilePublishBlock: () => void;
   login: (email: string, password: string) => Promise<AuthResponse>;
   signup: (email: string, password: string, displayName: string, customUsername?: string) => Promise<AuthResponse>;
   logout: () => Promise<void>;
@@ -135,6 +139,15 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setIsVerificationModalOpen(false);
   };
 
+  // Mobile Publishing Blocker Bottom Sheet State
+  const [isMobilePublishBlockOpen, setIsMobilePublishBlockOpen] = useState(false);
+  const openMobilePublishBlock = useCallback(() => {
+    setIsMobilePublishBlockOpen(true);
+  }, []);
+  const closeMobilePublishBlock = useCallback(() => {
+    setIsMobilePublishBlockOpen(false);
+  }, []);
+
   // Realtime notifications subscription for active session user
   useEffect(() => {
     if (!user) return;
@@ -200,6 +213,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     }
   }, [setUser]);
 
+  const hasInitializedRef = useRef(false);
+
   useEffect(() => {
     // Intercept signup verification hashes landing on root or other pages and route to /auth/verify
     if (typeof window !== "undefined") {
@@ -211,10 +226,16 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    refreshFromDb();
+    if (!hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      refreshFromDb();
+    }
 
-    // Listen to Supabase Auth state changes
+    // Listen to Supabase Auth state changes (skip INITIAL_SESSION to prevent duplicate fetch)
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "INITIAL_SESSION") {
+        return;
+      }
       if (session?.user) {
         const profile = await getCurrentAuthUser();
         if (profile) {
@@ -237,7 +258,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     return () => {
       authListener?.subscription.unsubscribe();
     };
-  }, [refreshFromDb]);
+  }, [refreshFromDb, setUser]);
 
   // Auth Operations
   const login = async (email: string, password: string): Promise<AuthResponse> => {
@@ -646,6 +667,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         verificationModalTargetName,
         openVerificationModal,
         closeVerificationModal,
+        isMobilePublishBlockOpen,
+        openMobilePublishBlock,
+        closeMobilePublishBlock,
         login,
         signup,
         logout,
@@ -672,6 +696,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         onClose={closeVerificationModal}
         action={verificationModalAction}
         targetName={verificationModalTargetName}
+      />
+
+      {/* Global Mobile Publishing Blocker Bottom Sheet */}
+      <MobileBlockSheet
+        isOpen={isMobilePublishBlockOpen}
+        onClose={closeMobilePublishBlock}
       />
     </SessionContext.Provider>
   );

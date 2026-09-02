@@ -117,10 +117,12 @@ export default function RootLayout({
 
         {/* Global Schema.org JSON-LD Structured Data */}
         <script
+          key="jsonld-root-website"
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
         <script
+          key="jsonld-root-org"
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />

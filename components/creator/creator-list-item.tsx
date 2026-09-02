@@ -115,7 +115,7 @@ export function CreatorListItem({
               <div className="flex items-center gap-2 flex-wrap">
                 <Link
                   href={`/u/${creator.username}`}
-                  className="text-base sm:text-lg font-bold text-[var(--content-primary)] hover:text-[var(--brand-secondary)] transition-colors truncate"
+                  className="text-base sm:text-lg font-bold text-[var(--content-primary)] transition-colors truncate"
                 >
                   {creator.displayName}
                 </Link>

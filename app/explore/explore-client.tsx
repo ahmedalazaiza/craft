@@ -207,8 +207,9 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
     handleFiltersChange(updated);
   };
 
-  // Guard skeleton: Only show skeleton during cold empty fetch
-  if (isLoadingDb && projects.length === 0) {
+  // Guard skeleton: Only show when context is loading AND no SSR data available
+  // IMPORTANT: initialProjects are SSR'd — never block them behind the skeleton
+  if (isLoadingDb && projects.length === 0 && initialProjects.length === 0) {
     return (
       <div className="w-full px-4 sm:px-6 lg:px-[140px] py-4 sm:py-6 animate-pulse">
         <div className="flex items-center gap-2 mb-6">
@@ -229,7 +230,7 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-[140px] py-4 sm:py-6">
-      <FadeIn>
+      <div>
         {/* Breadcrumbs Navigation */}
         <Breadcrumbs
           items={[
@@ -453,12 +454,17 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 min-h-[500px]">
-            {filteredProjects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
+            {filteredProjects.map((project, index) => (
+              <ProjectCard
+                key={project.id}
+                project={project}
+                // Priority-load the first 6 cards (above-fold on 4-col desktop)
+                priority={index < 6}
+              />
             ))}
           </div>
         )}
-      </FadeIn>
+      </div>
 
       {/* Filter Drawer */}
       <FilterDrawer

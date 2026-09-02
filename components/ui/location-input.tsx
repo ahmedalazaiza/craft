@@ -228,7 +228,7 @@ export function LocationInput({
         createPortal(
           <AnimatePresence>
             {isConsentOpen && (
-              <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+              <div className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-0 sm:p-4">
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -238,12 +238,17 @@ export function LocationInput({
                 />
 
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: 8 }}
+                  initial={{ opacity: 0, scale: 0.96, y: 20 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: 8 }}
-                  transition={{ duration: 0.2 }}
-                  className="relative w-full max-w-md rounded-3xl border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 shadow-2xl z-10 space-y-5"
+                  exit={{ opacity: 0, scale: 0.96, y: 20 }}
+                  transition={{ type: "spring", damping: 28, stiffness: 350 }}
+                  className="relative w-full max-w-md rounded-t-[28px] sm:rounded-3xl border-t sm:border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 shadow-2xl z-10 space-y-5 pb-safe"
                 >
+                  {/* Mobile Pull Handle Indicator */}
+                  <div className="flex sm:hidden justify-center pt-1 pb-2 -mt-2 shrink-0">
+                    <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
+                  </div>
+
                   <div className="flex items-start gap-3.5">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--bg-neutral)] text-[var(--content-primary)]">
                       <ShieldCheck className="h-5 w-5" />

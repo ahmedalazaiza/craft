@@ -89,7 +89,7 @@ export function PasswordResetModal({ isOpen, onClose, onSuccess }: PasswordReset
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -102,12 +102,17 @@ export function PasswordResetModal({ isOpen, onClose, onSuccess }: PasswordReset
 
         {/* Modal Container */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 12 }}
+          initial={{ opacity: 0, scale: 0.96, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 12 }}
-          transition={{ duration: 0.24, ease: "easeOut" }}
-          className="relative w-full max-w-md overflow-hidden rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 sm:p-8 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.25)] dark:shadow-none z-10"
+          exit={{ opacity: 0, scale: 0.96, y: 20 }}
+          transition={{ type: "spring", damping: 28, stiffness: 350 }}
+          className="relative w-full max-w-md overflow-hidden rounded-t-[28px] sm:rounded-[28px] border-t sm:border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 sm:p-8 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.25)] dark:shadow-none z-10 pb-safe"
         >
+          {/* Mobile Pull Handle Indicator */}
+          <div className="flex sm:hidden justify-center pt-1 pb-4 -mt-2 shrink-0">
+            <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
+          </div>
+
           {/* Header */}
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">

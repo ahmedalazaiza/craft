@@ -21,10 +21,12 @@ export default async function HomePage() {
   return (
     <>
       <script
+        key="jsonld-home-website"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteJsonLd) }}
       />
       <script
+        key="jsonld-home-org"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
       />

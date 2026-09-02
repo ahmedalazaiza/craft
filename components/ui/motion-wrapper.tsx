@@ -168,13 +168,14 @@ export function MotionCardWrapper({
   className,
 }: MotionCardProps) {
   return (
-    <motion.div
-      whileHover={{ y: -3 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
-      className={cn("h-full will-change-transform", className)}
+    <div
+      className={cn(
+        "h-full transition-transform duration-200 ease-out hover:-translate-y-1 will-change-transform",
+        className
+      )}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 

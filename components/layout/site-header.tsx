@@ -9,6 +9,7 @@ import { NotificationsPopover } from "@/components/layout/notifications-popover"
 import { ProfileDropdown } from "@/components/layout/profile-dropdown";
 import { VerificationBanner } from "@/components/layout/verification-banner";
 import { SearchModal } from "@/components/search/search-modal";
+import { NewProjectLink } from "@/components/project/new-project-link";
 import { Plus, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/logo";
@@ -125,18 +126,12 @@ export function SiteHeader() {
                 {/* Notifications Popover Dropdown */}
                 <NotificationsPopover />
 
-                {/* Primary Action: + New Project (Desktop Only) */}
-                <Link
-                  href="/me/projects/new"
-                  className={buttonVariants({
-                    variant: "accent",
-                    size: "sm",
-                    className: "hidden md:inline-flex gap-1.5 h-9 px-3.5 shadow-xs font-bold",
-                  })}
+                {/* Primary Action: + New Project */}
+                <NewProjectLink
+                  className="hidden md:inline-flex h-9 px-3.5"
                 >
-                  <Plus className="h-4 w-4" />
-                  <span>New project</span>
-                </Link>
+                  New project
+                </NewProjectLink>
 
                 {/* User Profile Avatar Dropdown (Desktop Only) */}
                 <div className="hidden md:block">

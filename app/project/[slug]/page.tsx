@@ -46,10 +46,12 @@ export default async function ProjectPage({ params }: PageProps) {
       {project.published && (
         <>
           <script
+            key="jsonld-project-detail"
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(projectJsonLd) }}
           />
           <script
+            key="jsonld-project-breadcrumb"
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
           />

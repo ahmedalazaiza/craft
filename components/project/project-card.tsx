@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { Project } from "@/lib/types";
 import { MotionCardWrapper } from "@/components/ui/motion-wrapper";
 import { AppreciationButton } from "@/components/project/appreciation-button";
@@ -29,7 +28,6 @@ function formatViews(count: number): string {
 }
 
 export function ProjectCard({ project, priority = false, className }: ProjectCardProps) {
-  const router = useRouter();
   const { projects, user } = useSession();
   const [isShareOpen, setIsShareOpen] = useState(false);
 
@@ -59,6 +57,7 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
           {/* 1. DOMINANT 4:3 VISUAL THUMBNAIL CANVAS                           */}
           {/* ================================================================= */}
           <div className="relative aspect-[4/3] w-full rounded-[20px] sm:rounded-[22px] overflow-hidden bg-[var(--bg-neutral)] border border-[var(--border-neutral)]/80 hover:border-[var(--content-primary)]/30 transition-all duration-300 shadow-xs hover:shadow-[0_12px_36px_rgba(0,0,0,0.08)]">
+            {/* Main navigation link — wraps only the image */}
             <Link
               href={`/project/${liveProject.slug}`}
               prefetch={true}
@@ -69,7 +68,7 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
                 src={liveProject.coverImage}
                 alt={liveProject.title}
                 fill
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                 className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
                 priority={priority || liveProject.featured}
               />
@@ -82,8 +81,24 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
               </span>
             </div>
 
-            {/* Hover Scrim Overlay with Title & Floating Action Buttons */}
-            <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-3.5 sm:p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-between gap-3 pointer-events-none">
+            {/* Mobile Fixed Like Button (Top-Right) - Hidden if own project */}
+            {!isOwner && (
+              <div className="absolute top-2.5 right-2.5 z-20 sm:hidden">
+                <AppreciationButton
+                  projectId={liveProject.id}
+                  count={liveProject.appreciations}
+                  variant="icon"
+                  className="h-8.5 w-8.5 bg-black/45 hover:bg-black/65 text-white backdrop-blur-md border border-white/20 shadow-md active:scale-90"
+                />
+              </div>
+            )}
+
+            {/* ============================================================= */}
+            {/* HOVER SCRIM (Desktop Quick Actions)                           */}
+            {/* ============================================================= */}
+            <div
+              className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-3.5 sm:p-4 transition-opacity duration-200 flex items-center justify-between gap-3 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto"
+            >
               {/* Project Title */}
               <Link
                 href={`/project/${liveProject.slug}`}
@@ -120,11 +135,13 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
                   <Share2 className="h-3.5 w-3.5" />
                 </button>
 
-                <AppreciationButton
-                  projectId={liveProject.id}
-                  count={liveProject.appreciations}
-                  variant="icon"
-                />
+                {!isOwner && (
+                  <AppreciationButton
+                    projectId={liveProject.id}
+                    count={liveProject.appreciations}
+                    variant="icon"
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -149,7 +166,8 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
                 />
               </div>
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className="text-xs sm:text-[13px] font-bold text-[var(--content-primary)] group-hover/author:text-[var(--brand-secondary)] transition-colors truncate">
+                {/* Creator name always stays black/primary — only the badge is branded */}
+                <span className="text-xs sm:text-[13px] font-bold text-[var(--content-primary)] transition-colors truncate">
                   {liveProject.creator.displayName}
                 </span>
                 {liveProject.creator.isVerified && (

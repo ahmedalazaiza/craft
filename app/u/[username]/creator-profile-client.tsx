@@ -9,6 +9,7 @@ import { Creator } from "@/lib/types";
 import { bricolage } from "@/lib/fonts";
 
 import { ProjectCard } from "@/components/project/project-card";
+import { NewProjectLink } from "@/components/project/new-project-link";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -447,18 +448,9 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
               <div className="flex items-center gap-3">
                 {isCurrentUser ? (
                   displayedProjects.length > 0 && (
-                    <Link
-                      href="/me/projects/new"
-                      prefetch={true}
-                      className={buttonVariants({
-                        variant: "accent",
-                        size: "sm",
-                        className: "inline-flex gap-1.5 font-bold shadow-xs text-xs sm:text-sm",
-                      })}
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>New Project</span>
-                    </Link>
+                    <NewProjectLink size="sm" className="text-xs sm:text-sm">
+                      New Project
+                    </NewProjectLink>
                   )
                 ) : (
                   <div className="flex items-center gap-1.5 bg-[var(--bg-neutral)] p-1 rounded-full text-xs font-semibold shrink-0">
@@ -515,17 +507,9 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                 </p>
 
                 {isCurrentUser && (
-                  <Link
-                    href="/me/projects/new"
-                    className={buttonVariants({
-                      variant: "accent",
-                      size: "default",
-                      className: "mt-6 gap-2 font-bold shadow-xs",
-                    })}
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>{activeTab === "published" ? "Create First Project" : "Start New Draft"}</span>
-                  </Link>
+                  <NewProjectLink size="default" className="mt-6 gap-2">
+                    {activeTab === "published" ? "Create First Project" : "Start New Draft"}
+                  </NewProjectLink>
                 )}
               </div>
             ) : (

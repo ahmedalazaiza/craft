@@ -187,6 +187,11 @@ export function VerificationModal({
           transition={{ type: "spring", damping: 25, stiffness: 320 }}
           className="relative w-full max-w-[440px] max-h-[92vh] overflow-y-auto rounded-t-[32px] sm:rounded-[32px] border-t sm:border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 sm:p-8 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.18)] dark:shadow-none z-10 pb-safe"
         >
+          {/* Mobile Pull Handle Indicator */}
+          <div className="flex sm:hidden justify-center pt-1 pb-4 -mt-2 shrink-0">
+            <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
+          </div>
+
           {/* Subtle Ambient Radial Glow */}
           <div
             className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 h-56 w-80 rounded-full blur-3xl opacity-70"

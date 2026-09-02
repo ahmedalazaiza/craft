@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React from "react";
 import type { Metadata } from "next";
 import { ExploreClient } from "./explore-client";
 import { constructMetadata, generateCollectionJsonLd, generateBreadcrumbJsonLd } from "@/lib/seo";
@@ -45,24 +45,16 @@ export default async function ExplorePage() {
   return (
     <>
       <script
+        key="jsonld-explore-collection"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
       />
       <script
+        key="jsonld-explore-breadcrumb"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <Suspense
-        fallback={
-          <div className="w-full px-4 sm:px-6 lg:px-[140px] py-16 text-center">
-            <div className="type-body-large text-[var(--content-tertiary)]">
-              Loading gallery...
-            </div>
-          </div>
-        }
-      >
-        <ExploreClient initialProjects={initialProjects || []} />
-      </Suspense>
+      <ExploreClient initialProjects={initialProjects || []} />
     </>
   );
 }

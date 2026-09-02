@@ -45,10 +45,12 @@ export default async function CreatorsPage() {
   return (
     <>
       <script
+        key="jsonld-creators-collection"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
       />
       <script
+        key="jsonld-creators-breadcrumb"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />

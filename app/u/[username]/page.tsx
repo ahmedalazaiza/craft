@@ -43,10 +43,12 @@ export default async function UserProfilePage({ params }: PageProps) {
   return (
     <>
       <script
+        key="jsonld-creator-profile"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(profileJsonLd) }}
       />
       <script
+        key="jsonld-creator-breadcrumb"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />

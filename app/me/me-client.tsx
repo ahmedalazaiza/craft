@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/session-context";
 import { bricolage } from "@/lib/fonts";
 import { ProjectCard } from "@/components/project/project-card";
+import { NewProjectLink } from "@/components/project/new-project-link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -365,18 +366,9 @@ export function MeClient() {
               {/* + New Project CTA */}
               {((activeTab === "published" && publishedProjects.length > 0) ||
                 (activeTab === "drafts" && draftProjects.length > 0)) && (
-                <Link
-                  href="/me/projects/new"
-                  prefetch={true}
-                  className={buttonVariants({
-                    variant: "accent",
-                    size: "sm",
-                    className: "inline-flex gap-1.5 font-bold shadow-xs text-xs sm:text-sm",
-                  })}
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>New Project</span>
-                </Link>
+                <NewProjectLink size="sm" className="text-xs sm:text-sm">
+                  New Project
+                </NewProjectLink>
               )}
             </div>
 
@@ -393,17 +385,9 @@ export function MeClient() {
                   <p className="mt-1.5 type-body-default text-[var(--content-secondary)] max-w-sm">
                     Publish your first case study or design monograph to showcase your work to the community.
                   </p>
-                  <Link
-                    href="/me/projects/new"
-                    className={buttonVariants({
-                      variant: "accent",
-                      size: "default",
-                      className: "mt-6 gap-2 font-bold shadow-xs",
-                    })}
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>Create First Project</span>
-                  </Link>
+                  <NewProjectLink size="default" className="mt-6 gap-2">
+                    Create First Project
+                  </NewProjectLink>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -438,17 +422,9 @@ export function MeClient() {
                 <p className="mt-1.5 type-body-default text-[var(--content-secondary)] max-w-sm">
                   Unpublished monographs and works in progress will be saved here safely.
                 </p>
-                <Link
-                  href="/me/projects/new"
-                  className={buttonVariants({
-                    variant: "secondary",
-                    size: "default",
-                    className: "mt-6 gap-2 font-semibold",
-                  })}
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Start a Draft</span>
-                </Link>
+                <NewProjectLink variant="secondary" size="default" className="mt-6 gap-2 font-semibold">
+                  Start a Draft
+                </NewProjectLink>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">

@@ -171,7 +171,7 @@ export function ImageCropperModal({
 
   return createPortal(
     <AnimatePresence>
-      <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4">
+      <div className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-0 sm:p-4">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -184,12 +184,17 @@ export function ImageCropperModal({
 
         {/* Modal Window */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 12 }}
+          initial={{ opacity: 0, scale: 0.96, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 12 }}
-          transition={{ duration: 0.24, ease: "easeOut" }}
-          className="relative w-full max-w-md overflow-hidden rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-5 sm:p-6 shadow-2xl z-10 space-y-4"
+          exit={{ opacity: 0, scale: 0.96, y: 20 }}
+          transition={{ type: "spring", damping: 28, stiffness: 350 }}
+          className="relative w-full max-w-md overflow-hidden rounded-t-[28px] sm:rounded-[28px] border-t sm:border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-5 sm:p-6 shadow-2xl z-10 space-y-4 pb-safe"
         >
+          {/* Mobile Pull Handle Indicator */}
+          <div className="flex sm:hidden justify-center pt-1 pb-2 -mt-1 shrink-0">
+            <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
+          </div>
+
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">

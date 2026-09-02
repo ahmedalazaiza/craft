@@ -253,31 +253,20 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
         <div className="space-y-6 mb-8">
           <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-[var(--border-neutral)]">
             <div className="space-y-3 flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                {(project.categories && project.categories.length > 0
-                  ? project.categories
-                  : [project.category]
-                ).map((cat) => (
-                  <Badge key={cat} variant="accent" size="default">
-                    {cat}
-                  </Badge>
-                ))}
-                {isDraft && (
-                  <Badge variant="neutral" size="default" className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 font-mono font-bold">
-                    Draft • Unpublished
-                  </Badge>
-                )}
-                {project.featured && (
-                  <Badge variant="forest" size="default">
-                    Featured Work
-                  </Badge>
-                )}
-                {project.medium && (
-                  <Badge variant="neutral" size="default">
-                    {project.medium}
-                  </Badge>
-                )}
-              </div>
+              {(isDraft || project.featured) && (
+                <div className="flex flex-wrap items-center gap-2">
+                  {isDraft && (
+                    <Badge variant="neutral" size="default" className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 font-mono font-bold">
+                      Draft • Unpublished
+                    </Badge>
+                  )}
+                  {project.featured && (
+                    <Badge variant="forest" size="default">
+                      Featured Work
+                    </Badge>
+                  )}
+                </div>
+              )}
 
               <h1
                 className={cn(
@@ -395,31 +384,31 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
               <div className="flex flex-col items-center gap-3 p-2 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)]/90 backdrop-blur-md shadow-sm">
                 {!isDraft && (
                   <>
-                    {/* 1. Appreciation Button */}
-                    <button
-                      type="button"
-                      onClick={handleToggleAppreciation}
-                      disabled={Boolean(isAuthor)}
-                      className={cn(
-                        "h-12 w-12 rounded-full flex flex-col items-center justify-center transition-all cursor-pointer select-none group border-0 shadow-xs",
-                        isAppreciated
-                          ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-md scale-105"
-                          : "bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]",
-                        isAuthor && "opacity-60 cursor-not-allowed"
-                      )}
-                      title={isAuthor ? "You cannot appreciate your own project" : isAppreciated ? "Unlike project" : "Appreciate project"}
-                      aria-label={isAuthor ? "You cannot appreciate your own project" : isAppreciated ? `Remove appreciation (${project.appreciations})` : `Appreciate project (${project.appreciations})`}
-                    >
-                      <Heart
+                    {/* 1. Appreciation Button (Hidden for author - cannot like own project) */}
+                    {!isAuthor && (
+                      <button
+                        type="button"
+                        onClick={handleToggleAppreciation}
                         className={cn(
-                          "h-4 w-4 transition-transform duration-200 group-hover:scale-110",
-                          isAppreciated ? "fill-current scale-110" : "text-[var(--content-primary)]"
+                          "h-12 w-12 rounded-full flex flex-col items-center justify-center transition-all cursor-pointer select-none group border-0 shadow-xs",
+                          isAppreciated
+                            ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-md scale-105"
+                            : "bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
                         )}
-                      />
-                      <span className="text-[10px] font-bold font-mono tracking-tight mt-0.5">
-                        {project.appreciations}
-                      </span>
-                    </button>
+                        title={isAppreciated ? "Unlike project" : "Appreciate project"}
+                        aria-label={isAppreciated ? `Remove appreciation (${project.appreciations})` : `Appreciate project (${project.appreciations})`}
+                      >
+                        <Heart
+                          className={cn(
+                            "h-4 w-4 transition-transform duration-200 group-hover:scale-110",
+                            isAppreciated ? "fill-current scale-110" : "text-[var(--content-primary)]"
+                          )}
+                        />
+                        <span className="text-[10px] font-bold font-mono tracking-tight mt-0.5">
+                          {project.appreciations}
+                        </span>
+                      </button>
+                    )}
 
                     {/* 2. Discussion / Comments Scroll Trigger */}
                     <button
@@ -554,55 +543,84 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                   </div>
                 </div>
 
-                {/* Tags and Tools Matrix */}
-                {(project.tags?.length > 0 || project.tools?.length > 0) && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-screen)] p-6 sm:p-8 shadow-xs">
-                    {/* Tags */}
-                    {project.tags?.length > 0 && (
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <Tag className="h-4 w-4 text-[var(--content-tertiary)]" />
-                          <h3 className="type-label uppercase text-[var(--content-primary)] font-bold">
-                            Disciplines & Tags
-                          </h3>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {project.tags.map((tag) => (
-                            <Link
-                              key={tag}
-                              href={`/search?q=${encodeURIComponent(tag)}`}
-                              className="rounded-full bg-[var(--bg-neutral)] border border-[var(--border-neutral)] px-3 py-1 text-xs font-semibold text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:border-[var(--content-primary)] transition-all"
-                            >
-                              #{tag}
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Tools */}
-                    {project.tools?.length > 0 && (
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <Wrench className="h-4 w-4 text-[var(--content-tertiary)]" />
-                          <h3 className="type-label uppercase text-[var(--content-primary)] font-bold">
-                            Software & Tools
-                          </h3>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {project.tools.map((tool) => (
-                            <span
-                              key={tool}
-                              className="rounded-full bg-[var(--bg-neutral)] border border-[var(--border-neutral)] px-3 py-1 text-xs font-semibold text-[var(--content-secondary)]"
-                            >
-                              {tool}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                {/* Project Details: Categories, Disciplines, Tags & Tools Matrix */}
+                <div className="rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-screen)] p-6 sm:p-10 shadow-xs space-y-8">
+                  {/* Creative Fields & Categories */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Tag className="h-4 w-4 text-[var(--content-tertiary)]" />
+                      <h3 className="type-label uppercase text-[var(--content-primary)] font-bold text-xs tracking-wider font-mono">
+                        Creative Fields & Categories
+                      </h3>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {(project.categories && project.categories.length > 0
+                        ? project.categories
+                        : [project.category]
+                      ).map((cat) => (
+                        <Link
+                          key={cat}
+                          href={`/explore?category=${encodeURIComponent(cat)}`}
+                          className="rounded-full bg-[var(--btn-cta-bg)] text-[var(--btn-cta-fg)] px-3.5 py-1.5 text-xs font-bold shadow-xs hover:opacity-90 transition-opacity"
+                        >
+                          {cat}
+                        </Link>
+                      ))}
+                      {project.medium && (
+                        <span className="rounded-full bg-[var(--bg-neutral)] border border-[var(--border-neutral)] px-3.5 py-1.5 text-xs font-semibold text-[var(--content-secondary)]">
+                          {project.medium}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                )}
+
+                  {/* Tags and Tools Sub-grid */}
+                  {(project.tags?.length > 0 || project.tools?.length > 0) && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-[var(--border-neutral)]">
+                      {/* Tags */}
+                      {project.tags?.length > 0 && (
+                        <div className="space-y-3">
+                          <h4 className="type-label uppercase text-[var(--content-secondary)] font-bold text-xs tracking-wider font-mono">
+                            Tags & Keywords
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {project.tags.map((tag) => (
+                              <Link
+                                key={tag}
+                                href={`/search?q=${encodeURIComponent(tag)}`}
+                                className="rounded-full bg-[var(--bg-neutral)] border border-[var(--border-neutral)] px-3 py-1 text-xs font-semibold text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:border-[var(--content-primary)] transition-all"
+                              >
+                                #{tag}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Tools */}
+                      {project.tools?.length > 0 && (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <Wrench className="h-4 w-4 text-[var(--content-tertiary)]" />
+                            <h4 className="type-label uppercase text-[var(--content-secondary)] font-bold text-xs tracking-wider font-mono">
+                              Software & Tools
+                            </h4>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {project.tools.map((tool) => (
+                              <span
+                                key={tool}
+                                className="rounded-full bg-[var(--bg-neutral)] border border-[var(--border-neutral)] px-3 py-1 text-xs font-semibold text-[var(--content-secondary)]"
+                              >
+                                {tool}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 {/* Discussion / Comments Section (Hidden for drafts) */}
                 {!isDraft && (
@@ -625,23 +643,23 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
       <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 p-1.5 rounded-full bg-[var(--bg-screen)]/95 backdrop-blur-md border border-[var(--border-neutral)] shadow-[0_12px_32px_rgba(0,0,0,0.18)]">
         {!isDraft && (
           <>
-            <button
-              type="button"
-              onClick={handleToggleAppreciation}
-              disabled={Boolean(isAuthor)}
-              className={cn(
-                "h-12 min-h-[48px] px-4 rounded-full flex items-center gap-2 text-xs font-bold transition-all cursor-pointer select-none border-0",
-                isAppreciated
-                  ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-md"
-                  : "bg-[var(--bg-neutral)] text-[var(--content-primary)]",
-                isAuthor && "opacity-60 cursor-not-allowed"
-              )}
-              title={isAuthor ? "You cannot appreciate your own project" : isAppreciated ? "Unlike project" : "Appreciate project"}
-              aria-label={isAuthor ? "You cannot appreciate your own project" : isAppreciated ? `Remove appreciation (${project.appreciations})` : `Appreciate project (${project.appreciations})`}
-            >
-              <Heart className={cn("h-4 w-4", isAppreciated ? "fill-current" : "text-[var(--content-primary)]")} />
-              <span>{project.appreciations}</span>
-            </button>
+            {!isAuthor && (
+              <button
+                type="button"
+                onClick={handleToggleAppreciation}
+                className={cn(
+                  "h-12 min-h-[48px] px-4 rounded-full flex items-center gap-2 text-xs font-bold transition-all cursor-pointer select-none border-0",
+                  isAppreciated
+                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-md"
+                    : "bg-[var(--bg-neutral)] text-[var(--content-primary)]"
+                )}
+                title={isAppreciated ? "Unlike project" : "Appreciate project"}
+                aria-label={isAppreciated ? `Remove appreciation (${project.appreciations})` : `Appreciate project (${project.appreciations})`}
+              >
+                <Heart className={cn("h-4 w-4", isAppreciated ? "fill-current" : "text-[var(--content-primary)]")} />
+                <span>{project.appreciations}</span>
+              </button>
+            )}
 
             <button
               type="button"

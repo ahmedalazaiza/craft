@@ -124,12 +124,17 @@ export function ShareModal({
 
           {/* Modal Card */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.94, y: 12 }}
+            initial={{ opacity: 0, scale: 0.96, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.94, y: 12 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            exit={{ opacity: 0, scale: 0.96, y: 20 }}
+            transition={{ type: "spring", damping: 28, stiffness: 350 }}
             className="relative w-full max-w-md rounded-t-[28px] sm:rounded-[28px] border-t sm:border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 sm:p-7 shadow-[0_24px_60px_rgba(0,0,0,0.18)] dark:shadow-none z-10 overflow-hidden pb-10 sm:pb-7 pb-safe"
           >
+            {/* Mobile Pull Handle Indicator */}
+            <div className="flex sm:hidden justify-center pt-1 pb-4 -mt-2 shrink-0">
+              <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
+            </div>
+
             {/* Top Close Button */}
             <button
               onClick={onClose}

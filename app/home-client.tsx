@@ -30,7 +30,6 @@ import {
   BarChart3,
   Cpu,
 } from "lucide-react";
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const FEATURE_POINTS = [
@@ -86,15 +85,21 @@ export function HomeClient({
     return projects.filter((p) => p.published);
   }, [projects]);
 
-  // Curated Featured (4 items)
-  const featuredProjects = useMemo(() => {
-    return publishedProjects.filter((p) => p.featured).slice(0, 4);
+  // Curated Featured (max 10 items)
+  const allFeatured = useMemo(() => {
+    return publishedProjects.filter((p) => p.featured);
   }, [publishedProjects]);
 
-  // Active Category Showcases from MASTER_TAXONOMY with at least 1 published project
+  const featuredProjects = useMemo(() => {
+    return allFeatured.slice(0, 10);
+  }, [allFeatured]);
+
+  const hasMoreFeatured = allFeatured.length > 10;
+
+  // Active Category Showcases from MASTER_TAXONOMY with at least 1 published project (max 10 items per category)
   const categorySections = useMemo(() => {
     return MASTER_TAXONOMY.map((cat) => {
-      const matchingProjects = publishedProjects.filter((p) => {
+      const allMatching = publishedProjects.filter((p) => {
         const norm = normalizeCategory(p.category);
         return (
           norm.toLowerCase() === cat.name.toLowerCase() ||
@@ -109,11 +114,13 @@ export function HomeClient({
               t.toLowerCase() === cat.name.toLowerCase()
           )
         );
-      }).slice(0, 4);
+      });
 
       return {
         taxonomy: cat,
-        projects: matchingProjects,
+        projects: allMatching.slice(0, 10),
+        totalCount: allMatching.length,
+        hasMore: allMatching.length > 10,
       };
     }).filter((section) => section.projects.length > 0);
   }, [publishedProjects]);
@@ -126,48 +133,14 @@ export function HomeClient({
       <section className="relative overflow-hidden border-b border-[var(--border-neutral)] bg-[var(--bg-screen)] min-h-[calc(100vh-64px)] flex items-center justify-center pt-12 pb-14 sm:pt-16 sm:pb-20 lg:py-24 text-center">
         {/* Ambient Animated Mesh Glows & Geometric Micro-Pattern */}
         <div className="absolute inset-0 pointer-events-none -z-10 select-none overflow-hidden">
-          {/* Top Center Purple Luminous Aura */}
-          {/* Center Brand Ambient Aura with Violet Glow */}
-          <motion.div
-            animate={{
-              scale: [1, 1.08, 1],
-              opacity: [0.4, 0.65, 0.4],
-            }}
-            transition={{
-              duration: 9,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-            className="absolute -top-[15%] left-1/2 -translate-x-1/2 w-[700px] sm:w-[950px] h-[450px] sm:h-[600px] rounded-full bg-gradient-to-b from-[var(--brand-secondary-subtle)] via-[var(--brand-secondary-glow)]/15 to-transparent blur-[140px]"
-          />
+          {/* Top Center Brand Ambient Aura with Violet Glow */}
+          <div className="absolute -top-[15%] left-1/2 -translate-x-1/2 w-[700px] sm:w-[950px] h-[450px] sm:h-[600px] rounded-full bg-gradient-to-b from-[var(--brand-secondary-subtle)] via-[var(--brand-secondary-glow)]/15 to-transparent blur-[120px] animate-ambient-pulse" />
 
           {/* Left Subtle Ambient Neutral Aura */}
-          <motion.div
-            animate={{
-              x: [-20, 20, -20],
-              y: [-15, 15, -15],
-            }}
-            transition={{
-              duration: 11,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-            className="absolute top-[20%] left-[8%] w-[380px] h-[380px] rounded-full bg-[var(--brand-secondary-subtle)]/40 blur-[120px]"
-          />
+          <div className="absolute top-[20%] left-[8%] w-[380px] h-[380px] rounded-full bg-[var(--brand-secondary-subtle)]/40 blur-[100px] animate-ambient-float-slow" />
 
           {/* Right Subtle Ambient Neutral Aura */}
-          <motion.div
-            animate={{
-              x: [20, -20, 20],
-              y: [15, -15, 15],
-            }}
-            transition={{
-              duration: 13,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-            className="absolute top-[25%] right-[8%] w-[380px] h-[380px] rounded-full bg-[var(--border-neutral)]/20 blur-[110px]"
-          />
+          <div className="absolute top-[25%] right-[8%] w-[380px] h-[380px] rounded-full bg-[var(--border-neutral)]/20 blur-[100px] animate-ambient-float" />
 
           {/* Modern Geometric Dot Pattern with Smooth Radial Vignette Mask */}
           <div
@@ -293,41 +266,66 @@ export function HomeClient({
       {/* ========================================================================= */}
       {featuredProjects.length > 0 && (
         <section className="w-full px-4 sm:px-6 lg:px-[140px]">
-          <div className="flex items-baseline justify-between mb-5 pb-2.5 border-b border-[var(--border-neutral)]">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="h-2 w-2 rounded-full bg-[var(--content-primary)]" />
-                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
-                  Hand-Curated
-                </span>
+          <div className="mb-4 sm:mb-5 pb-3 sm:pb-2.5 border-b border-[var(--border-neutral)]">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="hidden sm:flex items-center gap-2 mb-1">
+                  <span className="h-2 w-2 rounded-full bg-[var(--content-primary)]" />
+                  <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
+                    Hand-Curated
+                  </span>
+                </div>
+                <h2
+                  className={cn(
+                    bricolage.className,
+                    "text-xl sm:text-2xl lg:text-3xl font-bold text-[var(--content-primary)]"
+                  )}
+                >
+                  Featured Work
+                </h2>
               </div>
-              <h2
-                className={cn(
-                  bricolage.className,
-                  "text-2xl sm:text-3xl font-bold text-[var(--content-primary)]"
-                )}
+              <Link
+                href="/explore"
+                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[var(--content-secondary)] hover:text-[var(--content-primary)] shrink-0 px-3 py-1.5 rounded-full bg-[var(--bg-elevated)] border border-[var(--border-neutral)] hover:border-[var(--content-primary)] transition-all shadow-2xs"
               >
-                Featured Work
-              </h2>
-              <p className="type-body-default text-[var(--content-secondary)] mt-1">
-                Standout case studies and design projects hand-picked by our curators.
-              </p>
+                <span>View all</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
             </div>
-            <Link
-              href="/explore"
-              className="inline-flex items-center gap-1.5 type-body-default font-medium text-[var(--content-link)] hover:text-[var(--content-link-hover)] shrink-0 text-xs sm:text-sm"
-            >
-              <span>View all</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
+            <p className="hidden sm:block type-body-default text-[var(--content-secondary)] mt-2">
+              Standout case studies and design projects hand-picked by our curators.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProjects.map((project) => (
-              <div key={project.id}>
-                <ProjectCard project={project} />
+          <div className="flex sm:grid gap-4 sm:gap-6 overflow-x-auto sm:overflow-x-visible pb-3 sm:pb-0 snap-x snap-mandatory scrollbar-none sm:grid-cols-2 lg:grid-cols-4 after:content-[''] after:w-1 after:shrink-0 sm:after:hidden">
+            {featuredProjects.map((project, idx) => (
+              <div
+                key={project.id}
+                className="w-[82vw] max-w-[320px] shrink-0 snap-start sm:w-auto sm:max-w-none"
+              >
+                <ProjectCard project={project} priority={idx < 4} />
               </div>
             ))}
+
+            {hasMoreFeatured && (
+              <div className="w-[82vw] max-w-[320px] shrink-0 snap-start sm:w-auto sm:max-w-none flex flex-col">
+                <Link
+                  href="/explore"
+                  className="group relative aspect-[4/3] rounded-[24px] overflow-hidden border-2 border-dashed border-[var(--border-neutral)] hover:border-[var(--content-primary)] bg-[var(--bg-elevated)]/50 hover:bg-[var(--bg-elevated)] transition-all flex flex-col items-center justify-center p-6 text-center shadow-2xs hover:shadow-xs"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--content-primary)] text-[var(--bg-screen)] mb-3 group-hover:scale-110 group-hover:bg-[var(--brand-secondary)] group-hover:text-white transition-all shadow-xs">
+                    <ArrowRight className="h-5 w-5" />
+                  </div>
+                  <span className="font-bold text-sm text-[var(--content-primary)]">
+                    Explore More
+                  </span>
+                  <span className="text-xs text-[var(--content-secondary)] mt-1">
+                    Discover all {allFeatured.length} featured works →
+                  </span>
+                </Link>
+                <div className="mt-2.5 h-6 sm:h-6.5" aria-hidden="true" />
+              </div>
+            )}
           </div>
         </section>
       )}
@@ -345,41 +343,73 @@ export function HomeClient({
             key={section.taxonomy.id}
             className="w-full px-4 sm:px-6 lg:px-[140px]"
           >
-            <div className="flex items-baseline justify-between mb-5 pb-2.5 border-b border-[var(--border-neutral)]">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <IconComponent className="h-3.5 w-3.5 text-[var(--content-tertiary)]" />
-                  <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
-                    {section.taxonomy.shortName}
-                  </span>
+            <div className="mb-4 sm:mb-5 pb-3 sm:pb-2.5 border-b border-[var(--border-neutral)]">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] shrink-0 shadow-2xs">
+                    <IconComponent className="h-4 w-4 text-[var(--content-primary)]" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="hidden sm:flex items-center gap-2 mb-0.5">
+                      <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
+                        {section.taxonomy.shortName}
+                      </span>
+                    </div>
+                    <h2
+                      className={cn(
+                        bricolage.className,
+                        "text-base sm:text-2xl lg:text-3xl font-bold text-[var(--content-primary)] leading-tight sm:leading-normal truncate sm:whitespace-normal"
+                      )}
+                    >
+                      {section.taxonomy.name}
+                    </h2>
+                  </div>
                 </div>
-                <h2
-                  className={cn(
-                    bricolage.className,
-                    "text-2xl sm:text-3xl font-bold text-[var(--content-primary)]"
-                  )}
+
+                <Link
+                  href={`/explore?category=${encodeURIComponent(section.taxonomy.name)}`}
+                  className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[var(--content-secondary)] hover:text-[var(--content-primary)] shrink-0 px-3 py-1.5 rounded-full bg-[var(--bg-elevated)] border border-[var(--border-neutral)] hover:border-[var(--content-primary)] transition-all shadow-2xs"
                 >
-                  {section.taxonomy.name}
-                </h2>
-                <p className="type-body-default text-[var(--content-secondary)] mt-1">
-                  {section.taxonomy.description}
-                </p>
+                  <span>Explore</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
               </div>
-              <Link
-                href={`/explore?category=${encodeURIComponent(section.taxonomy.name)}`}
-                className="inline-flex items-center gap-1.5 type-body-default font-medium text-[var(--content-link)] hover:text-[var(--content-link-hover)] shrink-0 text-xs sm:text-sm"
-              >
-                <span>Explore {section.taxonomy.shortName}</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
+
+              {/* Subtitle description: hidden on mobile to eliminate text crowding and feed fatigue */}
+              <p className="hidden sm:block type-body-default text-[var(--content-secondary)] mt-2">
+                {section.taxonomy.description}
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="flex sm:grid gap-4 sm:gap-6 overflow-x-auto sm:overflow-x-visible pb-3 sm:pb-0 snap-x snap-mandatory scrollbar-none sm:grid-cols-2 lg:grid-cols-4 after:content-[''] after:w-1 after:shrink-0 sm:after:hidden">
               {section.projects.map((project) => (
-                <div key={project.id}>
+                <div
+                  key={project.id}
+                  className="w-[82vw] max-w-[320px] shrink-0 snap-start sm:w-auto sm:max-w-none"
+                >
                   <ProjectCard project={project} />
                 </div>
               ))}
+
+              {section.hasMore && (
+                <div className="w-[82vw] max-w-[320px] shrink-0 snap-start sm:w-auto sm:max-w-none flex flex-col">
+                  <Link
+                    href={`/explore?category=${encodeURIComponent(section.taxonomy.name)}`}
+                    className="group relative aspect-[4/3] rounded-[24px] overflow-hidden border-2 border-dashed border-[var(--border-neutral)] hover:border-[var(--content-primary)] bg-[var(--bg-elevated)]/50 hover:bg-[var(--bg-elevated)] transition-all flex flex-col items-center justify-center p-6 text-center shadow-2xs hover:shadow-xs"
+                  >
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--content-primary)] text-[var(--bg-screen)] mb-3 group-hover:scale-110 group-hover:bg-[var(--brand-secondary)] group-hover:text-white transition-all shadow-xs">
+                      <ArrowRight className="h-5 w-5" />
+                    </div>
+                    <span className="font-bold text-sm text-[var(--content-primary)]">
+                      Explore More
+                    </span>
+                    <span className="text-xs text-[var(--content-secondary)] mt-1">
+                      View all {section.totalCount} {section.taxonomy.shortName} works →
+                    </span>
+                  </Link>
+                  <div className="mt-2.5 h-6 sm:h-6.5" aria-hidden="true" />
+                </div>
+              )}
             </div>
           </section>
         );
