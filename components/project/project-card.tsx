@@ -14,6 +14,7 @@ import { ShareModal } from "@/components/ui/share-modal";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { OnlineBadge } from "@/components/ui/online-badge";
 import { getValidAvatarUrl } from "@/lib/avatar";
+import { getCanonicalShareUrl } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 interface ProjectCardProps {
@@ -73,20 +74,13 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
               priority={priority || liveProject.featured}
             />
 
-            {/* Solid Category Badge Top-Left */}
-            <div className="absolute top-3.5 left-3.5 z-10 pointer-events-auto">
-              <Badge variant="accent" size="default">
-                {liveProject.category}
-              </Badge>
-            </div>
-
             {/* Action Buttons Top-Right: Owner Edit + Quick Share + Appreciation */}
-            <div className="absolute top-3.5 right-3.5 z-10 flex items-center gap-1.5 pointer-events-auto">
+            <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 pointer-events-auto">
               {isOwner && (
                 <Link
                   href={`/me/projects/${liveProject.id}`}
                   prefetch={true}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--bg-elevated)]/90 backdrop-blur-xs text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] transition-all shadow-xs cursor-pointer border border-[var(--border-neutral)]"
+                  className="flex h-7.5 w-7.5 items-center justify-center rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] hover:bg-[var(--chip-bg-hover)] transition-all shadow-xs cursor-pointer select-none active:scale-95"
                   title="Edit case study"
                   aria-label="Edit case study"
                   onClick={(e) => e.stopPropagation()}
@@ -98,7 +92,7 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
               <button
                 type="button"
                 onClick={handleShareClick}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--bg-elevated)]/90 backdrop-blur-xs text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-elevated)] transition-all shadow-xs cursor-pointer border border-[var(--border-neutral)]"
+                className="flex h-7.5 w-7.5 items-center justify-center rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] hover:bg-[var(--chip-bg-hover)] transition-all shadow-xs cursor-pointer select-none active:scale-95"
                 title="Share project"
                 aria-label="Share project"
               >
@@ -114,7 +108,7 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
           </div>
 
           {/* Content Area */}
-          <div className="relative z-0 flex flex-1 flex-col justify-between p-4 sm:p-6 pointer-events-none">
+          <div className="relative z-0 flex flex-1 flex-col justify-between p-4 sm:p-5 pointer-events-none">
             <div>
               {/* Category above Title */}
               <div className="mb-1.5 flex items-center gap-1.5">
@@ -134,42 +128,40 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
               <h3 className="type-title-body line-clamp-1 text-[var(--content-primary)] group-hover:text-[var(--primary-forest-green)] transition-colors">
                 {liveProject.title}
               </h3>
-              <p className="mt-1.5 type-body-default line-clamp-2 text-[var(--content-secondary)]">
+              <p className="mt-1.5 type-body-default line-clamp-2 text-[var(--content-secondary)] text-xs sm:text-sm">
                 {liveProject.summary}
               </p>
             </div>
 
-            {/* Divider & Creator Row */}
-            <div className="mt-4 pt-3.5 border-t border-[var(--border-neutral)] flex items-center justify-between pointer-events-auto relative z-10">
-              <Link
-                href={`/u/${liveProject.creator.username}`}
-                prefetch={true}
-                onClick={(e) => e.stopPropagation()}
-                className="flex items-center gap-2 hover:opacity-80 transition-opacity group/creator cursor-pointer"
+            {/* Creator Attribution Bar */}
+            <div className="mt-4 pt-3 border-t border-[var(--border-neutral)] flex items-center justify-between gap-3 pointer-events-auto">
+              <div
+                onClick={handleCreatorClick}
+                className="group/creator flex items-center gap-2 min-w-0 cursor-pointer hover:opacity-80 transition-opacity"
               >
-                <div className="relative h-7 w-7 shrink-0">
-                  <div className="relative h-full w-full rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-1 ring-[var(--border-neutral)]">
-                    <Image
-                      src={getValidAvatarUrl(liveProject.creator.avatarUrl)}
-                      alt={liveProject.creator.displayName}
-                      fill
-                      sizes="28px"
-                      className="object-cover"
-                    />
-                  </div>
-                  <OnlineBadge userId={liveProject.creator.id} username={liveProject.creator.username} size="sm" className="absolute bottom-0 right-0 z-20" />
+                <div className="relative h-6 w-6 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-1 ring-[var(--border-neutral)] shrink-0">
+                  <Image
+                    src={getValidAvatarUrl(liveProject.creator.avatarUrl)}
+                    alt={liveProject.creator.displayName}
+                    fill
+                    sizes="24px"
+                    className="object-cover"
+                  />
                 </div>
                 <div className="flex items-center gap-1 min-w-0">
-                  <span className="type-title-group text-[var(--content-primary)] group-hover/creator:text-[var(--primary-forest-green)] transition-colors truncate max-w-[130px] sm:max-w-[150px]">
+                  <span className="text-xs font-semibold text-[var(--content-primary)] group-hover/creator:text-[var(--primary-forest-green)] transition-colors truncate">
                     {liveProject.creator.displayName}
                   </span>
-                  {liveProject.creator.isVerified !== false && <VerifiedBadge size="sm" />}
+                  {liveProject.creator.isVerified !== false && (
+                    <VerifiedBadge size="sm" />
+                  )}
                 </div>
-              </Link>
+              </div>
 
-              <span className="type-label text-[var(--content-tertiary)] shrink-0 pointer-events-none">
-                {liveProject.creator.city || liveProject.creator.location}
-              </span>
+              {/* Status Online indicator or Medium tag */}
+              <div className="flex items-center gap-1.5 shrink-0 text-[11px] text-[var(--content-tertiary)] font-mono">
+                <span>{liveProject.creator.city || "Global"}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -182,11 +174,7 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
         title="Share Project"
         subtitle={`Share "${liveProject.title}" by ${liveProject.creator.displayName} with your network or copy the link.`}
         creatorName={liveProject.creator.displayName}
-        url={
-          typeof window !== "undefined"
-            ? `${window.location.origin}/project/${liveProject.slug}`
-            : `https://layerat.com/project/${liveProject.slug}`
-        }
+        url={getCanonicalShareUrl(`/project/${liveProject.slug}`)}
       />
     </>
   );

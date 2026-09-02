@@ -36,7 +36,8 @@ import { OnlineBadge } from "@/components/ui/online-badge";
 import { uploadMediaFile } from "@/lib/supabase/storage";
 import { DEFAULT_AVATAR_URL, getValidAvatarUrl } from "@/lib/avatar";
 import { LocationInput } from "@/components/ui/location-input";
-import { SkillsPicker } from "@/components/onboarding/skills-picker";
+import { EditProfileModal } from "@/components/creator/edit-profile-modal";
+import { getCanonicalShareUrl } from "@/lib/seo";
 
 export function CreatorProfileClient({ initialCreator }: { initialCreator: Creator }) {
   const {
@@ -158,7 +159,8 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
     return allCreatorProjects.filter((p) => !p.published);
   }, [allCreatorProjects]);
 
-  const displayedProjects = activeTab === "published" ? publishedProjects : draftProjects;
+  const displayedProjects =
+    isCurrentUser && activeTab === "drafts" ? draftProjects : publishedProjects;
 
   const totalAppreciations = publishedProjects.reduce(
     (sum, p) => sum + p.appreciations,
@@ -531,167 +533,11 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
         </div>
 
         {/* Edit Profile Modal */}
-        {isEditingProfile && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
-            <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[28px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] p-5 sm:p-8 shadow-2xl">
-              <div className="flex items-center justify-between pb-4 border-b border-[var(--border-neutral)] mb-6">
-                <div className="flex items-center gap-2">
-                  <Edit3 className="h-5 w-5 text-[var(--primary-forest-green)]" />
-                  <h2 className="type-title-section text-[var(--content-primary)]">
-                    Edit Studio Profile
-                  </h2>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsEditingProfile(false)}
-                  className="rounded-full p-1.5 text-[var(--content-tertiary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-colors cursor-pointer"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <form onSubmit={handleSaveProfile} className="space-y-4">
-                {/* 1. Avatar Uploader */}
-                <div className="flex flex-col items-center justify-center pb-2">
-                  <div
-                    onClick={() => avatarFileInputRef.current?.click()}
-                    className="group relative h-24 w-24 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-4 ring-[var(--border-neutral)] hover:ring-[var(--primary-forest-green)] transition-all cursor-pointer shadow-md"
-                    title="Click to change profile picture"
-                  >
-                    <Image
-                      src={getValidAvatarUrl(editAvatarUrl)}
-                      alt={editName}
-                      fill
-                      sizes="96px"
-                      className="object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white gap-1">
-                      {isUploadingAvatar ? (
-                        <Loader2 className="h-6 w-6 animate-spin text-white" />
-                      ) : (
-                        <>
-                          <Camera className="h-5 w-5" />
-                          <span className="text-[10px] font-bold">Change</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    ref={avatarFileInputRef}
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        handleAvatarFile(e.target.files[0]);
-                      }
-                    }}
-                    className="hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => avatarFileInputRef.current?.click()}
-                    className="mt-2 text-xs font-semibold text-[var(--primary-forest-green)] hover:underline flex items-center gap-1 cursor-pointer"
-                  >
-                    <Camera className="h-3.5 w-3.5" />
-                    <span>{isUploadingAvatar ? "Uploading photo..." : "Change Profile Photo"}</span>
-                  </button>
-                </div>
-
-                {/* 2. Display Name */}
-                <div>
-                  <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5">
-                    Display Name
-                  </label>
-                  <Input
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    required
-                  />
-                </div>
-
-                {/* 3. About / Bio with 280 Max Char Limit */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="type-body-default-bold text-[var(--content-primary)]">
-                      About / Bio
-                    </label>
-                    <span
-                      className={cn(
-                        "text-xs font-mono font-semibold",
-                        editBio.length >= 280
-                          ? "text-[var(--negative)]"
-                          : editBio.length >= 240
-                          ? "text-amber-500"
-                          : "text-[var(--content-tertiary)]"
-                      )}
-                    >
-                      {editBio.length}/280 max
-                    </span>
-                  </div>
-                  <Textarea
-                    value={editBio}
-                    onChange={(e) => setEditBio(e.target.value.slice(0, 280))}
-                    maxLength={280}
-                    rows={3}
-                    placeholder="Tell the community about your design philosophy and disciplines (max 280 chars)..."
-                  />
-                </div>
-
-                {/* 4. Location with Autocomplete & Website */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Location Autosuggest Field with IP Auto-Detect */}
-                  <LocationInput
-                    value={editLocation}
-                    onChange={setEditLocation}
-                    label="Location / City"
-                    placeholder="e.g. Berlin, Germany"
-                    showPresets={false}
-                    enableAutoDetect={true}
-                  />
-
-                  <div>
-                    <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5">
-                      Website URL
-                    </label>
-                    <Input
-                      type="text"
-                      value={editWebsite}
-                      onChange={(e) => setEditWebsite(e.target.value)}
-                      placeholder="www.yourdomain.com or https://..."
-                    />
-                  </div>
-                </div>
-
-                {/* 5. Disciplines & Specializations */}
-                <div className="pt-2 border-t border-[var(--border-neutral)]">
-                  <SkillsPicker
-                    selectedSkills={editSkills}
-                    onChange={setEditSkills}
-                  />
-                </div>
-
-                <div className="flex justify-end gap-3 pt-4 border-t border-[var(--border-neutral)] mt-6">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => setIsEditingProfile(false)}
-                    disabled={isSaving}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="accent"
-                    className="font-bold"
-                    disabled={isSaving || isUploadingAvatar}
-                  >
-                    {isSaving ? "Saving..." : "Save Changes"}
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+        <EditProfileModal
+          isOpen={isEditingProfile}
+          onClose={() => setIsEditingProfile(false)}
+          creator={creator}
+        />
 
         {/* Share Modal */}
         <ShareModal
@@ -700,11 +546,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
           title="Share Profile"
           subtitle={`Share ${creator.displayName}'s portfolio with your network or copy the public link.`}
           creatorName={creator.displayName}
-          url={
-            typeof window !== "undefined"
-              ? `${window.location.origin}/u/${creator.username}`
-              : `https://layerat.com/u/${creator.username}`
-          }
+          url={getCanonicalShareUrl(`/u/${creator.username}`)}
         />
       </FadeIn>
     </div>

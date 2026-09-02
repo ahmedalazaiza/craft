@@ -45,7 +45,7 @@ export function OnboardingClient() {
   // Form Fields State
   const [displayName, setDisplayName] = useState(user?.displayName || "");
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || DEFAULT_AVATAR_URL);
-  const [location, setLocation] = useState(user?.location || "Worldwide");
+  const [location, setLocation] = useState(user?.location || "");
   const [skills, setSkills] = useState<string[]>(user?.skills || []);
   const [bio, setBio] = useState(user?.bio || "");
   const [website, setWebsite] = useState(user?.website || "");
@@ -57,10 +57,10 @@ export function OnboardingClient() {
       if (user.avatarUrl) {
         setAvatarUrl(user.avatarUrl);
       }
-      if (user.location && user.location !== "Worldwide") {
+      if (user.location) {
         setLocation(user.location);
       }
-      if (user.skills && user.skills.length > 0) {
+      if (user.skills) {
         setSkills(user.skills);
       }
       if (user.bio) {
@@ -223,11 +223,10 @@ export function OnboardingClient() {
                         />
                       </div>
 
-                      {/* Location Selector with IP Auto-Detect & Autocomplete */}
+                      {/* Location Selector with Legal Consent Auto-Detect & Autocomplete */}
                       <LocationInput
                         value={location}
                         onChange={setLocation}
-                        autoDetectOnMount={true}
                         enableAutoDetect={true}
                         showPresets={true}
                       />
@@ -294,7 +293,7 @@ export function OnboardingClient() {
                           maxLength={280}
                           value={bio}
                           onChange={(e) => setBio(e.target.value)}
-                          placeholder="Briefly describe your design philosophy, past work, and interests..."
+                          placeholder="Tell the community about your craft, design philosophy, and what you're currently exploring..."
                           className="w-full rounded-2xl border border-[var(--border-neutral)] bg-[var(--bg-neutral)]/50 p-4 text-xs sm:text-sm text-[var(--content-primary)] focus:border-[var(--input-focus-border)] focus:ring-2 focus:ring-[var(--input-focus-ring)] focus:outline-hidden resize-none leading-relaxed"
                         />
                       </div>

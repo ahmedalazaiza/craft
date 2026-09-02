@@ -35,9 +35,10 @@ import { ShareModal } from "@/components/ui/share-modal";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { OnlineBadge } from "@/components/ui/online-badge";
-import { CreatorProfileSkeleton } from "@/components/creator/creator-profile-skeleton";
 import { getValidAvatarUrl } from "@/lib/avatar";
-import { LocationInput } from "@/components/ui/location-input";
+import { CreatorProfileSkeleton } from "@/components/creator/creator-profile-skeleton";
+import { EditProfileModal } from "@/components/creator/edit-profile-modal";
+import { getCanonicalShareUrl } from "@/lib/seo";
 
 export function MeClient() {
   const router = useRouter();
@@ -124,8 +125,8 @@ export function MeClient() {
   };
 
   const handleShare = () => {
-    if (typeof window !== "undefined") {
-      navigator.clipboard.writeText(`${window.location.origin}/u/${user.username}`);
+    if (typeof window !== "undefined" && user) {
+      navigator.clipboard.writeText(getCanonicalShareUrl(`/u/${user.username}`));
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -477,84 +478,14 @@ export function MeClient() {
         </div>
 
         {/* Edit Profile Modal Dialog */}
-        {isEditingProfile && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--base-dark)]/40 p-4 backdrop-blur-xs">
-            <div className="w-full max-w-lg rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-screen)] p-6 sm:p-8 shadow-xl">
-              <div className="flex items-center justify-between pb-4 border-b border-[var(--border-neutral)]">
-                <h2 className="type-title-subsection text-[var(--content-primary)] font-bold">
-                  Edit Creator Profile
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => setIsEditingProfile(false)}
-                  className="rounded-full p-1.5 text-[var(--content-tertiary)] hover:bg-[var(--bg-neutral)] transition-colors cursor-pointer"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <form onSubmit={handleSaveProfile} className="mt-5 space-y-4">
-                <div>
-                  <label className="type-body-default-bold text-[var(--content-primary)] block mb-1">
-                    Display Name
-                  </label>
-                  <Input
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <LocationInput
-                    value={editLocation}
-                    onChange={setEditLocation}
-                    label="Location / City"
-                    placeholder="e.g. Berlin, Germany"
-                    showPresets={false}
-                    enableAutoDetect={true}
-                  />
-                </div>
-
-                <div>
-                  <label className="type-body-default-bold text-[var(--content-primary)] block mb-1">
-                    Website URL
-                  </label>
-                  <Input
-                    type="text"
-                    value={editWebsite}
-                    onChange={(e) => setEditWebsite(e.target.value)}
-                    placeholder="www.yourportfolio.com or https://..."
-                  />
-                </div>
-
-                <div>
-                  <label className="type-body-default-bold text-[var(--content-primary)] block mb-1">
-                    Bio / About
-                  </label>
-                  <Textarea
-                    value={editBio}
-                    onChange={(e) => setEditBio(e.target.value)}
-                    rows={4}
-                  />
-                </div>
-
-                <div className="pt-4 flex justify-end gap-3 border-t border-[var(--border-neutral)]">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => setIsEditingProfile(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" variant="accent" className="font-bold shadow-xs">
-                    Save Changes
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </div>
+        {user && (
+          <EditProfileModal
+            isOpen={isEditingProfile}
+            onClose={() => setIsEditingProfile(false)}
+            creator={user}
+          />
         )}
+
         {/* Profile Share Modal */}
         {user && (
           <ShareModal
@@ -563,11 +494,7 @@ export function MeClient() {
             title="Share Profile"
             subtitle={`Share ${user.displayName}'s portfolio with your network or copy the public link.`}
             creatorName={user.displayName}
-            url={
-              typeof window !== "undefined"
-                ? `${window.location.origin}/u/${user.username}`
-                : `https://layerat.com/u/${user.username}`
-            }
+            url={getCanonicalShareUrl(`/u/${user.username}`)}
           />
         )}
       </FadeIn>

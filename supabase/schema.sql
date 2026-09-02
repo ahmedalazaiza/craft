@@ -878,6 +878,7 @@ BEGIN
         display_name,
         avatar_url,
         bio,
+        skills,
         is_verified,
         is_online,
         followers_count
@@ -887,7 +888,8 @@ BEGIN
         temp_username,
         COALESCE(NEW.raw_user_meta_data->>'display_name', split_part(NEW.email, '@', 1)),
         'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
-        'Independent designer & creative practitioner.',
+        '',
+        ARRAY[]::TEXT[],
         false,
         true,
         0

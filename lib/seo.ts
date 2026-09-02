@@ -32,6 +32,15 @@ export function getAuthRedirectUrl(path: string = "/auth/verify"): string {
   return `${SITE_URL}${cleanPath}`;
 }
 
+/**
+ * Returns the canonical share URL for projects and creator profiles
+ * (always https://www.layerat.com/... across all environments and deployment previews).
+ */
+export function getCanonicalShareUrl(path: string = ""): string {
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  return `https://www.layerat.com${cleanPath}`;
+}
+
 export const defaultTitle = `${SITE_NAME} — ${SITE_TAGLINE}`;
 export const defaultDescription =
   "Discover standout design portfolios, UI/UX case studies, and brand identities. Connect with top independent designers and creative studios worldwide.";

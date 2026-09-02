@@ -15,10 +15,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params;
   const project = await fetchProjectBySlug(slug);
 
-  if (!project) {
+  if (!project || !project.published) {
     return {
       title: "Project Not Found",
-      description: "The requested project could not be found.",
+      description: "The requested project could not be found or is private.",
     };
   }
 
@@ -43,14 +43,18 @@ export default async function ProjectPage({ params }: PageProps) {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(projectJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
+      {project.published && (
+        <>
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(projectJsonLd) }}
+          />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+          />
+        </>
+      )}
       <ProjectDetailClient initialProject={project} />
     </>
   );

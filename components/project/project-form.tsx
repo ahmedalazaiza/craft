@@ -100,7 +100,64 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const [aiSuccessMessage, setAiSuccessMessage] = useState<string | null>(null);
   const [isTitleHighlighted, setIsTitleHighlighted] = useState(false);
   const [showAiGuideTooltip, setShowAiGuideTooltip] = useState(false);
+  const [draftRestored, setDraftRestored] = useState(false);
   const aiAbortControllerRef = useRef<AbortController | null>(null);
+
+  // Restore unsaved draft on mount if in 'new' mode
+  useEffect(() => {
+    if (mode === "new" && !initialData && typeof window !== "undefined") {
+      try {
+        const savedDraftJson = localStorage.getItem("layerat_new_project_draft");
+        if (savedDraftJson) {
+          const draft = JSON.parse(savedDraftJson);
+          if (draft.title) setTitle(draft.title);
+          if (draft.body) setBody(draft.body);
+          if (draft.category) setCategory(draft.category);
+          if (draft.specializations?.length) setSpecializations(draft.specializations);
+          if (draft.galleryImages?.length) setGalleryImages(draft.galleryImages);
+          if (draft.coverImage) setCoverImage(draft.coverImage);
+          if (draft.tags?.length) setTags(draft.tags);
+          if (draft.tools?.length) setTools(draft.tools);
+          setDraftRestored(true);
+          setTimeout(() => setDraftRestored(false), 6000);
+        }
+      } catch (err) {
+        console.warn("Could not restore draft:", err);
+      }
+    }
+  }, [mode, initialData]);
+
+  // Persist draft to localStorage on any field change
+  useEffect(() => {
+    if (mode === "new" && !initialData && typeof window !== "undefined") {
+      if (title.trim() || galleryImages.length > 0 || body.trim()) {
+        const draftData = {
+          title,
+          body,
+          category,
+          specializations,
+          galleryImages,
+          coverImage,
+          tags,
+          tools,
+          updatedAt: Date.now(),
+        };
+        localStorage.setItem("layerat_new_project_draft", JSON.stringify(draftData));
+      }
+    }
+  }, [mode, initialData, title, body, category, specializations, galleryImages, coverImage, tags, tools]);
+
+  // Warn on accidental tab close / refresh if form has content
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (title.trim() || galleryImages.length > 0 || body.trim()) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [title, galleryImages, body]);
 
   // Check first-time uploader state for AI guide tooltip
   useEffect(() => {
@@ -438,6 +495,10 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
         published: isPublish,
       });
 
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("layerat_new_project_draft");
+      }
+
       const targetSlug = saved?.slug || initialData?.slug;
       if (isPublish && targetSlug) {
         router.push(`/project/${targetSlug}`);
@@ -459,6 +520,14 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
   return (
     <div className="fixed inset-0 z-50 bg-[var(--bg-screen)] flex flex-col overflow-hidden text-[var(--content-primary)] select-none">
+      {/* Draft Restored Notice */}
+      {draftRestored && (
+        <div className="bg-emerald-500/15 border-b border-emerald-500/30 px-4 py-2 text-center text-xs font-semibold text-emerald-800 dark:text-emerald-200 flex items-center justify-center gap-2 shrink-0 z-40 animate-fade-in">
+          <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+          <span>Restored your unsaved draft progress automatically.</span>
+        </div>
+      )}
+
       {/* Hidden File Input */}
       <input
         type="file"

@@ -13,6 +13,7 @@ import { ShareModal } from "@/components/ui/share-modal";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { OnlineBadge } from "@/components/ui/online-badge";
 import { getValidAvatarUrl } from "@/lib/avatar";
+import { getCanonicalShareUrl } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 interface CreatorListItemProps {
@@ -191,11 +192,7 @@ export function CreatorListItem({
         title="Share Creator Profile"
         subtitle={`Share ${creator.displayName}'s profile with your network or copy the public link.`}
         creatorName={creator.displayName}
-        url={
-          typeof window !== "undefined"
-            ? `${window.location.origin}/u/${creator.username}`
-            : `https://layerat.com/u/${creator.username}`
-        }
+        url={getCanonicalShareUrl(`/u/${creator.username}`)}
       />
     </>
   );

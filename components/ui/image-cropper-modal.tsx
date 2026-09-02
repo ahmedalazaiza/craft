@@ -27,12 +27,14 @@ interface ImageCropperModalProps {
   onCancel: () => void;
 }
 
+const CROP_BOX_SIZE = 256; // 256px on-screen crop circle diameter
+
 export function ImageCropperModal({
   isOpen,
   imageSrc,
   aspectRatio = 1,
   cropShape = "round",
-  title = "Crop & Adjust Image",
+  title = "Crop Profile Photo",
   onCropComplete,
   onCancel,
 }: ImageCropperModalProps) {
@@ -87,14 +89,34 @@ export function ImageCropperModal({
     setRotation((prev) => (prev + 90) % 360);
   };
 
+  // 100% Mathematically Exact Canvas Cropping Algorithm
   const handleCrop = useCallback(async () => {
-    if (!imageRef.current) return;
+    if (!imageRef.current || !containerRef.current) return;
     setIsProcessing(true);
 
     try {
       const img = imageRef.current;
-      const targetWidth = aspectRatio === 1 ? 800 : 1800;
-      const targetHeight = aspectRatio === 1 ? 800 : 600;
+      const container = containerRef.current;
+
+      const containerW = container.clientWidth || 320;
+      const containerH = container.clientHeight || 320;
+
+      const naturalW = img.naturalWidth;
+      const naturalH = img.naturalHeight;
+
+      if (!naturalW || !naturalH) {
+        setIsProcessing(false);
+        return;
+      }
+
+      // Exact unscaled displayed size of image using contain logic
+      const containScale = Math.min(containerW / naturalW, containerH / naturalH);
+      const baseRenderedW = naturalW * containScale;
+      const baseRenderedH = naturalH * containScale;
+
+      const outputSize = aspectRatio === 1 ? 800 : 1800;
+      const targetWidth = outputSize;
+      const targetHeight = aspectRatio === 1 ? outputSize : 600;
 
       const canvas = document.createElement("canvas");
       canvas.width = targetWidth;
@@ -109,28 +131,22 @@ export function ImageCropperModal({
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
 
-      // Calculate centering and transformed bounds
+      // Scale factor from preview circle (CROP_BOX_SIZE) to canvas
+      const exportFactor = targetWidth / CROP_BOX_SIZE;
+
       ctx.save();
       ctx.translate(targetWidth / 2, targetHeight / 2);
       ctx.rotate((rotation * Math.PI) / 180);
       ctx.scale(scale, scale);
 
-      // Estimate scale factor relative to container display size
-      const containerW = containerRef.current?.clientWidth || 300;
-      const factor = targetWidth / containerW;
+      // Apply positional drag offset scaled to canvas resolution
+      ctx.translate((position.x * exportFactor) / scale, (position.y * exportFactor) / scale);
 
-      ctx.translate((position.x * factor) / scale, (position.y * factor) / scale);
+      // Draw the exact image dimensions
+      const drawW = baseRenderedW * exportFactor;
+      const drawH = baseRenderedH * exportFactor;
 
-      // Draw original image centered
-      const drawW = img.naturalWidth;
-      const drawH = img.naturalHeight;
-
-      // Scale draw to cover container
-      const scaleToFit = Math.max(targetWidth / drawW, targetHeight / drawH);
-      const finalW = drawW * scaleToFit;
-      const finalH = drawH * scaleToFit;
-
-      ctx.drawImage(img, -finalW / 2, -finalH / 2, finalW, finalH);
+      ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
       ctx.restore();
 
       // Convert canvas to optimized WebP Blob
@@ -143,7 +159,7 @@ export function ImageCropperModal({
           setIsProcessing(false);
         },
         "image/webp",
-        0.9
+        0.92
       );
     } catch (err) {
       console.error("Cropping failed:", err);
@@ -153,9 +169,9 @@ export function ImageCropperModal({
 
   if (!mounted || !isOpen || !imageSrc) return null;
 
-  const content = (
+  return createPortal(
     <AnimatePresence>
-      <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -163,7 +179,7 @@ export function ImageCropperModal({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
           onClick={!isProcessing ? onCancel : undefined}
-          className="fixed inset-0 bg-black/80 backdrop-blur-md"
+          className="fixed inset-0 bg-black/85 backdrop-blur-md"
         />
 
         {/* Modal Window */}
@@ -172,7 +188,7 @@ export function ImageCropperModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 12 }}
           transition={{ duration: 0.24, ease: "easeOut" }}
-          className="relative w-full max-w-lg overflow-hidden rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 shadow-2xl z-10 space-y-5"
+          className="relative w-full max-w-md overflow-hidden rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-5 sm:p-6 shadow-2xl z-10 space-y-4"
         >
           {/* Header */}
           <div className="flex items-center justify-between">
@@ -190,7 +206,7 @@ export function ImageCropperModal({
                   {title}
                 </h3>
                 <p className="text-[11px] text-[var(--content-tertiary)]">
-                  Drag to re-center • Zoom and rotate to fit perfectly
+                  Drag image to reposition • Zoom to fit the circle
                 </p>
               </div>
             </div>
@@ -212,7 +228,7 @@ export function ImageCropperModal({
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
-            className="relative w-full h-72 sm:h-80 bg-black/90 rounded-[20px] overflow-hidden flex items-center justify-center select-none cursor-grab active:cursor-grabbing touch-none border border-white/10"
+            className="relative w-full h-72 bg-black/95 rounded-[22px] overflow-hidden flex items-center justify-center select-none cursor-grab active:cursor-grabbing touch-none border border-white/10"
           >
             {/* The Image under transform */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -224,7 +240,7 @@ export function ImageCropperModal({
               style={{
                 transform: `translate(${position.x}px, ${position.y}px) scale(${scale}) rotate(${rotation}deg)`,
                 transformOrigin: "center center",
-                transition: isDragging ? "none" : "transform 0.1s ease-out",
+                transition: isDragging ? "none" : "transform 0.08s ease-out",
                 maxHeight: "100%",
                 maxWidth: "100%",
                 objectFit: "contain",
@@ -232,36 +248,37 @@ export function ImageCropperModal({
               className="pointer-events-none select-none user-select-none"
             />
 
-            {/* Mask Overlay Guide */}
+            {/* Mask Overlay Guide (Exact 256px Crop Circle) */}
             <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
               <div
+                style={{ width: `${CROP_BOX_SIZE}px`, height: `${CROP_BOX_SIZE}px` }}
                 className={cn(
-                  "border-2 border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.55)]",
+                  "border-2 border-white shadow-[0_0_0_9999px_rgba(0,0,0,0.65)] shrink-0",
                   aspectRatio === 1
                     ? cropShape === "round"
-                      ? "w-56 h-56 sm:w-64 sm:h-64 rounded-full"
-                      : "w-56 h-56 sm:w-64 sm:h-64 rounded-2xl"
-                    : "w-[90%] h-36 sm:h-44 rounded-xl"
+                      ? "rounded-full ring-2 ring-[#962EE6]/80"
+                      : "rounded-2xl"
+                    : "w-[90%] h-36 rounded-xl"
                 )}
               />
             </div>
 
             {/* Drag hint badge */}
-            <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 pointer-events-none flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 backdrop-blur-sm text-white/80 text-[10px] font-medium border border-white/10">
+            <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 pointer-events-none flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/70 backdrop-blur-sm text-white text-[10px] font-medium border border-white/15">
               <Move className="h-3 w-3" />
-              <span>Drag image to position</span>
+              <span>Drag to reposition</span>
             </div>
           </div>
 
           {/* Adjustment Sliders & Controls */}
-          <div className="space-y-4 pt-1">
+          <div className="space-y-3 pt-1">
             {/* Zoom Slider */}
             <div className="flex items-center gap-3">
               <ZoomOut className="h-4 w-4 text-[var(--content-tertiary)] shrink-0" />
               <input
                 type="range"
                 min="1"
-                max="3"
+                max="3.5"
                 step="0.05"
                 value={scale}
                 onChange={(e) => setScale(parseFloat(e.target.value))}
@@ -279,37 +296,32 @@ export function ImageCropperModal({
                 <RotateCw className="h-4 w-4" />
               </button>
             </div>
+          </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[var(--border-neutral)]">
-              <Button
-                type="button"
-                variant="secondary"
-                size="default"
-                onClick={onCancel}
-                disabled={isProcessing}
-                className="text-xs font-semibold px-4"
-              >
-                Cancel
-              </Button>
-
-              <Button
-                type="button"
-                variant="accent"
-                size="default"
-                disabled={isProcessing}
-                onClick={handleCrop}
-                className="text-xs font-bold px-5 gap-2 shadow-xs"
-              >
-                <Check className="h-4 w-4 stroke-[2.5]" />
-                <span>{isProcessing ? "Processing WebP..." : "Apply & Save"}</span>
-              </Button>
-            </div>
+          {/* Action Footer Buttons */}
+          <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[var(--border-neutral)]">
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={isProcessing}
+              onClick={onCancel}
+              className="rounded-full px-5 font-semibold text-xs"
+            >
+              Cancel
+            </Button>
+            <button
+              type="button"
+              disabled={isProcessing}
+              onClick={handleCrop}
+              className="inline-flex items-center gap-1.5 rounded-full font-bold bg-[#962EE6] text-white hover:bg-[#5F0EBA] px-6 py-2.5 text-xs shadow-md transition-colors cursor-pointer disabled:opacity-50"
+            >
+              <Check className="h-4 w-4" />
+              <span>{isProcessing ? "Cropping..." : "Apply & Save Crop"}</span>
+            </button>
           </div>
         </motion.div>
       </div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
-
-  return createPortal(content, document.body);
 }

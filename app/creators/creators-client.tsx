@@ -32,15 +32,65 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
     hasPublishedOnly: false,
   });
 
+  // 1. Initialize filter and search state from URL query on client mount
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const urlParams = new URLSearchParams(window.location.search);
+    const disc = urlParams.get("discipline");
+    const city = urlParams.get("city");
+    const hasWork = urlParams.get("hasWork") === "true";
+    const q = urlParams.get("q");
+
+    if (q) setSearchQuery(q);
+
+    setFilters((prev) => ({
+      ...prev,
+      discipline: disc || prev.discipline,
+      city: city || prev.city,
+      hasPublishedOnly: hasWork || prev.hasPublishedOnly,
+    }));
+  }, []);
+
+  // 2. Real-time URL query synchronization
+  const syncUrlParams = (newFilters: CreatorFilters, newQuery: string) => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams();
+    if (newQuery.trim()) params.set("q", newQuery.trim());
+    if (newFilters.discipline && newFilters.discipline !== "All") params.set("discipline", newFilters.discipline);
+    if (newFilters.city && newFilters.city !== "All") params.set("city", newFilters.city);
+    if (newFilters.hasPublishedOnly) params.set("hasWork", "true");
+
+    const newUrl = params.toString() ? `/creators?${params.toString()}` : "/creators";
+    window.history.replaceState(null, "", newUrl);
+  };
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    syncUrlParams(filters, query);
+  };
+
+  const handleFiltersChange = (updated: CreatorFilters) => {
+    setFilters(updated);
+    syncUrlParams(updated, searchQuery);
+  };
+
   const filteredCreators = useMemo(() => {
     return creators.filter((creator) => {
+      // Unconditional rule: Exclude any creator with 0 published projects
+      const creatorProjects = projects.filter(
+        (p) => p.creator.id === creator.id && p.published
+      );
+      if (creatorProjects.length === 0) {
+        return false;
+      }
+
       // Search text matching
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchName = creator.displayName.toLowerCase().includes(q);
         const matchUsername = creator.username.toLowerCase().includes(q);
         const matchBio = creator.bio.toLowerCase().includes(q);
-        const matchCity = creator.city.toLowerCase().includes(q);
+        const matchCity = (creator.city || "").toLowerCase().includes(q);
         const matchSkills = creator.skills.some((s) => s.toLowerCase().includes(q));
         if (!matchName && !matchUsername && !matchBio && !matchCity && !matchSkills) {
           return false;
@@ -69,7 +119,6 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
         const target = filters.city.toLowerCase().trim();
         const cCity = (creator.city || "").toLowerCase().trim();
         const cLoc = (creator.location || "").toLowerCase().trim();
-        // Extract main city name before comma (e.g. "Tokyo" from "Tokyo, Japan")
         const targetMainCity = target.split(",")[0].trim();
 
         const match =
@@ -84,14 +133,6 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
         if (!match) {
           return false;
         }
-      }
-
-      // Has published monograph/project
-      if (filters.hasPublishedOnly) {
-        const hasWork = projects.some(
-          (p) => p.creator.id === creator.id && p.published
-        );
-        if (!hasWork) return false;
       }
 
       return true;
@@ -168,26 +209,26 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
           </div>
 
           {/* Right-aligned Directory Stats Cards */}
-          <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-            <div className="flex items-center gap-2.5 rounded-2xl bg-white dark:bg-[#141713] border border-neutral-200 dark:border-neutral-800 px-4 py-2.5 shadow-xs">
-              <Users className="h-4 w-4 text-neutral-900 dark:text-white" />
-              <div className="text-left">
-                <span className="block text-xs font-bold text-neutral-950 dark:text-white">
-                  {creators.length} Creators
+          <div className="grid grid-cols-2 sm:flex sm:items-center gap-2.5 sm:gap-4 shrink-0 w-full sm:w-auto">
+            <div className="flex items-center gap-2.5 rounded-2xl bg-white dark:bg-[#141713] border border-neutral-200 dark:border-neutral-800 px-3.5 sm:px-4 py-2.5 shadow-xs">
+              <Users className="h-4 w-4 text-neutral-900 dark:text-white shrink-0" />
+              <div className="text-left min-w-0">
+                <span className="block text-xs font-bold text-neutral-950 dark:text-white truncate">
+                  {filteredCreators.length} Active Creators
                 </span>
-                <span className="text-[10px] text-neutral-400 dark:text-neutral-500 uppercase font-mono">
+                <span className="text-[10px] text-neutral-400 dark:text-neutral-500 uppercase font-mono truncate block">
                   {MASTER_TAXONOMY.length} Disciplines
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 rounded-2xl bg-white dark:bg-[#141713] border border-neutral-200 dark:border-neutral-800 px-4 py-2.5 shadow-xs">
-              <Globe className="h-4 w-4 text-neutral-900 dark:text-white" />
-              <div className="text-left">
-                <span className="block text-xs font-bold text-neutral-950 dark:text-white">
+            <div className="flex items-center gap-2.5 rounded-2xl bg-white dark:bg-[#141713] border border-neutral-200 dark:border-neutral-800 px-3.5 sm:px-4 py-2.5 shadow-xs">
+              <Globe className="h-4 w-4 text-neutral-900 dark:text-white shrink-0" />
+              <div className="text-left min-w-0">
+                <span className="block text-xs font-bold text-neutral-950 dark:text-white truncate">
                   {uniqueCitiesCount} Cities
                 </span>
-                <span className="text-[10px] text-neutral-400 dark:text-neutral-500 uppercase font-mono">
+                <span className="text-[10px] text-neutral-400 dark:text-neutral-500 uppercase font-mono truncate block">
                   Worldwide
                 </span>
               </div>
@@ -204,6 +245,7 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
             <SearchField
               placeholder="Search creators by name, username, bio, discipline, or city..."
               initialQuery={searchQuery}
+              onSearchChange={handleSearchChange}
               onOpenFilter={() => setIsFilterOpen(true)}
               hasActiveFilters={activeFilterCount > 0}
               filterCount={activeFilterCount}
@@ -212,10 +254,10 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
           </div>
 
           {/* Quick Discipline Pills Strip (13 Categories) */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 pt-1 no-scrollbar border-b border-neutral-200 dark:border-neutral-800">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 pt-1 no-scrollbar border-b border-neutral-200 dark:border-neutral-800 -mx-4 px-4 sm:mx-0 sm:px-0">
             <button
               type="button"
-              onClick={() => setFilters({ ...filters, discipline: "All" })}
+              onClick={() => handleFiltersChange({ ...filters, discipline: "All" })}
               className={cn(
                 "rounded-full px-3.5 py-1.5 text-xs transition-all shrink-0 cursor-pointer font-semibold select-none",
                 filters.discipline === "All"
@@ -232,7 +274,7 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
                 <button
                   key={cat.id}
                   type="button"
-                  onClick={() => setFilters({ ...filters, discipline: cat.name })}
+                  onClick={() => handleFiltersChange({ ...filters, discipline: cat.name })}
                   className={cn(
                     "rounded-full px-3.5 py-1.5 text-xs transition-all shrink-0 cursor-pointer select-none",
                     isSelected
@@ -268,7 +310,7 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
                 {filters.discipline !== "All" && (
                   <FilterChip
                     active
-                    onRemove={() => setFilters({ ...filters, discipline: "All" })}
+                    onRemove={() => handleFiltersChange({ ...filters, discipline: "All" })}
                   >
                     Discipline: {filters.discipline}
                   </FilterChip>
@@ -277,25 +319,16 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
                 {filters.city !== "All" && (
                   <FilterChip
                     active
-                    onRemove={() => setFilters({ ...filters, city: "All" })}
+                    onRemove={() => handleFiltersChange({ ...filters, city: "All" })}
                   >
                     Location: {filters.city}
-                  </FilterChip>
-                )}
-
-                {filters.hasPublishedOnly && (
-                  <FilterChip
-                    active
-                    onRemove={() => setFilters({ ...filters, hasPublishedOnly: false })}
-                  >
-                    With Published Projects
                   </FilterChip>
                 )}
 
                 <button
                   type="button"
                   onClick={() =>
-                    setFilters({
+                    handleFiltersChange({
                       discipline: "All",
                       city: "All",
                       hasPublishedOnly: false,
@@ -324,8 +357,8 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
             <button
               type="button"
               onClick={() => {
-                setSearchQuery("");
-                setFilters({
+                handleSearchChange("");
+                handleFiltersChange({
                   discipline: "All",
                   city: "All",
                   hasPublishedOnly: false,
@@ -353,7 +386,7 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
         onClose={() => setIsFilterOpen(false)}
         mode="creators"
         creatorFilters={filters}
-        onCreatorFiltersChange={setFilters}
+        onCreatorFiltersChange={handleFiltersChange}
       />
     </div>
   );

@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 interface SearchFieldProps {
   initialQuery?: string;
   placeholder?: string;
+  onSearchChange?: (query: string) => void;
   onOpenFilter?: () => void;
   hasActiveFilters?: boolean;
   filterCount?: number;
@@ -27,6 +28,7 @@ interface SearchFieldProps {
 export function SearchField({
   initialQuery = "",
   placeholder = "Search projects, creators, tools, or tags...",
+  onSearchChange,
   onOpenFilter,
   hasActiveFilters = false,
   filterCount = 0,
@@ -160,7 +162,9 @@ export function SearchField({
           value={query}
           autoFocus={autoFocus}
           onChange={(e) => {
-            setQuery(e.target.value);
+            const val = e.target.value;
+            setQuery(val);
+            onSearchChange?.(val);
             setIsOpen(true);
             setSelectedIndex(-1);
           }}
@@ -178,6 +182,7 @@ export function SearchField({
             type="button"
             onClick={() => {
               setQuery("");
+              onSearchChange?.("");
               setIsOpen(false);
               inputRef.current?.focus();
             }}

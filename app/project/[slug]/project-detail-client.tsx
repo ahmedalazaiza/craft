@@ -17,6 +17,7 @@ import { OnlineBadge } from "@/components/ui/online-badge";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { getValidAvatarUrl } from "@/lib/avatar";
+import { getCanonicalShareUrl } from "@/lib/seo";
 import { DeleteProjectModal } from "@/components/project/delete-project-modal";
 import {
   Heart,
@@ -31,6 +32,8 @@ import {
   Loader2,
   CheckCircle2,
   X,
+  FolderKanban,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -47,6 +50,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
     toggleAppreciation,
     saveProject,
     isLoadingDb,
+    isAuthReady,
   } = useSession();
 
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
@@ -68,16 +72,43 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
 
   const isAppreciated = isProjectAppreciated(project.id);
 
-  const isAuthor =
+  const isAuthor = Boolean(
     user &&
     project.creator &&
-    (user.id === project.creator.id ||
-      user.username.toLowerCase() === project.creator.username.toLowerCase());
+    (
+      (user.id && project.creator.id && user.id === project.creator.id) ||
+      (user.username && project.creator.username && user.username.toLowerCase() === project.creator.username.toLowerCase())
+    )
+  );
 
-  const isDraft =
-    project.published === false ||
-    (project as any).status === "draft" ||
-    !project.publishedAt;
+  const isDraft = project.published === false || (project as any).status === "draft";
+
+  // Strict draft security gate: block incognito / non-author visitors
+  if (isDraft) {
+    if (!isAuthReady) {
+      return (
+        <div className="mx-auto max-w-[1580px] px-4 sm:px-6 py-24 flex justify-center items-center min-h-[50vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-[#962EE6]" />
+        </div>
+      );
+    }
+    if (!isAuthor) {
+      return (
+        <div className="mx-auto max-w-xl px-4 py-24 text-center">
+          <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-neutral-500 mb-4 shadow-xs">
+            <Lock className="h-7 w-7" />
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--content-primary)] tracking-tight">Project Not Found</h1>
+          <p className="mt-2 text-sm text-[var(--content-secondary)] leading-relaxed">This project is private, in draft status, or does not exist.</p>
+          <div className="mt-6 flex justify-center gap-3">
+            <Link href="/explore" className={buttonVariants({ variant: "accent", size: "default" })}>
+              Explore Showcase
+            </Link>
+          </div>
+        </div>
+      );
+    }
+  }
 
   const displayDate = React.useMemo(() => {
     if (isDraft) return "Draft • Unpublished";
@@ -693,11 +724,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
         title="Share Project"
         subtitle={`Share "${project.title}" by ${project.creator.displayName} with your network or copy the link.`}
         creatorName={project.creator.displayName}
-        url={
-          typeof window !== "undefined"
-            ? `${window.location.origin}/project/${project.slug}`
-            : `https://layerat.com/project/${project.slug}`
-        }
+        url={getCanonicalShareUrl(`/project/${project.slug}`)}
       />
 
       {/* Delete Project Confirmation Modal */}

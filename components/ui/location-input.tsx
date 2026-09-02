@@ -1,9 +1,13 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { POPULAR_CITIES, detectUserLocation } from "@/lib/location";
-import { MapPin, Sparkles, Loader2, X, Check } from "lucide-react";
+import { MapPin, Sparkles, Loader2, X, Check, ShieldCheck } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { bricolage } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface LocationInputProps {
   value: string;
@@ -12,7 +16,6 @@ interface LocationInputProps {
   placeholder?: string;
   showPresets?: boolean;
   enableAutoDetect?: boolean;
-  autoDetectOnMount?: boolean;
   className?: string;
 }
 
@@ -23,14 +26,20 @@ export function LocationInput({
   placeholder = "e.g. Berlin, Germany or type custom city...",
   showPresets = true,
   enableAutoDetect = true,
-  autoDetectOnMount = false,
   className,
 }: LocationInputProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDetecting, setIsDetecting] = useState(false);
+  const [isConsentOpen, setIsConsentOpen] = useState(false);
   const [detectedLocation, setDetectedLocation] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -55,8 +64,9 @@ export function LocationInput({
     return filtered.slice(0, 8);
   }, [value]);
 
-  // Handle auto-detect IP / Geolocation
-  const handleAutoDetect = async (isManual = false) => {
+  // Execute explicit auto-detection after user gives legal consent
+  const performLocationDetection = async () => {
+    setIsConsentOpen(false);
     setIsDetecting(true);
     try {
       const loc = await detectUserLocation();
@@ -70,13 +80,6 @@ export function LocationInput({
       setIsDetecting(false);
     }
   };
-
-  // Auto-detect on mount if requested and current value is empty or default
-  useEffect(() => {
-    if (autoDetectOnMount && (!value || value === "Worldwide")) {
-      handleAutoDetect(false);
-    }
-  }, [autoDetectOnMount]);
 
   const presetList = useMemo(() => {
     const base = [
@@ -107,15 +110,15 @@ export function LocationInput({
         {enableAutoDetect && (
           <button
             type="button"
-            onClick={() => handleAutoDetect(true)}
+            onClick={() => setIsConsentOpen(true)}
             disabled={isDetecting}
-            className="inline-flex items-center gap-1 text-[11px] font-medium text-[var(--content-secondary)] hover:text-[var(--primary-forest-green)] dark:hover:text-purple-300 transition-colors cursor-pointer disabled:opacity-50"
-            title="Auto-detect location from IP"
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-[var(--content-secondary)] hover:text-[#962EE6] dark:hover:text-purple-300 transition-colors cursor-pointer disabled:opacity-50"
+            title="Request location access to detect city"
           >
             {isDetecting ? (
               <>
-                <Loader2 className="h-3 w-3 animate-spin text-[var(--primary-forest-green)] dark:text-purple-300" />
-                <span>Detecting IP...</span>
+                <Loader2 className="h-3 w-3 animate-spin text-[#962EE6] dark:text-purple-300" />
+                <span>Detecting Location...</span>
               </>
             ) : (
               <>
@@ -148,7 +151,7 @@ export function LocationInput({
                     : "border border-[var(--border-neutral)] bg-[var(--bg-screen)] text-[var(--content-secondary)] hover:border-[var(--content-secondary)] hover:bg-[var(--bg-neutral)]"
                 )}
               >
-                {isDetected && <Sparkles className="h-2.5 w-2.5 text-emerald-600 dark:text-black shrink-0" />}
+                {isDetected && <Sparkles className="h-2.5 w-2.5 text-emerald-600 dark:text-white shrink-0" />}
                 <span>{loc}</span>
                 {isSelected && <Check className="h-3 w-3 shrink-0 stroke-[3]" />}
               </button>
@@ -219,6 +222,82 @@ export function LocationInput({
           </div>
         )}
       </div>
+
+      {/* Legal Location Access Consent Modal */}
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {isConsentOpen && (
+              <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setIsConsentOpen(false)}
+                  className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+                />
+
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 8 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 8 }}
+                  transition={{ duration: 0.2 }}
+                  className="relative w-full max-w-md rounded-3xl border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 shadow-2xl z-10 space-y-5"
+                >
+                  <div className="flex items-start gap-3.5">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#962EE6]/15 text-[#962EE6]">
+                      <ShieldCheck className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3
+                        className={cn(
+                          bricolage.className,
+                          "text-lg font-bold text-[var(--content-primary)]"
+                        )}
+                      >
+                        Allow Location Access
+                      </h3>
+                      <p className="text-xs text-[var(--content-secondary)] leading-relaxed">
+                        Layerat requests permission to detect your approximate network location to automatically suggest your city on your studio profile.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl bg-[var(--bg-neutral)]/70 border border-[var(--border-neutral)] p-3.5 text-[11px] text-[var(--content-secondary)] space-y-1.5">
+                    <div className="flex items-center gap-1.5 font-semibold text-[var(--content-primary)]">
+                      <MapPin className="h-3.5 w-3.5 text-emerald-600" />
+                      <span>Privacy & Legal Guarantee</span>
+                    </div>
+                    <p className="leading-relaxed">
+                      We only resolve city-level coordinates (e.g. &ldquo;London, UK&rdquo;). Your precise GPS location is never tracked, stored, or shared.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2.5 pt-1">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setIsConsentOpen(false)}
+                      className="rounded-full px-4 text-xs font-semibold"
+                    >
+                      Cancel
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={performLocationDetection}
+                      className="inline-flex items-center gap-1.5 rounded-full font-bold bg-[#962EE6] text-white hover:bg-[#5F0EBA] px-5 py-2 text-xs shadow-xs transition-colors cursor-pointer"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      <span>Allow & Detect Location</span>
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
     </div>
   );
 }

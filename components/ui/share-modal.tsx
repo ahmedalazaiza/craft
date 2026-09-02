@@ -16,6 +16,20 @@ interface ShareModalProps {
   creatorName?: string;
 }
 
+function normalizeLayeratUrl(rawUrl: string): string {
+  if (!rawUrl) return "https://www.layerat.com";
+  try {
+    if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) {
+      const parsed = new URL(rawUrl);
+      return `https://www.layerat.com${parsed.pathname}${parsed.search}`;
+    }
+    const cleanPath = rawUrl.startsWith("/") ? rawUrl : `/${rawUrl}`;
+    return `https://www.layerat.com${cleanPath}`;
+  } catch {
+    return rawUrl.replace(/^https?:\/\/[^/]+/, "https://www.layerat.com");
+  }
+}
+
 export function ShareModal({
   isOpen,
   onClose,
@@ -26,6 +40,8 @@ export function ShareModal({
 }: ShareModalProps) {
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  const cleanUrl = normalizeLayeratUrl(url);
 
   useEffect(() => {
     setMounted(true);
@@ -48,7 +64,7 @@ export function ShareModal({
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(cleanUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -69,7 +85,7 @@ export function ShareModal({
         </svg>
       ),
       bg: "bg-[var(--chip-bg)] text-[var(--chip-fg)] hover:bg-[var(--chip-bg-hover)] border border-[var(--border-neutral)]",
-      href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(url)}`,
+      href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(cleanUrl)}`,
     },
     {
       name: "LinkedIn",
@@ -79,7 +95,7 @@ export function ShareModal({
         </svg>
       ),
       bg: "bg-[#0A66C2] text-white hover:bg-[#084e96]",
-      href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
+      href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(cleanUrl)}`,
     },
     {
       name: "WhatsApp",
@@ -89,7 +105,7 @@ export function ShareModal({
         </svg>
       ),
       bg: "bg-[#25D366] text-white hover:bg-[#1EBE5D]",
-      href: `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + " " + url)}`,
+      href: `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + " " + cleanUrl)}`,
     },
   ];
 
@@ -176,7 +192,7 @@ export function ShareModal({
               <div className="flex items-center gap-2 rounded-2xl border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-1.5 focus-within:ring-2 focus-within:ring-[var(--primary-forest-green)] transition-all">
                 <div className="flex-1 px-3 overflow-hidden">
                   <p className="text-xs font-mono text-[var(--content-secondary)] truncate select-all">
-                    {url}
+                    {cleanUrl}
                   </p>
                 </div>
                 <button
