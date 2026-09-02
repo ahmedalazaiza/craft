@@ -82,8 +82,10 @@ export function mapProjectRow(row: any, currentUserId?: string): Project {
     creator,
     tags: row.tags || [],
     tools: row.tools || [],
-    category: row.category,
-    subCategory: row.sub_category || undefined,
+    category: row.category || (Array.isArray(row.categories) && row.categories[0]) || "User Interface Design (UI)",
+    categories: Array.isArray(row.categories) && row.categories.length > 0 ? row.categories : (row.category ? [row.category] : []),
+    subCategory: row.sub_category || (Array.isArray(row.sub_categories) && row.sub_categories[0]) || undefined,
+    subCategories: Array.isArray(row.sub_categories) && row.sub_categories.length > 0 ? row.sub_categories : (row.sub_category ? [row.sub_category] : []),
     medium: row.medium,
     published: row.published ?? true,
     publishedAt: formatTimeAgo(new Date(row.published_at || row.created_at || Date.now())),
@@ -470,9 +472,20 @@ export async function insertProject(project: Partial<Project> & { creatorId?: st
       ? project.galleryImages.filter(Boolean) 
       : [finalCover];
 
-    const finalTags = project.subCategory && !(project.tags || []).includes(project.subCategory)
-      ? [project.subCategory, ...(project.tags || [])]
-      : (project.tags && project.tags.length > 0 ? project.tags : ["Design"]);
+    const finalCategories = project.categories && project.categories.length > 0
+      ? project.categories
+      : [project.category || "User Interface Design (UI)"];
+
+    const finalSubCategories = project.subCategories && project.subCategories.length > 0
+      ? project.subCategories
+      : (project.subCategory ? [project.subCategory] : []);
+
+    const finalTags = Array.from(
+      new Set([
+        ...finalSubCategories,
+        ...(project.tags && project.tags.length > 0 ? project.tags : ["Design"]),
+      ])
+    );
 
     const row = {
       slug: finalSlug,
@@ -481,7 +494,10 @@ export async function insertProject(project: Partial<Project> & { creatorId?: st
       body: project.body || "",
       cover_image: finalCover,
       gallery_images: finalGallery.length > 0 ? finalGallery : [finalCover],
-      category: project.category || "User Interface Design (UI)",
+      category: finalCategories[0] || project.category || "User Interface Design (UI)",
+      categories: finalCategories,
+      sub_category: finalSubCategories[0] || project.subCategory || null,
+      sub_categories: finalSubCategories,
       medium: project.medium || "Image",
       tags: finalTags,
       tools: project.tools && project.tools.length > 0 ? project.tools : ["Figma"],
@@ -554,6 +570,19 @@ export async function updateProjectInDb(id: string, updates: Partial<Project>): 
     if (updates.coverImage !== undefined) payload.cover_image = updates.coverImage;
     if (updates.galleryImages !== undefined) payload.gallery_images = updates.galleryImages;
     if (updates.category !== undefined) payload.category = updates.category;
+    if (updates.categories !== undefined) {
+      payload.categories = updates.categories;
+      if (updates.categories.length > 0 && !updates.category) {
+        payload.category = updates.categories[0];
+      }
+    }
+    if (updates.subCategory !== undefined) payload.sub_category = updates.subCategory;
+    if (updates.subCategories !== undefined) {
+      payload.sub_categories = updates.subCategories;
+      if (updates.subCategories.length > 0 && !updates.subCategory) {
+        payload.sub_category = updates.subCategories[0];
+      }
+    }
     if (updates.medium !== undefined) payload.medium = updates.medium;
     if (updates.tags !== undefined) payload.tags = updates.tags;
     if (updates.tools !== undefined) payload.tools = updates.tools;

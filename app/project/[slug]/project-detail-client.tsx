@@ -231,9 +231,14 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
           <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-[var(--border-neutral)]">
             <div className="space-y-3 flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="accent" size="default">
-                  {project.category}
-                </Badge>
+                {(project.categories && project.categories.length > 0
+                  ? project.categories
+                  : [project.category]
+                ).map((cat) => (
+                  <Badge key={cat} variant="accent" size="default">
+                    {cat}
+                  </Badge>
+                ))}
                 {isDraft && (
                   <Badge variant="neutral" size="default" className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 font-mono font-bold">
                     Draft • Unpublished

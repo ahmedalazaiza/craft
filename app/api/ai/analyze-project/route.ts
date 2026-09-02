@@ -111,20 +111,24 @@ ${taxonomySummary}
 
 ### Output Rules (CRITICAL: Use simple, natural, clear international English that is easy to understand for all designers):
 1. "title": A clear, concise, and professional project title (e.g., "Cinema — Mobile Movie Booking App", "Aura — Mobile Banking App", "Kroma — Brand Identity & Packaging", "Sakha — Zakat & Giving App"). Keep it direct and easy to read.
-2. "category": EXACT MATCH with one of the 13 category names listed above.
-3. "subCategory": EXACT MATCH from the sub-categories list of that selected category.
-4. "body": 2 clear, well-structured paragraphs written in simple, friendly, and professional English:
+2. "category": Primary category from the 13 category names listed above.
+3. "categories": Array of 1 to 3 relevant categories matching the master categories list above.
+4. "subCategory": Primary sub-category from the selected category list.
+5. "subCategories": Array of 2 to 6 specific specializations selected from the chosen categories' sub-categories lists (maximum 9 total).
+6. "body": 2 clear, well-structured paragraphs written in simple, friendly, and professional English:
    - Paragraph 1: What this project is, what problem it solves, and who it was designed for.
    - Paragraph 2: The visual style, user experience features, color scheme, and tools used.
    - IMPORTANT: Avoid complicated or confusing academic jargon. Write clearly so anyone can easily read and enjoy the case study.
-5. "tags": An array of 4 to 6 simple and relevant tags (e.g. ["UI Design", "Mobile App", "iOS App", "Design System", "Dark Mode"]).
-6. "tools": An array of 2 to 4 tools used (e.g. ["Figma", "FigJam", "Adobe Illustrator"]).
+7. "tags": An array of 4 to 6 simple and relevant tags (e.g. ["UI Design", "Mobile App", "iOS App", "Design System", "Dark Mode"]).
+8. "tools": An array of 2 to 4 tools used (e.g. ["Figma", "FigJam", "Adobe Illustrator"]).
 
 Return ONLY valid JSON matching this structure without markdown formatting or code fences:
 {
   "title": "string",
   "category": "string",
+  "categories": ["Category 1", "Category 2"],
   "subCategory": "string",
+  "subCategories": ["Sub 1", "Sub 2", "Sub 3"],
   "body": "string",
   "tags": ["tag1", "tag2", "tag3"],
   "tools": ["tool1", "tool2"]

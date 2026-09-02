@@ -71,7 +71,9 @@ export interface Project {
   tags: string[];
   tools: string[];
   category: ProjectCategory;
+  categories?: string[];
   subCategory?: string;
+  subCategories?: string[];
   medium: ProjectMedium;
   published: boolean;
   publishedAt: string;

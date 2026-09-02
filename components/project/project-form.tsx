@@ -53,22 +53,48 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const galleryFileInputRef = useRef<HTMLInputElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
+  const MAX_CATEGORIES = 3;
+  const MAX_SPECIALIZATIONS = 9;
+
   // Form State
   const [title, setTitle] = useState(initialData?.title || "");
   const [body, setBody] = useState(
     initialData?.body || initialData?.summary || ""
   );
-  const [category, setCategory] = useState<string>(
-    initialData?.category ? normalizeCategory(initialData.category) : MASTER_TAXONOMY[0].name
-  );
 
-  // Multi-Select Specializations
+  // Multi-Category State (up to 3 categories)
+  const [categories, setCategories] = useState<string[]>(() => {
+    if (initialData?.categories && Array.isArray(initialData.categories) && initialData.categories.length > 0) {
+      return initialData.categories.map((c) => normalizeCategory(c)).slice(0, MAX_CATEGORIES);
+    }
+    if (initialData?.category) {
+      return [normalizeCategory(initialData.category)];
+    }
+    return [MASTER_TAXONOMY[0].name];
+  });
+
+  const [activeCategoryTab, setActiveCategoryTab] = useState<string>(() => {
+    if (initialData?.categories && initialData.categories[0]) {
+      return normalizeCategory(initialData.categories[0]);
+    }
+    if (initialData?.category) {
+      return normalizeCategory(initialData.category);
+    }
+    return MASTER_TAXONOMY[0].name;
+  });
+
+  // Multi-Select Specializations (up to 9 total across all selected categories)
   const [specializations, setSpecializations] = useState<string[]>(() => {
+    if (initialData?.subCategories && Array.isArray(initialData.subCategories) && initialData.subCategories.length > 0) {
+      return initialData.subCategories.slice(0, MAX_SPECIALIZATIONS);
+    }
     if (initialData?.subCategory) return [initialData.subCategory];
     if (initialData?.tags) {
-      const tax = getCategoryTaxonomy(initialData.category || "UI");
-      const matched = initialData.tags.filter((t) => tax?.subCategories.includes(t));
-      if (matched.length > 0) return matched;
+      const allowedSubs = (initialData.categories || [initialData.category || "UI"])
+        .map((c) => getCategoryTaxonomy(c)?.subCategories || [])
+        .flat();
+      const matched = initialData.tags.filter((t) => allowedSubs.includes(t));
+      if (matched.length > 0) return matched.slice(0, MAX_SPECIALIZATIONS);
     }
     return [];
   });
@@ -112,8 +138,14 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           const draft = JSON.parse(savedDraftJson);
           if (draft.title) setTitle(draft.title);
           if (draft.body) setBody(draft.body);
-          if (draft.category) setCategory(draft.category);
-          if (draft.specializations?.length) setSpecializations(draft.specializations);
+          if (draft.categories?.length) {
+            setCategories(draft.categories.slice(0, MAX_CATEGORIES));
+            setActiveCategoryTab(draft.categories[0]);
+          } else if (draft.category) {
+            setCategories([draft.category]);
+            setActiveCategoryTab(draft.category);
+          }
+          if (draft.specializations?.length) setSpecializations(draft.specializations.slice(0, MAX_SPECIALIZATIONS));
           if (draft.galleryImages?.length) setGalleryImages(draft.galleryImages);
           if (draft.coverImage) setCoverImage(draft.coverImage);
           if (draft.tags?.length) setTags(draft.tags);
@@ -134,7 +166,8 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
         const draftData = {
           title,
           body,
-          category,
+          categories,
+          category: categories[0] || MASTER_TAXONOMY[0].name,
           specializations,
           galleryImages,
           coverImage,
@@ -145,7 +178,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
         localStorage.setItem("layerat_new_project_draft", JSON.stringify(draftData));
       }
     }
-  }, [mode, initialData, title, body, category, specializations, galleryImages, coverImage, tags, tools]);
+  }, [mode, initialData, title, body, categories, specializations, galleryImages, coverImage, tags, tools]);
 
   // Warn on accidental tab close / refresh if form has content
   useEffect(() => {
@@ -190,37 +223,80 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     }
   };
 
-  // Active Taxonomy
-  const activeTaxonomy = useMemo(() => {
-    return getCategoryTaxonomy(category);
-  }, [category]);
+  // Active Taxonomies for all selected categories
+  const activeTaxonomies = useMemo(() => {
+    return categories
+      .map((c) => getCategoryTaxonomy(c))
+      .filter(Boolean) as (typeof MASTER_TAXONOMY)[0][];
+  }, [categories]);
 
-  const availableSubCategories = useMemo(() => {
-    return activeTaxonomy?.subCategories || [];
-  }, [activeTaxonomy]);
+  const activeCategoryTaxonomy = useMemo(() => {
+    return (
+      getCategoryTaxonomy(activeCategoryTab) ||
+      activeTaxonomies[0] ||
+      MASTER_TAXONOMY[0]
+    );
+  }, [activeCategoryTab, activeTaxonomies]);
+
+  const displayedSubCategories = useMemo(() => {
+    if (activeCategoryTab === "ALL") {
+      return Array.from(
+        new Set(activeTaxonomies.map((t) => t.subCategories).flat())
+      );
+    }
+    return activeCategoryTaxonomy?.subCategories || [];
+  }, [activeCategoryTab, activeCategoryTaxonomy, activeTaxonomies]);
 
   const suggestedTags = useMemo(() => {
-    return activeTaxonomy?.tags || [];
-  }, [activeTaxonomy]);
+    return Array.from(new Set(activeTaxonomies.map((t) => t.tags).flat())).slice(0, 15);
+  }, [activeTaxonomies]);
 
   const suggestedTools = useMemo(() => {
-    return activeTaxonomy?.tools || [];
-  }, [activeTaxonomy]);
+    return Array.from(new Set(activeTaxonomies.map((t) => t.tools).flat())).slice(0, 12);
+  }, [activeTaxonomies]);
 
-  const handleCategoryChange = (catName: string) => {
-    setCategory(catName);
-    const tax = getCategoryTaxonomy(catName);
-    if (tax) {
-      setSpecializations((prev) => prev.filter((s) => tax.subCategories.includes(s)));
-    } else {
-      setSpecializations([]);
+  const handleAddCategory = (catName: string) => {
+    if (!catName) return;
+    if (categories.includes(catName)) {
+      setActiveCategoryTab(catName);
+      return;
     }
+    if (categories.length >= MAX_CATEGORIES) {
+      alert("You can select up to 3 categories per project.");
+      return;
+    }
+    const nextCategories = [...categories, catName];
+    setCategories(nextCategories);
+    setActiveCategoryTab(catName);
+  };
+
+  const handleRemoveCategory = (catToRemove: string) => {
+    if (categories.length <= 1) {
+      alert("A project must have at least one category.");
+      return;
+    }
+    const nextCategories = categories.filter((c) => c !== catToRemove);
+    setCategories(nextCategories);
+    if (activeCategoryTab === catToRemove) {
+      setActiveCategoryTab(nextCategories[0] || MASTER_TAXONOMY[0].name);
+    }
+    // Prune specializations that were only in this removed category
+    const remainingAllowedSubs = nextCategories
+      .map((c) => getCategoryTaxonomy(c)?.subCategories || [])
+      .flat();
+    setSpecializations((prev) => prev.filter((s) => remainingAllowedSubs.includes(s)));
   };
 
   const handleToggleSpecialization = (sub: string) => {
-    setSpecializations((prev) =>
-      prev.includes(sub) ? prev.filter((s) => s !== sub) : [...prev, sub]
-    );
+    if (specializations.includes(sub)) {
+      setSpecializations((prev) => prev.filter((s) => s !== sub));
+    } else {
+      if (specializations.length >= MAX_SPECIALIZATIONS) {
+        alert("Maximum 9 total specializations reached across all categories.");
+        return;
+      }
+      setSpecializations((prev) => [...prev, sub]);
+    }
   };
 
   // Reorder & Manipulate Gallery Spreads
@@ -291,11 +367,18 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
         if (forceOverwrite || !title.trim()) {
           setTitle(aiTitle);
         }
-        if (aiCategory) {
-          setCategory(aiCategory);
+        if (json.data.categories && Array.isArray(json.data.categories) && json.data.categories.length > 0) {
+          const aiCats = json.data.categories.slice(0, MAX_CATEGORIES);
+          setCategories(aiCats);
+          setActiveCategoryTab(aiCats[0]);
+        } else if (aiCategory) {
+          setCategories([aiCategory]);
+          setActiveCategoryTab(aiCategory);
         }
-        if (aiSubCategory) {
-          setSpecializations((prev) => Array.from(new Set([...prev, aiSubCategory])));
+        if (json.data.subCategories && Array.isArray(json.data.subCategories) && json.data.subCategories.length > 0) {
+          setSpecializations(json.data.subCategories.slice(0, MAX_SPECIALIZATIONS));
+        } else if (aiSubCategory) {
+          setSpecializations((prev) => Array.from(new Set([...prev, aiSubCategory])).slice(0, MAX_SPECIALIZATIONS));
         }
         if (forceOverwrite || !body.trim()) {
           setBody(aiBody);
@@ -480,13 +563,19 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
         }
       }
 
+      const finalCategories = categories.length > 0 ? categories : [MASTER_TAXONOMY[0].name];
+      const finalSubCategories = specializations.slice(0, MAX_SPECIALIZATIONS);
+      const combinedTags = Array.from(new Set([...finalSubCategories, ...tags]));
+
       const saved = await saveProject({
         id: initialData?.id,
         title: title.trim(),
         summary: body.trim().slice(0, 200) || title.trim(),
         body: body.trim() || "Visual design case study.",
-        category,
-        subCategory: specializations[0] || undefined,
+        category: finalCategories[0],
+        categories: finalCategories,
+        subCategory: finalSubCategories[0] || undefined,
+        subCategories: finalSubCategories,
         medium: "Image",
         coverImage: finalCover,
         galleryImages,
@@ -822,63 +911,176 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
             {/* 2. Category & Multi-Select Specialization */}
             <div className="space-y-4 pt-2 border-t border-[var(--border-neutral)]">
-              {/* Category Dropdown */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] block">
-                  Category
-                </label>
-                <div className="relative">
-                  <select
-                    value={category}
-                    onChange={(e) => handleCategoryChange(e.target.value)}
-                    className="w-full h-11 rounded-[14px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] px-3.5 pr-8 text-xs font-bold text-[var(--content-primary)] focus:outline-none focus:border-[var(--primary-forest-green)] appearance-none cursor-pointer shadow-2xs"
-                  >
-                    {MASTER_TAXONOMY.map((cat) => (
-                      <option key={cat.id} value={cat.name}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-[var(--content-tertiary)] pointer-events-none" />
+              {/* Multi-Category Selector (Max 3) */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] block">
+                    Category ({categories.length}/{MAX_CATEGORIES})
+                  </label>
+                  <span className={cn(
+                    "text-[10px] font-mono font-bold",
+                    categories.length >= MAX_CATEGORIES
+                      ? "text-amber-600 dark:text-amber-400"
+                      : "text-[var(--primary-forest-green)] dark:text-purple-300"
+                  )}>
+                    {categories.length >= MAX_CATEGORIES ? "3/3 Max Categories" : `${categories.length} Selected (Max 3)`}
+                  </span>
+                </div>
+
+                {/* Active Categories Pills Bar */}
+                <div className="flex flex-wrap items-center gap-2 p-2 rounded-2xl bg-[var(--bg-neutral)]/40 border border-[var(--border-neutral)]">
+                  {categories.map((catName, idx) => {
+                    const isCurrentTab = activeCategoryTab === catName;
+                    const tax = getCategoryTaxonomy(catName);
+                    const subCount = specializations.filter((s) => tax?.subCategories.includes(s)).length;
+
+                    return (
+                      <span
+                        key={catName}
+                        onClick={() => setActiveCategoryTab(catName)}
+                        className={cn(
+                          "inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs transition-all shadow-xs select-none border font-bold cursor-pointer",
+                          isCurrentTab
+                            ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent dark:bg-[#962EE6] dark:text-white"
+                            : "bg-[var(--bg-elevated)] text-[var(--content-primary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)]"
+                        )}
+                        title={`Click to view specializations for ${catName}`}
+                      >
+                        <span>
+                          {idx === 0 ? "★ " : ""}
+                          {catName}
+                          {subCount > 0 ? ` (${subCount})` : ""}
+                        </span>
+                        {categories.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveCategory(catName);
+                            }}
+                            className="hover:text-rose-400 p-0.5 rounded-full transition-colors cursor-pointer ml-0.5"
+                            title={`Remove ${catName}`}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        )}
+                      </span>
+                    );
+                  })}
+
+                  {/* Add Category Dropdown (if < 3) */}
+                  {categories.length < MAX_CATEGORIES && (
+                    <div className="relative inline-flex items-center">
+                      <select
+                        value=""
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            handleAddCategory(e.target.value);
+                            e.target.value = "";
+                          }
+                        }}
+                        className="h-8 rounded-full bg-[var(--bg-elevated)] hover:bg-[var(--bg-neutral)] border border-dashed border-[var(--border-neutral)] px-3 pr-7 text-xs font-semibold text-[var(--content-secondary)] hover:text-[var(--content-primary)] cursor-pointer appearance-none transition-all focus:outline-none"
+                      >
+                        <option value="" disabled>
+                          + Add Category ({categories.length}/{MAX_CATEGORIES})
+                        </option>
+                        {MASTER_TAXONOMY.filter((cat) => !categories.includes(cat.name)).map((cat) => (
+                          <option key={cat.id} value={cat.name}>
+                            {cat.name}
+                          </option>
+                        ))}
+                      </select>
+                      <Plus className="absolute right-2.5 top-2.5 h-3 w-3 text-[var(--content-tertiary)] pointer-events-none" />
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Multi-Select Specialization Pills */}
-              {availableSubCategories.length > 0 && (
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
-                      Specialization ({specializations.length}/{availableSubCategories.length})
-                    </label>
-                    {specializations.length > 0 && (
-                      <span className="text-[10px] font-mono font-bold text-[var(--primary-forest-green)] dark:text-purple-300">
-                        {specializations.length} Selected
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-2 rounded-xl bg-[var(--bg-neutral)]/30 border border-[var(--border-neutral)]">
-                    {availableSubCategories.map((sub) => {
-                      const isSelected = specializations.includes(sub);
+              {/* Multi-Select Specialization Pills (Max 9 across categories) */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
+                    Specialization ({specializations.length}/{MAX_SPECIALIZATIONS})
+                  </label>
+                  <span className={cn(
+                    "text-[10px] font-mono font-bold",
+                    specializations.length >= MAX_SPECIALIZATIONS
+                      ? "text-amber-600 dark:text-amber-400"
+                      : "text-[var(--primary-forest-green)] dark:text-purple-300"
+                  )}>
+                    {specializations.length >= MAX_SPECIALIZATIONS
+                      ? "9/9 Max Reached"
+                      : `${specializations.length} Selected (Max 9)`}
+                  </span>
+                </div>
+
+                {/* Category Filter Tabs (if > 1 category selected) */}
+                {categories.length > 1 && (
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                    <button
+                      type="button"
+                      onClick={() => setActiveCategoryTab("ALL")}
+                      className={cn(
+                        "rounded-full px-3 py-1 text-xs font-semibold shrink-0 cursor-pointer transition-all border select-none",
+                        activeCategoryTab === "ALL"
+                          ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-bold border-transparent"
+                          : "bg-[var(--bg-elevated)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)]"
+                      )}
+                    >
+                      All Categories ({specializations.length})
+                    </button>
+                    {categories.map((catName) => {
+                      const tax = getCategoryTaxonomy(catName);
+                      const count = specializations.filter((s) => tax?.subCategories.includes(s)).length;
+                      const isCurrent = activeCategoryTab === catName;
                       return (
                         <button
-                          key={sub}
+                          key={catName}
                           type="button"
-                          onClick={() => handleToggleSpecialization(sub)}
+                          onClick={() => setActiveCategoryTab(catName)}
                           className={cn(
-                            "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all border",
-                            isSelected
-                              ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-xs dark:bg-[#962EE6] dark:text-white font-bold scale-[1.02]"
-                              : "bg-[var(--bg-elevated)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)] hover:text-[var(--content-primary)]"
+                            "rounded-full px-3 py-1 text-xs font-semibold shrink-0 cursor-pointer transition-all border select-none",
+                            isCurrent
+                              ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-bold border-transparent"
+                              : "bg-[var(--bg-elevated)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)]"
                           )}
                         >
-                          {isSelected && <Check className="h-3 w-3 shrink-0" />}
-                          <span>{sub}</span>
+                          <span>{tax?.shortName || catName}</span>
+                          {count > 0 && <span className="ml-1 opacity-80 font-mono">({count})</span>}
                         </button>
                       );
                     })}
                   </div>
+                )}
+
+                {/* Specialization Pills Container */}
+                <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto p-2.5 rounded-2xl bg-[var(--bg-neutral)]/30 border border-[var(--border-neutral)]">
+                  {displayedSubCategories.map((sub) => {
+                    const isSelected = specializations.includes(sub);
+                    const isMax = specializations.length >= MAX_SPECIALIZATIONS && !isSelected;
+                    return (
+                      <button
+                        key={sub}
+                        type="button"
+                        onClick={() => handleToggleSpecialization(sub)}
+                        disabled={isMax}
+                        className={cn(
+                          "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all border select-none",
+                          isSelected
+                            ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-xs dark:bg-[#962EE6] dark:text-white font-bold scale-[1.02]"
+                            : isMax
+                            ? "bg-[var(--bg-elevated)]/50 text-[var(--content-tertiary)] border-[var(--border-neutral)] opacity-50 cursor-not-allowed"
+                            : "bg-[var(--bg-elevated)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)] hover:text-[var(--content-primary)]"
+                        )}
+                        title={isMax ? "Max 9 specializations reached" : sub}
+                      >
+                        {isSelected && <Check className="h-3 w-3 shrink-0" />}
+                        <span>{sub}</span>
+                      </button>
+                    );
+                  })}
                 </div>
-              )}
+              </div>
             </div>
 
             {/* 3. Narrative / Case Study Story */}
