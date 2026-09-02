@@ -160,8 +160,8 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
 
             {/* Metrics: Heart + Views */}
             <div className="flex items-center gap-2.5 sm:gap-3 shrink-0 text-[11px] sm:text-xs">
-              <span className="inline-flex items-center gap-1 font-semibold text-[var(--content-secondary)]">
-                <Heart className="h-3.5 w-3.5 fill-[var(--brand-secondary)] text-[var(--brand-secondary)]" />
+              <span className="inline-flex items-center gap-1 font-medium text-[var(--content-tertiary)]">
+                <Heart className="h-3.5 w-3.5" />
                 <span>{liveProject.appreciations}</span>
               </span>
               <span className="inline-flex items-center gap-1 font-medium text-[var(--content-tertiary)]">
