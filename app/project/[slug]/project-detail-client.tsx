@@ -14,6 +14,7 @@ import { useSession } from "@/lib/session-context";
 import { FadeIn } from "@/components/ui/motion-wrapper";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
+import { ReportModal } from "@/components/ui/report-modal";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { getValidAvatarUrl } from "@/lib/avatar";
 import { getCanonicalShareUrl } from "@/lib/seo";
@@ -34,6 +35,7 @@ import {
   X,
   FolderKanban,
   Lock,
+  Flag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -57,6 +59,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishToast, setPublishToast] = useState<string | null>(null);
 
@@ -436,6 +439,19 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                     >
                       <Share2 className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
                     </button>
+
+                    {/* 4. Report Project (Non-author) */}
+                    {!isAuthor && (
+                      <button
+                        type="button"
+                        onClick={() => setIsReportModalOpen(true)}
+                        className="h-10 w-10 rounded-full bg-[var(--bg-neutral)]/70 text-[var(--content-tertiary)] hover:text-rose-600 hover:bg-rose-500/10 flex items-center justify-center transition-all cursor-pointer select-none group"
+                        title="Report Project"
+                        aria-label="Report Project"
+                      >
+                        <Flag className="h-3.5 w-3.5 transition-transform duration-200 group-hover:scale-110" />
+                      </button>
+                    )}
                   </>
                 )}
 
@@ -771,6 +787,15 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
         onSuccess={() => {
           router.push("/me");
         }}
+      />
+
+      {/* Report Project Moderation Modal */}
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        targetType="project"
+        targetId={project.id}
+        targetName={project.title}
       />
     </article>
   );

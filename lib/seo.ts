@@ -33,12 +33,16 @@ export function getAuthRedirectUrl(path: string = "/auth/verify"): string {
 }
 
 /**
- * Returns the canonical share URL for projects and creator profiles
- * (always https://www.layerat.com/... across all environments and deployment previews).
+ * Returns the canonical share URL for projects and creator profiles.
+ * In the browser, preserves current origin (local dev, staging preview, or production domain)
+ * so recipient links don't cross origin boundaries and invalidate sessions.
  */
 export function getCanonicalShareUrl(path: string = ""): string {
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
-  return `https://www.layerat.com${cleanPath}`;
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return `${window.location.origin}${cleanPath}`;
+  }
+  return `${SITE_URL}${cleanPath}`;
 }
 
 export const defaultTitle = `${SITE_NAME} — ${SITE_TAGLINE}`;

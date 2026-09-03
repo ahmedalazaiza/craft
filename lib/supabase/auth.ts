@@ -290,7 +290,16 @@ export async function signOut(): Promise<{ success: boolean; error?: string }> {
  */
 export async function getCurrentAuthUser(): Promise<Creator | null> {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    // 1. Ensure stored session is loaded and automatically refreshed if expired
+    const { data: sessionData } = await supabase.auth.getSession();
+    let user = sessionData?.session?.user ?? null;
+
+    // 2. Fallback to getUser() if session has not finished resolving
+    if (!user) {
+      const { data: userData } = await supabase.auth.getUser();
+      user = userData?.user ?? null;
+    }
+
     if (!user) {
       return null;
     }

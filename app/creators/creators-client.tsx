@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { FadeIn, StaggerGridItem } from "@/components/ui/motion-wrapper";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Creator } from "@/lib/types";
-import { MASTER_TAXONOMY, normalizeCategory, getCategoryTaxonomy } from "@/lib/taxonomy";
+import { normalizeCategory, getCategoryTaxonomy } from "@/lib/taxonomy";
 import { computeCreatorRank } from "@/lib/ranking";
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -23,7 +23,7 @@ interface CreatorsClientProps {
 }
 
 export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
-  const { creators: contextCreators, projects, isLoadingDb } = useSession();
+  const { creators: contextCreators, projects, taxonomy, isLoadingDb } = useSession();
   const creators = contextCreators.length > 0 ? contextCreators : initialCreators;
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -116,7 +116,7 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
         // Discipline filter matching (checks exact skill or normalized category match)
         const activeDiscipline = filters.discipline;
         if (activeDiscipline && activeDiscipline !== "All") {
-          const targetTax = getCategoryTaxonomy(activeDiscipline);
+          const targetTax = getCategoryTaxonomy(activeDiscipline, taxonomy);
           const matchDiscipline = creator.skills.some((skill) => {
             if (skill.toLowerCase() === activeDiscipline.toLowerCase()) return true;
             if (targetTax) {

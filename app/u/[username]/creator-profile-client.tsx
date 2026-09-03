@@ -30,9 +30,11 @@ import {
   X,
   Camera,
   Loader2,
+  Flag,
 } from "lucide-react";
 import { cn, normalizeUrl, formatDisplayUrl } from "@/lib/utils";
 import { ShareModal } from "@/components/ui/share-modal";
+import { ReportModal } from "@/components/ui/report-modal";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { uploadMediaFile } from "@/lib/supabase/storage";
@@ -74,6 +76,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
   const [activeTab, setActiveTab] = useState<"published" | "drafts">("published");
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [sortBy, setSortBy] = useState<"newest" | "appreciated">("newest");
 
   // Profile Edit Form State
@@ -236,7 +239,12 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                   >
                     {creator.displayName}
                   </h1>
-                  {creator.isVerified !== false && <VerifiedBadge size="lg" />}
+                  {Boolean(creator.isVerified) && <VerifiedBadge size="lg" />}
+                  {creator.badge && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[var(--chip-bg)] border border-[var(--border-neutral)] px-2.5 py-0.5 text-xs font-bold text-[var(--chip-fg)] uppercase tracking-wider">
+                      {creator.badge}
+                    </span>
+                  )}
                 </div>
 
                 <p className="text-xs font-semibold text-[var(--content-tertiary)] mt-0.5">
@@ -327,6 +335,20 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                 >
                   <Share2 className="h-4 w-4" />
                 </Button>
+
+                {!isCurrentUser && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsReportModalOpen(true)}
+                    className="text-[var(--content-tertiary)] hover:text-rose-600 hover:bg-rose-500/10 transition-transform hover:scale-105 active:scale-95"
+                    title={`Report ${creator.displayName}'s account`}
+                    aria-label="Report Creator"
+                  >
+                    <Flag className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
 
               {/* Bio Statement */}
@@ -539,6 +561,15 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
           subtitle={`Share ${creator.displayName}'s portfolio with your network or copy the public link.`}
           creatorName={creator.displayName}
           url={getCanonicalShareUrl(`/u/${creator.username}`)}
+        />
+
+        {/* Report Creator Modal */}
+        <ReportModal
+          isOpen={isReportModalOpen}
+          onClose={() => setIsReportModalOpen(false)}
+          targetType="creator"
+          targetId={creator.id}
+          targetName={creator.displayName}
         />
       </FadeIn>
     </div>

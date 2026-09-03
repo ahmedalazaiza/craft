@@ -121,6 +121,11 @@ export function CreatorListItem({
                 </Link>
 
                 {creator.isVerified && <VerifiedBadge size="sm" />}
+                {creator.badge && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[var(--chip-bg)] border border-[var(--border-neutral)] px-2 py-0.5 text-[10px] font-bold text-[var(--chip-fg)] uppercase tracking-wider">
+                    {creator.badge}
+                  </span>
+                )}
               </div>
 
               <div className="flex items-center gap-2 text-xs text-[var(--content-secondary)] mt-1 flex-wrap">

@@ -74,12 +74,22 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
               />
             </Link>
 
-            {/* Category Tag on Hover (Top-Left) */}
-            <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-              <span className="inline-flex items-center rounded-full bg-black/60 backdrop-blur-md px-2.5 py-1 text-[10px] font-bold text-white uppercase tracking-wider shadow-xs">
-                {liveProject.category}
-              </span>
-            </div>
+            {/* Editorial Badge (Top-Left) - e.g. Staff Pick, Project of the Day */}
+            {liveProject.badge ? (
+              <div className="absolute top-3 left-3 z-20 pointer-events-none">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-black/80 backdrop-blur-md px-2.5 py-1 text-[10px] font-black text-amber-300 border border-amber-400/30 shadow-md uppercase tracking-wider">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                  {liveProject.badge}
+                </span>
+              </div>
+            ) : (
+              /* Category Tag on Hover (Top-Left) */
+              <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                <span className="inline-flex items-center rounded-full bg-black/60 backdrop-blur-md px-2.5 py-1 text-[10px] font-bold text-white uppercase tracking-wider shadow-xs">
+                  {liveProject.category}
+                </span>
+              </div>
+            )}
 
             {/* Mobile Fixed Like Button (Top-Right) - Hidden if own project */}
             {!isOwner && (

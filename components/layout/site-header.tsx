@@ -8,6 +8,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { NotificationsPopover } from "@/components/layout/notifications-popover";
 import { ProfileDropdown } from "@/components/layout/profile-dropdown";
 import { VerificationBanner } from "@/components/layout/verification-banner";
+import { AnnouncementBanner } from "@/components/layout/announcement-banner";
 import { SearchModal } from "@/components/search/search-modal";
 import { NewProjectLink } from "@/components/project/new-project-link";
 import { Plus, Search } from "lucide-react";
@@ -16,13 +17,15 @@ import { Logo } from "@/components/ui/logo";
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const { user } = useSession();
+  const { user, platformSettings, isAdmin } = useSession();
 
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   const isHome = pathname === "/";
   const isExplore = pathname === "/explore";
   const isCreators = pathname === "/creators";
+  const isCollections = pathname.startsWith("/collections");
+  const showCollections = Boolean(platformSettings.enableCollections || isAdmin);
 
   // Global Keyboard Shortcut: Cmd+K / Ctrl+K or / to open Search Modal
   useEffect(() => {
@@ -49,6 +52,9 @@ export function SiteHeader() {
 
   return (
     <>
+      {/* Global Dynamic Platform Announcement Banner */}
+      <AnnouncementBanner />
+
       {/* Top Announcement Banner for Unverified Users */}
       <VerificationBanner />
 
@@ -105,6 +111,23 @@ export function SiteHeader() {
                 )}
                 <span>Creators</span>
               </Link>
+              {showCollections && (
+                <Link
+                  href="/collections"
+                  prefetch={true}
+                  className={cn(
+                    "relative rounded-full px-3.5 py-1.5 text-xs font-bold transition-all flex items-center gap-1.5",
+                    isCollections
+                      ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                      : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
+                  )}
+                >
+                  {isCollections && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--chip-fg)] shadow-xs animate-pulse" />
+                  )}
+                  <span>Collections</span>
+                </Link>
+              )}
             </nav>
           </div>
 

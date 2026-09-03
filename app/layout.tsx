@@ -12,6 +12,7 @@ import { PageLoadingOverlay } from "@/components/layout/page-loading-overlay";
 import { NetworkStatusIndicator } from "@/components/layout/network-status-indicator";
 import { CookieConsentBanner } from "@/components/ui/cookie-consent-banner";
 import { ToastContainer } from "@/components/ui/toast";
+import { MaintenanceScreen } from "@/components/layout/maintenance-screen";
 
 import Script from "next/script";
 
@@ -158,13 +159,15 @@ export default function RootLayout({
               <PageLoadingOverlay />
             </Suspense>
 
-            <SiteHeader />
-            <main className="flex-1 pb-20 md:pb-0">{children}</main>
-            <SiteFooter />
-            <MobileBottomNav />
-            <NetworkStatusIndicator />
-            <CookieConsentBanner />
-            <ToastContainer />
+            <MaintenanceScreen>
+              <SiteHeader />
+              <main className="flex-1 pb-20 md:pb-0">{children}</main>
+              <SiteFooter />
+              <MobileBottomNav />
+              <NetworkStatusIndicator />
+              <CookieConsentBanner />
+              <ToastContainer />
+            </MaintenanceScreen>
           </SessionProvider>
         </ThemeProvider>
       </body>

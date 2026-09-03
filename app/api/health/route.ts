@@ -9,15 +9,24 @@ export async function GET() {
   let dbLatencyMs = 0;
   let dbError: string | null = null;
 
+  let categoriesCount = 0;
+  let settingsConfigured = false;
+
   try {
     const dbStart = performance.now();
-    // Lightweight probe using head-only count on profiles
-    const { error } = await supabase.from("profiles").select("id", { count: "exact", head: true });
+    // Lightweight probe using head-only count on profiles & categories and platform_settings check
+    const [{ error: profileError }, { count: catCount, error: catError }, { data: settingsRow }] = await Promise.all([
+      supabase.from("profiles").select("id", { count: "exact", head: true }),
+      supabase.from("categories").select("id", { count: "exact", head: true }),
+      supabase.from("platform_settings").select("id").eq("id", "global").maybeSingle(),
+    ]);
     dbLatencyMs = Math.round(performance.now() - dbStart);
+    categoriesCount = catCount || 0;
+    settingsConfigured = Boolean(settingsRow);
 
-    if (error) {
+    if (profileError || catError) {
       dbStatus = "error";
-      dbError = error.message;
+      dbError = profileError?.message || catError?.message || "Error probing database";
     }
   } catch (err: unknown) {
     dbStatus = "disconnected";
@@ -44,6 +53,8 @@ export async function GET() {
       database: {
         status: dbStatus,
         latencyMs: dbLatencyMs,
+        categoriesCount,
+        settingsConfigured,
         ...(dbError ? { error: dbError } : {}),
       },
     },

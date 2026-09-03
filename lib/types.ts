@@ -1,5 +1,7 @@
 export * from "./taxonomy";
 
+export type UserRole = "member" | "curator" | "moderator" | "admin";
+
 export interface Creator {
   id: string;
   username: string;
@@ -14,6 +16,9 @@ export interface Creator {
   isCurrentUser?: boolean;
   followersCount?: number;
   isVerified?: boolean;
+  role?: UserRole;
+  isFeatured?: boolean;
+  badge?: string;
 }
 
 export interface Comment {
@@ -82,6 +87,8 @@ export interface Project {
   views?: number;
   comments: Comment[];
   featured?: boolean;
+  featuredOrder?: number;
+  badge?: string;
 }
 
 export type NotificationType = "appreciation" | "comment" | "follow" | "publish";
@@ -99,3 +106,71 @@ export interface Notification {
   createdAt: string;
   read: boolean;
 }
+
+export interface PlatformSettings {
+  id: string;
+  announcementBannerText: string;
+  announcementBannerLink?: string;
+  announcementBannerActive: boolean;
+  allowSignups: boolean;
+  maintenanceMode: boolean;
+  maintenanceMessage?: string;
+  maxUploadSizeMb: number;
+  enableCollections: boolean;
+  updatedAt?: string;
+}
+
+export interface Collection {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  coverImage: string;
+  projectIds: string[];
+  projectsCount?: number;
+  sortOrder: number;
+  isFeatured: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type ReportReason =
+  | "copyright"
+  | "inappropriate_content"
+  | "spam"
+  | "harassment"
+  | "other";
+
+export type ReportStatus = "pending" | "reviewed" | "resolved" | "dismissed";
+
+export interface Report {
+  id: string;
+  reporterId?: string;
+  projectId?: string;
+  reportedCreatorId?: string;
+  reason: ReportReason;
+  notes?: string;
+  status: ReportStatus;
+  createdAt?: string;
+}
+
+export interface LegalSection {
+  title: string;
+  content: string;
+  bullets?: string[];
+}
+
+export interface LegalDocument {
+  id: "terms" | "privacy" | "guidelines" | string;
+  title: string;
+  subtitle: string;
+  version: string;
+  summary: string;
+  sections: LegalSection[];
+  isPublished: boolean;
+  publishedAt: string;
+  updatedAt: string;
+}
+
+
+

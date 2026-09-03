@@ -8,7 +8,7 @@ import { useSession } from "@/lib/session-context";
 import { Project } from "@/lib/types";
 import { bricolage } from "@/lib/fonts";
 import {
-  MASTER_TAXONOMY,
+  CategoryTaxonomyItem,
   getCategoryTaxonomy,
   normalizeCategory,
 } from "@/lib/taxonomy";
@@ -51,7 +51,7 @@ const MAX_SPECIALIZATIONS = 9;
 
 export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const router = useRouter();
-  const { saveProject } = useSession();
+  const { saveProject, taxonomy } = useSession();
 
   const galleryFileInputRef = useRef<HTMLInputElement>(null);
   const additionalFileInputRef = useRef<HTMLInputElement>(null);
@@ -69,12 +69,12 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   // Multi-Category State (up to 3 categories)
   const [categories, setCategories] = useState<string[]>(() => {
     if (initialData?.categories && Array.isArray(initialData.categories) && initialData.categories.length > 0) {
-      return initialData.categories.map((c) => normalizeCategory(c)).slice(0, MAX_CATEGORIES);
+      return initialData.categories.map((c) => normalizeCategory(c, taxonomy)).slice(0, MAX_CATEGORIES);
     }
     if (initialData?.category) {
-      return [normalizeCategory(initialData.category)];
+      return [normalizeCategory(initialData.category, taxonomy)];
     }
-    return [MASTER_TAXONOMY[0].name];
+    return [taxonomy[0]?.name || "User Interface Design (UI)"];
   });
 
   // Multi-Select Specializations (up to 9 total across all selected categories)
@@ -172,16 +172,16 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   // ---------------------------------------------------------------------------
   const activeTaxonomies = useMemo(() => {
     return categories
-      .map((c) => getCategoryTaxonomy(c))
-      .filter(Boolean) as (typeof MASTER_TAXONOMY)[0][];
-  }, [categories]);
+      .map((c) => getCategoryTaxonomy(c, taxonomy))
+      .filter(Boolean) as CategoryTaxonomyItem[];
+  }, [categories, taxonomy]);
 
   const availableSubCategories = useMemo(() => {
     const subs = categories
-      .map((c) => getCategoryTaxonomy(c)?.subCategories || [])
+      .map((c) => getCategoryTaxonomy(c, taxonomy)?.subCategories || [])
       .flat();
     return Array.from(new Set(subs));
-  }, [categories]);
+  }, [categories, taxonomy]);
 
   const handleToggleCategory = (catName: string) => {
     if (categories.includes(catName)) {
@@ -363,7 +363,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     }
 
     const finalCover = coverImage || galleryImages[0];
-    const finalCategories = categories.length > 0 ? categories : [MASTER_TAXONOMY[0].name];
+    const finalCategories = categories.length > 0 ? categories : [taxonomy[0]?.name || "User Interface Design (UI)"];
     const finalSubCategories = specializations.slice(0, MAX_SPECIALIZATIONS);
     const combinedTags = Array.from(new Set([...finalSubCategories, ...tags]));
 
@@ -911,7 +911,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
                 {/* Category Pills Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
-                  {MASTER_TAXONOMY.map((cat) => {
+                  {taxonomy.map((cat) => {
                     const isSelected = categories.includes(cat.name);
                     return (
                       <button

@@ -4,8 +4,12 @@ import React from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/logo";
+import { useSession } from "@/lib/session-context";
 
 export function SiteFooter() {
+  const { platformSettings, isAdmin } = useSession();
+  const showCollections = Boolean(platformSettings.enableCollections || isAdmin);
+
   return (
     <footer className="border-t border-[var(--border-neutral)] bg-[var(--bg-screen)] pt-12 pb-16">
       <div className="w-full px-4 sm:px-6 lg:px-[80px] space-y-12">
@@ -62,6 +66,17 @@ export function SiteFooter() {
                   Discover Creators
                 </Link>
               </li>
+              {showCollections && (
+                <li>
+                  <Link
+                    href="/collections"
+                    prefetch={true}
+                    className="text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors"
+                  >
+                    Curated Collections
+                  </Link>
+                </li>
+              )}
               <li>
                 <Link
                   href="/search"

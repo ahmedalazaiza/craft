@@ -1,7 +1,6 @@
 import { MetadataRoute } from "next";
-import { fetchProjects, fetchCreators } from "@/lib/supabase/queries";
+import { fetchProjects, fetchCreators, fetchCategories } from "@/lib/supabase/queries";
 import { absoluteUrl } from "@/lib/seo";
-import { ALL_CATEGORY_NAMES } from "@/lib/taxonomy";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const currentDate = new Date().toISOString();
@@ -58,19 +57,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Curated category corridors for topical authority across all 13 Master Categories
-  const categoryRoutes: MetadataRoute.Sitemap = ALL_CATEGORY_NAMES.map((cat) => ({
-    url: absoluteUrl(`/explore?category=${encodeURIComponent(cat)}`),
-    lastModified: currentDate,
-    changeFrequency: "weekly",
-    priority: 0.85,
-  }));
-
   try {
-    const [dbProjects, dbCreators] = await Promise.all([
+    const [dbProjects, dbCreators, dbCategories] = await Promise.all([
       fetchProjects({ publishedOnly: true }),
       fetchCreators(),
+      fetchCategories(),
     ]);
+
+    // Dynamic category corridors for topical authority across all active categories
+    const categoryRoutes: MetadataRoute.Sitemap = dbCategories.map((cat) => ({
+      url: absoluteUrl(`/explore?category=${encodeURIComponent(cat.name)}`),
+      lastModified: currentDate,
+      changeFrequency: "weekly",
+      priority: 0.85,
+    }));
 
     const projectRoutes: MetadataRoute.Sitemap = dbProjects.map((project) => ({
       url: absoluteUrl(`/project/${project.slug}`),
@@ -89,6 +89,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return [...staticRoutes, ...categoryRoutes, ...projectRoutes, ...creatorRoutes];
   } catch (err) {
     console.error("Error generating dynamic sitemap:", err);
-    return [...staticRoutes, ...categoryRoutes];
+    return [...staticRoutes];
   }
 }

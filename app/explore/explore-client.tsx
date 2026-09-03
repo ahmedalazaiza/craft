@@ -14,7 +14,6 @@ import { FadeIn, StaggerGridItem } from "@/components/ui/motion-wrapper";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { ProjectCategory, Project } from "@/lib/types";
 import {
-  MASTER_TAXONOMY,
   normalizeCategory,
   getCategoryTaxonomy,
 } from "@/lib/taxonomy";
@@ -31,7 +30,7 @@ interface ExploreClientProps {
 }
 
 export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
-  const { projects: contextProjects, isLoadingDb } = useSession();
+  const { projects: contextProjects, taxonomy, isLoadingDb } = useSession();
   const projects = contextProjects.length > 0 ? contextProjects : initialProjects;
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -103,8 +102,8 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
   // Dynamic Sub-categories based on selected Category
   const activeTaxonomy = useMemo(() => {
     if (!filters.category || filters.category === "All") return null;
-    return getCategoryTaxonomy(filters.category);
-  }, [filters.category]);
+    return getCategoryTaxonomy(filters.category, taxonomy);
+  }, [filters.category, taxonomy]);
 
 
 

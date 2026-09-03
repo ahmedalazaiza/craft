@@ -16,7 +16,11 @@ export function VerificationBanner() {
   // AND their account is NOT verified in the database.
   // When logged out (user === null) or verified (user.isVerified === true), return null immediately.
   const isPendingVerification = Boolean(user && !user.isVerified);
-  const userEmail = user?.email || "";
+  const userEmail =
+    user?.email ||
+    (typeof window !== "undefined"
+      ? localStorage.getItem("craft_last_registered_email") || ""
+      : "");
 
   // Rate limiter cooldown countdown
   useEffect(() => {
@@ -63,32 +67,42 @@ export function VerificationBanner() {
         initial={{ height: 0, opacity: 0 }}
         animate={{ height: "auto", opacity: 1 }}
         exit={{ height: 0, opacity: 0 }}
-        className="relative z-50 bg-neutral-950 text-white border-b border-neutral-800 px-4 py-2.5 sm:px-6 lg:px-[80px] shadow-xs"
+        className="relative z-50 bg-neutral-950 text-white border-b border-neutral-800 px-3 py-2 sm:px-6 sm:py-2.5 lg:px-[80px] shadow-xs"
       >
-        <div className="flex w-full items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+        <div className="flex w-full items-center justify-between gap-2.5 sm:gap-3 text-xs">
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
             <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-black shadow-xs animate-pulse">
               <Mail className="h-3 w-3" />
             </span>
 
-            <p className="truncate font-medium text-white/90">
-              <strong className="text-white font-bold">Account Activation Required:</strong> Please confirm your email{" "}
-              {userEmail && <span className="font-mono text-neutral-300 underline">({userEmail})</span>} to unlock appreciation, following creators, and publishing projects.
-            </p>
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] sm:text-xs font-medium text-white/90 leading-tight">
+                <strong className="text-white font-bold">Please verify your account:</strong>{" "}
+                <span className="hidden sm:inline">Confirm your email </span>
+                {userEmail && (
+                  <span className="font-mono text-neutral-300 underline">({userEmail})</span>
+                )}
+                <span className="hidden md:inline">
+                  {" "}to unlock appreciation, following creators, and publishing projects.
+                </span>
+                <span className="inline md:hidden text-white/75"> to unlock all creator perks.</span>
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {sendSuccess ? (
-              <span className="inline-flex items-center gap-1 text-neutral-200 font-semibold text-xs">
+              <span className="inline-flex items-center gap-1 text-emerald-400 font-semibold text-[11px] sm:text-xs">
                 <CheckCircle2 className="h-3.5 w-3.5" />
-                <span>Link sent! Check inbox</span>
+                <span className="hidden sm:inline">Link sent! Check inbox</span>
+                <span className="sm:hidden">Sent!</span>
               </span>
             ) : (
               <button
                 type="button"
                 onClick={handleResend}
                 disabled={isSending || cooldown > 0}
-                className="font-bold text-neutral-300 hover:text-white underline underline-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-xs inline-flex items-center gap-1"
+                className="font-bold text-neutral-300 hover:text-white underline underline-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-[11px] sm:text-xs inline-flex items-center gap-1"
               >
                 {isSending ? (
                   "Sending..."
@@ -98,7 +112,10 @@ export function VerificationBanner() {
                     <span>Resend in {cooldown}s</span>
                   </>
                 ) : (
-                  "Resend activation link"
+                  <>
+                    <span className="sm:hidden">Resend link</span>
+                    <span className="hidden sm:inline">Resend activation link</span>
+                  </>
                 )}
               </button>
             )}

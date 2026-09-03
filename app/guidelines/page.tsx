@@ -1,8 +1,8 @@
 import { Metadata } from "next";
-import Link from "next/link";
 import { constructMetadata, generateBreadcrumbJsonLd } from "@/lib/seo";
 import { bricolage } from "@/lib/fonts";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { fetchLegalDocument } from "@/lib/supabase/queries";
 import { ShieldCheck, Award, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -13,9 +13,17 @@ export const metadata: Metadata = constructMetadata({
   path: "/guidelines",
 });
 
-export const revalidate = 86400;
+export const revalidate = 3600; // 1 hour ISR revalidation
 
-export default function GuidelinesPage() {
+export default async function GuidelinesPage() {
+  const doc = await fetchLegalDocument("guidelines");
+
+  const formattedDate = new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(doc.updatedAt || doc.publishedAt));
+
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([
     { name: "Home", url: "/" },
     { name: "Community Guidelines", url: "/guidelines" },
@@ -27,101 +35,124 @@ export default function GuidelinesPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      
+
       {/* Breadcrumbs */}
       <Breadcrumbs
         items={[
           { label: "Home", href: "/" },
-          { label: "Community Guidelines", isCurrent: true },
+          { label: doc.title, isCurrent: true },
         ]}
       />
 
       {/* Header */}
-      <div className="space-y-4 border-b border-neutral-200 dark:border-neutral-800 pb-8">
-        <span className="inline-block text-[11px] font-mono font-semibold uppercase tracking-widest text-neutral-400 dark:text-neutral-500">
-          Peer & Curation Standards
-        </span>
+      <div className="space-y-4 border-b border-[var(--border-neutral)] pb-8">
+        <div className="flex items-center gap-3">
+          <span className="inline-block text-[11px] font-mono font-semibold uppercase tracking-widest text-[var(--content-tertiary)]">
+            {doc.subtitle || "Peer & Curation Standards"}
+          </span>
+          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-[var(--chip-bg)] text-[var(--chip-fg)] border border-[var(--border-neutral)]">
+            v{doc.version}
+          </span>
+        </div>
 
-        <h1 className={cn(bricolage.className, "text-3xl sm:text-5xl font-black text-neutral-950 dark:text-white tracking-tight leading-tight")}>
-          Community Guidelines
+        <h1
+          className={cn(
+            bricolage.className,
+            "text-3xl sm:text-5xl font-black text-[var(--content-primary)] tracking-tight leading-tight"
+          )}
+        >
+          {doc.title}
         </h1>
 
-        <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 font-normal leading-relaxed">
-          The shared principles and curation expectations that keep Layerat a high-signal sanctuary for creators worldwide.
+        <p className="text-sm sm:text-base text-[var(--content-secondary)] font-normal leading-relaxed">
+          {doc.summary ||
+            "The shared principles and curation expectations that keep Layerat a high-signal sanctuary for creators worldwide."}
+        </p>
+
+        <p className="text-xs sm:text-sm font-mono text-[var(--content-tertiary)]">
+          Last revised: {formattedDate}
         </p>
       </div>
 
       {/* 3 Core Principles */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#141713] p-6 space-y-3 shadow-xs">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white">
+        <div className="rounded-2xl border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 space-y-3 shadow-xs">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--bg-neutral)] text-[var(--content-primary)]">
             <Award className="h-5 w-5" />
           </div>
-          <h3 className={cn(bricolage.className, "text-base font-bold text-neutral-950 dark:text-white")}>
+          <h3 className={cn(bricolage.className, "text-base font-bold text-[var(--content-primary)]")}>
             Originality & Provenance
           </h3>
-          <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed font-normal">
-            Publish authentic case studies that you personally designed, directed, or contributed to with accurate team attribution.
+          <p className="text-xs text-[var(--content-secondary)] leading-relaxed font-normal">
+            Publish authentic case studies that you personally designed, directed, or contributed to with accurate attribution.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#141713] p-6 space-y-3 shadow-xs">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white">
+        <div className="rounded-2xl border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 space-y-3 shadow-xs">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--bg-neutral)] text-[var(--content-primary)]">
             <Sparkles className="h-5 w-5" />
           </div>
-          <h3 className={cn(bricolage.className, "text-base font-bold text-neutral-950 dark:text-white")}>
+          <h3 className={cn(bricolage.className, "text-base font-bold text-[var(--content-primary)]")}>
             Thoughtful Critique
           </h3>
-          <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed font-normal">
-            Provide respectful, substantive feedback on typography, layout, interaction design, and conceptual execution.
+          <p className="text-xs text-[var(--content-secondary)] leading-relaxed font-normal">
+            Provide respectful, substantive feedback on typography, layout hierarchy, interaction, and conceptual execution.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#141713] p-6 space-y-3 shadow-xs">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white">
+        <div className="rounded-2xl border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 space-y-3 shadow-xs">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--bg-neutral)] text-[var(--content-primary)]">
             <ShieldCheck className="h-5 w-5" />
           </div>
-          <h3 className={cn(bricolage.className, "text-base font-bold text-neutral-950 dark:text-white")}>
+          <h3 className={cn(bricolage.className, "text-base font-bold text-[var(--content-primary)]")}>
             Zero Harassment
           </h3>
-          <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed font-normal">
+          <p className="text-xs text-[var(--content-secondary)] leading-relaxed font-normal">
             Layerat maintains zero tolerance for hate speech, harassment, impersonation, or predatory behavior.
           </p>
         </div>
       </div>
 
-      {/* Detail Editorial Sections */}
-      <div className="space-y-10 text-neutral-600 dark:text-neutral-400 leading-relaxed text-sm sm:text-base font-normal">
-        <section className="space-y-3">
-          <h2 className={cn(bricolage.className, "text-xl sm:text-2xl font-bold text-neutral-950 dark:text-white")}>
-            1. Curation & Publishing Standards
-          </h2>
-          <p>
-            When publishing a monograph or case study on Layerat:
-          </p>
-          <ul className="list-disc pl-5 space-y-2 text-sm sm:text-base">
-            <li>Ensure high-resolution imagery and clear typography specimens without unnecessary watermarks.</li>
-            <li>Write meaningful summaries explaining the design problem, client objectives, tools used, and creative solution.</li>
-            <li>Tag appropriate disciplines (Brand Identity, UI/UX, 3D & Motion, Typography, Packaging, Architecture) accurately.</li>
-          </ul>
-        </section>
+      {/* Detail Editorial Sections from Database */}
+      <div className="space-y-10 text-[var(--content-secondary)] leading-relaxed text-sm sm:text-base font-normal">
+        {doc.sections.map((section, idx) => (
+          <section key={idx} className="space-y-3">
+            <h2
+              className={cn(
+                bricolage.className,
+                "text-xl sm:text-2xl font-bold text-[var(--content-primary)]"
+              )}
+            >
+              {section.title}
+            </h2>
+            <p>{section.content}</p>
 
-        <section className="space-y-3">
-          <h2 className={cn(bricolage.className, "text-xl sm:text-2xl font-bold text-neutral-950 dark:text-white")}>
-            2. Respectful Collaboration & Comments
-          </h2>
-          <p>
-            The comment section on every project is an open forum for professional critique, questions about techniques, and appreciation. Keep interactions constructive, cordial, and focused on design craft.
-          </p>
-        </section>
+            {section.bullets && section.bullets.length > 0 && (
+              <ul className="list-disc pl-5 space-y-2 text-sm sm:text-base">
+                {section.bullets.map((bullet, bIdx) => (
+                  <li key={bIdx}>{bullet}</li>
+                ))}
+              </ul>
+            )}
+          </section>
+        ))}
 
-        <section className="space-y-3">
-          <h2 className={cn(bricolage.className, "text-xl sm:text-2xl font-bold text-neutral-950 dark:text-white")}>
-            3. Reporting & Enforcement
+        {/* Contact Section */}
+        <section className="space-y-3 pt-6 border-t border-[var(--border-neutral)]">
+          <h2
+            className={cn(
+              bricolage.className,
+              "text-xl sm:text-2xl font-bold text-[var(--content-primary)]"
+            )}
+          >
+            Editorial Curation Contact
           </h2>
           <p>
-            If you notice copyright infringement, uncredited work, or violations of these guidelines, please contact our curation team at{" "}
-            <a href="mailto:curation@layerat.com" className="text-neutral-900 dark:text-white font-bold underline">
+            If you notice copyright infringement or violations of these guidelines, reach out to our curation team or submit a report using the flag icon on any monograph:{" "}
+            <a
+              href="mailto:curation@layerat.com"
+              className="text-[var(--content-primary)] font-bold underline"
+            >
               curation@layerat.com
             </a>.
           </p>

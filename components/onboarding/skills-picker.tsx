@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { Plus, X, Check, Sparkles, Layers, Tag, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { MASTER_TAXONOMY, ALL_SUB_CATEGORIES } from "@/lib/taxonomy";
+import { useSession } from "@/lib/session-context";
 import { toast } from "@/components/ui/toast";
 
 interface SkillsPickerProps {
@@ -12,6 +12,7 @@ interface SkillsPickerProps {
 }
 
 export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
+  const { taxonomy } = useSession();
   const [customInput, setCustomInput] = useState("");
   const [selectedCategoryTab, setSelectedCategoryTab] = useState<string>("All");
 
@@ -48,13 +49,13 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
 
   const visibleDisciplines = useMemo(() => {
     if (selectedCategoryTab === "All") {
-      const mainNames = MASTER_TAXONOMY.map((c) => c.name);
-      const topSubs = MASTER_TAXONOMY.flatMap((c) => c.subCategories.slice(0, 2));
+      const mainNames = taxonomy.map((c) => c.name);
+      const topSubs = taxonomy.flatMap((c) => c.subCategories.slice(0, 2));
       return Array.from(new Set([...mainNames, ...topSubs]));
     }
-    const match = MASTER_TAXONOMY.find((c) => c.name === selectedCategoryTab);
+    const match = taxonomy.find((c) => c.name === selectedCategoryTab);
     return match ? [match.name, ...match.subCategories] : [];
-  }, [selectedCategoryTab]);
+  }, [selectedCategoryTab, taxonomy]);
 
   return (
     <div className="space-y-6">
@@ -105,7 +106,7 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
         <div className="flex items-center justify-between">
           <label className="text-xs font-semibold text-[var(--content-secondary)] flex items-center gap-1.5">
             <Sparkles className="h-3.5 w-3.5 text-[var(--content-secondary)]" />
-            <span>Browse by Discipline ({MASTER_TAXONOMY.length} Domains)</span>
+            <span>Browse by Discipline ({taxonomy.length} Domains)</span>
           </label>
         </div>
 
@@ -123,7 +124,7 @@ export function SkillsPicker({ selectedSkills, onChange }: SkillsPickerProps) {
           >
             All Top Disciplines
           </button>
-          {MASTER_TAXONOMY.map((cat) => (
+          {taxonomy.map((cat) => (
             <button
               key={cat.id}
               type="button"

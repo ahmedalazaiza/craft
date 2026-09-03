@@ -4,11 +4,8 @@ import React, { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ProjectCategory, ProjectMedium } from "@/lib/types";
+import { useSession } from "@/lib/session-context";
 import {
-  MASTER_TAXONOMY,
-  ALL_TAGS,
-  ALL_TOOLS,
-  ALL_SUB_CATEGORIES,
   getCategoryTaxonomy,
   getTagsForCategory,
   getToolsForCategory,
@@ -75,6 +72,8 @@ export function FilterDrawer({
   creatorFilters,
   onCreatorFiltersChange,
 }: FilterDrawerProps) {
+  const { taxonomy } = useSession();
+  const [isMounted, setIsMounted] = useState(false);
   const [locationQuery, setLocationQuery] = useState("");
 
   const availableCities = useMemo(() => {
@@ -105,29 +104,32 @@ export function FilterDrawer({
 
   const currentCategoryTaxonomy = useMemo(() => {
     if (!projectFilters?.category || projectFilters.category === "All") return null;
-    return getCategoryTaxonomy(projectFilters.category);
-  }, [projectFilters?.category]);
+    return getCategoryTaxonomy(projectFilters.category, taxonomy);
+  }, [projectFilters?.category, taxonomy]);
 
   const availableSubCategories = useMemo(() => {
     if (currentCategoryTaxonomy) {
       return ["All", ...currentCategoryTaxonomy.subCategories];
     }
-    return ["All", ...ALL_SUB_CATEGORIES.slice(0, 18)];
-  }, [currentCategoryTaxonomy]);
+    const allSubs = Array.from(new Set(taxonomy.flatMap((c) => c.subCategories)));
+    return ["All", ...allSubs.slice(0, 18)];
+  }, [currentCategoryTaxonomy, taxonomy]);
 
   const availableTags = useMemo(() => {
     if (currentCategoryTaxonomy) {
       return currentCategoryTaxonomy.tags;
     }
-    return ALL_TAGS.slice(0, 30);
-  }, [currentCategoryTaxonomy]);
+    const allTags = Array.from(new Set(taxonomy.flatMap((c) => c.tags)));
+    return allTags.slice(0, 30);
+  }, [currentCategoryTaxonomy, taxonomy]);
 
   const availableTools = useMemo(() => {
     if (currentCategoryTaxonomy) {
       return currentCategoryTaxonomy.tools;
     }
-    return ALL_TOOLS.slice(0, 24);
-  }, [currentCategoryTaxonomy]);
+    const allTools = Array.from(new Set(taxonomy.flatMap((c) => c.tools)));
+    return allTools.slice(0, 24);
+  }, [currentCategoryTaxonomy, taxonomy]);
 
   const handleToggleTag = (tag: string) => {
     if (!projectFilters || !onProjectFiltersChange) return;
@@ -169,8 +171,6 @@ export function FilterDrawer({
       hasPublishedOnly: false,
     });
   };
-
-  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -284,11 +284,11 @@ export function FilterDrawer({
                 </div>
               </div>
 
-              {/* Primary Category (13 Master Categories) */}
+              {/* Primary Category */}
               <div>
                 <div className="flex items-center justify-between mb-2.5">
                   <label className="type-body-default-bold text-[var(--content-primary)] block text-xs uppercase tracking-wider font-mono">
-                    Category ({MASTER_TAXONOMY.length})
+                    Category ({taxonomy.length})
                   </label>
                   {projectFilters.category && projectFilters.category !== "All" && (
                     <button
@@ -319,7 +319,7 @@ export function FilterDrawer({
                   >
                     All Categories
                   </FilterChip>
-                  {MASTER_TAXONOMY.map((cat) => {
+                  {taxonomy.map((cat) => {
                     const isSelected =
                       projectFilters.category === cat.name ||
                       projectFilters.category === cat.shortName;
@@ -499,7 +499,7 @@ export function FilterDrawer({
                   >
                     All Disciplines
                   </FilterChip>
-                  {MASTER_TAXONOMY.map((cat) => (
+                  {taxonomy.map((cat) => (
                     <FilterChip
                       key={cat.id}
                       active={creatorFilters.discipline === cat.name || creatorFilters.discipline === cat.shortName}

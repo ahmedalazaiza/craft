@@ -38,7 +38,7 @@ export function SignupClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get("redirect") || "/me";
-  const { signup } = useSession();
+  const { signup, platformSettings } = useSession();
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -159,6 +159,45 @@ export function SignupClient() {
   };
 
   // =========================================================================
+  // VIEW: REGISTRATIONS PAUSED
+  // =========================================================================
+  if (!platformSettings.allowSignups) {
+    return (
+      <div className="flex min-h-[calc(100vh-14rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-[140px]">
+        <FadeIn className="w-full max-w-md">
+          <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[28px] p-6 sm:p-8 text-center shadow-xl">
+            <CardHeader className="pb-4 pt-2">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 shadow-xs">
+                <AlertCircle className="h-7 w-7" strokeWidth={2} />
+              </div>
+              <h1 className={cn(bricolage.className, "text-2xl sm:text-3xl font-bold tracking-tight text-[var(--content-primary)]")}>
+                Registrations Paused
+              </h1>
+              <p className="text-xs sm:text-sm text-[var(--content-secondary)] mt-2">
+                New creator onboarding is temporarily closed. Please check back soon or sign in to your existing account.
+              </p>
+            </CardHeader>
+            <CardContent className="pt-4 flex flex-col gap-3">
+              <Link
+                href="/login"
+                className={cn(buttonVariants({ variant: "primary", size: "lg" }), "w-full rounded-full font-bold")}
+              >
+                Sign In to Existing Account
+              </Link>
+              <Link
+                href="/"
+                className={cn(buttonVariants({ variant: "ghost", size: "default" }), "w-full rounded-full text-xs text-[var(--content-tertiary)]")}
+              >
+                Return to Discover
+              </Link>
+            </CardContent>
+          </Card>
+        </FadeIn>
+      </div>
+    );
+  }
+
+  // =========================================================================
   // VIEW: CHECK YOUR INBOX CONFIRMATION SCREEN
   // =========================================================================
   if (isRegistered) {
@@ -244,17 +283,22 @@ export function SignupClient() {
                   )}
                 </Button>
 
-                <Link
-                  href="/"
-                  prefetch={true}
-                  className={buttonVariants({
-                    variant: "accent",
-                    className: "w-full font-bold shadow-xs gap-2",
-                  })}
-                >
-                  <span>Explore Platform</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
+                <div className="pt-1">
+                  <Link
+                    href="/"
+                    prefetch={true}
+                    className={buttonVariants({
+                      variant: "accent",
+                      className: "w-full font-bold shadow-xs gap-2 py-2.5 cursor-pointer",
+                    })}
+                  >
+                    <span>Discover & verify later</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <p className="text-[11px] text-[var(--content-tertiary)] text-center mt-2.5 leading-relaxed">
+                    You can explore portfolios and creators immediately. We&apos;ll keep your account active and remind you to verify before publishing or interacting.
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>

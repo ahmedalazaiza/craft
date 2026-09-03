@@ -9,7 +9,7 @@ import { bricolage } from "@/lib/fonts";
 import { ProjectCard } from "@/components/project/project-card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { DEFAULT_AVATAR_URL, getValidAvatarUrl } from "@/lib/avatar";
-import { MASTER_TAXONOMY, normalizeCategory } from "@/lib/taxonomy";
+import { normalizeCategory } from "@/lib/taxonomy";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -75,7 +75,7 @@ export function HomeClient({
   initialProjects = [],
   initialCreators = [],
 }: HomeClientProps) {
-  const { projects: contextProjects, creators: contextCreators, user } = useSession();
+  const { projects: contextProjects, creators: contextCreators, taxonomy, user } = useSession();
 
   // Instant SSR hydration: prioritize context if updated by user action, otherwise use SSR initial data
   const projects = contextProjects.length > 0 ? contextProjects : initialProjects;
@@ -85,9 +85,18 @@ export function HomeClient({
     return projects.filter((p) => p.published);
   }, [projects]);
 
-  // Curated Featured (max 10 items)
+  // Curated Featured (max 10 items) - sorted by featuredOrder if present, then publishedAt
   const allFeatured = useMemo(() => {
-    return publishedProjects.filter((p) => p.featured);
+    return publishedProjects
+      .filter((p) => p.featured)
+      .sort((a, b) => {
+        const hasA = typeof a.featuredOrder === "number";
+        const hasB = typeof b.featuredOrder === "number";
+        if (hasA && hasB) return (a.featuredOrder as number) - (b.featuredOrder as number);
+        if (hasA) return -1;
+        if (hasB) return 1;
+        return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
+      });
   }, [publishedProjects]);
 
   const featuredProjects = useMemo(() => {
@@ -96,11 +105,11 @@ export function HomeClient({
 
   const hasMoreFeatured = allFeatured.length > 10;
 
-  // Active Category Showcases from MASTER_TAXONOMY with at least 1 published project (max 10 items per category)
+  // Active Category Showcases from live dynamic taxonomy with at least 1 published project (max 10 items per category)
   const categorySections = useMemo(() => {
-    return MASTER_TAXONOMY.map((cat) => {
+    return taxonomy.map((cat) => {
       const allMatching = publishedProjects.filter((p) => {
-        const norm = normalizeCategory(p.category);
+        const norm = normalizeCategory(p.category, taxonomy);
         return (
           norm.toLowerCase() === cat.name.toLowerCase() ||
           p.category.toLowerCase() === cat.shortName.toLowerCase() ||
@@ -123,7 +132,7 @@ export function HomeClient({
         hasMore: allMatching.length > 10,
       };
     }).filter((section) => section.projects.length > 0);
-  }, [publishedProjects]);
+  }, [publishedProjects, taxonomy]);
 
   return (
     <div className="flex flex-col gap-12 sm:gap-14 pb-14">

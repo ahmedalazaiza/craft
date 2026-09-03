@@ -1,12 +1,26 @@
 import { supabase } from "./client";
-import { Project, Creator, Comment, Notification, NotificationType } from "@/lib/types";
+import { Project, Creator, Comment, Notification, NotificationType, PlatformSettings, Collection, LegalDocument, LegalSection } from "@/lib/types";
 import { DEFAULT_AVATAR_URL } from "@/lib/avatar";
 import { getAuthRedirectUrl } from "@/lib/seo";
 import { deleteStorageFiles } from "./storage";
+import { CategoryTaxonomyItem, FALLBACK_TAXONOMY } from "@/lib/taxonomy";
 
 // =============================================================================
 // TYPE MAPPERS
 // =============================================================================
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function mapCategoryRow(row: any): CategoryTaxonomyItem {
+  return {
+    id: row.id,
+    name: row.name,
+    shortName: row.short_name || row.name,
+    description: row.description || "",
+    subCategories: Array.isArray(row.sub_categories) ? row.sub_categories : [],
+    tags: Array.isArray(row.tags) ? row.tags : [],
+    tools: Array.isArray(row.tools) ? row.tools : [],
+  };
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function mapProfileToCreator(row: any, currentUserId?: string): Creator {
@@ -44,6 +58,9 @@ export function mapProfileToCreator(row: any, currentUserId?: string): Creator {
     isVerified: Boolean(row.is_verified),
     followersCount: liveFollowers,
     isCurrentUser: currentUserId ? row.id === currentUserId : false,
+    role: row.role || "member",
+    isFeatured: Boolean(row.is_featured),
+    badge: row.badge || undefined,
   };
 }
 
@@ -102,6 +119,8 @@ export function mapProjectRow(row: any, currentUserId?: string): Project {
     views: liveViews,
     comments,
     featured: row.featured ?? false,
+    featuredOrder: typeof row.featured_order === "number" ? row.featured_order : undefined,
+    badge: row.badge || undefined,
   };
 }
 
@@ -1204,6 +1223,439 @@ export async function incrementProjectViewsInDb(projectId: string): Promise<void
     // Non-blocking view increment
   }
 }
+
+/**
+ * Fetch dynamic creative disciplines & categories taxonomy from Supabase public.categories
+ * Automatically falls back to FALLBACK_TAXONOMY if table does not exist or network error occurs.
+ */
+export async function fetchCategories(): Promise<CategoryTaxonomyItem[]> {
+  try {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+
+    if (error || !data || data.length === 0) {
+      return FALLBACK_TAXONOMY;
+    }
+
+    return data.map(mapCategoryRow);
+  } catch (err) {
+    console.warn("Categories fetch fallback:", err);
+    return FALLBACK_TAXONOMY;
+  }
+}
+
+export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
+  id: "global",
+  announcementBannerText: "",
+  announcementBannerLink: "",
+  announcementBannerActive: false,
+  allowSignups: true,
+  maintenanceMode: false,
+  maintenanceMessage: "Layerat is currently undergoing scheduled platform upgrades. We will be back online shortly.",
+  maxUploadSizeMb: 25,
+  enableCollections: false,
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function mapPlatformSettingsRow(row: any): PlatformSettings {
+  if (!row) return DEFAULT_PLATFORM_SETTINGS;
+  return {
+    id: row.id || "global",
+    announcementBannerText: row.announcement_banner_text || "",
+    announcementBannerLink: row.announcement_banner_link || "",
+    announcementBannerActive: Boolean(row.announcement_banner_active),
+    allowSignups: row.allow_signups ?? true,
+    maintenanceMode: Boolean(row.maintenance_mode),
+    maintenanceMessage: row.maintenance_message || DEFAULT_PLATFORM_SETTINGS.maintenanceMessage,
+    maxUploadSizeMb: typeof row.max_upload_size_mb === "number" ? row.max_upload_size_mb : 25,
+    enableCollections: Boolean(row.enable_collections),
+    updatedAt: row.updated_at,
+  };
+}
+
+/**
+ * Fetch dynamic platform settings from Supabase public.platform_settings
+ * Automatically falls back to DEFAULT_PLATFORM_SETTINGS if table does not exist or error occurs.
+ */
+export async function fetchPlatformSettings(): Promise<PlatformSettings> {
+  try {
+    const { data, error } = await supabase
+      .from("platform_settings")
+      .select("*")
+      .eq("id", "global")
+      .maybeSingle();
+
+    if (error || !data) {
+      return DEFAULT_PLATFORM_SETTINGS;
+    }
+
+    return mapPlatformSettingsRow(data);
+  } catch (err) {
+    console.warn("Platform settings fetch fallback:", err);
+    return DEFAULT_PLATFORM_SETTINGS;
+  }
+}
+
+// =============================================================================
+// COLLECTIONS (THEMATIC CURATIONS)
+// =============================================================================
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function mapCollectionRow(row: any): Collection {
+  const projectIds = Array.isArray(row.project_ids) ? row.project_ids : [];
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    description: row.description || "",
+    coverImage: row.cover_image,
+    projectIds,
+    projectsCount: projectIds.length,
+    sortOrder: typeof row.sort_order === "number" ? row.sort_order : 0,
+    isFeatured: Boolean(row.is_featured),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+/**
+ * Fetch all curated collections ordered by sort_order ASC, created_at DESC
+ */
+export async function fetchCollections(): Promise<Collection[]> {
+  try {
+    const { data, error } = await supabase
+      .from("collections")
+      .select("*")
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: false });
+
+    if (error || !data) {
+      return [];
+    }
+
+    return data.map(mapCollectionRow);
+  } catch (err) {
+    console.warn("fetchCollections error:", err);
+    return [];
+  }
+}
+
+/**
+ * Fetch a single curated collection by slug and populate its project records
+ */
+export async function fetchCollectionBySlug(
+  slug: string
+): Promise<{ collection: Collection; projects: Project[] } | null> {
+  try {
+    const { data: collectionRow, error } = await supabase
+      .from("collections")
+      .select("*")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (error || !collectionRow) {
+      return null;
+    }
+
+    const collection = mapCollectionRow(collectionRow);
+
+    if (!collection.projectIds || collection.projectIds.length === 0) {
+      return { collection, projects: [] };
+    }
+
+    // Fetch the actual project rows for these IDs
+    const { data: projectsData, error: projError } = await supabase
+      .from("projects")
+      .select(`
+        *,
+        creator:profiles(*),
+        appreciations:appreciations(count),
+        comments:comments(*, author:profiles(*))
+      `)
+      .in("id", collection.projectIds)
+      .eq("published", true);
+
+    if (projError || !projectsData) {
+      return { collection, projects: [] };
+    }
+
+    const mappedProjects = projectsData.map((row) => mapProjectRow(row));
+
+    // Preserve collection's defined order
+    const sortedProjects = collection.projectIds
+      .map((id) => mappedProjects.find((p) => p.id === id))
+      .filter((p): p is Project => Boolean(p));
+
+    return { collection, projects: sortedProjects };
+  } catch (err) {
+    console.warn("fetchCollectionBySlug error:", err);
+    return null;
+  }
+}
+
+// =============================================================================
+// CONTENT MODERATION & ABUSE REPORTS
+// =============================================================================
+
+export async function submitReportInDb(params: {
+  projectId?: string;
+  reportedCreatorId?: string;
+  reason: string;
+  notes?: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { data: authData } = await supabase.auth.getUser();
+    const reporterId = authData.user?.id || null;
+
+    const { error } = await supabase.from("reports").insert({
+      reporter_id: reporterId,
+      project_id: params.projectId || null,
+      reported_creator_id: params.reportedCreatorId || null,
+      reason: params.reason,
+      notes: params.notes || "",
+      status: "pending",
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to submit report",
+    };
+  }
+}
+
+// =============================================================================
+// LEGAL & POLICY DOCUMENTS (DYNAMIC TERMS, PRIVACY & GUIDELINES)
+// =============================================================================
+
+export const DEFAULT_LEGAL_DOCUMENTS: Record<string, LegalDocument> = {
+  terms: {
+    id: "terms",
+    title: "Terms of Use",
+    subtitle: "Legal Agreement",
+    version: "2026.1",
+    summary: "By publishing or browsing on Layerat, you enter into a binding agreement protecting your original intellectual property and ensuring respectful peer interactions.",
+    isPublished: true,
+    publishedAt: "2026-08-31T00:00:00.000Z",
+    updatedAt: "2026-08-31T00:00:00.000Z",
+    sections: [
+      {
+        title: "1. Ownership & Original Creative Authorship",
+        content: "You retain 100% ownership, copyright, and moral rights to all creative monographs, images, case studies, and assets you publish on Layerat. We never claim ownership of your work. By uploading, you grant Layerat a non-exclusive, worldwide license solely to display, format, and distribute your work across the platform.",
+        bullets: [
+          "Layerat does not sell, sublicense, or license your portfolio works to third parties.",
+          "Your work will never be utilized to train proprietary generative AI visual models without your explicit, opt-in written consent.",
+          "You affirm that you hold all necessary copyrights or studio permissions for works published under your profile."
+        ]
+      },
+      {
+        title: "2. Creator Accounts & Session Security",
+        content: "You are responsible for safeguarding your account credentials. You agree to provide accurate identification and maintain truthful attribution for all studio collaborations.",
+        bullets: [
+          "One account per creator or registered design agency.",
+          "Impersonation of existing designers, studios, or brands is strictly prohibited and results in immediate account suspension.",
+          "You are liable for all actions taken under your authenticated session."
+        ]
+      },
+      {
+        title: "3. Platform Conduct & Prohibited Practices",
+        content: "Layerat is designed as a sanctuary for serious visual craft. We maintain zero tolerance for abuse, plagiarism, or malicious activity.",
+        bullets: [
+          "No uploading of stolen case studies, uncredited derivative templates, or deceptive portfolio entries.",
+          "No automated scraping, botting of appreciations, artificial view inflation, or commercial spam in critiques.",
+          "No harassment, hate speech, defamation, or graphic illegal content."
+        ]
+      },
+      {
+        title: "4. Content Moderation & Takedown Notices",
+        content: "We respect the intellectual property rights of all artists. If you believe your copyrighted work has been copied in a manner that constitutes infringement, you may submit a report through our in-platform moderation reporting tool or contact our legal team.",
+        bullets: [
+          "We review and take action on verified copyright notices promptly.",
+          "Repeat infringers will have their accounts permanently terminated.",
+          "False or bad-faith takedown notices may incur legal liability."
+        ]
+      },
+      {
+        title: "5. Limitation of Liability & Warranties",
+        content: "Layerat is provided on an as-is and as-available basis. While we strive for 99.99% uptime and bulletproof data persistence, we do not warrant that the service will be uninterrupted or error-free. Under no circumstances will Layerat be liable for indirect, incidental, or consequential damages arising from platform usage."
+      }
+    ]
+  },
+  privacy: {
+    id: "privacy",
+    title: "Privacy Policy",
+    subtitle: "Privacy & Security",
+    version: "2026.1",
+    summary: "Layerat is built on a zero data-selling pledge. We only collect the minimal session information required to render your portfolio and provide a high-signal discovery experience.",
+    isPublished: true,
+    publishedAt: "2026-08-31T00:00:00.000Z",
+    updatedAt: "2026-08-31T00:00:00.000Z",
+    sections: [
+      {
+        title: "1. Zero Data-Selling Guarantee",
+        content: "We have never sold, rented, or monetized your personal information, contact details, or portfolio metrics to third-party data brokers or advertising networks. Our business model is aligned entirely with supporting creators, not harvesting user attention.",
+        bullets: [
+          "No tracking pixels or third-party behavioral advertising scripts.",
+          "No data bundling for external programmatic ad auctions.",
+          "Your email address is confidential and never displayed publicly unless you explicitly add it to your bio."
+        ]
+      },
+      {
+        title: "2. What Information We Collect",
+        content: "We collect only the essential information necessary to maintain your authenticated session and display your public studio profile.",
+        bullets: [
+          "Account Data: Email address, encrypted authentication tokens, username, display name, and avatar.",
+          "Profile Metadata: Bio, location, city, website link, and creative skill tags provided voluntarily by you.",
+          "Publishing Data: Project monographs, gallery images, descriptions, categories, software tags, and associated metrics.",
+          "Technical Diagnostics: Anonymized request logs, response latency, and error traces to maintain platform health and uptime."
+        ]
+      },
+      {
+        title: "3. Storage & Cryptographic Security",
+        content: "All data in transit is encrypted via TLS 1.3. User authentication is governed by Supabase Auth with bcrypt password hashing and secure HTTP-only session cookies. Sensitive database records are protected by PostgreSQL Row Level Security (RLS) policies enforcing cryptographic ownership checks.",
+        bullets: [
+          "Media assets stored on enterprise CDN with global edge caching.",
+          "Automated continuous database backups with point-in-time recovery.",
+          "Strict principle of least privilege across internal infrastructure."
+        ]
+      },
+      {
+        title: "4. Cookies & Local Session Storage",
+        content: "Layerat uses functional cookies and browser storage strictly to keep you signed in, remember your dark/light theme preference, and cache dismissible system banners.",
+        bullets: [
+          "Essential Cookies: Authentication session and CSRF mitigation.",
+          "Preference Storage: Theme mode (light/dark) and dismissal tokens for announcements.",
+          "No third-party cross-site tracking cookies."
+        ]
+      },
+      {
+        title: "5. Your Rights: Export & Total Account Deletion",
+        content: "You have full control over your digital footprint. Under GDPR, CCPA, and global privacy standards, you have the right to inspect, export, or permanently delete your account and all associated portfolio data.",
+        bullets: [
+          "Instant self-service account deletion available directly in Settings.",
+          "Upon deletion, all projects, appreciation records, comments, and uploaded storage files are permanently erased from our production database."
+        ]
+      }
+    ]
+  },
+  guidelines: {
+    id: "guidelines",
+    title: "Community Guidelines",
+    subtitle: "Peer & Curation Standards",
+    version: "2026.1",
+    summary: "Layerat is a sanctuary for thoughtful creative craft. These standards outline our expectations for original authorship, constructive critique, and professional integrity.",
+    isPublished: true,
+    publishedAt: "2026-08-31T00:00:00.000Z",
+    updatedAt: "2026-08-31T00:00:00.000Z",
+    sections: [
+      {
+        title: "1. Authentic Authorship & Creative Integrity",
+        content: "Publish only work that you created, art directed, or contributed to meaningfully. Layerat celebrates genuine craft over volume.",
+        bullets: [
+          "Always credit collaborators, creative directors, photographers, and studios involved in the project.",
+          "Commercial agency client work must have proper client release authorization.",
+          "Template repackaging or posting generic stock graphics as original case studies is not permitted."
+        ]
+      },
+      {
+        title: "2. Thoughtful Peer Critique & Discourse",
+        content: "Feedback on Layerat should elevate the craft. When commenting on another designer's monograph, offer actionable, constructive critique.",
+        bullets: [
+          "Focus feedback on typography, layout hierarchy, ergonomics, interaction, and conceptual execution.",
+          "No generic copy-paste spam or solicitation (e.g. follow-for-follow, check my profile).",
+          "Disagreements must remain professional, respectful, and focused on the work, never personal attacks."
+        ]
+      },
+      {
+        title: "3. Curation Standards for Curated Collections",
+        content: "Projects featured on the homepage, in category showcases, or in editorial collections are chosen based on execution quality and storytelling completeness.",
+        bullets: [
+          "High-resolution cover imagery without compression artifacts or cluttered watermarks.",
+          "Comprehensive monographs with process insights, typography specimens, or interface walkthroughs.",
+          "Correct categorization into one of Layerat's 13 canonical design disciplines."
+        ]
+      },
+      {
+        title: "4. Zero Tolerance for Harassment & Discrimination",
+        content: "Layerat is an inclusive global creative network. Discrimination, hate speech, targeted harassment, or exclusionary conduct based on race, gender, nationality, sexual orientation, disability, or religion will result in immediate and permanent account removal."
+      },
+      {
+        title: "5. Enforcement & Community Reporting",
+        content: "Our moderation team actively monitors flags submitted through the in-platform reporting system. Violations may result in formal warnings, project unpublishing, or permanent account revocation depending on severity."
+      }
+    ]
+  }
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function mapLegalDocumentRow(row: any): LegalDocument {
+  const rawSections = Array.isArray(row.sections) ? row.sections : [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sections: LegalSection[] = rawSections.map((s: any) => ({
+    title: s.title || "",
+    content: s.content || "",
+    bullets: Array.isArray(s.bullets) ? s.bullets : undefined,
+  }));
+
+  return {
+    id: row.id,
+    title: row.title || "",
+    subtitle: row.subtitle || "",
+    version: row.version || "1.0",
+    summary: row.summary || "",
+    sections,
+    isPublished: Boolean(row.is_published),
+    publishedAt: row.published_at || row.created_at || new Date().toISOString(),
+    updatedAt: row.updated_at || row.published_at || new Date().toISOString(),
+  };
+}
+
+/**
+ * Fetch a legal/policy document from public.legal_documents by ID.
+ * Falls back to DEFAULT_LEGAL_DOCUMENTS if the database row does not exist.
+ */
+export async function fetchLegalDocument(
+  id: "terms" | "privacy" | "guidelines" | string
+): Promise<LegalDocument> {
+  try {
+    const { data, error } = await supabase
+      .from("legal_documents")
+      .select("*")
+      .eq("id", id)
+      .eq("is_published", true)
+      .maybeSingle();
+
+    if (error || !data) {
+      return DEFAULT_LEGAL_DOCUMENTS[id] || {
+        id,
+        title: id,
+        subtitle: "Policy Document",
+        version: "1.0",
+        summary: "",
+        sections: [],
+        isPublished: true,
+        publishedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+    }
+
+    return mapLegalDocumentRow(data);
+  } catch (err) {
+    console.warn(`fetchLegalDocument error for ${id}:`, err);
+    return DEFAULT_LEGAL_DOCUMENTS[id];
+  }
+}
+
+
+
 
 
 

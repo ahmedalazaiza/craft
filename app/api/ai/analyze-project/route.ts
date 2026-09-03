@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { MASTER_TAXONOMY, normalizeCategory, getCategoryTaxonomy } from "@/lib/taxonomy";
+import { CategoryTaxonomyItem, normalizeCategory, getCategoryTaxonomy } from "@/lib/taxonomy";
+import { fetchCategories } from "@/lib/supabase/queries";
 
 export const runtime = "nodejs";
 export const maxDuration = 30; // 30 seconds max for multimodal image inspection
@@ -44,33 +45,33 @@ function cleanFilenameToTitle(filename: string): string {
     .join(" ");
 }
 
-function detectCategoryFromKeywords(text: string): typeof MASTER_TAXONOMY[0] {
+function detectCategoryFromKeywords(text: string, taxonomy: CategoryTaxonomyItem[]): CategoryTaxonomyItem {
   const lower = text.toLowerCase();
   
   if (lower.match(/\b(ux|ui|app|dashboard|screen|interface|web|saas|mobile|ios|android|portal|figma)\b/)) {
-    return MASTER_TAXONOMY.find((c) => c.name.includes("Interface")) || MASTER_TAXONOMY[0];
+    return taxonomy.find((c) => c.name.includes("Interface")) || taxonomy[0];
   }
   if (lower.match(/\b(brand|identity|logo|editorial|book|monograph|guidelines|stationery|packaging|poster)\b/)) {
-    return MASTER_TAXONOMY.find((c) => c.name.includes("Brand")) || MASTER_TAXONOMY[1];
+    return taxonomy.find((c) => c.name.includes("Brand")) || taxonomy[1] || taxonomy[0];
   }
   if (lower.match(/\b(3d|render|blender|cinema4d|octane|c4d|spatial|sculpt|houdini)\b/)) {
-    return MASTER_TAXONOMY.find((c) => c.name.includes("3D")) || MASTER_TAXONOMY[2];
+    return taxonomy.find((c) => c.name.includes("3D")) || taxonomy[2] || taxonomy[0];
   }
   if (lower.match(/\b(motion|animation|aftereffects|video|reel|kinetic)\b/)) {
-    return MASTER_TAXONOMY.find((c) => c.name.includes("Motion")) || MASTER_TAXONOMY[3];
+    return taxonomy.find((c) => c.name.includes("Motion")) || taxonomy[3] || taxonomy[0];
   }
   if (lower.match(/\b(type|font|typeface|typography|lettering)\b/)) {
-    return MASTER_TAXONOMY.find((c) => c.name.includes("Typography")) || MASTER_TAXONOMY[4];
+    return taxonomy.find((c) => c.name.includes("Typography")) || taxonomy[4] || taxonomy[0];
   }
   if (lower.match(/\b(photo|photography|film|portrait|editorial-shot|35mm)\b/)) {
-    return MASTER_TAXONOMY.find((c) => c.name.includes("Photography")) || MASTER_TAXONOMY[5];
+    return taxonomy.find((c) => c.name.includes("Photography")) || taxonomy[5] || taxonomy[0];
   }
   if (lower.match(/\b(architect|spatial|interior|building|pavilion|structure)\b/)) {
-    return MASTER_TAXONOMY.find((c) => c.name.includes("Architecture")) || MASTER_TAXONOMY[6];
+    return taxonomy.find((c) => c.name.includes("Architecture")) || taxonomy[6] || taxonomy[0];
   }
 
-  // Default to UI
-  return MASTER_TAXONOMY[0];
+  // Default to first active discipline
+  return taxonomy[0];
 }
 
 export async function POST(req: NextRequest) {
@@ -92,8 +93,11 @@ export async function POST(req: NextRequest) {
       process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
       process.env.GOOGLE_API_KEY;
 
+    // Fetch live categories taxonomy
+    const taxonomy = await fetchCategories();
+
     // Build categories summary for strict taxonomy guidance
-    const taxonomySummary = MASTER_TAXONOMY.map(
+    const taxonomySummary = taxonomy.map(
       (cat) =>
         `- Category: "${cat.name}" (ID: ${cat.id})\n  Sub-Categories: ${cat.subCategories.join(", ")}\n  Typical Tags: ${cat.tags.slice(0, 10).join(", ")}\n  Typical Tools: ${cat.tools.slice(0, 8).join(", ")}`
     ).join("\n\n");
@@ -223,8 +227,8 @@ Return ONLY valid JSON matching this structure without markdown formatting or co
           const cleanedText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
           const parsed = JSON.parse(cleanedText);
 
-          const normalizedCategory = normalizeCategory(parsed.category || "UI");
-          const matchedTax = getCategoryTaxonomy(normalizedCategory) || MASTER_TAXONOMY[0];
+          const normalizedCategory = normalizeCategory(parsed.category || "UI", taxonomy);
+          const matchedTax = getCategoryTaxonomy(normalizedCategory, taxonomy) || taxonomy[0];
           const validSub = matchedTax.subCategories.includes(parsed.subCategory)
             ? parsed.subCategory
             : matchedTax.subCategories[0] || "";
@@ -263,7 +267,8 @@ Return ONLY valid JSON matching this structure without markdown formatting or co
 
     const primaryExtractedTitle = combinedTerms.find((t) => t.length > 4) || "";
     const detectedTaxonomy = detectCategoryFromKeywords(
-      primaryExtractedTitle + " " + filenames.join(" ") + " " + imageUrls.join(" ")
+      primaryExtractedTitle + " " + filenames.join(" ") + " " + imageUrls.join(" "),
+      taxonomy
     );
 
     let dynamicTitle = "";

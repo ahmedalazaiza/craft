@@ -26,7 +26,6 @@ import { bricolage } from "@/lib/fonts";
 import { Button } from "@/components/ui/button";
 import { LocationInput } from "@/components/ui/location-input";
 import { ImageCropperModal } from "@/components/ui/image-cropper-modal";
-import { MASTER_TAXONOMY } from "@/lib/taxonomy";
 import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
@@ -41,7 +40,7 @@ export function EditProfileModal({
   onClose,
   creator,
 }: EditProfileModalProps) {
-  const { updateProfile } = useSession();
+  const { updateProfile, taxonomy } = useSession();
   const [mounted, setMounted] = useState(false);
 
   const [editName, setEditName] = useState(creator.displayName || "");
@@ -397,7 +396,7 @@ export function EditProfileModal({
                       Select Master Disciplines:
                     </span>
                     <div className="flex flex-wrap gap-1.5">
-                      {MASTER_TAXONOMY.map((cat) => {
+                      {taxonomy.map((cat) => {
                         const isSelected = editSkills.includes(cat.name);
                         return (
                           <button

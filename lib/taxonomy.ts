@@ -12,7 +12,7 @@ export interface CategoryTaxonomyItem {
   tools: string[];
 }
 
-export const MASTER_TAXONOMY: CategoryTaxonomyItem[] = [
+export const FALLBACK_TAXONOMY: CategoryTaxonomyItem[] = [
   {
     id: "ui",
     name: "User Interface Design (UI)",
@@ -619,19 +619,25 @@ export const MASTER_TAXONOMY: CategoryTaxonomyItem[] = [
   },
 ];
 
+/**
+ * Backward compatibility alias for FALLBACK_TAXONOMY.
+ * For live dynamic disciplines, consume `taxonomy` from `useSession()`.
+ */
+export const MASTER_TAXONOMY: CategoryTaxonomyItem[] = FALLBACK_TAXONOMY;
+
 // Flat lists and helpers
-export const ALL_CATEGORY_NAMES = MASTER_TAXONOMY.map((c) => c.name);
+export const ALL_CATEGORY_NAMES = FALLBACK_TAXONOMY.map((c) => c.name);
 
 export const ALL_SUB_CATEGORIES = Array.from(
-  new Set(MASTER_TAXONOMY.flatMap((c) => c.subCategories))
+  new Set(FALLBACK_TAXONOMY.flatMap((c) => c.subCategories))
 );
 
 export const ALL_TAGS = Array.from(
-  new Set(MASTER_TAXONOMY.flatMap((c) => c.tags))
+  new Set(FALLBACK_TAXONOMY.flatMap((c) => c.tags))
 );
 
 export const ALL_TOOLS = Array.from(
-  new Set(MASTER_TAXONOMY.flatMap((c) => c.tools))
+  new Set(FALLBACK_TAXONOMY.flatMap((c) => c.tools))
 );
 
 // Map old abbreviations / partial names to current full categories
@@ -647,12 +653,15 @@ const CATEGORY_ALIASES: Record<string, string> = {
   Type: "Type Design & Lettering",
 };
 
-export function normalizeCategory(categoryName?: string): string {
-  if (!categoryName) return MASTER_TAXONOMY[0].name;
+export function normalizeCategory(
+  categoryName?: string,
+  taxonomyList: CategoryTaxonomyItem[] = FALLBACK_TAXONOMY
+): string {
+  if (!categoryName) return taxonomyList[0]?.name || "General";
   if (CATEGORY_ALIASES[categoryName]) {
     return CATEGORY_ALIASES[categoryName];
   }
-  const match = MASTER_TAXONOMY.find(
+  const match = taxonomyList.find(
     (c) =>
       c.name.toLowerCase() === categoryName.toLowerCase() ||
       c.shortName.toLowerCase() === categoryName.toLowerCase() ||
@@ -661,23 +670,35 @@ export function normalizeCategory(categoryName?: string): string {
   return match ? match.name : categoryName;
 }
 
-export function getCategoryTaxonomy(categoryName?: string): CategoryTaxonomyItem | undefined {
-  if (!categoryName) return MASTER_TAXONOMY[0];
-  const normalized = normalizeCategory(categoryName);
-  return MASTER_TAXONOMY.find((c) => c.name === normalized);
+export function getCategoryTaxonomy(
+  categoryName?: string,
+  taxonomyList: CategoryTaxonomyItem[] = FALLBACK_TAXONOMY
+): CategoryTaxonomyItem | undefined {
+  if (!categoryName) return taxonomyList[0];
+  const normalized = normalizeCategory(categoryName, taxonomyList);
+  return taxonomyList.find((c) => c.name === normalized);
 }
 
-export function getSubCategoriesForCategory(categoryName?: string): string[] {
-  const tax = getCategoryTaxonomy(categoryName);
+export function getSubCategoriesForCategory(
+  categoryName?: string,
+  taxonomyList: CategoryTaxonomyItem[] = FALLBACK_TAXONOMY
+): string[] {
+  const tax = getCategoryTaxonomy(categoryName, taxonomyList);
   return tax ? tax.subCategories : [];
 }
 
-export function getTagsForCategory(categoryName?: string): string[] {
-  const tax = getCategoryTaxonomy(categoryName);
+export function getTagsForCategory(
+  categoryName?: string,
+  taxonomyList: CategoryTaxonomyItem[] = FALLBACK_TAXONOMY
+): string[] {
+  const tax = getCategoryTaxonomy(categoryName, taxonomyList);
   return tax ? tax.tags : ALL_TAGS.slice(0, 15);
 }
 
-export function getToolsForCategory(categoryName?: string): string[] {
-  const tax = getCategoryTaxonomy(categoryName);
+export function getToolsForCategory(
+  categoryName?: string,
+  taxonomyList: CategoryTaxonomyItem[] = FALLBACK_TAXONOMY
+): string[] {
+  const tax = getCategoryTaxonomy(categoryName, taxonomyList);
   return tax ? tax.tools : ALL_TOOLS.slice(0, 12);
 }

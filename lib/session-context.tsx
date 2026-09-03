@@ -6,6 +6,7 @@ import {
   Project,
   Comment,
   Notification,
+  PlatformSettings,
 } from "./types";
 import {
   fetchProjects,
@@ -23,7 +24,11 @@ import {
   insertNotificationInDb,
   markNotificationReadInDb,
   markAllNotificationsReadInDb,
+  fetchCategories,
+  fetchPlatformSettings,
+  DEFAULT_PLATFORM_SETTINGS,
 } from "./supabase/queries";
+import { CategoryTaxonomyItem, FALLBACK_TAXONOMY } from "@/lib/taxonomy";
 import {
   signInWithEmail,
   signUpWithEmail,
@@ -39,6 +44,10 @@ interface SessionContextType {
   user: Creator | null;
   projects: Project[];
   creators: Creator[];
+  taxonomy: CategoryTaxonomyItem[];
+  platformSettings: PlatformSettings;
+  isAdmin: boolean;
+  isModerator: boolean;
   isLoadingDb: boolean;
   isAuthReady: boolean;
   appreciatedProjectIds: Set<string>;
@@ -119,6 +128,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [creators, setCreators] = useState<Creator[]>([]);
+  const [taxonomy, setTaxonomy] = useState<CategoryTaxonomyItem[]>(FALLBACK_TAXONOMY);
+  const [platformSettings, setPlatformSettings] = useState<PlatformSettings>(DEFAULT_PLATFORM_SETTINGS);
   const [isLoadingDb, setIsLoadingDb] = useState<boolean>(true);
   const [appreciatedProjectIds, setAppreciatedProjectIds] = useState<Set<string>>(new Set());
   const [followingCreatorIds, setFollowingCreatorIds] = useState<Set<string>>(new Set());
@@ -177,9 +188,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   // Check auth and fetch live database on mount
   const refreshFromDb = useCallback(async () => {
     try {
-      const [dbProjects, dbCreators, activeAuthUser] = await Promise.all([
+      const [dbProjects, dbCreators, dbCategories, dbSettings, activeAuthUser] = await Promise.all([
         fetchProjects({ publishedOnly: false }),
         fetchCreators(),
+        fetchCategories(),
+        fetchPlatformSettings(),
         getCurrentAuthUser(),
       ]);
 
@@ -188,6 +201,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       }
       if (dbCreators && dbCreators.length > 0) {
         setCreators(dbCreators);
+      }
+      if (dbCategories && dbCategories.length > 0) {
+        setTaxonomy(dbCategories);
+      }
+      if (dbSettings) {
+        setPlatformSettings(dbSettings);
       }
 
       if (activeAuthUser) {
@@ -199,9 +218,61 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         setFollowingCreatorIds(new Set(userFollows));
         setNotifications(userNotifs);
       } else {
-        setUser(null);
-        setNotifications([]);
-        setFollowingCreatorIds(new Set());
+        // Check if there is an unverified user profile waiting for email confirmation
+        let pendingUser: Creator | null = null;
+        if (user && !user.isVerified) {
+          pendingUser = user;
+        } else if (typeof window !== "undefined") {
+          try {
+            const rawCached = localStorage.getItem("craft_cached_profile");
+            if (rawCached) {
+              const parsed = JSON.parse(rawCached);
+              if (parsed && parsed.id && parsed.isVerified === false) {
+                pendingUser = parsed;
+              }
+            }
+          } catch {
+            // ignore
+          }
+        }
+
+        if (pendingUser) {
+          // Check if this pending user has since been verified in Supabase
+          try {
+            const { data: liveProfile } = await supabase
+              .from("profiles")
+              .select("is_verified, display_name, username, avatar_url")
+              .eq("id", pendingUser.id)
+              .maybeSingle();
+
+            if (liveProfile?.is_verified) {
+              const verifiedPending: Creator = {
+                ...pendingUser,
+                displayName: liveProfile.display_name || pendingUser.displayName,
+                username: liveProfile.username || pendingUser.username,
+                avatarUrl: liveProfile.avatar_url || pendingUser.avatarUrl,
+                isVerified: true,
+              };
+              setUser(verifiedPending);
+              return;
+            }
+          } catch {
+            // ignore network latency
+          }
+
+          // User is discovering without verification: KEEP THEM LOGGED IN!
+          // Never wipe out an unverified user session!
+          setUser(pendingUser);
+          return;
+        }
+
+        // Only clear user if Supabase confirms there is truly NO active session AND no pending unverified profile
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData?.session) {
+          setUser(null);
+          setNotifications([]);
+          setFollowingCreatorIds(new Set());
+        }
       }
     } catch (err: unknown) {
       const errorObj = err as { name?: string; message?: string };
@@ -247,7 +318,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           setFollowingCreatorIds(new Set(userFollows));
           setNotifications(userNotifs);
         }
-      } else if (event === "SIGNED_OUT" || !session) {
+      } else if (event === "SIGNED_OUT") {
         setUser(null);
         setNotifications([]);
         setAppreciatedProjectIds(new Set());
@@ -255,8 +326,48 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
+    // Realtime categories taxonomy changes subscription
+    const categoriesChannel = supabase
+      .channel("public-categories-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "categories",
+        },
+        async () => {
+          const freshCategories = await fetchCategories();
+          if (freshCategories && freshCategories.length > 0) {
+            setTaxonomy(freshCategories);
+          }
+        }
+      )
+      .subscribe();
+
+    // Realtime platform settings changes subscription
+    const settingsChannel = supabase
+      .channel("public-platform-settings-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "platform_settings",
+        },
+        async () => {
+          const freshSettings = await fetchPlatformSettings();
+          if (freshSettings) {
+            setPlatformSettings(freshSettings);
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
       authListener?.subscription.unsubscribe();
+      supabase.removeChannel(categoriesChannel);
+      supabase.removeChannel(settingsChannel);
     };
   }, [refreshFromDb, setUser]);
 
@@ -282,7 +393,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       if (typeof window !== "undefined") {
         localStorage.setItem("craft_last_registered_email", email.trim().toLowerCase());
       }
-      await refreshFromDb();
     }
     return res;
   };
@@ -649,12 +759,19 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     return res.success;
   };
 
+  const isAdmin = user?.role === "admin";
+  const isModerator = user?.role === "admin" || user?.role === "moderator" || user?.role === "curator";
+
   return (
     <SessionContext.Provider
       value={{
         user,
         projects,
         creators,
+        taxonomy,
+        platformSettings,
+        isAdmin,
+        isModerator,
         isLoadingDb,
         isAuthReady,
         appreciatedProjectIds,
