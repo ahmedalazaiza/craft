@@ -617,6 +617,40 @@ export async function updateProjectInDb(id: string, updates: Partial<Project>): 
     if (updates.tools !== undefined) payload.tools = updates.tools;
     if (updates.published !== undefined) payload.published = updates.published;
 
+    // If images are updated, identify and purge discarded images from storage
+    if (updates.coverImage !== undefined || updates.galleryImages !== undefined) {
+      const { data: oldRow } = await supabase
+        .from("projects")
+        .select("cover_image, gallery_images")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (oldRow) {
+        const oldUrls = new Set<string>();
+        if (oldRow.cover_image) oldUrls.add(oldRow.cover_image);
+        if (Array.isArray(oldRow.gallery_images)) {
+          oldRow.gallery_images.forEach((u: string) => {
+            if (u) oldUrls.add(u);
+          });
+        }
+
+        const newUrls = new Set<string>();
+        if (updates.coverImage) newUrls.add(updates.coverImage);
+        if (Array.isArray(updates.galleryImages)) {
+          updates.galleryImages.forEach((u: string) => {
+            if (u) newUrls.add(u);
+          });
+        }
+
+        const discardedUrls = Array.from(oldUrls).filter((u) => !newUrls.has(u));
+        if (discardedUrls.length > 0) {
+          deleteStorageFiles(discardedUrls, "project-media").catch((err) =>
+            console.warn("Project image update cleanup notice:", err)
+          );
+        }
+      }
+    }
+
     const { error } = await supabase
       .from("projects")
       .update(payload)
@@ -635,25 +669,35 @@ export async function updateProjectInDb(id: string, updates: Partial<Project>): 
 }
 
 /**
- * Delete a project and purge its cloud media files from Supabase Storage
+ * Delete a project and purge all associated media files from Cloudflare R2 / Storage
  */
 export async function deleteProjectFromDb(id: string): Promise<boolean> {
   try {
-    // 1. Fetch images to purge from Supabase storage
+    // 1. Fetch all media associated with the project to purge from Cloudflare R2 and Supabase
     const { data: projectRow } = await supabase
       .from("projects")
-      .select("cover_image, gallery_images")
+      .select("cover_image, gallery_images, body, summary")
       .eq("id", id)
       .maybeSingle();
 
     if (projectRow) {
-      const mediaUrls: string[] = [];
-      if (projectRow.cover_image) mediaUrls.push(projectRow.cover_image);
+      const mediaUrls = new Set<string>();
+      if (projectRow.cover_image) mediaUrls.add(projectRow.cover_image);
       if (Array.isArray(projectRow.gallery_images)) {
-        mediaUrls.push(...projectRow.gallery_images);
+        projectRow.gallery_images.forEach((u: string) => {
+          if (u) mediaUrls.add(u);
+        });
       }
-      if (mediaUrls.length > 0) {
-        await deleteStorageFiles(mediaUrls, "project-media");
+
+      // Extract any embedded media URLs within body or summary
+      const content = `${projectRow.body || ""} ${projectRow.summary || ""}`;
+      const matchedUrls = content.match(/https?:\/\/[^\s"'<>]+\.(?:webp|png|jpg|jpeg|gif|svg|avif)(?:\?[^\s"'<>]*)?/gi);
+      if (matchedUrls) {
+        matchedUrls.forEach((u) => mediaUrls.add(u));
+      }
+
+      if (mediaUrls.size > 0) {
+        await deleteStorageFiles(Array.from(mediaUrls), "project-media");
       }
     }
 
@@ -997,27 +1041,34 @@ export async function deleteUserAccountInDb(userId: string): Promise<{ success: 
       return { success: false, error: "User ID is required." };
     }
 
-    // 1. Purge all project media belonging to this user
+    // 1. Purge all project media, gallery images, and embedded assets belonging to this user
     try {
       const { data: userProjects } = await supabase
         .from("projects")
-        .select("cover_image, gallery_images")
+        .select("cover_image, gallery_images, body, summary")
         .eq("creator_id", userId);
 
       if (userProjects && userProjects.length > 0) {
-        const mediaUrls: string[] = [];
+        const mediaUrls = new Set<string>();
         userProjects.forEach((p) => {
-          if (p.cover_image) mediaUrls.push(p.cover_image);
+          if (p.cover_image) mediaUrls.add(p.cover_image);
           if (Array.isArray(p.gallery_images)) {
-            mediaUrls.push(...p.gallery_images);
+            p.gallery_images.forEach((u: string) => {
+              if (u) mediaUrls.add(u);
+            });
+          }
+          const content = `${p.body || ""} ${p.summary || ""}`;
+          const matchedUrls = content.match(/https?:\/\/[^\s"'<>]+\.(?:webp|png|jpg|jpeg|gif|svg|avif)(?:\?[^\s"'<>]*)?/gi);
+          if (matchedUrls) {
+            matchedUrls.forEach((u) => mediaUrls.add(u));
           }
         });
-        if (mediaUrls.length > 0) {
-          await deleteStorageFiles(mediaUrls, "project-media");
+        if (mediaUrls.size > 0) {
+          await deleteStorageFiles(Array.from(mediaUrls), "project-media");
         }
       }
 
-      // Purge avatar from avatars bucket
+      // Purge avatar from avatars storage / Cloudflare R2
       const { data: userProfile } = await supabase
         .from("profiles")
         .select("avatar_url")

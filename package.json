@@ -11,6 +11,7 @@
     "validate": "npm run typecheck && npm run build"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1127.0",
     "@supabase/supabase-js": "^2.112.4",
     "clsx": "^2.1.1",
     "framer-motion": "^13.1.1",

@@ -32,8 +32,8 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com data:",
-      "img-src 'self' data: blob: https://*.supabase.co https://ttjobsgglwgyioqlldqj.supabase.co https://images.unsplash.com https://images.pexels.com https://avatar.vercel.sh https://api.dicebear.com https://res.cloudinary.com https://i.imgur.com https://i.postimg.cc https://mir-s3-cdn-cf.behance.net https://cdn.dribbble.com",
-      "connect-src 'self' https://*.supabase.co https://ttjobsgglwgyioqlldqj.supabase.co wss://*.supabase.co",
+      "img-src 'self' data: blob: https://media.layerat.com https://*.r2.cloudflarestorage.com https://*.supabase.co https://ttjobsgglwgyioqlldqj.supabase.co https://images.unsplash.com https://images.pexels.com https://avatar.vercel.sh https://api.dicebear.com https://res.cloudinary.com https://i.imgur.com https://i.postimg.cc https://mir-s3-cdn-cf.behance.net https://cdn.dribbble.com",
+      "connect-src 'self' https://media.layerat.com https://*.r2.cloudflarestorage.com https://*.supabase.co https://ttjobsgglwgyioqlldqj.supabase.co wss://*.supabase.co",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
@@ -50,6 +50,14 @@ const nextConfig: NextConfig = {
     deviceSizes: [390, 640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "media.layerat.com",
+      },
+      {
+        protocol: "https",
+        hostname: "**.r2.cloudflarestorage.com",
+      },
       {
         protocol: "https",
         hostname: "**.supabase.co",
