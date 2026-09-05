@@ -93,14 +93,38 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
           )}
 
           {/* ============================================================= */}
-          {/* TOP-RIGHT CIRCULAR FAVORITE BUTTON                            */}
+          {/* TOP-RIGHT ACTION BUTTONS CLUSTER (Fav + Add to Board + View)  */}
           {/* ============================================================= */}
-          <div className="absolute top-3 right-3 z-30 pointer-events-auto">
+          <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-30 flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
+            {/* View / Eye Button: Always visible on mobile, center hover on desktop */}
+            <Link
+              href={`/project/${liveProject.slug}`}
+              prefetch={true}
+              onClick={(e) => e.stopPropagation()}
+              className="flex sm:hidden h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-md border border-white/20 shadow-md active:scale-90 transition-transform cursor-pointer"
+              title="View Project"
+              aria-label={`View project ${liveProject.title}`}
+            >
+              <Eye className="h-4 w-4 stroke-[2]" />
+            </Link>
+
+            {/* Add to Board Button: Always visible on mobile, center hover on desktop */}
+            <button
+              type="button"
+              onClick={handleAddToBoard}
+              className="flex sm:hidden h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-md border border-white/20 shadow-md active:scale-90 transition-transform cursor-pointer"
+              title="Add to Board"
+              aria-label={`Add ${liveProject.title} to board`}
+            >
+              <BookmarkPlus className="h-4 w-4 stroke-[2]" />
+            </button>
+
+            {/* Favorite / Appreciate Button: Always visible on mobile & desktop */}
             <button
               type="button"
               onClick={handleFavClick}
               className={cn(
-                "group/fav flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full backdrop-blur-md transition-all duration-200 cursor-pointer shadow-lg active:scale-90 border",
+                "group/fav flex h-8 w-8 sm:h-11 sm:w-11 items-center justify-center rounded-full backdrop-blur-md transition-all duration-200 cursor-pointer shadow-md sm:shadow-lg active:scale-90 border",
                 isLiked
                   ? "bg-black/80 text-rose-500 border-rose-500/40 shadow-rose-500/20 hover:bg-black/95 hover:scale-105"
                   : "bg-black/60 text-white border-white/20 hover:bg-black/85 hover:border-white/40 hover:scale-105"
@@ -120,9 +144,9 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
           </div>
 
           {/* ============================================================= */}
-          {/* CENTER FLOATING ACTION BUTTONS (Eye + Add to List)            */}
+          {/* CENTER FLOATING ACTION BUTTONS (Desktop Hover: Eye + Add)     */}
           {/* ============================================================= */}
-          <div className="absolute inset-0 z-20 flex items-center justify-center gap-3.5 pointer-events-none group-hover:pointer-events-auto">
+          <div className="absolute inset-0 z-20 hidden sm:flex items-center justify-center gap-3.5 pointer-events-none group-hover:pointer-events-auto">
             {/* Eye Button: Direct quick view / navigation */}
             <Link
               href={`/project/${liveProject.slug}`}
@@ -147,10 +171,10 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
           </div>
 
           {/* ============================================================= */}
-          {/* BOTTOM TITLE BAR (Appears cleanly on hover)                   */}
+          {/* BOTTOM TITLE BAR (Always on mobile, hover on desktop)         */}
           {/* ============================================================= */}
           <div
-            className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-3.5 sm:p-4 transition-opacity duration-200 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto"
+            className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-3 sm:p-4 transition-opacity duration-200 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto"
           >
             {/* Project Title */}
             <Link
@@ -158,7 +182,7 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
               prefetch={true}
               className="pointer-events-auto min-w-0 block hover:underline"
             >
-              <h3 className="text-white font-bold text-sm sm:text-base truncate drop-shadow-xs">
+              <h3 className="text-white font-bold text-xs sm:text-base truncate drop-shadow-xs">
                 {liveProject.title}
               </h3>
             </Link>
@@ -195,8 +219,13 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
             </div>
           </Link>
 
-          {/* Metrics: Heart + Views */}
-          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0 text-[11px] sm:text-xs">
+          {/* Metrics: Heart + Views (also links to project details) */}
+          <Link
+            href={`/project/${liveProject.slug}`}
+            prefetch={true}
+            className="flex items-center gap-2.5 sm:gap-3 shrink-0 text-[11px] sm:text-xs hover:opacity-80 transition-opacity"
+            aria-label={`Project metrics: ${liveProject.appreciations} likes, ${viewsCount} views`}
+          >
             <span
               className={cn(
                 "inline-flex items-center gap-1 font-medium transition-colors",
@@ -210,7 +239,7 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
               <Eye className="h-3.5 w-3.5" />
               <span>{formatViews(viewsCount)}</span>
             </span>
-          </div>
+          </Link>
         </div>
       </div>
     </MotionCardWrapper>
