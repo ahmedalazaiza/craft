@@ -49,6 +49,7 @@ export function mapProfileToCreator(row: any, currentUserId?: string): Creator {
     id: row.id || "",
     username: row.username || "creator",
     displayName: row.display_name || row.username || "Creator",
+    email: row.email || undefined,
     avatarUrl: row.avatar_url || DEFAULT_AVATAR_URL,
     bio: row.bio || "",
     location: row.location || "",
