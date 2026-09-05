@@ -38,6 +38,7 @@ import {
   Sparkles,
   FileText,
   ImageIcon,
+  ShieldAlert,
 } from "lucide-react";
 import { DeleteProjectModal } from "@/components/project/delete-project-modal";
 
@@ -51,7 +52,7 @@ const MAX_SPECIALIZATIONS = 9;
 
 export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const router = useRouter();
-  const { saveProject, taxonomy } = useSession();
+  const { user, saveProject, taxonomy } = useSession();
 
   const galleryFileInputRef = useRef<HTMLInputElement>(null);
   const additionalFileInputRef = useRef<HTMLInputElement>(null);
@@ -347,6 +348,11 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   // SAVE / PUBLISH DISPATCHER
   // ---------------------------------------------------------------------------
   const handleSave = async (isPublish: boolean) => {
+    if (user?.isSuspended) {
+      toast.error("Your account has been suspended by moderation. Publishing and saving are disabled.", "Account Suspended");
+      return;
+    }
+
     if (galleryImages.length === 0) {
       toast.warning("Please upload at least one image for your project.", "Images Required");
       setCurrentStep(1);
@@ -1235,11 +1241,18 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
             ) : (
               /* Step 2: Save Draft or Publish */
               <>
+                {user?.isSuspended && (
+                  <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 font-semibold px-2">
+                    <ShieldAlert className="h-4 w-4 shrink-0" />
+                    <span>Account Suspended</span>
+                  </div>
+                )}
+
                 <Button
                   type="button"
                   variant="secondary"
                   size="sm"
-                  disabled={isDraftSaving || isSaving || galleryImages.length === 0}
+                  disabled={isDraftSaving || isSaving || galleryImages.length === 0 || Boolean(user?.isSuspended)}
                   onClick={() => handleSave(false)}
                   className="gap-1.5 font-semibold text-xs shadow-xs px-4"
                 >
@@ -1255,7 +1268,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                   type="button"
                   variant="accent"
                   size="sm"
-                  disabled={isSaving || isDraftSaving || galleryImages.length === 0}
+                  disabled={isSaving || isDraftSaving || galleryImages.length === 0 || Boolean(user?.isSuspended)}
                   onClick={() => handleSave(true)}
                   className="gap-2 font-black shadow-sm px-6 min-w-[140px]"
                 >

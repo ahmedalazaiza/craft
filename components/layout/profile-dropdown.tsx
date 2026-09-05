@@ -18,6 +18,8 @@ import {
   FolderKanban,
   ExternalLink,
   ChevronRight,
+  Heart,
+  LayoutGrid,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -143,6 +145,32 @@ export function ProfileDropdown() {
                 <div className="flex items-center gap-2.5">
                   <User className="h-4 w-4 text-[var(--content-tertiary)]" />
                   <span>My Studio Profile</span>
+                </div>
+                <ChevronRight className="h-3.5 w-3.5 text-[var(--content-tertiary)]" />
+              </Link>
+
+              <Link
+                href="/favorites"
+                prefetch={true}
+                onClick={() => setIsOpen(false)}
+                className="flex items-center justify-between gap-2.5 rounded-[12px] px-3 py-2 text-xs font-medium text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Heart className="h-4 w-4 text-[var(--content-tertiary)]" />
+                  <span>Favorites</span>
+                </div>
+                <ChevronRight className="h-3.5 w-3.5 text-[var(--content-tertiary)]" />
+              </Link>
+
+              <Link
+                href="/boards"
+                prefetch={true}
+                onClick={() => setIsOpen(false)}
+                className="flex items-center justify-between gap-2.5 rounded-[12px] px-3 py-2 text-xs font-medium text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <LayoutGrid className="h-4 w-4 text-[var(--content-tertiary)]" />
+                  <span>My Boards</span>
                 </div>
                 <ChevronRight className="h-3.5 w-3.5 text-[var(--content-tertiary)]" />
               </Link>

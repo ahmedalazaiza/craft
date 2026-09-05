@@ -176,15 +176,22 @@ export function FilterDrawer({
     setIsMounted(true);
   }, []);
 
-  // Lock body scroll while filter drawer is open to prevent page layout jumps
+  // Lock body scroll and listen for Escape key while filter drawer is open
   useEffect(() => {
     if (!isOpen) return;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
     return () => {
       document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen]);
+  }, [isOpen, onClose]);
 
   if (!isMounted) return null;
 
@@ -196,7 +203,7 @@ export function FilterDrawer({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[99999] flex items-end sm:items-stretch justify-center sm:justify-end bg-[var(--base-dark)]/50 backdrop-blur-xs p-0"
+          className="fixed inset-0 z-[99999] flex items-end sm:items-stretch justify-center sm:justify-end bg-black/60 backdrop-blur-md p-0"
           onClick={onClose}
         >
           <motion.div
@@ -204,27 +211,37 @@ export function FilterDrawer({
             animate={{ y: 0, x: 0 }}
             exit={{ y: "100%", x: 0 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="relative flex max-h-[90vh] sm:max-h-full h-auto sm:h-full w-full max-w-lg flex-col rounded-t-[28px] sm:rounded-none bg-[var(--bg-screen)] border-t sm:border-t-0 sm:border-l border-[var(--border-neutral)] shadow-2xl p-5 sm:p-8 overflow-y-auto pb-safe"
+            className="relative flex max-h-[90vh] sm:max-h-full h-auto sm:h-full w-full max-w-lg flex-col rounded-t-[28px] sm:rounded-l-[28px] sm:rounded-tr-none bg-[var(--bg-elevated)] border-t sm:border-t-0 sm:border-l border-[var(--border-neutral)] shadow-[0_24px_60px_rgba(0,0,0,0.25)] p-5 sm:p-7 overflow-y-auto pb-safe"
             onClick={(e) => e.stopPropagation()}
           >
-        {/* Mobile Pull Handle Indicator */}
-        <div className="w-12 h-1 rounded-full bg-[var(--border-neutral)] mx-auto mb-3 sm:hidden shrink-0" />
+            {/* Mobile Pull Handle Indicator */}
+            <div className="flex sm:hidden justify-center pt-1 pb-3 -mt-2 shrink-0">
+              <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
+            </div>
 
-        {/* Header */}
-        <div className="flex items-center justify-between pb-4 sm:pb-5 border-b border-[var(--border-neutral)] shrink-0">
-          <div className="flex items-center gap-2.5">
-            <SlidersHorizontal className="h-5 w-5 text-[var(--content-primary)]" />
-            <h2 className="type-title-subsection text-[var(--content-primary)] font-bold text-base sm:text-lg">
-              {mode === "projects" ? "Filter Projects" : "Filter Creators"}
-            </h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="rounded-full p-2 text-[var(--content-tertiary)] hover:bg-[var(--bg-neutral)] hover:text-[var(--content-primary)] transition-colors cursor-pointer"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+            {/* Header */}
+            <div className="flex items-center justify-between pb-4 sm:pb-5 border-b border-[var(--border-neutral)] shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--bg-neutral)] border border-[var(--border-neutral)] shrink-0 text-[var(--content-primary)]">
+                  <SlidersHorizontal className="h-4.5 w-4.5" />
+                </div>
+                <div>
+                  <h2 className="text-base sm:text-lg font-bold text-[var(--content-primary)]">
+                    {mode === "projects" ? "Filter Projects" : "Filter Creators"}
+                  </h2>
+                  <p className="text-xs text-[var(--content-tertiary)]">
+                    {mode === "projects" ? "Refine by medium, tools, or taxonomy" : "Filter creators by city or discipline"}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--content-tertiary)] hover:bg-[var(--bg-neutral)] hover:text-[var(--content-primary)] transition-colors cursor-pointer"
+                aria-label="Close filters"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
 
         {/* Filters Content */}
         <div className="flex-1 py-6 space-y-7">

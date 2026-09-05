@@ -7,6 +7,7 @@ import {
   Comment,
   Notification,
   PlatformSettings,
+  Board,
 } from "./types";
 import {
   fetchProjects,
@@ -18,6 +19,7 @@ import {
   toggleAppreciationInDb,
   updateProfileInDb,
   fetchUserFollows,
+  fetchUserAppreciations,
   toggleFollowInDb,
   deleteUserAccountInDb,
   fetchUserNotifications,
@@ -27,6 +29,13 @@ import {
   fetchCategories,
   fetchPlatformSettings,
   DEFAULT_PLATFORM_SETTINGS,
+  fetchUserBoards,
+  createBoardInDb,
+  updateBoardInDb,
+  deleteBoardFromDb,
+  addProjectToBoardInDb,
+  removeProjectFromBoardInDb,
+  fetchProjectBoards,
 } from "./supabase/queries";
 import { CategoryTaxonomyItem, FALLBACK_TAXONOMY } from "@/lib/taxonomy";
 import {
@@ -39,6 +48,8 @@ import {
 import { supabase } from "./supabase/client";
 import { VerificationModal, GatedActionType } from "@/components/ui/verification-modal";
 import { MobileBlockSheet } from "@/components/ui/mobile-block-sheet";
+import { AddToBoardModal } from "@/components/board/add-to-board-modal";
+import { toast } from "@/components/ui/toast";
 
 interface SessionContextType {
   user: Creator | null;
@@ -78,6 +89,17 @@ interface SessionContextType {
   deleteProject: (id: string) => Promise<boolean>;
   updateProfile: (updatedData: Partial<Creator>) => Promise<boolean>;
   deleteAccount: () => Promise<boolean>;
+  boards: Board[];
+  isBoardsLoading: boolean;
+  refreshBoards: () => Promise<void>;
+  createBoard: (title: string, description?: string, isPrivate?: boolean) => Promise<Board | null>;
+  updateBoard: (boardId: string, updates: { title?: string; description?: string; isPrivate?: boolean }) => Promise<boolean>;
+  deleteBoard: (boardId: string) => Promise<boolean>;
+  toggleProjectInBoard: (boardId: string, projectId: string) => Promise<boolean>;
+  openAddToBoardModal: (project: Project) => void;
+  closeAddToBoardModal: () => void;
+  isAddToBoardModalOpen: boolean;
+  activeBoardProject: Project | null;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -159,31 +181,21 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setIsMobilePublishBlockOpen(false);
   }, []);
 
-  // Realtime notifications subscription for active session user
-  useEffect(() => {
-    if (!user) return;
+  // Boards & Moodboards State
+  const [boards, setBoards] = useState<Board[]>([]);
+  const [isBoardsLoading, setIsBoardsLoading] = useState(false);
+  const [isAddToBoardModalOpen, setIsAddToBoardModalOpen] = useState(false);
+  const [activeBoardProject, setActiveBoardProject] = useState<Project | null>(null);
 
-    const notifChannel = supabase
-      .channel(`notifications-recipient-${user.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: `recipient_id=eq.${user.id}`,
-        },
-        async () => {
-          const freshNotifs = await fetchUserNotifications(user.id);
-          setNotifications(freshNotifs);
-        }
-      )
-      .subscribe();
+  const openAddToBoardModal = useCallback((project: Project) => {
+    setActiveBoardProject(project);
+    setIsAddToBoardModalOpen(true);
+  }, []);
 
-    return () => {
-      supabase.removeChannel(notifChannel);
-    };
-  }, [user]);
+  const closeAddToBoardModal = useCallback(() => {
+    setIsAddToBoardModalOpen(false);
+    setActiveBoardProject(null);
+  }, []);
 
   // Check auth and fetch live database on mount
   const refreshFromDb = useCallback(async () => {
@@ -211,67 +223,31 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
       if (activeAuthUser) {
         setUser(activeAuthUser);
-        const [userFollows, userNotifs] = await Promise.all([
+        const [userFollows, userNotifs, userAppreciations, userBoards] = await Promise.all([
           fetchUserFollows(activeAuthUser.id),
           fetchUserNotifications(activeAuthUser.id),
+          fetchUserAppreciations(activeAuthUser.id),
+          fetchUserBoards(activeAuthUser.id),
         ]);
         setFollowingCreatorIds(new Set(userFollows));
         setNotifications(userNotifs);
+        setAppreciatedProjectIds(new Set(userAppreciations));
+        setBoards(userBoards);
       } else {
-        // Check if there is an unverified user profile waiting for email confirmation
-        let pendingUser: Creator | null = null;
-        if (user && !user.isVerified) {
-          pendingUser = user;
-        } else if (typeof window !== "undefined") {
-          try {
-            const rawCached = localStorage.getItem("craft_cached_profile");
-            if (rawCached) {
-              const parsed = JSON.parse(rawCached);
-              if (parsed && parsed.id && parsed.isVerified === false) {
-                pendingUser = parsed;
-              }
-            }
-          } catch {
-            // ignore
+        // User is not authenticated or account was deleted in database
+        setUser(null);
+        setNotifications([]);
+        setFollowingCreatorIds(new Set());
+        setAppreciatedProjectIds(new Set());
+        setBoards([]);
+
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("craft_cached_profile");
+          const terminationReason = sessionStorage.getItem("layerat_session_terminated");
+          if (terminationReason === "account_deleted") {
+            sessionStorage.removeItem("layerat_session_terminated");
+            toast.warning("Your session has ended. This account is no longer active.", "Session Ended");
           }
-        }
-
-        if (pendingUser) {
-          // Check if this pending user has since been verified in Supabase
-          try {
-            const { data: liveProfile } = await supabase
-              .from("profiles")
-              .select("is_verified, display_name, username, avatar_url")
-              .eq("id", pendingUser.id)
-              .maybeSingle();
-
-            if (liveProfile?.is_verified) {
-              const verifiedPending: Creator = {
-                ...pendingUser,
-                displayName: liveProfile.display_name || pendingUser.displayName,
-                username: liveProfile.username || pendingUser.username,
-                avatarUrl: liveProfile.avatar_url || pendingUser.avatarUrl,
-                isVerified: true,
-              };
-              setUser(verifiedPending);
-              return;
-            }
-          } catch {
-            // ignore network latency
-          }
-
-          // User is discovering without verification: KEEP THEM LOGGED IN!
-          // Never wipe out an unverified user session!
-          setUser(pendingUser);
-          return;
-        }
-
-        // Only clear user if Supabase confirms there is truly NO active session AND no pending unverified profile
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (!sessionData?.session) {
-          setUser(null);
-          setNotifications([]);
-          setFollowingCreatorIds(new Set());
         }
       }
     } catch (err: unknown) {
@@ -283,6 +259,100 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       setIsLoadingDb(false);
     }
   }, [setUser]);
+
+  // Realtime notifications and account status subscription for active session user
+  useEffect(() => {
+    if (!user) return;
+
+    const notifChannel = supabase
+      .channel(`notifications-recipient-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `recipient_id=eq.${user.id}`,
+        },
+        async () => {
+          const freshNotifs = await fetchUserNotifications(user.id);
+          setNotifications(freshNotifs);
+        }
+      )
+      .subscribe();
+
+    // Listen to real-time deletion of this user's profile
+    const profileDeleteChannel = supabase
+      .channel(`profile-delete-listener-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "profiles",
+          filter: `id=eq.${user.id}`,
+        },
+        async () => {
+          console.warn("User account was deleted. Terminating active session immediately.");
+          await supabase.auth.signOut().catch(() => {});
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("craft_cached_profile");
+          }
+          setUser(null);
+          setNotifications([]);
+          setFollowingCreatorIds(new Set());
+          setAppreciatedProjectIds(new Set());
+          toast.warning("Your session has ended. This account is no longer active.", "Session Ended");
+        }
+      )
+      .subscribe();
+
+    // Listen to real-time verification of this user's profile (from mobile, another tab, or email link)
+    const profileUpdateChannel = supabase
+      .channel(`profile-update-listener-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "profiles",
+          filter: `id=eq.${user.id}`,
+        },
+        async (payload) => {
+          const newRecord = payload.new as {
+            is_verified?: boolean;
+            display_name?: string;
+            avatar_url?: string;
+            username?: string;
+          };
+          if (newRecord && newRecord.is_verified) {
+            setUser((prev) => {
+              if (!prev) return null;
+              if (prev.isVerified) return prev; // Already verified, no-op
+              return {
+                ...prev,
+                isVerified: true,
+                displayName: newRecord.display_name || prev.displayName,
+                avatarUrl: newRecord.avatar_url || prev.avatarUrl,
+                username: newRecord.username || prev.username,
+              };
+            });
+            toast.success(
+              "Your account is now verified! All creator privileges have been unlocked.",
+              "Account Verified 🎉"
+            );
+            refreshFromDb();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(notifChannel);
+      supabase.removeChannel(profileDeleteChannel);
+      supabase.removeChannel(profileUpdateChannel);
+    };
+  }, [user?.id, setUser, refreshFromDb]);
 
   const hasInitializedRef = useRef(false);
 
@@ -311,18 +381,44 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         const profile = await getCurrentAuthUser();
         if (profile) {
           setUser(profile);
-          const [userFollows, userNotifs] = await Promise.all([
+          const [userFollows, userNotifs, userAppreciations, userBoards] = await Promise.all([
             fetchUserFollows(profile.id),
             fetchUserNotifications(profile.id),
+            fetchUserAppreciations(profile.id),
+            fetchUserBoards(profile.id),
           ]);
           setFollowingCreatorIds(new Set(userFollows));
           setNotifications(userNotifs);
+          setAppreciatedProjectIds(new Set(userAppreciations));
+          setBoards(userBoards);
+        } else {
+          setUser(null);
+          setNotifications([]);
+          setFollowingCreatorIds(new Set());
+          setAppreciatedProjectIds(new Set());
+          setBoards([]);
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("craft_cached_profile");
+            const terminationReason = sessionStorage.getItem("layerat_session_terminated");
+            if (terminationReason === "account_deleted") {
+              sessionStorage.removeItem("layerat_session_terminated");
+              toast.warning("Your session has ended. This account is no longer active.", "Session Ended");
+            }
+          }
         }
       } else if (event === "SIGNED_OUT") {
         setUser(null);
         setNotifications([]);
         setAppreciatedProjectIds(new Set());
         setFollowingCreatorIds(new Set());
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("craft_cached_profile");
+          const terminationReason = sessionStorage.getItem("layerat_session_terminated");
+          if (terminationReason === "account_deleted") {
+            sessionStorage.removeItem("layerat_session_terminated");
+            toast.warning("Your session has ended. This account is no longer active.", "Session Ended");
+          }
+        }
       }
     });
 
@@ -517,20 +613,16 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       return false;
     }
 
-    // Cannot appreciate own project
-    if (targetProject?.creator?.id === user.id) {
-      return false;
-    }
+    const wasAppreciated = appreciatedProjectIds.has(projectId);
 
     setAppreciatedProjectIds((prev) => {
       const next = new Set(prev);
-      const wasAppreciated = next.has(projectId);
       if (wasAppreciated) {
         next.delete(projectId);
       } else {
         next.add(projectId);
-        // Strictly send notification only to the project creator in DB (never to the actor)
-        if (user && targetProject && targetProject.creator && targetProject.creator.id !== user.id) {
+        // Strictly send notification only to the project creator in DB (never to self)
+        if (user && targetProject?.creator?.id && targetProject.creator.id !== user.id) {
           insertNotificationInDb({
             recipientId: targetProject.creator.id,
             actorId: user.id,
@@ -546,12 +638,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setProjects((prev) =>
       prev.map((p) => {
         if (p.id === projectId) {
-          const isCurrentlyAppreciated = appreciatedProjectIds.has(projectId);
           return {
             ...p,
-            appreciations: isCurrentlyAppreciated
-              ? Math.max(0, p.appreciations - 1)
-              : p.appreciations + 1,
+            appreciations: wasAppreciated
+              ? Math.max(0, (p.appreciations || 0) - 1)
+              : (p.appreciations || 0) + 1,
           };
         }
         return p;
@@ -565,9 +656,16 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
-  // GATED ACTION: Add Comment (Strictly Verified Only)
+  // GATED ACTION: Add Comment (Strictly Verified Only & Not Suspended)
   const addComment = async (projectId: string, content: string) => {
-    if (!user || !user.isVerified) {
+    if (!user) return;
+
+    if (user.isSuspended) {
+      toast.error("Your account has been suspended by moderation. Commenting is restricted.", "Account Suspended");
+      return;
+    }
+
+    if (!user.isVerified) {
       openVerificationModal("comment");
       return;
     }
@@ -612,9 +710,18 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // GATED ACTION: Save Project (Requires verified creator account)
+  // GATED ACTION: Save Project (Requires verified creator account & Not Suspended)
   const saveProject = async (projectData: Partial<Project> & { title: string }): Promise<Project> => {
-    if (!user || !user.isVerified) {
+    if (!user) {
+      throw new Error("You must be signed in to publish projects.");
+    }
+
+    if (user.isSuspended) {
+      toast.error("Your account has been suspended by moderation. Publishing is restricted.", "Account Suspended");
+      throw new Error("Your account has been suspended by moderation.");
+    }
+
+    if (!user.isVerified) {
       openVerificationModal("publish", projectData.title);
       throw new Error("Email verification is required before publishing projects.");
     }
@@ -759,6 +866,147 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     return res.success;
   };
 
+  const refreshBoards = useCallback(async () => {
+    if (!user) {
+      setBoards([]);
+      return;
+    }
+    setIsBoardsLoading(true);
+    try {
+      const b = await fetchUserBoards(user.id);
+      setBoards(b);
+    } catch (err) {
+      console.warn("Failed to refresh boards:", err);
+    } finally {
+      setIsBoardsLoading(false);
+    }
+  }, [user]);
+
+  const createBoard = useCallback(
+    async (title: string, description?: string, isPrivate = false): Promise<Board | null> => {
+      if (!user) return null;
+      const optimisticId = `board-${Date.now()}`;
+      const optimisticBoard: Board = {
+        id: optimisticId,
+        userId: user.id,
+        title,
+        description: description || "",
+        isPrivate,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        itemsCount: 0,
+        coverImages: [],
+        creator: user,
+      };
+
+      setBoards((prev) => [optimisticBoard, ...prev]);
+
+      const created = await createBoardInDb({
+        userId: user.id,
+        title,
+        description,
+        isPrivate,
+      });
+
+      if (created) {
+        setBoards((prev) =>
+          prev.map((b) => (b.id === optimisticId ? { ...created, creator: user } : b))
+        );
+        return created;
+      } else {
+        setBoards((prev) => prev.filter((b) => b.id !== optimisticId));
+        return null;
+      }
+    },
+    [user]
+  );
+
+  const updateBoard = useCallback(
+    async (
+      boardId: string,
+      updates: { title?: string; description?: string; isPrivate?: boolean }
+    ): Promise<boolean> => {
+      setBoards((prev) =>
+        prev.map((b) =>
+          b.id === boardId
+            ? {
+                ...b,
+                ...(updates.title !== undefined && { title: updates.title }),
+                ...(updates.description !== undefined && { description: updates.description }),
+                ...(updates.isPrivate !== undefined && { isPrivate: updates.isPrivate }),
+                updatedAt: new Date().toISOString(),
+              }
+            : b
+        )
+      );
+      return updateBoardInDb(boardId, updates);
+    },
+    []
+  );
+
+  const deleteBoard = useCallback(async (boardId: string): Promise<boolean> => {
+    setBoards((prev) => prev.filter((b) => b.id !== boardId));
+    return deleteBoardFromDb(boardId);
+  }, []);
+
+  const toggleProjectInBoard = useCallback(
+    async (boardId: string, projectId: string): Promise<boolean> => {
+      const targetBoard = boards.find((b) => b.id === boardId);
+      const targetProject = projects.find((p) => p.id === projectId);
+      if (!targetBoard || !user) return false;
+
+      const boardMemberIds = await fetchProjectBoards(user.id, projectId);
+      const isInBoard = boardMemberIds.includes(boardId);
+
+      if (isInBoard) {
+        const success = await removeProjectFromBoardInDb(boardId, projectId);
+        if (success) {
+          setBoards((prev) =>
+            prev.map((b) => {
+              if (b.id === boardId) {
+                const covers = b.coverImages || [];
+                const projectCover = targetProject?.coverImage;
+                return {
+                  ...b,
+                  itemsCount: Math.max(0, (b.itemsCount || 0) - 1),
+                  coverImages: projectCover ? covers.filter((c) => c !== projectCover) : covers,
+                  updatedAt: new Date().toISOString(),
+                };
+              }
+              return b;
+            })
+          );
+        }
+        return success;
+      } else {
+        const success = await addProjectToBoardInDb(boardId, projectId);
+        if (success) {
+          setBoards((prev) =>
+            prev.map((b) => {
+              if (b.id === boardId) {
+                const covers = b.coverImages || [];
+                const projectCover = targetProject?.coverImage;
+                const nextCovers =
+                  projectCover && !covers.includes(projectCover) && covers.length < 4
+                    ? [projectCover, ...covers]
+                    : covers;
+                return {
+                  ...b,
+                  itemsCount: (b.itemsCount || 0) + 1,
+                  coverImages: nextCovers,
+                  updatedAt: new Date().toISOString(),
+                };
+              }
+              return b;
+            })
+          );
+        }
+        return success;
+      }
+    },
+    [boards, projects, user]
+  );
+
   const isAdmin = user?.role === "admin";
   const isModerator = user?.role === "admin" || user?.role === "moderator" || user?.role === "curator";
 
@@ -803,6 +1051,17 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         deleteProject,
         updateProfile,
         deleteAccount,
+        boards,
+        isBoardsLoading,
+        refreshBoards,
+        createBoard,
+        updateBoard,
+        deleteBoard,
+        toggleProjectInBoard,
+        openAddToBoardModal,
+        closeAddToBoardModal,
+        isAddToBoardModalOpen,
+        activeBoardProject,
       }}
     >
       {children}
@@ -819,6 +1078,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       <MobileBlockSheet
         isOpen={isMobilePublishBlockOpen}
         onClose={closeMobilePublishBlock}
+      />
+
+      {/* Global Add to Board Modal */}
+      <AddToBoardModal
+        isOpen={isAddToBoardModalOpen}
+        onClose={closeAddToBoardModal}
+        project={activeBoardProject}
       />
     </SessionContext.Provider>
   );

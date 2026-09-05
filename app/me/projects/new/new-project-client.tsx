@@ -7,7 +7,7 @@ import { ProjectForm } from "@/components/project/project-form";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ProjectEditorSkeleton } from "@/components/project/project-editor-skeleton";
-import { Sparkles, LogIn, UserPlus, Monitor, ArrowRight } from "lucide-react";
+import { Sparkles, LogIn, UserPlus, Monitor, ArrowRight, Copy, Check } from "lucide-react";
 import { bricolage } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +15,16 @@ export function NewProjectClient() {
   const { user, isLoadingDb, openMobilePublishBlock } = useSession();
   const [isMobile, setIsMobile] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = () => {
+    if (typeof window === "undefined") return;
+    const url = `${window.location.origin}/me/projects/new`;
+    navigator.clipboard?.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    });
+  };
 
   useEffect(() => {
     setHasMounted(true);
@@ -127,17 +137,37 @@ export function NewProjectClient() {
             ))}
           </ul>
 
-          {/* Back to studio */}
-          <Link
-            href="/me"
-            className={buttonVariants({
-              variant: "accent",
-              size: "lg",
-              className: "w-full gap-2 font-bold shadow-sm",
-            })}
-          >
-            Back to My Studio
-          </Link>
+          {/* Action Buttons */}
+          <div className="w-full space-y-2.5">
+            <button
+              type="button"
+              onClick={handleCopyLink}
+              className="w-full h-12 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)] text-[var(--content-primary)] font-semibold text-xs flex items-center justify-center gap-2 hover:bg-[var(--bg-neutral)] transition-all shadow-2xs cursor-pointer active:scale-[0.98]"
+            >
+              {copied ? (
+                <>
+                  <Check className="h-4 w-4 text-emerald-500" />
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">Copied Editor Link!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4 text-[var(--content-secondary)]" />
+                  <span>Copy Editor Link for Desktop</span>
+                </>
+              )}
+            </button>
+
+            <Link
+              href="/me"
+              className={buttonVariants({
+                variant: "accent",
+                size: "lg",
+                className: "w-full gap-2 font-bold shadow-sm rounded-full",
+              })}
+            >
+              Back to My Studio
+            </Link>
+          </div>
 
           <p className="text-xs text-[var(--content-tertiary)]">
             You can browse, like, and share projects on mobile anytime.

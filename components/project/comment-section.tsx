@@ -10,7 +10,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { getValidAvatarUrl } from "@/lib/avatar";
-import { Send, MessageSquare } from "lucide-react";
+import { Send, MessageSquare, ShieldAlert } from "lucide-react";
 
 interface CommentSectionProps {
   projectId: string;
@@ -24,7 +24,7 @@ export function CommentSection({ projectId, comments }: CommentSectionProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!commentText.trim() || !user) return;
+    if (!commentText.trim() || !user || user.isSuspended) return;
     addComment(projectId, commentText.trim());
     setCommentText("");
   };
@@ -38,10 +38,16 @@ export function CommentSection({ projectId, comments }: CommentSectionProps) {
         </h3>
       </div>
 
-      {/* Write Comment Form / Guest CTA */}
+      {/* Write Comment Form / Guest CTA / Suspended Notice */}
       <div className="mb-8">
         {user ? (
-          <form onSubmit={handleSubmit} className="space-y-3">
+          user.isSuspended ? (
+            <div className="rounded-[20px] border border-amber-500/30 bg-amber-500/10 p-4 text-xs sm:text-sm text-amber-900 dark:text-amber-200 flex items-center gap-2.5">
+              <ShieldAlert className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+              <span>Your creator account is currently suspended. Leaving feedback and comments is disabled.</span>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-3">
             <div className="flex items-start gap-3">
               <div className="relative h-9 w-9 rounded-full overflow-hidden border border-[var(--border-neutral)] shrink-0">
                 <Image
@@ -75,6 +81,7 @@ export function CommentSection({ projectId, comments }: CommentSectionProps) {
               </div>
             </div>
           </form>
+        )
         ) : (
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-[20px] border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-4 sm:p-5 shadow-xs">
             <div>

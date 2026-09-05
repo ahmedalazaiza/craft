@@ -28,6 +28,22 @@ export function DeleteAccountModal({ isOpen, onClose }: DeleteAccountModalProps)
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape" && !isDeleting) {
+          onClose();
+        }
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.body.style.overflow = "unset";
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [isOpen, isDeleting, onClose]);
+
   if (!isOpen || !user || !mounted) return null;
 
   const expectedInput = user.username;
@@ -66,7 +82,7 @@ export function DeleteAccountModal({ isOpen, onClose }: DeleteAccountModalProps)
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
           onClick={!isDeleting ? onClose : undefined}
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 bg-black/60 backdrop-blur-md"
         />
 
         {/* Modal Container */}
@@ -78,7 +94,7 @@ export function DeleteAccountModal({ isOpen, onClose }: DeleteAccountModalProps)
           className="relative w-full max-w-lg overflow-hidden rounded-t-[28px] sm:rounded-[28px] border-t sm:border border-red-500/30 bg-[var(--bg-elevated)] p-6 sm:p-8 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.25)] dark:shadow-none z-10 pb-safe"
         >
           {/* Mobile Pull Handle Indicator */}
-          <div className="flex sm:hidden justify-center pt-1 pb-4 -mt-2 shrink-0">
+          <div className="flex sm:hidden justify-center pt-2.5 pb-1 shrink-0 bg-[var(--bg-elevated)]">
             <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
           </div>
 

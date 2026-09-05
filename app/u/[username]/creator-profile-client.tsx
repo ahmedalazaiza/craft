@@ -240,11 +240,14 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                     {creator.displayName}
                   </h1>
                   {Boolean(creator.isVerified) && <VerifiedBadge size="lg" />}
-                  {creator.badge && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-[var(--chip-bg)] border border-[var(--border-neutral)] px-2.5 py-0.5 text-xs font-bold text-[var(--chip-fg)] uppercase tracking-wider">
-                      {creator.badge}
-                    </span>
-                  )}
+                  {creator.badge &&
+                    !["superadmin", "super_admin", "admin", "curator", "moderator", "root"].includes(
+                      creator.badge.toLowerCase().replace(/[\s_-]/g, "")
+                    ) && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[var(--chip-bg)] border border-[var(--border-neutral)] px-2.5 py-0.5 text-xs font-bold text-[var(--chip-fg)] uppercase tracking-wider">
+                        {creator.badge}
+                      </span>
+                    )}
                 </div>
 
                 <p className="text-xs font-semibold text-[var(--content-tertiary)] mt-0.5">

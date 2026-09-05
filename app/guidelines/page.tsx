@@ -2,7 +2,8 @@ import { Metadata } from "next";
 import { constructMetadata, generateBreadcrumbJsonLd } from "@/lib/seo";
 import { bricolage } from "@/lib/fonts";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
-import { fetchLegalDocument } from "@/lib/supabase/queries";
+import { fetchLegalDocument, fetchCMSPage } from "@/lib/supabase/queries";
+import { GuidelinesPageContent, GuidelinesClause } from "@/lib/types";
 import { ShieldCheck, Award, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -13,10 +14,17 @@ export const metadata: Metadata = constructMetadata({
   path: "/guidelines",
 });
 
-export const revalidate = 3600; // 1 hour ISR revalidation
+export const revalidate = 60; // 1 minute revalidation for CMS updates
 
 export default async function GuidelinesPage() {
-  const doc = await fetchLegalDocument("guidelines");
+  const [doc, cmsPage] = await Promise.all([
+    fetchLegalDocument("guidelines"),
+    fetchCMSPage<GuidelinesPageContent>("guidelines"),
+  ]);
+
+  const headline = cmsPage?.content?.headline || doc.title;
+  const subtitle = cmsPage?.content?.subtitle || doc.subtitle || "Peer & Curation Standards";
+  const clauses = cmsPage?.content?.clauses;
 
   const formattedDate = new Intl.DateTimeFormat("en-US", {
     month: "long",
@@ -40,7 +48,7 @@ export default async function GuidelinesPage() {
       <Breadcrumbs
         items={[
           { label: "Home", href: "/" },
-          { label: doc.title, isCurrent: true },
+          { label: headline, isCurrent: true },
         ]}
       />
 
@@ -48,7 +56,7 @@ export default async function GuidelinesPage() {
       <div className="space-y-4 border-b border-[var(--border-neutral)] pb-8">
         <div className="flex items-center gap-3">
           <span className="inline-block text-[11px] font-mono font-semibold uppercase tracking-widest text-[var(--content-tertiary)]">
-            {doc.subtitle || "Peer & Curation Standards"}
+            {subtitle}
           </span>
           <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-[var(--chip-bg)] text-[var(--chip-fg)] border border-[var(--border-neutral)]">
             v{doc.version}
@@ -61,7 +69,7 @@ export default async function GuidelinesPage() {
             "text-3xl sm:text-5xl font-black text-[var(--content-primary)] tracking-tight leading-tight"
           )}
         >
-          {doc.title}
+          {headline}
         </h1>
 
         <p className="text-sm sm:text-base text-[var(--content-secondary)] font-normal leading-relaxed">
@@ -113,29 +121,43 @@ export default async function GuidelinesPage() {
         </div>
       </div>
 
-      {/* Detail Editorial Sections from Database */}
+      {/* Detail Editorial Sections from Database or CMS clauses */}
       <div className="space-y-10 text-[var(--content-secondary)] leading-relaxed text-sm sm:text-base font-normal">
-        {doc.sections.map((section, idx) => (
-          <section key={idx} className="space-y-3">
-            <h2
-              className={cn(
-                bricolage.className,
-                "text-xl sm:text-2xl font-bold text-[var(--content-primary)]"
-              )}
-            >
-              {section.title}
-            </h2>
-            <p>{section.content}</p>
+        {clauses && clauses.length > 0
+          ? clauses.map((clause: GuidelinesClause, idx: number) => (
+              <section key={clause.id || idx} className="space-y-3">
+                <h2
+                  className={cn(
+                    bricolage.className,
+                    "text-xl sm:text-2xl font-bold text-[var(--content-primary)]"
+                  )}
+                >
+                  {clause.title}
+                </h2>
+                <p className="whitespace-pre-line">{clause.content}</p>
+              </section>
+            ))
+          : doc.sections.map((section, idx) => (
+              <section key={idx} className="space-y-3">
+                <h2
+                  className={cn(
+                    bricolage.className,
+                    "text-xl sm:text-2xl font-bold text-[var(--content-primary)]"
+                  )}
+                >
+                  {section.title}
+                </h2>
+                <p>{section.content}</p>
 
-            {section.bullets && section.bullets.length > 0 && (
-              <ul className="list-disc pl-5 space-y-2 text-sm sm:text-base">
-                {section.bullets.map((bullet, bIdx) => (
-                  <li key={bIdx}>{bullet}</li>
-                ))}
-              </ul>
-            )}
-          </section>
-        ))}
+                {section.bullets && section.bullets.length > 0 && (
+                  <ul className="list-disc pl-5 space-y-2 text-sm sm:text-base">
+                    {section.bullets.map((bullet, bIdx) => (
+                      <li key={bIdx}>{bullet}</li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            ))}
 
         {/* Contact Section */}
         <section className="space-y-3 pt-6 border-t border-[var(--border-neutral)]">

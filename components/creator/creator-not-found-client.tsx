@@ -5,11 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, UserX, ArrowRight, Sparkles, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { bricolage } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
-import { useSession } from "@/lib/session-context";
-import { CreatorListItem } from "@/components/creator/creator-list-item";
 
 interface CreatorNotFoundClientProps {
   searchedUsername: string;
@@ -17,7 +14,6 @@ interface CreatorNotFoundClientProps {
 
 export function CreatorNotFoundClient({ searchedUsername }: CreatorNotFoundClientProps) {
   const router = useRouter();
-  const { creators } = useSession();
   const [query, setQuery] = useState(searchedUsername || "");
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -26,13 +22,8 @@ export function CreatorNotFoundClient({ searchedUsername }: CreatorNotFoundClien
     router.push(`/search?q=${encodeURIComponent(query.trim())}`);
   };
 
-  // Curated suggested creators
-  const suggestedCreators = creators
-    .filter((c) => c.username.toLowerCase() !== searchedUsername.toLowerCase())
-    .slice(0, 3);
-
   return (
-    <div className="min-h-[75vh] flex flex-col items-center justify-center px-4 py-16 sm:py-24">
+    <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 py-16 sm:py-24">
       <div className="w-full max-w-2xl text-center space-y-8">
         {/* Icon & Title */}
         <div className="space-y-4">
@@ -53,7 +44,7 @@ export function CreatorNotFoundClient({ searchedUsername }: CreatorNotFoundClien
               No creator matching &ldquo;@{searchedUsername}&rdquo;
             </h1>
             <p className="text-xs sm:text-sm text-[var(--content-secondary)] max-w-md mx-auto leading-relaxed">
-              The handle you entered may be misspelled, renamed, or does not exist. You can search directly or explore active designers below.
+              The handle you entered may be misspelled, renamed, or does not exist. You can search directly or browse active creators across the platform.
             </p>
           </div>
         </div>
@@ -84,42 +75,23 @@ export function CreatorNotFoundClient({ searchedUsername }: CreatorNotFoundClien
           </Button>
         </form>
 
-        {/* Quick Action Navigation */}
+        {/* Quick Action Navigation - Browse All Creators is prominently highlighted */}
         <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
           <Link
             href="/creators"
-            className="inline-flex items-center gap-2 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-screen)] px-4 py-2 text-xs font-semibold text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-all shadow-xs"
+            className="inline-flex items-center gap-2 rounded-full bg-[var(--content-primary)] text-[var(--bg-screen)] px-5 py-2.5 text-xs sm:text-sm font-bold hover:opacity-90 transition-all shadow-md active:scale-95 cursor-pointer group"
           >
-            <Compass className="h-3.5 w-3.5" />
+            <Compass className="h-4 w-4 transition-transform group-hover:rotate-45" />
             <span>Browse All Creators</span>
           </Link>
           <Link
             href="/explore"
-            className="inline-flex items-center gap-2 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-screen)] px-4 py-2 text-xs font-semibold text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-all shadow-xs"
+            className="inline-flex items-center gap-2 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-screen)] px-5 py-2.5 text-xs sm:text-sm font-semibold text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-all shadow-xs"
           >
-            <Sparkles className="h-3.5 w-3.5" />
+            <Sparkles className="h-4 w-4" />
             <span>Explore Latest Projects</span>
           </Link>
         </div>
-
-        {/* Suggested Creators Preview */}
-        {suggestedCreators.length > 0 && (
-          <div className="pt-10 border-t border-[var(--border-neutral)] text-left space-y-4">
-            <h3
-              className={cn(
-                bricolage.className,
-                "text-base font-bold text-[var(--content-primary)]"
-              )}
-            >
-              Discover Featured Creators
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {suggestedCreators.map((creator) => (
-                <CreatorListItem key={creator.id} creator={creator} />
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

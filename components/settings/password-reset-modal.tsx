@@ -29,6 +29,23 @@ export function PasswordResetModal({ isOpen, onClose, onSuccess }: PasswordReset
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Close on Escape key & body scroll lock
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape" && !loading) {
+          handleDismiss();
+        }
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.body.style.overflow = "unset";
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [isOpen, loading]);
+
   // Invalidate on dismissal / unload
   const handleDismiss = () => {
     if (typeof window !== "undefined") {
@@ -97,7 +114,7 @@ export function PasswordResetModal({ isOpen, onClose, onSuccess }: PasswordReset
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
           onClick={!loading ? handleDismiss : undefined}
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 bg-black/60 backdrop-blur-md"
         />
 
         {/* Modal Container */}
@@ -106,10 +123,10 @@ export function PasswordResetModal({ isOpen, onClose, onSuccess }: PasswordReset
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 20 }}
           transition={{ type: "spring", damping: 28, stiffness: 350 }}
-          className="relative w-full max-w-md overflow-hidden rounded-t-[28px] sm:rounded-[28px] border-t sm:border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 sm:p-8 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.25)] dark:shadow-none z-10 pb-safe"
+          className="relative w-full max-w-md overflow-hidden rounded-t-[28px] sm:rounded-[28px] border-t sm:border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 sm:p-8 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.25)] dark:shadow-none z-10 pb-safe sm:pb-8"
         >
           {/* Mobile Pull Handle Indicator */}
-          <div className="flex sm:hidden justify-center pt-1 pb-4 -mt-2 shrink-0">
+          <div className="flex sm:hidden justify-center pt-2.5 pb-1 shrink-0 bg-[var(--bg-elevated)]">
             <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
           </div>
 

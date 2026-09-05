@@ -24,6 +24,7 @@ import {
   Heart,
   MessageSquare,
   Share2,
+  BookmarkPlus,
   Maximize2,
   Tag,
   Wrench,
@@ -50,6 +51,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
     user,
     isProjectAppreciated,
     toggleAppreciation,
+    openAddToBoardModal,
     saveProject,
     isLoadingDb,
     isAuthReady,
@@ -387,33 +389,42 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
               <div className="flex flex-col items-center gap-3 p-2 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)]/90 backdrop-blur-md shadow-sm">
                 {!isDraft && (
                   <>
-                    {/* 1. Appreciation Button (Hidden for author - cannot like own project) */}
-                    {!isAuthor && (
-                      <button
-                        type="button"
-                        onClick={handleToggleAppreciation}
+                    {/* 1. Appreciation Button (Allowed for all users, including author) */}
+                    <button
+                      type="button"
+                      onClick={handleToggleAppreciation}
+                      className={cn(
+                        "h-12 w-12 rounded-full flex flex-col items-center justify-center transition-all cursor-pointer select-none group border-0 shadow-xs",
+                        isAppreciated
+                          ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-md scale-105"
+                          : "bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
+                      )}
+                      title={isAppreciated ? "Unlike project" : "Appreciate project"}
+                      aria-label={isAppreciated ? `Remove appreciation (${project.appreciations})` : `Appreciate project (${project.appreciations})`}
+                    >
+                      <Heart
                         className={cn(
-                          "h-12 w-12 rounded-full flex flex-col items-center justify-center transition-all cursor-pointer select-none group border-0 shadow-xs",
-                          isAppreciated
-                            ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-md scale-105"
-                            : "bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
+                          "h-4 w-4 transition-transform duration-200 group-hover:scale-110",
+                          isAppreciated ? "fill-current scale-110" : "text-[var(--content-primary)]"
                         )}
-                        title={isAppreciated ? "Unlike project" : "Appreciate project"}
-                        aria-label={isAppreciated ? `Remove appreciation (${project.appreciations})` : `Appreciate project (${project.appreciations})`}
-                      >
-                        <Heart
-                          className={cn(
-                            "h-4 w-4 transition-transform duration-200 group-hover:scale-110",
-                            isAppreciated ? "fill-current scale-110" : "text-[var(--content-primary)]"
-                          )}
-                        />
-                        <span className="text-[10px] font-bold font-mono tracking-tight mt-0.5">
-                          {project.appreciations}
-                        </span>
-                      </button>
-                    )}
+                      />
+                      <span className="text-[10px] font-bold font-mono tracking-tight mt-0.5">
+                        {project.appreciations}
+                      </span>
+                    </button>
 
-                    {/* 2. Discussion / Comments Scroll Trigger */}
+                    {/* 2. Add to Board Button */}
+                    <button
+                      type="button"
+                      onClick={() => openAddToBoardModal(project)}
+                      className="h-12 w-12 rounded-full bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] flex items-center justify-center transition-all cursor-pointer select-none group"
+                      title="Add to Board"
+                      aria-label="Add to Board"
+                    >
+                      <BookmarkPlus className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                    </button>
+
+                    {/* 3. Discussion / Comments Scroll Trigger */}
                     <button
                       type="button"
                       onClick={handleScrollToComments}
@@ -659,23 +670,31 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
       <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 p-1.5 rounded-full bg-[var(--bg-screen)]/95 backdrop-blur-md border border-[var(--border-neutral)] shadow-[0_12px_32px_rgba(0,0,0,0.18)]">
         {!isDraft && (
           <>
-            {!isAuthor && (
-              <button
-                type="button"
-                onClick={handleToggleAppreciation}
-                className={cn(
-                  "h-12 min-h-[48px] px-4 rounded-full flex items-center gap-2 text-xs font-bold transition-all cursor-pointer select-none border-0",
-                  isAppreciated
-                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-md"
-                    : "bg-[var(--bg-neutral)] text-[var(--content-primary)]"
-                )}
-                title={isAppreciated ? "Unlike project" : "Appreciate project"}
-                aria-label={isAppreciated ? `Remove appreciation (${project.appreciations})` : `Appreciate project (${project.appreciations})`}
-              >
-                <Heart className={cn("h-4 w-4", isAppreciated ? "fill-current" : "text-[var(--content-primary)]")} />
-                <span>{project.appreciations}</span>
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={handleToggleAppreciation}
+              className={cn(
+                "h-12 min-h-[48px] px-4 rounded-full flex items-center gap-2 text-xs font-bold transition-all cursor-pointer select-none border-0",
+                isAppreciated
+                  ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-md"
+                  : "bg-[var(--bg-neutral)] text-[var(--content-primary)]"
+              )}
+              title={isAppreciated ? "Unlike project" : "Appreciate project"}
+              aria-label={isAppreciated ? `Remove appreciation (${project.appreciations})` : `Appreciate project (${project.appreciations})`}
+            >
+              <Heart className={cn("h-4 w-4", isAppreciated ? "fill-current" : "text-[var(--content-primary)]")} />
+              <span>{project.appreciations}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => openAddToBoardModal(project)}
+              className="h-12 w-12 min-h-[48px] min-w-[48px] rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] flex items-center justify-center"
+              title="Add to Board"
+              aria-label="Add to Board"
+            >
+              <BookmarkPlus className="h-4 w-4" />
+            </button>
 
             <button
               type="button"

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { bricolage } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 import { Flag, X, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ReportModalProps {
   isOpen: boolean;
@@ -57,15 +58,21 @@ export function ReportModal({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Close on ESC key
+  // Close on ESC key & lock body scroll
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen && !isSubmitting) {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape" && !isSubmitting) {
+          onClose();
+        }
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.body.style.overflow = "unset";
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    }
   }, [isOpen, isSubmitting, onClose]);
 
   // Reset state when opening
@@ -108,28 +115,46 @@ export function ReportModal({
   };
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="report-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm animate-fade-in"
-      onClick={(e) => {
-        if (e.target === e.currentTarget && !isSubmitting) {
-          onClose();
-        }
-      }}
-    >
-      <div className="relative w-full max-w-lg rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 sm:p-8 shadow-2xl transition-all">
-        {/* Close Button */}
-        <button
-          type="button"
-          onClick={onClose}
-          disabled={isSubmitting}
-          aria-label="Close dialog"
-          className="absolute top-5 right-5 h-8 w-8 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:text-[var(--content-primary)] flex items-center justify-center transition-all cursor-pointer disabled:opacity-50"
+    <AnimatePresence>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="report-modal-title"
+        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      >
+        {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          onClick={!isSubmitting ? onClose : undefined}
+          className="fixed inset-0 bg-black/60 backdrop-blur-md"
+        />
+
+        {/* Modal Dialog Card */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: 20 }}
+          transition={{ type: "spring", damping: 28, stiffness: 360 }}
+          className="relative w-full max-w-lg rounded-t-[28px] sm:rounded-[28px] border-t sm:border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 sm:p-8 shadow-[0_24px_60px_rgba(0,0,0,0.25)] z-10 pb-safe sm:pb-8"
         >
-          <X className="h-4 w-4" />
-        </button>
+          {/* Mobile Pull Handle Indicator */}
+          <div className="flex sm:hidden justify-center pt-1 pb-4 -mt-2 shrink-0">
+            <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
+          </div>
+
+          {/* Close Button */}
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isSubmitting}
+            aria-label="Close dialog"
+            className="absolute top-5 right-5 h-8 w-8 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:text-[var(--content-primary)] flex items-center justify-center transition-all cursor-pointer disabled:opacity-50"
+          >
+            <X className="h-4 w-4" />
+          </button>
 
         {isSubmitted ? (
           <div className="flex flex-col items-center text-center py-6">
@@ -253,7 +278,8 @@ export function ReportModal({
             </div>
           </form>
         )}
+        </motion.div>
       </div>
-    </div>
+    </AnimatePresence>
   );
 }

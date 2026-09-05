@@ -19,6 +19,7 @@ export interface Creator {
   role?: UserRole;
   isFeatured?: boolean;
   badge?: string;
+  isSuspended?: boolean;
 }
 
 export interface Comment {
@@ -172,5 +173,71 @@ export interface LegalDocument {
   updatedAt: string;
 }
 
+export interface TeamMemberCMS {
+  id: string;
+  name: string;
+  role: string;
+  location: string;
+  bio: string;
+  avatar: string;
+  discipline: string;
+  socials: {
+    twitter?: string;
+    github?: string;
+    linkedin?: string;
+    website?: string;
+  };
+}
 
+export interface AboutPageContent {
+  headline: string;
+  mission: string;
+  pillar1Title: string;
+  pillar1Desc: string;
+  pillar2Title: string;
+  pillar2Desc: string;
+  pillar3Title: string;
+  pillar3Desc: string;
+}
 
+export interface GuidelinesClause {
+  id: string;
+  title: string;
+  content: string;
+}
+
+export interface GuidelinesPageContent {
+  headline: string;
+  subtitle: string;
+  clauses: GuidelinesClause[];
+}
+
+export interface CMSPageRecord {
+  slug: string;
+  title: string;
+  subtitle?: string;
+  content: any;
+  updatedAt?: string;
+  updatedBy?: string;
+}
+
+export interface Board {
+  id: string;
+  userId: string;
+  title: string;
+  description?: string;
+  isPrivate: boolean;
+  createdAt: string;
+  updatedAt: string;
+  itemsCount?: number;
+  coverImages?: string[];
+  creator?: Creator;
+}
+
+export interface BoardItem {
+  id: string;
+  boardId: string;
+  projectId: string;
+  createdAt: string;
+  project?: Project;
+}

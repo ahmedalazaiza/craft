@@ -74,15 +74,22 @@ export function EditProfileModal({
     }
   }, [creator, isOpen]);
 
-  // Lock background scroll when open
+  // Lock background scroll and listen for Escape when open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape" && !isSaving && !isCropperOpen) {
+          onClose();
+        }
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.body.style.overflow = "unset";
+        window.removeEventListener("keydown", handleKeyDown);
+      };
     }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [isOpen]);
+  }, [isOpen, isSaving, isCropperOpen, onClose]);
 
   const handleAvatarFileSelected = (file: File) => {
     if (!file.type.startsWith("image/")) {
@@ -187,7 +194,7 @@ export function EditProfileModal({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               onClick={!isSaving ? onClose : undefined}
-              className="fixed inset-0 bg-black/70 backdrop-blur-md"
+              className="fixed inset-0 bg-black/60 backdrop-blur-md"
             />
 
             {/* Modal Card */}

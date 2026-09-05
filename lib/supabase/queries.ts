@@ -1,5 +1,21 @@
 import { supabase } from "./client";
-import { Project, Creator, Comment, Notification, NotificationType, PlatformSettings, Collection, LegalDocument, LegalSection } from "@/lib/types";
+import {
+  Project,
+  Creator,
+  Comment,
+  Notification,
+  NotificationType,
+  PlatformSettings,
+  Collection,
+  LegalDocument,
+  LegalSection,
+  AboutPageContent,
+  TeamMemberCMS,
+  GuidelinesPageContent,
+  CMSPageRecord,
+  Board,
+  BoardItem,
+} from "@/lib/types";
 import { DEFAULT_AVATAR_URL } from "@/lib/avatar";
 import { getAuthRedirectUrl } from "@/lib/seo";
 import { deleteStorageFiles } from "./storage";
@@ -61,7 +77,14 @@ export function mapProfileToCreator(row: any, currentUserId?: string): Creator {
     isCurrentUser: currentUserId ? row.id === currentUserId : false,
     role: row.role || "member",
     isFeatured: Boolean(row.is_featured),
-    badge: row.badge || undefined,
+    badge:
+      row.badge &&
+      !["superadmin", "super_admin", "admin", "curator", "moderator", "root"].includes(
+        String(row.badge).toLowerCase().replace(/[\s_-]/g, "")
+      )
+        ? row.badge
+        : undefined,
+    isSuspended: Boolean(row.is_suspended),
   };
 }
 
@@ -976,6 +999,24 @@ export async function fetchUserFollows(userId: string): Promise<string[]> {
 }
 
 /**
+ * Fetch all project IDs appreciated by a specific user from Supabase
+ */
+export async function fetchUserAppreciations(userId: string): Promise<string[]> {
+  try {
+    const { data, error } = await supabase
+      .from("appreciations")
+      .select("project_id")
+      .eq("user_id", userId);
+
+    if (error || !data) return [];
+    return data.map((r: { project_id: string }) => r.project_id);
+  } catch (err) {
+    console.error("Error fetching user appreciations from Supabase:", err);
+    return [];
+  }
+}
+
+/**
  * Toggle follow/unfollow a creator
  */
 export async function toggleFollowInDb(followerId: string, followingId: string): Promise<boolean> {
@@ -1836,8 +1877,533 @@ export async function fetchLegalDocument(
   }
 }
 
+// =============================================================================
+// CMS PAGES (ABOUT US, OUR TEAM, GUIDELINES, DYNAMIC CONTENT)
+// =============================================================================
 
+export const DEFAULT_ABOUT_CONTENT: AboutPageContent = {
+  headline: "The modern home for great design.",
+  mission: "We built Layerat because creative work deserves a fast, focused, and ad-free space. Here, high-resolution craftsmanship speaks for itself.",
+  pillar1Title: "High Resolution",
+  pillar1Desc: "Upload full project case studies in crisp, uncompressed quality with custom image layouts, process notes, and typography.",
+  pillar2Title: "No Algorithms",
+  pillar2Desc: "No social feed noise or algorithmic feeds. Discoveries are driven purely by design quality and authentic peer appreciation.",
+  pillar3Title: "100% Creator Ownership",
+  pillar3Desc: "You retain full intellectual property rights to your work. Share your portfolio and story completely on your own terms.",
+};
 
+export const DEFAULT_TEAM_MEMBERS: TeamMemberCMS[] = [
+  {
+    id: "ahmed-alazaiza",
+    name: "Ahmed Al-Azaiza",
+    role: "Founder & Lead Architect",
+    location: "Global",
+    bio: "Obsessed with micro-interactions, high-speed UI architecture, and typographic perfection.",
+    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=85",
+    discipline: "Product & Architecture",
+    socials: {
+      github: "https://github.com",
+      twitter: "https://x.com",
+      linkedin: "https://linkedin.com",
+      website: "https://layerat.com",
+    },
+  },
+  {
+    id: "elena-rostova",
+    name: "Elena Rostova",
+    role: "Head of Editorial & Curation",
+    location: "Berlin, DE",
+    bio: "Ex-art director at Monolith Design. Curates standout visual monographs and oversees typography standards.",
+    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&auto=format&fit=crop&q=85",
+    discipline: "Editorial Direction",
+    socials: {
+      twitter: "https://x.com",
+      linkedin: "https://linkedin.com",
+      website: "https://layerat.com",
+    },
+  },
+  {
+    id: "marcus-vance",
+    name: "Marcus Vance",
+    role: "Creative Technologist & 3D Lead",
+    location: "Tokyo, JP",
+    bio: "Pioneering spatial computing interfaces, real-time shaders, and immersive interactive graphics.",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=85",
+    discipline: "3D & Motion",
+    socials: {
+      github: "https://github.com",
+      twitter: "https://x.com",
+      linkedin: "https://linkedin.com",
+    },
+  },
+  {
+    id: "maya-lin",
+    name: "Maya Lin",
+    role: "Brand Identity & Specimen Curator",
+    location: "London, UK",
+    bio: "Specializing in timeless identity systems, foundry specimens, and minimalist packaging.",
+    avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop&q=85",
+    discipline: "Brand & Typography",
+    socials: {
+      twitter: "https://x.com",
+      linkedin: "https://linkedin.com",
+      website: "https://layerat.com",
+    },
+  },
+];
 
+export const DEFAULT_GUIDELINES_CONTENT: GuidelinesPageContent = {
+  headline: "Community Guidelines",
+  subtitle: "Peer & Curation Standards",
+  clauses: [
+    {
+      id: "authorship",
+      title: "1. Authentic Authorship & Creative Integrity",
+      content: "Publish only work that you created, art directed, or contributed to meaningfully. Layerat celebrates genuine craft over volume.",
+    },
+    {
+      id: "critique",
+      title: "2. Thoughtful Peer Critique & Discourse",
+      content: "Feedback on Layerat should elevate the craft. When commenting on another designer's monograph, offer actionable, constructive critique.",
+    },
+    {
+      id: "curation",
+      title: "3. Curation Standards for Curated Collections",
+      content: "Projects featured on the homepage, in category showcases, or in editorial collections are chosen based on execution quality and storytelling completeness.",
+    },
+  ],
+};
+
+export const DEFAULT_CMS_PAGES: Record<string, CMSPageRecord> = {
+  about: {
+    slug: "about",
+    title: "About Us",
+    subtitle: "Our Story & Mission",
+    content: DEFAULT_ABOUT_CONTENT,
+    updatedAt: "2026-09-01T00:00:00.000Z",
+  },
+  team: {
+    slug: "team",
+    title: "Our Team",
+    subtitle: "Curators & Builders",
+    content: {
+      headline: "Built by makers, for makers.",
+      subtitle: "We are a distributed collective of designers, engineers, and typographers dedicated to building the premier home for digital craftsmanship.",
+      members: DEFAULT_TEAM_MEMBERS,
+    },
+    updatedAt: "2026-09-01T00:00:00.000Z",
+  },
+  guidelines: {
+    slug: "guidelines",
+    title: "Community Guidelines",
+    subtitle: "Peer & Curation Standards",
+    content: DEFAULT_GUIDELINES_CONTENT,
+    updatedAt: "2026-09-01T00:00:00.000Z",
+  },
+};
+
+/**
+ * Fetch a CMS Page record by slug from public.cms_pages
+ * Falls back to DEFAULT_CMS_PAGES if not found or if table does not exist yet.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function fetchCMSPage<T = any>(slug: string): Promise<CMSPageRecord & { content: T }> {
+  try {
+    const { data, error } = await supabase
+      .from("cms_pages")
+      .select("*")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (error || !data) {
+      const fallback = DEFAULT_CMS_PAGES[slug] || {
+        slug,
+        title: slug,
+        subtitle: "",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        content: {} as any,
+        updatedAt: new Date().toISOString(),
+      };
+      return fallback as CMSPageRecord & { content: T };
+    }
+
+    return {
+      slug: data.slug,
+      title: data.title || slug,
+      subtitle: data.subtitle || "",
+      content: data.content as T,
+      updatedAt: data.updated_at || new Date().toISOString(),
+      updatedBy: data.updated_by || undefined,
+    };
+  } catch (err) {
+    console.warn(`fetchCMSPage fallback for ${slug}:`, err);
+    const fallback = DEFAULT_CMS_PAGES[slug] || {
+      slug,
+      title: slug,
+      subtitle: "",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      content: {} as any,
+      updatedAt: new Date().toISOString(),
+    };
+    return fallback as CMSPageRecord & { content: T };
+  }
+}
+
+/**
+ * Update or insert a CMS Page record into public.cms_pages
+ */
+export async function updateCMSPageInDb(
+  slug: string,
+  payload: {
+    title?: string;
+    subtitle?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    content: any;
+  }
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { data: authData } = await supabase.auth.getUser();
+    const userId = authData.user?.id || null;
+
+    const { error } = await supabase
+      .from("cms_pages")
+      .upsert(
+        {
+          slug,
+          title: payload.title,
+          subtitle: payload.subtitle,
+          content: payload.content,
+          updated_at: new Date().toISOString(),
+          updated_by: userId,
+        },
+        { onConflict: "slug" }
+      );
+
+    if (error) {
+      console.error(`Error updating CMS page ${slug}:`, error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Failed to update CMS page.";
+    return { success: false, error: msg };
+  }
+}
+
+// =============================================================================
+// BOARDS & MOODBOARDS QUERIES
+// =============================================================================
+
+export function mapBoardRow(row: any, itemsCount?: number, coverImages?: string[]): Board {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    title: row.title,
+    description: row.description || "",
+    isPrivate: Boolean(row.is_private),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    itemsCount: typeof itemsCount === "number" ? itemsCount : (row.board_items?.[0]?.count ?? 0),
+    coverImages: coverImages || [],
+  };
+}
+
+/**
+ * Fetch all boards created by a user with item counts and up to 4 preview cover images
+ */
+export async function fetchUserBoards(userId: string): Promise<Board[]> {
+  try {
+    const { data: boardsData, error } = await supabase
+      .from("boards")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error || !boardsData) {
+      return [];
+    }
+
+    // Fetch items with cover images for each board
+    const boardsWithCovers: Board[] = await Promise.all(
+      boardsData.map(async (boardRow) => {
+        const { data: itemsData, count } = await supabase
+          .from("board_items")
+          .select("project_id, projects(cover_image)", { count: "exact" })
+          .eq("board_id", boardRow.id)
+          .order("created_at", { ascending: false })
+          .limit(4);
+
+        const coverImages: string[] = [];
+        if (itemsData) {
+          itemsData.forEach((item: any) => {
+            const img = item.projects?.cover_image;
+            if (img && !coverImages.includes(img)) {
+              coverImages.push(img);
+            }
+          });
+        }
+
+        return mapBoardRow(boardRow, count ?? 0, coverImages);
+      })
+    );
+
+    return boardsWithCovers;
+  } catch (err) {
+    console.warn("Failed to fetch user boards:", err);
+    return [];
+  }
+}
+
+/**
+ * Fetch a single board by ID with its full list of projects
+ */
+export async function fetchBoardById(boardId: string): Promise<{ board: Board | null; projects: Project[] }> {
+  try {
+    // 1. Fetch board row
+    let boardRow: any = null;
+    const { data: bData, error: bError } = await supabase
+      .from("boards")
+      .select("*, creator:profiles!user_id(*)")
+      .eq("id", boardId)
+      .maybeSingle();
+
+    if (!bError && bData) {
+      boardRow = bData;
+    } else {
+      const { data: fallbackRow } = await supabase
+        .from("boards")
+        .select("*")
+        .eq("id", boardId)
+        .maybeSingle();
+      boardRow = fallbackRow;
+    }
+
+    if (!boardRow) {
+      return { board: null, projects: [] };
+    }
+
+    // 2. Fetch items
+    const { data: itemsData } = await supabase
+      .from("board_items")
+      .select(`
+        project_id,
+        created_at,
+        projects(
+          *,
+          creator:profiles!creator_id(*),
+          comments(*, author:profiles!author_id(*)),
+          appreciations(count)
+        )
+      `)
+      .eq("board_id", boardId)
+      .order("created_at", { ascending: false });
+
+    const projects: Project[] = [];
+    const coverImages: string[] = [];
+
+    if (itemsData) {
+      itemsData.forEach((item: any) => {
+        if (item.projects) {
+          const p = mapProjectRow(item.projects);
+          projects.push(p);
+          if (p.coverImage && coverImages.length < 4 && !coverImages.includes(p.coverImage)) {
+            coverImages.push(p.coverImage);
+          }
+        }
+      });
+    }
+
+    const board = mapBoardRow(boardRow, projects.length, coverImages);
+    if (boardRow.creator) {
+      board.creator = mapProfileToCreator(boardRow.creator);
+    }
+
+    return { board, projects };
+  } catch (err) {
+    console.error("Failed to fetch board by ID:", err);
+    return { board: null, projects: [] };
+  }
+}
+
+/**
+ * Create a new board
+ */
+export async function createBoardInDb(payload: {
+  userId: string;
+  title: string;
+  description?: string;
+  isPrivate?: boolean;
+}): Promise<Board | null> {
+  try {
+    const { data, error } = await supabase
+      .from("boards")
+      .insert({
+        user_id: payload.userId,
+        title: payload.title.trim(),
+        description: (payload.description || "").trim(),
+        is_private: Boolean(payload.isPrivate),
+      })
+      .select("*")
+      .single();
+
+    if (error || !data) {
+      console.error("Error creating board:", error);
+      return null;
+    }
+
+    invalidateAppCache();
+    return mapBoardRow(data, 0, []);
+  } catch (err) {
+    console.error("Failed to create board in DB:", err);
+    return null;
+  }
+}
+
+/**
+ * Update an existing board
+ */
+export async function updateBoardInDb(
+  boardId: string,
+  payload: { title?: string; description?: string; isPrivate?: boolean }
+): Promise<boolean> {
+  try {
+    const updateObj: Record<string, any> = { updated_at: new Date().toISOString() };
+    if (payload.title !== undefined) updateObj.title = payload.title.trim();
+    if (payload.description !== undefined) updateObj.description = payload.description.trim();
+    if (payload.isPrivate !== undefined) updateObj.is_private = Boolean(payload.isPrivate);
+
+    const { error } = await supabase
+      .from("boards")
+      .update(updateObj)
+      .eq("id", boardId);
+
+    if (error) {
+      console.error("Error updating board:", error);
+      return false;
+    }
+
+    invalidateAppCache();
+    return true;
+  } catch (err) {
+    console.error("Failed to update board in DB:", err);
+    return false;
+  }
+}
+
+/**
+ * Delete a board
+ */
+export async function deleteBoardFromDb(boardId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase.from("boards").delete().eq("id", boardId);
+    if (error) {
+      console.error("Error deleting board:", error);
+      return false;
+    }
+
+    invalidateAppCache();
+    return true;
+  } catch (err) {
+    console.error("Failed to delete board in DB:", err);
+    return false;
+  }
+}
+
+/**
+ * Add project to board
+ */
+export async function addProjectToBoardInDb(boardId: string, projectId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from("board_items")
+      .upsert({ board_id: boardId, project_id: projectId }, { onConflict: "board_id,project_id" });
+
+    if (error) {
+      console.error("Error adding project to board:", error);
+      return false;
+    }
+
+    await supabase.from("boards").update({ updated_at: new Date().toISOString() }).eq("id", boardId);
+    invalidateAppCache();
+    return true;
+  } catch (err) {
+    console.error("Failed to add project to board in DB:", err);
+    return false;
+  }
+}
+
+/**
+ * Remove project from board
+ */
+export async function removeProjectFromBoardInDb(boardId: string, projectId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from("board_items")
+      .delete()
+      .eq("board_id", boardId)
+      .eq("project_id", projectId);
+
+    if (error) {
+      console.error("Error removing project from board:", error);
+      return false;
+    }
+
+    await supabase.from("boards").update({ updated_at: new Date().toISOString() }).eq("id", boardId);
+    invalidateAppCache();
+    return true;
+  } catch (err) {
+    console.error("Failed to remove project from board in DB:", err);
+    return false;
+  }
+}
+
+/**
+ * Fetch all board IDs owned by a user that contain a specific project
+ */
+export async function fetchProjectBoards(userId: string, projectId: string): Promise<string[]> {
+  try {
+    const { data, error } = await supabase
+      .from("board_items")
+      .select("board_id, boards!inner(user_id)")
+      .eq("project_id", projectId)
+      .eq("boards.user_id", userId);
+
+    if (error || !data) return [];
+    return data.map((row: any) => row.board_id);
+  } catch (err) {
+    console.warn("Failed to fetch project boards:", err);
+    return [];
+  }
+}
+
+/**
+ * Fetch a list of projects by an array of project IDs
+ */
+export async function fetchProjectsByIds(projectIds: string[]): Promise<Project[]> {
+  if (!projectIds || projectIds.length === 0) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from("projects")
+      .select(`
+        *,
+        creator:profiles!creator_id(*),
+        comments(*, author:profiles!author_id(*)),
+        appreciations(count)
+      `)
+      .in("id", projectIds)
+      .eq("published", true);
+
+    if (error || !data) {
+      return [];
+    }
+
+    return data.map((row) => mapProjectRow(row));
+  } catch (err) {
+    console.error("Failed to fetch projects by IDs:", err);
+    return [];
+  }
+}
 
 

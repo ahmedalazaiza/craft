@@ -17,6 +17,7 @@ import {
 import { useSession } from "@/lib/session-context";
 import { cn } from "@/lib/utils";
 import { bricolage } from "@/lib/fonts";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface DeleteProjectModalProps {
   isOpen: boolean;
@@ -42,6 +43,22 @@ export function DeleteProjectModal({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape" && !isDeleting) {
+          onClose();
+        }
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.body.style.overflow = "unset";
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [isOpen, isDeleting, onClose]);
 
   if (!mounted || !isOpen) return null;
 
@@ -73,25 +90,36 @@ export function DeleteProjectModal({
   };
 
   const modalContent = (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
-      {/* Backdrop */}
-      <div
-        onClick={!isDeleting ? onClose : undefined}
-        className="fixed inset-0 bg-black/65 backdrop-blur-md transition-opacity"
-      />
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+        {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          onClick={!isDeleting ? onClose : undefined}
+          className="fixed inset-0 bg-black/60 backdrop-blur-md"
+        />
 
-      {/* Modal Container */}
-      <div className="relative w-full max-w-lg overflow-hidden rounded-t-[28px] sm:rounded-[28px] border-t sm:border border-[var(--border-neutral)] bg-[var(--bg-screen)] p-6 sm:p-8 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.25)] dark:shadow-none z-10 animate-in fade-in zoom-in-95 duration-200 pb-safe">
-        {/* Mobile Pull Handle Indicator */}
-        <div className="flex sm:hidden justify-center pt-1 pb-4 -mt-2 shrink-0">
-          <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
-        </div>
+        {/* Modal Container */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: 20 }}
+          transition={{ type: "spring", damping: 28, stiffness: 360 }}
+          className="relative w-full max-w-lg overflow-hidden rounded-t-[28px] sm:rounded-[28px] border-t sm:border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 sm:p-8 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.25)] dark:shadow-none z-10 pb-safe sm:pb-8"
+        >
+          {/* Mobile Pull Handle Indicator */}
+          <div className="flex sm:hidden justify-center pt-1 pb-4 -mt-2 shrink-0">
+            <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
+          </div>
 
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[11px] font-bold tracking-wide uppercase">
-              <ShieldAlert className="h-3.5 w-3.5" />
+          {/* Header */}
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[11px] font-bold tracking-wide uppercase">
+                <ShieldAlert className="h-3.5 w-3.5" />
               <span>Irreversible Action</span>
             </div>
 
@@ -188,8 +216,9 @@ export function DeleteProjectModal({
             )}
           </button>
         </div>
+        </motion.div>
       </div>
-    </div>
+    </AnimatePresence>
   );
 
   return createPortal(modalContent, document.body);

@@ -31,6 +31,7 @@ import { getResendStatus, sendVerificationEmail } from "@/lib/resend-limiter";
 import { generateUniqueUsername, slugifyUsername } from "@/lib/supabase/auth";
 import { bricolage } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
+import { toast } from "@/components/ui/toast";
 
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -121,7 +122,12 @@ export function SignupClient() {
       // Auto-generates unique username on the backend & Supabase with guaranteed uniqueness
       const res = await signup(email, password, displayName, resolvedUsername || undefined);
       if (res.success) {
-        setIsRegistered(true);
+        toast.success(
+          "Welcome to Layerat! Please check your inbox to confirm your email and unlock all creator perks.",
+          "Account Created 🎉",
+          6000
+        );
+        window.location.href = "/";
       } else {
         setErrorMessage(res.error || "Failed to create account. Please check your information.");
       }

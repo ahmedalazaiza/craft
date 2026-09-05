@@ -214,7 +214,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
             aria-label="Search Layerat Platform"
           >
             {/* Mobile Pull Handle Indicator */}
-            <div className="flex sm:hidden justify-center pt-2.5 pb-1 shrink-0 bg-[var(--bg-screen)]">
+            <div className="flex sm:hidden justify-center pt-2.5 pb-1 shrink-0 bg-[var(--bg-elevated)]">
               <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
             </div>
 

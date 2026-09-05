@@ -119,7 +119,7 @@ export function ShareModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/60 backdrop-blur-md"
           />
 
           {/* Modal Card */}
@@ -131,7 +131,7 @@ export function ShareModal({
             className="relative w-full max-w-md rounded-t-[28px] sm:rounded-[28px] border-t sm:border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 sm:p-7 shadow-[0_24px_60px_rgba(0,0,0,0.18)] dark:shadow-none z-10 overflow-hidden pb-10 sm:pb-7 pb-safe"
           >
             {/* Mobile Pull Handle Indicator */}
-            <div className="flex sm:hidden justify-center pt-1 pb-4 -mt-2 shrink-0">
+            <div className="flex sm:hidden justify-center pt-2.5 pb-1 -mt-2 shrink-0 bg-[var(--bg-elevated)]">
               <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
             </div>
 

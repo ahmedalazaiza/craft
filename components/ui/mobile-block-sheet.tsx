@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Monitor, X, ArrowRight } from "lucide-react";
+import { Monitor, X, ArrowRight, Copy, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { bricolage } from "@/lib/fonts";
 
@@ -12,6 +12,16 @@ interface MobileBlockSheetProps {
 }
 
 export function MobileBlockSheet({ isOpen, onClose }: MobileBlockSheetProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = () => {
+    if (typeof window === "undefined") return;
+    const url = `${window.location.origin}/me/projects/new`;
+    navigator.clipboard?.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    });
+  };
   // Lock body scroll when open
   useEffect(() => {
     if (isOpen) {
@@ -44,7 +54,7 @@ export function MobileBlockSheet({ isOpen, onClose }: MobileBlockSheetProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-md"
             onClick={onClose}
             aria-hidden="true"
           />
@@ -59,12 +69,12 @@ export function MobileBlockSheet({ isOpen, onClose }: MobileBlockSheetProps) {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", stiffness: 360, damping: 32, mass: 0.9 }}
-            className="fixed inset-x-0 bottom-0 z-[71] rounded-t-[28px] bg-[var(--bg-screen)] border-t border-[var(--border-neutral)] shadow-2xl"
+            className="fixed inset-x-0 bottom-0 z-[71] rounded-t-[28px] bg-[var(--bg-elevated)] border-t border-[var(--border-neutral)] shadow-2xl"
             style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
           >
             {/* Drag handle */}
-            <div className="flex justify-center pt-3 pb-1">
-              <div className="h-1 w-10 rounded-full bg-[var(--border-neutral)]" />
+            <div className="flex justify-center pt-2.5 pb-1">
+              <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
             </div>
 
             {/* Close button */}
@@ -114,14 +124,34 @@ export function MobileBlockSheet({ isOpen, onClose }: MobileBlockSheetProps) {
                 ))}
               </ul>
 
-              {/* CTA */}
-              <button
-                type="button"
-                onClick={onClose}
-                className="w-full max-w-xs h-12 rounded-full bg-[var(--btn-cta-bg)] text-[var(--btn-cta-fg)] font-bold text-sm hover:bg-[var(--btn-cta-bg-hover)] active:bg-[var(--btn-cta-bg-active)] transition-all active:scale-[0.98] shadow-sm"
-              >
-                Got it
-              </button>
+              {/* Action Buttons */}
+              <div className="w-full max-w-xs space-y-2.5">
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className="w-full h-11 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)] text-[var(--content-primary)] font-semibold text-xs flex items-center justify-center gap-2 hover:bg-[var(--bg-neutral)] transition-all shadow-2xs cursor-pointer active:scale-[0.98]"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-4 w-4 text-emerald-500" />
+                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">Copied Editor Link!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4 text-[var(--content-secondary)]" />
+                      <span>Copy Editor Link for Desktop</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-full h-11 rounded-full bg-[var(--btn-cta-bg)] text-[var(--btn-cta-fg)] font-bold text-sm hover:bg-[var(--btn-cta-bg-hover)] active:bg-[var(--btn-cta-bg-active)] transition-all active:scale-[0.98] shadow-sm cursor-pointer"
+                >
+                  Got it
+                </button>
+              </div>
             </div>
           </motion.div>
         </>

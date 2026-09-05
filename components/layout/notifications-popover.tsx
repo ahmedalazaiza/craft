@@ -86,7 +86,7 @@ export function NotificationsPopover() {
         title="Notifications"
         aria-label="Notifications"
       >
-        <Bell className="h-4 w-4" />
+        <Bell className={cn("h-4 w-4 transition-all", isOpen && "fill-current")} />
         {unreadNotificationsCount > 0 && (
           <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--content-primary)] px-1 text-[10px] font-black text-[var(--bg-screen)] ring-2 ring-[var(--bg-screen)] shadow-xs">
             {unreadNotificationsCount}

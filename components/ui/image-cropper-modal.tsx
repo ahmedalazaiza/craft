@@ -53,6 +53,23 @@ export function ImageCropperModal({
     setMounted(true);
   }, []);
 
+  // Lock body scroll and listen for Escape
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape" && !isProcessing) {
+          onCancel();
+        }
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.body.style.overflow = "unset";
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [isOpen, isProcessing, onCancel]);
+
   // Reset adjustments on new image or open
   useEffect(() => {
     if (isOpen) {
@@ -191,7 +208,7 @@ export function ImageCropperModal({
           className="relative w-full max-w-md overflow-hidden rounded-t-[28px] sm:rounded-[28px] border-t sm:border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-5 sm:p-6 shadow-2xl z-10 space-y-4 pb-safe"
         >
           {/* Mobile Pull Handle Indicator */}
-          <div className="flex sm:hidden justify-center pt-1 pb-2 -mt-1 shrink-0">
+          <div className="flex sm:hidden justify-center pt-2.5 pb-1 shrink-0 bg-[var(--bg-elevated)]">
             <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
           </div>
 

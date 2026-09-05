@@ -6,6 +6,8 @@ import { bricolage } from "@/lib/fonts";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { fetchCMSPage, DEFAULT_TEAM_MEMBERS } from "@/lib/supabase/queries";
+import { TeamMemberCMS } from "@/lib/types";
 
 export const metadata: Metadata = constructMetadata({
   title: "Our Team — Curators, Designers & Builders",
@@ -14,7 +16,7 @@ export const metadata: Metadata = constructMetadata({
   path: "/team",
 });
 
-export const revalidate = 3600;
+export const revalidate = 60; // 1 minute revalidation for CMS updates
 
 interface TeamMember {
   name: string;
@@ -111,7 +113,23 @@ function LinkedInIcon({ className }: { className?: string }) {
   );
 }
 
-export default function TeamPage() {
+export default async function TeamPage() {
+  const cmsRecord = await fetchCMSPage<{
+    headline?: string;
+    subtitle?: string;
+    members?: TeamMemberCMS[];
+  }>("team");
+
+  const content = cmsRecord?.content;
+  const headline = content?.headline || "Built by makers, for makers.";
+  const subtitle =
+    content?.subtitle ||
+    "We are a distributed collective of designers, engineers, and typographers dedicated to building the premier home for digital craftsmanship.";
+  const members: TeamMemberCMS[] =
+    Array.isArray(content?.members) && content.members.length > 0
+      ? content.members
+      : DEFAULT_TEAM_MEMBERS;
+
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([
     { name: "Home", url: "/" },
     { name: "Our Team", url: "/team" },
@@ -144,11 +162,11 @@ export default function TeamPage() {
             "text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-neutral-950 dark:text-white leading-[1.06]"
           )}
         >
-          Built by makers, for makers.
+          {headline}
         </h1>
 
         <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed font-normal max-w-2xl mx-auto">
-          We are a distributed collective of designers, engineers, and typographers dedicated to building the premier home for digital craftsmanship.
+          {subtitle}
         </p>
       </section>
 
@@ -164,14 +182,14 @@ export default function TeamPage() {
             </p>
           </div>
           <span className="text-xs font-mono font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
-            4 Core Curators
+            {members.length} Curators & Builders
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {TEAM_MEMBERS.map((member, idx) => (
+          {members.map((member, idx) => (
             <div
-              key={member.name}
+              key={member.id || member.name}
               className="group flex flex-col rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#141713] overflow-hidden shadow-xs hover:border-neutral-300 dark:hover:border-neutral-700 transition-all"
             >
               {/* Portrait Image */}

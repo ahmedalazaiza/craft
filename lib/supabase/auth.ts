@@ -124,21 +124,51 @@ export async function signUpWithEmail(
       },
     });
 
-    if (authError) {
+    let authUser = authData?.user;
+
+    // If user already exists in auth.users (e.g. administrative dashboard user),
+    // check if they don't yet have a public.profiles creator profile on Layerat!
+    const isAlreadyRegistered =
+      authError?.message?.toLowerCase().includes("already registered") ||
+      authError?.message?.toLowerCase().includes("already exists") ||
+      Boolean(authUser?.identities && authUser.identities.length === 0);
+
+    if (isAlreadyRegistered) {
+      // Verify credentials by attempting to sign in with the provided password
+      const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password: password,
+      });
+
+      if (signInErr || !signInData.user) {
+        return {
+          success: false,
+          error:
+            "An account with this email address already exists. If you own this account, please enter the correct password to initialize your designer profile.",
+        };
+      }
+
+      // Check if they already have a creator profile
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", signInData.user.id)
+        .maybeSingle();
+
+      if (existingProfile) {
+        return {
+          success: false,
+          error: "A creator account with this email already exists on Layerat. Please log in directly.",
+        };
+      }
+
+      authUser = signInData.user;
+    } else if (authError) {
       return { success: false, error: authError.message };
     }
 
-    const authUser = authData.user;
     if (!authUser) {
       return { success: false, error: "Failed to create user account." };
-    }
-
-    // In Supabase, if email confirmation is enabled and the user is already registered, identities is []
-    if (authUser.identities && authUser.identities.length === 0) {
-      return {
-        success: false,
-        error: "An account with this email address already exists. Please log in or reset your password.",
-      };
     }
 
     const isEmailConfirmed = Boolean(authUser.email_confirmed_at);
@@ -217,43 +247,27 @@ export async function signInWithEmail(
       .maybeSingle();
 
     let creator: Creator;
-    if (profileData) {
-      creator = mapProfileToCreator(profileData);
-      if (isEmailConfirmed || profileData.is_verified) {
-        creator.isVerified = true;
-        // Sync database if it wasn't marked verified yet
-        if (!profileData.is_verified) {
-          supabase.from("profiles").update({ is_verified: true }).eq("id", authUser.id).then();
-        }
-      } else {
-        creator.isVerified = false;
+    if (!profileData) {
+      // User is authenticated in Supabase Auth (e.g. administrative dashboard user),
+      // but has NOT registered as a creator on the Layerat public platform.
+      // Strictly maintain total separation: Do NOT auto-create a creator profile!
+      await supabase.auth.signOut().catch(() => {});
+      return {
+        success: false,
+        error:
+          "No creator profile found on Layerat with this email. If this is an administrative account, please Sign Up on Layerat to initialize your designer profile.",
+      };
+    }
+
+    creator = mapProfileToCreator(profileData);
+    if (isEmailConfirmed || profileData.is_verified) {
+      creator.isVerified = true;
+      // Sync database if it wasn't marked verified yet
+      if (!profileData.is_verified) {
+        supabase.from("profiles").update({ is_verified: true }).eq("id", authUser.id).then();
       }
     } else {
-      // Create fallback profile if not found
-      const fallbackUsername = authUser.user_metadata?.username || authUser.email?.split("@")[0] || "creator";
-      const fallbackName = authUser.user_metadata?.display_name || authUser.email?.split("@")[0] || "Creator";
-      creator = {
-        id: authUser.id,
-        username: fallbackUsername,
-        displayName: fallbackName,
-        email: cleanEmail,
-        avatarUrl: DEFAULT_AVATAR_URL,
-        bio: "Independent designer & creative practitioner.",
-        location: "Worldwide",
-        city: "Global",
-        skills: ["Design"],
-        isVerified: isEmailConfirmed,
-        followersCount: 0,
-        isCurrentUser: true,
-      };
-
-      // Create in db
-      await supabase.from("profiles").upsert({
-        id: authUser.id,
-        username: fallbackUsername,
-        display_name: fallbackName,
-        is_verified: isEmailConfirmed,
-      });
+      creator.isVerified = false;
     }
 
     creator.isCurrentUser = true;
@@ -290,22 +304,32 @@ export async function signOut(): Promise<{ success: boolean; error?: string }> {
  */
 export async function getCurrentAuthUser(): Promise<Creator | null> {
   try {
-    // 1. Ensure stored session is loaded and automatically refreshed if expired
-    const { data: sessionData } = await supabase.auth.getSession();
-    let user = sessionData?.session?.user ?? null;
+    // Check if client had a stored profile or session
+    const hadPreviousSession = typeof window !== "undefined" && (
+      Boolean(localStorage.getItem("craft_cached_profile")) ||
+      Boolean(localStorage.getItem("sb-pmswqujgbvquqbbmttfe-auth-token"))
+    );
 
-    // 2. Fallback to getUser() if session has not finished resolving
-    if (!user) {
-      const { data: userData } = await supabase.auth.getUser();
-      user = userData?.user ?? null;
-    }
+    // 1. Verify authenticated user with Supabase Auth server
+    const { data: userData, error: userErr } = await supabase.auth.getUser();
+    const user = userData?.user ?? null;
 
-    if (!user) {
+    if (userErr || !user) {
+      // User does not exist in auth.users or session has been revoked/deleted
+      if (hadPreviousSession) {
+        console.warn("Auth user not found or deleted on server. Terminating client session.");
+        await supabase.auth.signOut().catch(() => {});
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("craft_cached_profile");
+          sessionStorage.setItem("layerat_session_terminated", "account_deleted");
+        }
+      }
       return null;
     }
 
     const isEmailConfirmed = Boolean(user.email_confirmed_at);
 
+    // 2. Query public.profiles
     const { data: profile } = await supabase
       .from("profiles")
       .select("*")
@@ -328,39 +352,16 @@ export async function getCurrentAuthUser(): Promise<Creator | null> {
       return creator;
     }
 
-    const fallbackUsername = user.user_metadata?.username || user.email?.split("@")[0] || "creator";
-    const fallbackName = user.user_metadata?.display_name || user.email?.split("@")[0] || "Creator";
-    
-    const newProfileRow = {
-      id: user.id,
-      username: fallbackUsername,
-      display_name: fallbackName,
-      avatar_url: DEFAULT_AVATAR_URL,
-      bio: "Independent designer & creative practitioner.",
-      location: "Worldwide",
-      city: "Global",
-      skills: ["Design"],
-      is_verified: isEmailConfirmed,
-      followers_count: 0,
-    };
-
-    // Auto-create in public.profiles
-    await supabase.from("profiles").upsert(newProfileRow);
-
-    return {
-      id: user.id,
-      username: fallbackUsername,
-      displayName: fallbackName,
-      email: user.email,
-      avatarUrl: newProfileRow.avatar_url,
-      bio: newProfileRow.bio,
-      location: newProfileRow.location,
-      city: newProfileRow.city,
-      skills: newProfileRow.skills,
-      isVerified: isEmailConfirmed,
-      followersCount: 0,
-      isCurrentUser: true,
-    };
+    // 3. IF PROFILE DOES NOT EXIST IN DATABASE:
+    // The account was deleted by administration or self-purged.
+    // HARD TERMINATE THE CLIENT SESSION immediately!
+    console.warn("Current user profile does not exist in database (deleted). Terminating local session.");
+    await supabase.auth.signOut().catch(() => {});
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("craft_cached_profile");
+      sessionStorage.setItem("layerat_session_terminated", "account_deleted");
+    }
+    return null;
   } catch (err) {
     console.warn("Notice getting current auth user:", err);
     return null;

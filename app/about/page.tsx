@@ -12,6 +12,8 @@ import {
   Heart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { fetchCMSPage, DEFAULT_ABOUT_CONTENT } from "@/lib/supabase/queries";
+import { AboutPageContent } from "@/lib/types";
 
 export const metadata: Metadata = constructMetadata({
   title: "About Us — The Modern Home for Great Design",
@@ -20,9 +22,11 @@ export const metadata: Metadata = constructMetadata({
   path: "/about",
 });
 
-export const revalidate = 3600;
+export const revalidate = 60; // 1 minute revalidation for CMS updates
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const cmsRecord = await fetchCMSPage<AboutPageContent>("about");
+  const content = cmsRecord?.content || DEFAULT_ABOUT_CONTENT;
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([
     { name: "Home", url: "/" },
     { name: "About Us", url: "/about" },
@@ -55,11 +59,11 @@ export default function AboutPage() {
             "text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-neutral-950 dark:text-white leading-[1.06]"
           )}
         >
-          The modern home for great design.
+          {content.headline || "The modern home for great design."}
         </h1>
 
         <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed font-normal max-w-2xl mx-auto">
-          We built Layerat because creative work deserves a fast, focused, and ad-free space. Here, high-resolution craftsmanship speaks for itself.
+          {content.mission || "We built Layerat because creative work deserves a fast, focused, and ad-free space. Here, high-resolution craftsmanship speaks for itself."}
         </p>
 
         {/* Clean Action Buttons */}
@@ -98,10 +102,10 @@ export default function AboutPage() {
             <Eye className="h-5 w-5" />
           </div>
           <h3 className={cn(bricolage.className, "text-xl font-bold text-neutral-950 dark:text-white")}>
-            High Resolution
+            {content.pillar1Title || "High Resolution"}
           </h3>
           <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed font-normal">
-            Upload full project case studies in crisp, uncompressed quality with custom image layouts, process notes, and typography.
+            {content.pillar1Desc || "Upload full project case studies in crisp, uncompressed quality with custom image layouts, process notes, and typography."}
           </p>
         </div>
 
@@ -110,10 +114,10 @@ export default function AboutPage() {
             <ShieldCheck className="h-5 w-5" />
           </div>
           <h3 className={cn(bricolage.className, "text-xl font-bold text-neutral-950 dark:text-white")}>
-            No Algorithms
+            {content.pillar2Title || "No Algorithms"}
           </h3>
           <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed font-normal">
-            No social feed noise or algorithmic feeds. Discoveries are driven purely by design quality and authentic peer appreciation.
+            {content.pillar2Desc || "No social feed noise or algorithmic feeds. Discoveries are driven purely by design quality and authentic peer appreciation."}
           </p>
         </div>
 
@@ -122,10 +126,10 @@ export default function AboutPage() {
             <Heart className="h-5 w-5" />
           </div>
           <h3 className={cn(bricolage.className, "text-xl font-bold text-neutral-950 dark:text-white")}>
-            100% Creator Ownership
+            {content.pillar3Title || "100% Creator Ownership"}
           </h3>
           <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed font-normal">
-            You retain full intellectual property rights to your work. Share your portfolio and story completely on your own terms.
+            {content.pillar3Desc || "You retain full intellectual property rights to your work. Share your portfolio and story completely on your own terms."}
           </p>
         </div>
       </section>

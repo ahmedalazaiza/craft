@@ -13,6 +13,7 @@ import { NetworkStatusIndicator } from "@/components/layout/network-status-indic
 import { CookieConsentBanner } from "@/components/ui/cookie-consent-banner";
 import { ToastContainer } from "@/components/ui/toast";
 import { MaintenanceScreen } from "@/components/layout/maintenance-screen";
+import { SuspensionBanner } from "@/components/layout/suspension-banner";
 
 import Script from "next/script";
 
@@ -160,6 +161,7 @@ export default function RootLayout({
             </Suspense>
 
             <MaintenanceScreen>
+              <SuspensionBanner />
               <SiteHeader />
               <main className="flex-1 pb-20 md:pb-0">{children}</main>
               <SiteFooter />
