@@ -1,8 +1,10 @@
 import React from "react";
 import type { Metadata } from "next";
+import { permanentRedirect } from "next/navigation";
 import { ExploreClient } from "./explore-client";
 import { constructMetadata, generateCollectionJsonLd, generateBreadcrumbJsonLd } from "@/lib/seo";
-import { fetchProjects } from "@/lib/supabase/queries";
+import { fetchProjects, fetchCategories } from "@/lib/supabase/queries";
+import { categoryToSlug } from "@/lib/taxonomy";
 
 export const revalidate = 60;
 
@@ -22,7 +24,23 @@ export const metadata: Metadata = constructMetadata({
   ],
 });
 
-export default async function ExplorePage() {
+interface ExplorePageProps {
+  searchParams: Promise<{ category?: string; [key: string]: string | string[] | undefined }>;
+}
+
+export default async function ExplorePage({ searchParams }: ExplorePageProps) {
+  const resolvedParams = (await searchParams) || {};
+  const queryCat =
+    typeof resolvedParams.category === "string" ? resolvedParams.category.trim() : undefined;
+
+  if (queryCat) {
+    const categories = await fetchCategories();
+    const slug = categoryToSlug(queryCat, categories);
+    if (slug) {
+      permanentRedirect(`/explore/${slug}`);
+    }
+  }
+
   const initialProjects = await fetchProjects({ publishedOnly: true });
 
   const collectionJsonLd = generateCollectionJsonLd({

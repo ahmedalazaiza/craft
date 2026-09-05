@@ -702,3 +702,43 @@ export function getToolsForCategory(
   const tax = getCategoryTaxonomy(categoryName, taxonomyList);
   return tax ? tax.tools : ALL_TOOLS.slice(0, 12);
 }
+
+/**
+ * Convert any category name or identifier to its canonical URL slug.
+ * Uses the stable category ID from the taxonomy.
+ */
+export function categoryToSlug(
+  categoryName?: string,
+  taxonomyList: CategoryTaxonomyItem[] = FALLBACK_TAXONOMY
+): string {
+  if (!categoryName) return "";
+  const normalized = normalizeCategory(categoryName, taxonomyList);
+  const found = taxonomyList.find(
+    (c) =>
+      c.name.toLowerCase() === normalized.toLowerCase() ||
+      c.id.toLowerCase() === categoryName.toLowerCase() ||
+      c.shortName.toLowerCase() === categoryName.toLowerCase()
+  );
+  if (found) return found.id;
+  return categoryName
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/**
+ * Resolve a URL slug back to its matching CategoryTaxonomyItem.
+ */
+export function slugToCategory(
+  slug?: string,
+  taxonomyList: CategoryTaxonomyItem[] = FALLBACK_TAXONOMY
+): CategoryTaxonomyItem | undefined {
+  if (!slug) return undefined;
+  const cleanSlug = slug.toLowerCase().trim();
+  return taxonomyList.find(
+    (c) =>
+      c.id.toLowerCase() === cleanSlug ||
+      categoryToSlug(c.name, taxonomyList) === cleanSlug
+  );
+}

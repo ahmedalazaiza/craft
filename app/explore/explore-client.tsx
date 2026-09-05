@@ -16,6 +16,8 @@ import { ProjectCategory, Project } from "@/lib/types";
 import {
   normalizeCategory,
   getCategoryTaxonomy,
+  CategoryTaxonomyItem,
+  categoryToSlug,
 } from "@/lib/taxonomy";
 import {
   Sparkles,
@@ -27,16 +29,17 @@ import { cn } from "@/lib/utils";
 
 interface ExploreClientProps {
   initialProjects?: Project[];
+  categoryTaxonomy?: CategoryTaxonomyItem;
 }
 
-export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
+export function ExploreClient({ initialProjects = [], categoryTaxonomy }: ExploreClientProps) {
   const { projects: contextProjects, taxonomy, isLoadingDb } = useSession();
   const projects = contextProjects.length > 0 ? contextProjects : initialProjects;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filters, setFilters] = useState<ProjectFilters>({
-    category: "All",
+    category: categoryTaxonomy ? categoryTaxonomy.name : "All",
     subCategory: "All",
     tags: [],
     tools: [],
@@ -60,29 +63,51 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
 
     setFilters((prev) => ({
       ...prev,
-      category: cat || prev.category,
+      category: categoryTaxonomy ? categoryTaxonomy.name : (cat || prev.category),
       subCategory: subCat || prev.subCategory,
       medium: med || prev.medium,
       sortBy: (sort as any) || prev.sortBy,
       tags: tagsParam ? tagsParam.split(",").map((t) => t.trim()).filter(Boolean) : prev.tags,
       tools: toolsParam ? toolsParam.split(",").map((t) => t.trim()).filter(Boolean) : prev.tools,
     }));
-  }, []);
+  }, [categoryTaxonomy]);
 
   // 2. Real-time URL query synchronization
   const syncUrlParams = (newFilters: ProjectFilters, newQuery: string) => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams();
     if (newQuery.trim()) params.set("q", newQuery.trim());
-    if (newFilters.category && newFilters.category !== "All") params.set("category", newFilters.category);
     if (newFilters.subCategory && newFilters.subCategory !== "All") params.set("subCategory", newFilters.subCategory);
     if (newFilters.medium && newFilters.medium !== "All") params.set("medium", newFilters.medium);
     if (newFilters.sortBy && newFilters.sortBy !== "curated") params.set("sort", newFilters.sortBy);
     if (newFilters.tags && newFilters.tags.length > 0) params.set("tags", newFilters.tags.join(","));
     if (newFilters.tools && newFilters.tools.length > 0) params.set("tools", newFilters.tools.join(","));
 
-    const newUrl = params.toString() ? `/explore?${params.toString()}` : "/explore";
-    window.history.replaceState(null, "", newUrl);
+    if (categoryTaxonomy) {
+      if (!newFilters.category || newFilters.category === "All") {
+        window.location.href = params.toString() ? `/explore?${params.toString()}` : "/explore";
+        return;
+      }
+      if (newFilters.category !== categoryTaxonomy.name) {
+        const nextSlug = categoryToSlug(newFilters.category, taxonomy);
+        if (nextSlug) {
+          window.location.href = params.toString() ? `/explore/${nextSlug}?${params.toString()}` : `/explore/${nextSlug}`;
+          return;
+        }
+      }
+      const newUrl = params.toString() ? `/explore/${categoryTaxonomy.id}?${params.toString()}` : `/explore/${categoryTaxonomy.id}`;
+      window.history.replaceState(null, "", newUrl);
+    } else {
+      if (newFilters.category && newFilters.category !== "All") {
+        const nextSlug = categoryToSlug(newFilters.category, taxonomy);
+        if (nextSlug) {
+          window.location.href = params.toString() ? `/explore/${nextSlug}?${params.toString()}` : `/explore/${nextSlug}`;
+          return;
+        }
+      }
+      const newUrl = params.toString() ? `/explore?${params.toString()}` : "/explore";
+      window.history.replaceState(null, "", newUrl);
+    }
   };
 
   const handleSearchChange = (query: string) => {
@@ -232,10 +257,18 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
       <div>
         {/* Breadcrumbs Navigation */}
         <Breadcrumbs
-          items={[
-            { label: "Home", href: "/" },
-            { label: "Explore" },
-          ]}
+          items={
+            categoryTaxonomy
+              ? [
+                  { label: "Home", href: "/" },
+                  { label: "Explore", href: "/explore" },
+                  { label: categoryTaxonomy.shortName || categoryTaxonomy.name },
+                ]
+              : [
+                  { label: "Home", href: "/" },
+                  { label: "Explore" },
+                ]
+          }
         />
 
         {/* ========================================================================= */}
@@ -245,9 +278,11 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
           <div className="max-w-xl">
             <div className="inline-flex items-center gap-2 rounded-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-3 py-1 text-[11px] font-mono font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-300 mb-3 shadow-xs">
               <Sparkles className="h-3 w-3 text-neutral-900 dark:text-white" />
-              <span>Project Showcase</span>
+              <span>{categoryTaxonomy ? "Curated Discipline" : "Project Showcase"}</span>
               <span className="text-neutral-400 dark:text-neutral-500">•</span>
-              <span className="font-normal text-neutral-500 dark:text-neutral-400">Design Case Studies</span>
+              <span className="font-normal text-neutral-500 dark:text-neutral-400">
+                {categoryTaxonomy ? categoryTaxonomy.shortName : "Design Case Studies"}
+              </span>
             </div>
             <h1
               className={cn(
@@ -255,10 +290,12 @@ export function ExploreClient({ initialProjects = [] }: ExploreClientProps) {
                 "text-3xl sm:text-4xl lg:text-[40px] font-black text-neutral-950 dark:text-white leading-tight tracking-tight"
               )}
             >
-              Explore Projects
+              {categoryTaxonomy ? categoryTaxonomy.name : "Explore Projects"}
             </h1>
             <p className="mt-2 text-sm sm:text-base text-neutral-600 dark:text-neutral-400 leading-relaxed font-normal">
-              Discover standout UI designs, brand identities, typography, and creative projects published worldwide.
+              {categoryTaxonomy
+                ? categoryTaxonomy.description
+                : "Discover standout UI designs, brand identities, typography, and creative projects published worldwide."}
             </p>
           </div>
 

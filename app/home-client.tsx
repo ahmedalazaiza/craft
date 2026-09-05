@@ -376,7 +376,7 @@ export function HomeClient({
                 </div>
 
                 <Link
-                  href={`/explore?category=${encodeURIComponent(section.taxonomy.name)}`}
+                  href={`/explore/${section.taxonomy.id}`}
                   className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[var(--content-secondary)] hover:text-[var(--content-primary)] shrink-0 px-3 py-1.5 rounded-full bg-[var(--bg-elevated)] border border-[var(--border-neutral)] hover:border-[var(--content-primary)] transition-all shadow-2xs"
                 >
                   <span>Explore</span>
@@ -403,7 +403,7 @@ export function HomeClient({
               {section.hasMore && (
                 <div className="w-[82vw] max-w-[320px] shrink-0 snap-start sm:w-auto sm:max-w-none flex flex-col">
                   <Link
-                    href={`/explore?category=${encodeURIComponent(section.taxonomy.name)}`}
+                    href={`/explore/${section.taxonomy.id}`}
                     className="group relative aspect-[4/3] rounded-[24px] overflow-hidden border-2 border-dashed border-[var(--border-neutral)] hover:border-[var(--content-primary)] bg-[var(--bg-elevated)]/50 hover:bg-[var(--bg-elevated)] transition-all flex flex-col items-center justify-center p-6 text-center shadow-2xs hover:shadow-xs"
                   >
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--content-primary)] text-[var(--bg-screen)] mb-3 group-hover:scale-110 group-hover:bg-[var(--brand-secondary)] group-hover:text-white transition-all shadow-xs">

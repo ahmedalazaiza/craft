@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { fetchProjectBySlug } from "@/lib/supabase/queries";
 import { getProjectMetadata, generateProjectJsonLd, generateBreadcrumbJsonLd } from "@/lib/seo";
+import { categoryToSlug } from "@/lib/taxonomy";
 import { ProjectDetailClient } from "./project-detail-client";
 
 export const revalidate = 60;
@@ -41,7 +42,7 @@ export default async function ProjectPage({ params }: PageProps) {
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([
     { name: "Home", url: "/" },
     { name: "Explore", url: "/explore" },
-    { name: project.category, url: `/explore?category=${encodeURIComponent(project.category)}` },
+    { name: project.category, url: `/explore/${categoryToSlug(project.category)}` },
     { name: project.title, url: `/project/${project.slug}` },
   ]);
 

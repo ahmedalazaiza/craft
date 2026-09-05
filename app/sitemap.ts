@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { fetchProjects, fetchCreators } from "@/lib/supabase/queries";
+import { fetchProjects, fetchCreators, fetchCategories } from "@/lib/supabase/queries";
 import { absoluteUrl } from "@/lib/seo";
 
 // Real release timestamp for platform core landing pages (avoids fake dynamic "now" spoofing)
@@ -59,10 +59,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   try {
-    const [dbProjects, dbCreators] = await Promise.all([
+    const [dbProjects, dbCreators, dbCategories] = await Promise.all([
       fetchProjects({ publishedOnly: true }),
       fetchCreators(),
+      fetchCategories(),
     ]);
+
+    // Clean category corridors for topical authority
+    const categoryRoutes: MetadataRoute.Sitemap = (dbCategories || []).map((cat) => ({
+      url: absoluteUrl(`/explore/${cat.id}`),
+      lastModified: STATIC_LAST_MODIFIED,
+      changeFrequency: "weekly" as const,
+      priority: 0.85,
+    }));
 
     const projectRoutes: MetadataRoute.Sitemap = (dbProjects || [])
       .filter((project) => Boolean(project.published && project.slug))
@@ -105,7 +114,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         };
       });
 
-    return [...staticRoutes, ...projectRoutes, ...creatorRoutes];
+    return [...staticRoutes, ...categoryRoutes, ...projectRoutes, ...creatorRoutes];
   } catch (err) {
     console.error("Error generating dynamic sitemap:", err);
     return [...staticRoutes];

@@ -18,6 +18,7 @@ import { ReportModal } from "@/components/ui/report-modal";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { getValidAvatarUrl } from "@/lib/avatar";
 import { getCanonicalShareUrl } from "@/lib/seo";
+import { categoryToSlug } from "@/lib/taxonomy";
 import { DeleteProjectModal } from "@/components/project/delete-project-modal";
 import { incrementProjectViewsInDb } from "@/lib/supabase/queries";
 import {
@@ -206,7 +207,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
             { label: "Explore", href: "/explore" },
             {
               label: project.category,
-              href: `/explore?category=${encodeURIComponent(project.category)}`,
+              href: `/explore/${categoryToSlug(project.category)}`,
             },
             { label: project.title, isCurrent: true },
           ]}
@@ -587,7 +588,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                       ).map((cat) => (
                         <Link
                           key={cat}
-                          href={`/explore?category=${encodeURIComponent(cat)}`}
+                          href={`/explore/${categoryToSlug(cat)}`}
                           className="rounded-full bg-[var(--btn-cta-bg)] text-[var(--btn-cta-fg)] px-3.5 py-1.5 text-xs font-bold shadow-xs hover:opacity-90 transition-opacity"
                         >
                           {cat}
