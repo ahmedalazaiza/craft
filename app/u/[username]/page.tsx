@@ -19,6 +19,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return {
       title: `@${username} · Results Not Found`,
       description: `No creator profile found for @${username}. Search active designers and visual studios on Layerat.`,
+      robots: {
+        index: false,
+        follow: false,
+      },
     };
   }
 

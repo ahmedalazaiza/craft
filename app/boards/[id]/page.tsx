@@ -19,15 +19,30 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return {
       title: "Board Not Found",
       description: "The requested moodboard does not exist or has been removed.",
+      robots: {
+        index: false,
+        follow: false,
+      },
     };
   }
 
+  if (board.isPrivate) {
+    return constructMetadata({
+      title: `${board.title} — Moodboard`,
+      description:
+        board.description ||
+        `Visual moodboard "${board.title}" curated on Layerat.`,
+      noIndex: true,
+    });
+  }
+
   return constructMetadata({
-    title: `${board.title} — Moodboard on Craft`,
+    title: `${board.title} — Moodboard`,
     description:
       board.description ||
-      `Visual moodboard "${board.title}" curated with design projects and case studies on Craft.`,
+      `Visual moodboard "${board.title}" curated with design projects and case studies on Layerat.`,
     path: `/boards/${board.id}`,
+    noIndex: false,
   });
 }
 
@@ -39,19 +54,23 @@ export default async function BoardDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const breadcrumbJsonLd = generateBreadcrumbJsonLd([
-    { name: "Home", url: "/" },
-    { name: "My Boards", url: "/boards" },
-    { name: board.title, url: `/boards/${board.id}` },
-  ]);
+  const breadcrumbJsonLd = !board.isPrivate
+    ? generateBreadcrumbJsonLd([
+        { name: "Home", url: "/" },
+        { name: "My Boards", url: "/boards" },
+        { name: board.title, url: `/boards/${board.id}` },
+      ])
+    : null;
 
   return (
     <>
-      <script
-        key="jsonld-board-breadcrumb"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
+      {breadcrumbJsonLd && (
+        <script
+          key="jsonld-board-breadcrumb"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        />
+      )}
       <BoardDetailClient initialBoard={board} initialProjects={projects} />
     </>
   );

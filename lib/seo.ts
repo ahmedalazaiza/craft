@@ -15,6 +15,9 @@ export const SITE_URL =
   "https://www.layerat.com";
 
 export function absoluteUrl(path: string = ""): string {
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
   return `${SITE_URL}${cleanPath}`;
 }
@@ -91,11 +94,10 @@ export function constructMetadata({
 } = {}): Metadata {
   const pageTitle = title ? `${title} · ${SITE_NAME}` : defaultTitle;
   const canonicalUrl = absoluteUrl(path);
-  const ogImage = image
-    ? image.startsWith("http")
-      ? image
-      : absoluteUrl(image)
-    : absoluteUrl("/og-image.png");
+  const rawImage = image?.trim() || "/og-image.png";
+  const ogImage = rawImage.startsWith("http")
+    ? rawImage
+    : absoluteUrl(rawImage);
 
   return {
     title: title ? title : { default: defaultTitle, template: `%s · ${SITE_NAME}` },
@@ -107,13 +109,15 @@ export function constructMetadata({
     publisher: "Layerat Platforms Inc.",
     category: "Design Portfolio & Creative Case Studies",
     metadataBase: new URL(SITE_URL),
-    alternates: {
-      canonical: canonicalUrl,
-    },
+    alternates: noIndex
+      ? undefined
+      : {
+          canonical: canonicalUrl,
+        },
     openGraph: {
       title: pageTitle,
       description,
-      url: canonicalUrl,
+      url: noIndex ? undefined : canonicalUrl,
       siteName: SITE_NAME,
       images: [
         {
@@ -164,8 +168,12 @@ export function getProjectMetadata(project: Project): Metadata {
     project.summary ||
     `Explore ${project.title} by ${project.creator.displayName} — a ${project.category} case study in ${project.medium} on ${SITE_NAME}.`;
   const canonicalUrl = absoluteUrl(`/project/${project.slug}`);
+  const rawCover = project.coverImage?.trim() || "/og-image.png";
+  const coverUrl = rawCover.startsWith("http") ? rawCover : absoluteUrl(rawCover);
+  const authorUrl = absoluteUrl(`/u/${project.creator.username}`);
 
   return {
+    metadataBase: new URL(SITE_URL),
     title,
     description,
     keywords: [
@@ -178,7 +186,7 @@ export function getProjectMetadata(project: Project): Metadata {
       `${project.category} case study`,
       "design portfolio project",
     ],
-    authors: [{ name: project.creator.displayName, url: absoluteUrl(`/u/${project.creator.username}`) }],
+    authors: [{ name: project.creator.displayName, url: authorUrl }],
     creator: project.creator.displayName,
     alternates: {
       canonical: canonicalUrl,
@@ -194,7 +202,7 @@ export function getProjectMetadata(project: Project): Metadata {
       tags: project.tags,
       images: [
         {
-          url: project.coverImage,
+          url: coverUrl,
           width: 1400,
           height: 900,
           alt: project.title,
@@ -205,7 +213,7 @@ export function getProjectMetadata(project: Project): Metadata {
       card: "summary_large_image",
       title: `${title} · ${SITE_NAME}`,
       description,
-      images: [project.coverImage],
+      images: [coverUrl],
       creator: `@${project.creator.username}`,
     },
     robots: {
@@ -227,8 +235,11 @@ export function getProfileMetadata(creator: Creator): Metadata {
     creator.bio ||
     `View the design portfolio, case studies, and creative work of ${creator.displayName} (@${creator.username}) on ${SITE_NAME}.`;
   const canonicalUrl = absoluteUrl(`/u/${creator.username}`);
+  const rawAvatar = creator.avatarUrl?.trim() || "/og-image.png";
+  const avatarUrl = rawAvatar.startsWith("http") ? rawAvatar : absoluteUrl(rawAvatar);
 
   return {
+    metadataBase: new URL(SITE_URL),
     title,
     description,
     keywords: [
@@ -252,7 +263,7 @@ export function getProfileMetadata(creator: Creator): Metadata {
       type: "profile",
       images: [
         {
-          url: creator.avatarUrl,
+          url: avatarUrl,
           width: 600,
           height: 600,
           alt: creator.displayName,
@@ -263,7 +274,7 @@ export function getProfileMetadata(creator: Creator): Metadata {
       card: "summary_large_image",
       title: `${title} · ${SITE_NAME}`,
       description,
-      images: [creator.avatarUrl],
+      images: [avatarUrl],
       creator: `@${creator.username}`,
     },
     robots: {

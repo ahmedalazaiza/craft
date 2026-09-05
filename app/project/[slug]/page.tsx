@@ -19,6 +19,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return {
       title: "Project Not Found",
       description: "The requested project could not be found or is private.",
+      robots: {
+        index: false,
+        follow: false,
+      },
     };
   }
 
