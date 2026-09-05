@@ -1121,6 +1121,136 @@ export async function deleteUserAccountInDb(userId: string): Promise<{ success: 
 }
 
 /**
+ * Permanently delete a user account, all their monographs, and all media assets from Cloudflare R2 & Supabase
+ * Executed by an authorized Admin from the Dashboard.
+ */
+export async function adminDeleteUserCompleteInDb(
+  targetUserId: string
+): Promise<{ success: boolean; error?: string; deletedProjectsCount?: number }> {
+  try {
+    if (!targetUserId) {
+      return { success: false, error: "User ID is required." };
+    }
+
+    // 1. Gather all media assets belonging to the user and their monographs for storage purging
+    const mediaUrlsToPurge = new Set<string>();
+
+    // A. Creator profile avatar
+    const { data: profileRow } = await supabase
+      .from("profiles")
+      .select("avatar_url")
+      .eq("id", targetUserId)
+      .maybeSingle();
+
+    if (profileRow?.avatar_url) {
+      mediaUrlsToPurge.add(profileRow.avatar_url);
+    }
+
+    // B. All projects created by this user
+    const { data: userProjects } = await supabase
+      .from("projects")
+      .select("id, cover_image, gallery_images, body, summary")
+      .eq("creator_id", targetUserId);
+
+    const projectIds: string[] = [];
+    if (userProjects && userProjects.length > 0) {
+      for (const proj of userProjects) {
+        projectIds.push(proj.id);
+        if (proj.cover_image) mediaUrlsToPurge.add(proj.cover_image);
+        if (Array.isArray(proj.gallery_images)) {
+          proj.gallery_images.forEach((u: string) => {
+            if (u) mediaUrlsToPurge.add(u);
+          });
+        }
+        const textContent = `${proj.body || ""} ${proj.summary || ""}`;
+        const matchedUrls = textContent.match(/https?:\/\/[^\s"'<>]+\.(?:webp|png|jpg|jpeg|gif|svg|avif)(?:\?[^\s"'<>]*)?/gi);
+        if (matchedUrls) {
+          matchedUrls.forEach((u) => mediaUrlsToPurge.add(u));
+        }
+      }
+    }
+
+    // 2. Call the Security Definer RPC for comprehensive hard deletion
+    let deletedProjectsCount = projectIds.length;
+    const { data: rpcData, error: rpcError } = await supabase.rpc(
+      "admin_delete_user_complete",
+      { target_user_id: targetUserId }
+    );
+
+    if (rpcError) {
+      console.warn("RPC admin_delete_user_complete notice (using direct table fallback):", rpcError.message);
+
+      // Direct fallback deletion on public tables
+      if (projectIds.length > 0) {
+        // Clean up from curated collections
+        const { data: collections } = await supabase.from("collections").select("id, project_ids");
+        if (collections) {
+          for (const col of collections) {
+            if (Array.isArray(col.project_ids)) {
+              const updated = col.project_ids.filter((pid: string) => !projectIds.includes(pid));
+              if (updated.length !== col.project_ids.length) {
+                await supabase.from("collections").update({ project_ids: updated }).eq("id", col.id);
+              }
+            }
+          }
+        }
+
+        // Delete comments & appreciations on user projects
+        for (const pid of projectIds) {
+          await supabase.from("comments").delete().eq("project_id", pid);
+          await supabase.from("appreciations").delete().eq("project_id", pid);
+          await supabase.from("reports").delete().eq("project_id", pid);
+        }
+      }
+
+      // Delete user-level relations
+      await Promise.allSettled([
+        supabase.from("notifications").delete().or(`recipient_id.eq.${targetUserId},actor_id.eq.${targetUserId}`),
+        supabase.from("follows").delete().or(`follower_id.eq.${targetUserId},following_id.eq.${targetUserId}`),
+        supabase.from("appreciations").delete().eq("user_id", targetUserId),
+        supabase.from("comments").delete().eq("author_id", targetUserId),
+        supabase.from("reports").delete().or(`reporter_id.eq.${targetUserId},reported_creator_id.eq.${targetUserId}`),
+        supabase.from("projects").delete().eq("creator_id", targetUserId),
+        supabase.from("admin_users").delete().eq("user_id", targetUserId),
+      ]);
+
+      // Delete the profile
+      const { error: profileDeleteError } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("id", targetUserId);
+
+      if (profileDeleteError) {
+        return { success: false, error: profileDeleteError.message };
+      }
+    } else if (rpcData && typeof rpcData === "object" && "deleted_projects_count" in rpcData) {
+      deletedProjectsCount = Number(rpcData.deleted_projects_count) || deletedProjectsCount;
+      if (Array.isArray(rpcData.media_urls)) {
+        rpcData.media_urls.forEach((u: string) => {
+          if (u) mediaUrlsToPurge.add(u);
+        });
+      }
+    }
+
+    // 3. Purge all collected media from Cloudflare R2 and Supabase Storage
+    if (mediaUrlsToPurge.size > 0) {
+      try {
+        await deleteStorageFiles(Array.from(mediaUrlsToPurge), "project-media");
+      } catch (storageErr) {
+        console.warn("Storage files cleanup notice:", storageErr);
+      }
+    }
+
+    invalidateAppCache();
+    return { success: true, deletedProjectsCount };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "Failed to permanently delete user.";
+    console.error("Unexpected error in adminDeleteUserCompleteInDb:", err);
+    return { success: false, error: errorMsg };
+  }
+}
+
+/**
  * Trigger Supabase Password Reset Email
  */
 export async function requestPasswordResetInDb(email: string): Promise<{ success: boolean; error?: string }> {
