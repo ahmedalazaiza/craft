@@ -31,7 +31,7 @@ export function MaintenanceScreen({ children }: { children: React.ReactNode }) {
         </div>
 
         <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-4">
-          Upgrading the Craft
+          Upgrading Layerat
         </h1>
 
         <p className="text-sm sm:text-base text-[var(--content-secondary)] leading-relaxed mb-8">

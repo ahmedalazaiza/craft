@@ -249,7 +249,7 @@ export function BoardsClient() {
                   href="/login"
                   className="rounded-full bg-[var(--content-primary)] text-[var(--bg-screen)] px-6 py-2.5 text-xs font-bold shadow-sm hover:opacity-90 transition-opacity inline-block"
                 >
-                  Sign in to Craft
+                  Sign in to Layerat
                 </Link>
               </div>
             </div>
@@ -629,7 +629,7 @@ export function BoardsClient() {
                 Delete this board?
               </h3>
               <p className="mt-2 text-xs text-[var(--content-secondary)] leading-relaxed">
-                This action cannot be undone. The projects inside will remain intact on Craft, but the board collage will be permanently removed.
+                This action cannot be undone. The projects inside will remain intact on Layerat, but the board collage will be permanently removed.
               </p>
 
               <div className="mt-6 flex flex-col-reverse sm:flex-row items-center justify-center gap-2.5">

@@ -18,7 +18,7 @@ export function BoardCard({ board, creatorName, onDelete, onEdit }: BoardCardPro
   const [menuOpen, setMenuOpen] = useState(false);
   const covers = board.coverImages || [];
   const count = board.itemsCount ?? 0;
-  const displayName = creatorName || board.creator?.displayName || "Craft Creator";
+  const displayName = creatorName || board.creator?.displayName || "Layerat Creator";
 
   return (
     <div className="group relative flex flex-col rounded-[24px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] overflow-hidden hover:border-[var(--border-strong)] transition-all duration-300 hover:shadow-[0_16px_40px_rgba(0,0,0,0.12)]">

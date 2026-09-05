@@ -69,7 +69,7 @@ export function FavoritesClient({ initialProjects = [] }: FavoritesClientProps) 
                 Favorite Projects
               </h1>
               <p className="mt-2 text-sm sm:text-base text-[var(--content-secondary)] max-w-2xl">
-                All the case studies, monographs, and design systems you have appreciated across Craft.
+                All the case studies, monographs, and design systems you have appreciated across Layerat.
               </p>
             </div>
 
@@ -116,7 +116,7 @@ export function FavoritesClient({ initialProjects = [] }: FavoritesClientProps) 
                   href="/login"
                   className="rounded-full bg-[var(--content-primary)] text-[var(--bg-screen)] px-6 py-2.5 text-xs font-bold shadow-sm hover:opacity-90 transition-opacity"
                 >
-                  Sign in to Craft
+                  Sign in to Layerat
                 </Link>
                 <Link
                   href="/explore"

@@ -23,8 +23,6 @@ import {
   defaultTitle,
   defaultDescription,
   PRIMARY_KEYWORDS,
-  generateWebSiteJsonLd,
-  generateOrganizationJsonLd,
 } from "@/lib/seo";
 
 export const metadata: Metadata = {
@@ -104,27 +102,12 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const websiteSchema = generateWebSiteJsonLd();
-  const organizationSchema = generateOrganizationJsonLd();
-
   return (
     <html lang="en" className={bricolage.variable} suppressHydrationWarning>
       <head>
         {/* Preconnect & DNS-Prefetch for Speed & LCP Core Web Vitals */}
         <link rel="preconnect" href="https://ttjobsgglwgyioqlldqj.supabase.co" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
-
-        {/* Global Schema.org JSON-LD Structured Data */}
-        <script
-          key="jsonld-root-website"
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
-        />
-        <script
-          key="jsonld-root-org"
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
-        />
 
         {/* Blocking theme script: locked to light theme for now, dynamic logic preserved */}
         <Script

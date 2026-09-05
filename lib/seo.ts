@@ -342,16 +342,24 @@ export function generateBreadcrumbJsonLd(
 }
 
 export function generateProjectJsonLd(project: Project) {
+  const authorAvatar = project.creator.avatarUrl?.startsWith("http")
+    ? project.creator.avatarUrl
+    : absoluteUrl(project.creator.avatarUrl || "/og-image.png");
+
   return {
     "@context": "https://schema.org",
     "@type": ["CreativeWork", "VisualArtwork", "Article"],
     headline: project.title,
     description: project.summary,
     image: Array.from(
-      new Set([project.coverImage, ...(project.galleryImages || [])].filter(Boolean))
+      new Set(
+        [project.coverImage, ...(project.galleryImages || [])]
+          .filter(Boolean)
+          .map((img) => (img.startsWith("http") ? img : absoluteUrl(img)))
+      )
     ),
     datePublished: project.publishedAt,
-    dateModified: project.publishedAt,
+    dateModified: project.updatedAt || project.publishedAt,
     inLanguage: "en",
     author: {
       "@type": "Person",
@@ -359,7 +367,7 @@ export function generateProjectJsonLd(project: Project) {
       alternateName: project.creator.username,
       url: absoluteUrl(`/u/${project.creator.username}`),
       jobTitle: project.creator.bio || "Designer",
-      image: project.creator.avatarUrl,
+      image: authorAvatar,
     },
     publisher: {
       "@type": "Organization",
@@ -392,6 +400,10 @@ export function generateProjectJsonLd(project: Project) {
 }
 
 export function generateProfileJsonLd(creator: Creator) {
+  const avatarUrl = creator.avatarUrl?.startsWith("http")
+    ? creator.avatarUrl
+    : absoluteUrl(creator.avatarUrl || "/og-image.png");
+
   return {
     "@context": "https://schema.org",
     "@type": "ProfilePage",
@@ -400,7 +412,7 @@ export function generateProfileJsonLd(creator: Creator) {
       name: creator.displayName,
       alternateName: creator.username,
       description: creator.bio,
-      image: creator.avatarUrl,
+      image: avatarUrl,
       address: {
         "@type": "PostalAddress",
         addressLocality: creator.city || creator.location || "Worldwide",
@@ -444,8 +456,16 @@ export function generateCollectionPageJsonLd(
         position: index + 1,
         name: item.name,
         url: item.url.startsWith("http") ? item.url : absoluteUrl(item.url),
-        image: item.image,
+        ...(item.image
+          ? {
+              image: item.image.startsWith("http")
+                ? item.image
+                : absoluteUrl(item.image),
+            }
+          : {}),
       })),
     },
   };
 }
+
+

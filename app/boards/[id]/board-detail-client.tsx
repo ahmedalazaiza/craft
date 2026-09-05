@@ -152,7 +152,7 @@ export function BoardDetailClient({
   const creatorName =
     board.creator?.displayName ||
     (isOwner ? user?.displayName : null) ||
-    "Craft Creator";
+    "Layerat Creator";
   const creatorAvatar =
     board.creator?.avatarUrl ||
     (isOwner ? user?.avatarUrl : null);
