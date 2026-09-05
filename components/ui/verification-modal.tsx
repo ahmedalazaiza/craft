@@ -18,13 +18,14 @@ import {
   Clock,
   FolderKanban,
   Check,
+  BookmarkPlus,
 } from "lucide-react";
 import { getResendStatus, sendVerificationEmail } from "@/lib/resend-limiter";
 import { bricolage } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
 
-export type GatedActionType = "like" | "follow" | "comment" | "publish";
+export type GatedActionType = "like" | "follow" | "comment" | "publish" | "board";
 
 interface VerificationModalProps {
   isOpen: boolean;
@@ -158,6 +159,25 @@ export function VerificationModal({
             "Unlimited high-resolution gallery uploads",
             "Editorial placement in kinetic discover streams",
             "Custom studio profile with verified badge",
+          ],
+        };
+      case "board":
+        return {
+          glowColor: "rgba(133, 16, 222, 0.12)",
+          badgeBg: "bg-[var(--brand-secondary-subtle)] text-[var(--brand-secondary)] border-[var(--brand-secondary)]/20",
+          badgeIcon: <BookmarkPlus className="h-3.5 w-3.5 text-[var(--brand-secondary)]" />,
+          badgeLabel: "Moodboards & Boards",
+          icon: <BookmarkPlus className="h-7 w-7 text-[var(--brand-secondary)]" />,
+          targetIcon: <FolderKanban className="h-3.5 w-3.5 text-[var(--content-primary)]" />,
+          title: "Save Works to Boards",
+          description: targetName
+            ? `Sign in or verify your email to save "${targetName}" into your moodboards.`
+            : "Sign in or verify your email to create boards and organize your design inspirations.",
+          targetLabel: "Project",
+          benefits: [
+            "Organize case studies into custom moodboards",
+            "Bookmark projects with a single tap for quick access",
+            "Curate your creative inspiration publicly or privately",
           ],
         };
     }

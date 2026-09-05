@@ -187,10 +187,18 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [isAddToBoardModalOpen, setIsAddToBoardModalOpen] = useState(false);
   const [activeBoardProject, setActiveBoardProject] = useState<Project | null>(null);
 
-  const openAddToBoardModal = useCallback((project: Project) => {
-    setActiveBoardProject(project);
-    setIsAddToBoardModalOpen(true);
-  }, []);
+  const openAddToBoardModal = useCallback(
+    (project: Project) => {
+      // If guest or not verified, trigger verification modal (identical to liking a project)
+      if (!user || !user.isVerified) {
+        openVerificationModal("board", project.title);
+        return;
+      }
+      setActiveBoardProject(project);
+      setIsAddToBoardModalOpen(true);
+    },
+    [user]
+  );
 
   const closeAddToBoardModal = useCallback(() => {
     setIsAddToBoardModalOpen(false);
@@ -884,7 +892,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const createBoard = useCallback(
     async (title: string, description?: string, isPrivate = false): Promise<Board | null> => {
-      if (!user) return null;
+      if (!user || !user.isVerified) {
+        openVerificationModal("board", title);
+        return null;
+      }
       const optimisticId = `board-${Date.now()}`;
       const optimisticBoard: Board = {
         id: optimisticId,

@@ -83,7 +83,7 @@ export function BoardsClient() {
       return;
     }
     if (user.isVerified === false) {
-      openVerificationModal("publish", "board");
+      openVerificationModal("board", "new board");
       return;
     }
     setNewTitle("");

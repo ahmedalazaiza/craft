@@ -91,8 +91,8 @@ export function AddToBoardModal({ isOpen, onClose, project }: AddToBoardModalPro
   if (!isOpen || !project) return null;
 
   const handleToggleBoard = async (board: Board) => {
-    if (!user) {
-      openVerificationModal("like", project.title);
+    if (!user || !user.isVerified) {
+      openVerificationModal("board", project.title);
       return;
     }
 
@@ -138,6 +138,11 @@ export function AddToBoardModal({ isOpen, onClose, project }: AddToBoardModalPro
   const handleCreateAndAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim() || isSubmittingNew) return;
+
+    if (!user || !user.isVerified) {
+      openVerificationModal("board", project.title);
+      return;
+    }
 
     try {
       setIsSubmittingNew(true);
