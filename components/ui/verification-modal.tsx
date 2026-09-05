@@ -205,10 +205,10 @@ export function VerificationModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.94, y: 16 }}
           transition={{ type: "spring", damping: 25, stiffness: 320 }}
-          className="relative w-full max-w-[440px] max-h-[92vh] overflow-y-auto rounded-t-[32px] sm:rounded-[32px] border-t sm:border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 sm:p-8 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.18)] dark:shadow-none z-10 pb-safe"
+          className="relative w-full max-w-[440px] max-h-[92vh] overflow-y-auto rounded-t-[32px] sm:rounded-[32px] border-t sm:border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 sm:p-8 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.18)] dark:shadow-none z-10 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] sm:pb-8"
         >
           {/* Mobile Pull Handle Indicator */}
-          <div className="flex sm:hidden justify-center pt-1 pb-4 -mt-2 shrink-0">
+          <div className="flex sm:hidden justify-center pt-3 pb-2 shrink-0">
             <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
           </div>
 

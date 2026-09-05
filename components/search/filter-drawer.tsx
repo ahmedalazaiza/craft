@@ -211,11 +211,11 @@ export function FilterDrawer({
             animate={{ y: 0, x: 0 }}
             exit={{ y: "100%", x: 0 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="relative flex max-h-[90vh] sm:max-h-full h-auto sm:h-full w-full max-w-lg flex-col rounded-t-[28px] sm:rounded-l-[28px] sm:rounded-tr-none bg-[var(--bg-elevated)] border-t sm:border-t-0 sm:border-l border-[var(--border-neutral)] shadow-[0_24px_60px_rgba(0,0,0,0.25)] p-5 sm:p-7 overflow-y-auto pb-safe"
+            className="relative flex max-h-[90vh] sm:max-h-full h-auto sm:h-full w-full max-w-lg flex-col rounded-t-[32px] sm:rounded-l-[28px] sm:rounded-tr-none bg-[var(--bg-elevated)] border-t sm:border-t-0 sm:border-l border-[var(--border-neutral)] shadow-[0_24px_60px_rgba(0,0,0,0.25)] p-5 sm:p-7 overflow-y-auto pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-7"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Mobile Pull Handle Indicator */}
-            <div className="flex sm:hidden justify-center pt-1 pb-3 -mt-2 shrink-0">
+            <div className="flex sm:hidden justify-center pt-3 pb-2 shrink-0">
               <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
             </div>
 

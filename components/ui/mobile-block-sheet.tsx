@@ -54,7 +54,7 @@ export function MobileBlockSheet({ isOpen, onClose }: MobileBlockSheetProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-md"
+            className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-md"
             onClick={onClose}
             aria-hidden="true"
           />
@@ -69,11 +69,11 @@ export function MobileBlockSheet({ isOpen, onClose }: MobileBlockSheetProps) {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", stiffness: 360, damping: 32, mass: 0.9 }}
-            className="fixed inset-x-0 bottom-0 z-[71] rounded-t-[28px] bg-[var(--bg-elevated)] border-t border-[var(--border-neutral)] shadow-2xl"
-            style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+            className="fixed inset-x-0 bottom-0 z-[101] rounded-t-[32px] bg-[var(--bg-elevated)] border-t border-[var(--border-neutral)] shadow-2xl"
+            style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}
           >
             {/* Drag handle */}
-            <div className="flex justify-center pt-2.5 pb-1">
+            <div className="flex justify-center pt-3 pb-2">
               <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
             </div>
 

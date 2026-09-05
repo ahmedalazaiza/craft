@@ -304,7 +304,7 @@ export function BoardsClient() {
       {/* CREATE BOARD MODAL */}
       <AnimatePresence>
         {isCreateOpen && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -321,10 +321,10 @@ export function BoardsClient() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 20 }}
               transition={{ type: "spring", damping: 28, stiffness: 360 }}
-              className="relative w-full max-w-md rounded-t-[28px] sm:rounded-[28px] bg-[var(--bg-elevated)] border-t sm:border border-[var(--border-neutral)] shadow-[0_24px_60px_rgba(0,0,0,0.25)] overflow-hidden z-10 flex flex-col pb-safe sm:pb-0"
+              className="relative w-full max-w-md rounded-t-[32px] sm:rounded-[28px] bg-[var(--bg-elevated)] border-t sm:border border-[var(--border-neutral)] shadow-[0_24px_60px_rgba(0,0,0,0.25)] overflow-hidden z-10 flex flex-col pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-0"
             >
               {/* Mobile Pull Handle Indicator */}
-              <div className="flex sm:hidden justify-center pt-2.5 pb-1 shrink-0 bg-[var(--bg-elevated)]">
+              <div className="flex sm:hidden justify-center pt-3 pb-2 shrink-0 bg-[var(--bg-elevated)]">
                 <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
               </div>
 
@@ -454,7 +454,7 @@ export function BoardsClient() {
       {/* EDIT BOARD MODAL */}
       <AnimatePresence>
         {editingBoard && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -471,10 +471,10 @@ export function BoardsClient() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 20 }}
               transition={{ type: "spring", damping: 28, stiffness: 360 }}
-              className="relative w-full max-w-md rounded-t-[28px] sm:rounded-[28px] bg-[var(--bg-elevated)] border-t sm:border border-[var(--border-neutral)] shadow-[0_24px_60px_rgba(0,0,0,0.25)] overflow-hidden z-10 flex flex-col pb-safe sm:pb-0"
+              className="relative w-full max-w-md rounded-t-[32px] sm:rounded-[28px] bg-[var(--bg-elevated)] border-t sm:border border-[var(--border-neutral)] shadow-[0_24px_60px_rgba(0,0,0,0.25)] overflow-hidden z-10 flex flex-col pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-0"
             >
               {/* Mobile Pull Handle Indicator */}
-              <div className="flex sm:hidden justify-center pt-2.5 pb-1 shrink-0 bg-[var(--bg-elevated)]">
+              <div className="flex sm:hidden justify-center pt-3 pb-2 shrink-0 bg-[var(--bg-elevated)]">
                 <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
               </div>
 
@@ -598,7 +598,7 @@ export function BoardsClient() {
       {/* DELETE CONFIRMATION MODAL */}
       <AnimatePresence>
         {deletingBoardId && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -615,10 +615,10 @@ export function BoardsClient() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 20 }}
               transition={{ type: "spring", damping: 28, stiffness: 360 }}
-              className="relative w-full max-w-sm rounded-t-[28px] sm:rounded-[28px] bg-[var(--bg-elevated)] border-t sm:border border-[var(--border-neutral)] p-6 sm:p-7 shadow-[0_24px_60px_rgba(0,0,0,0.25)] z-10 text-center pb-safe sm:pb-7"
+              className="relative w-full max-w-sm rounded-t-[32px] sm:rounded-[28px] bg-[var(--bg-elevated)] border-t sm:border border-[var(--border-neutral)] p-6 sm:p-7 shadow-[0_24px_60px_rgba(0,0,0,0.25)] z-10 text-center pb-[calc(env(safe-area-inset-bottom,0px)+20px)] sm:pb-7"
             >
               {/* Mobile Pull Handle Indicator */}
-              <div className="flex sm:hidden justify-center pt-1 pb-3 -mt-2 shrink-0">
+              <div className="flex sm:hidden justify-center pt-3 pb-2 shrink-0">
                 <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
               </div>
 

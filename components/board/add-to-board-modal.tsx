@@ -165,7 +165,7 @@ export function AddToBoardModal({ isOpen, onClose, project }: AddToBoardModalPro
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -182,10 +182,10 @@ export function AddToBoardModal({ isOpen, onClose, project }: AddToBoardModalPro
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 20 }}
           transition={{ type: "spring", damping: 28, stiffness: 360 }}
-          className="relative w-full max-w-md rounded-t-[28px] sm:rounded-[28px] bg-[var(--bg-elevated)] border-t sm:border border-[var(--border-neutral)] shadow-[0_24px_60px_rgba(0,0,0,0.25)] overflow-hidden z-10 flex flex-col max-h-[88vh] pb-safe sm:pb-0"
+          className="relative w-full max-w-md rounded-t-[32px] sm:rounded-[28px] bg-[var(--bg-elevated)] border-t sm:border border-[var(--border-neutral)] shadow-[0_24px_60px_rgba(0,0,0,0.25)] overflow-hidden z-10 flex flex-col max-h-[88vh] pb-[calc(env(safe-area-inset-bottom,0px)+12px)] sm:pb-0"
         >
           {/* Mobile Pull Handle Indicator */}
-          <div className="flex sm:hidden justify-center pt-2 pb-1 shrink-0 bg-[var(--bg-elevated)]">
+          <div className="flex sm:hidden justify-center pt-3 pb-2 shrink-0 bg-[var(--bg-elevated)]">
             <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
           </div>
 
@@ -373,11 +373,11 @@ export function AddToBoardModal({ isOpen, onClose, project }: AddToBoardModalPro
 
         {/* Footer: Trigger to open Inline Create */}
         {!isCreatingInline && boards.length > 0 && (
-          <div className="p-3.5 sm:p-4 border-t border-[var(--border-neutral)] bg-[var(--bg-neutral)]/20">
+          <div className="p-3.5 sm:p-4 border-t border-[var(--border-neutral)] bg-[var(--bg-neutral)]/20 shrink-0">
             <button
               type="button"
               onClick={() => setIsCreatingInline(true)}
-              className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-[14px] text-xs font-bold text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-colors cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-[14px] text-xs font-bold text-[var(--content-primary)] bg-[var(--bg-neutral)]/70 hover:bg-[var(--bg-neutral)] border border-[var(--border-neutral)] transition-colors cursor-pointer"
             >
               <Plus className="h-4 w-4" />
               <span>Create New Board</span>

@@ -37,7 +37,7 @@ export function MobileBottomNav() {
   return (
     <>
       <div
-        className="fixed bottom-0 inset-x-0 z-50 md:hidden pointer-events-none px-4 pt-2"
+        className="fixed bottom-0 inset-x-0 z-40 md:hidden pointer-events-none px-4 pt-2"
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}
       >
         <nav

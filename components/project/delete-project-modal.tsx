@@ -108,10 +108,10 @@ export function DeleteProjectModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 20 }}
           transition={{ type: "spring", damping: 28, stiffness: 360 }}
-          className="relative w-full max-w-lg overflow-hidden rounded-t-[28px] sm:rounded-[28px] border-t sm:border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 sm:p-8 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.25)] dark:shadow-none z-10 pb-safe sm:pb-8"
+          className="relative w-full max-w-lg overflow-hidden rounded-t-[32px] sm:rounded-[28px] border-t sm:border border-[var(--border-neutral)] bg-[var(--bg-elevated)] p-6 sm:p-8 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.25)] dark:shadow-none z-10 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] sm:pb-8"
         >
           {/* Mobile Pull Handle Indicator */}
-          <div className="flex sm:hidden justify-center pt-1 pb-4 -mt-2 shrink-0">
+          <div className="flex sm:hidden justify-center pt-3 pb-2 shrink-0">
             <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
           </div>
 

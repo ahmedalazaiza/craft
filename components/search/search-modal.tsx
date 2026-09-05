@@ -208,13 +208,13 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 20 }}
             transition={{ type: "spring", damping: 28, stiffness: 360 }}
-            className="relative w-full max-w-2xl rounded-t-[28px] sm:rounded-[28px] bg-[var(--bg-elevated)] border-t sm:border border-[var(--border-neutral)] shadow-[0_25px_70px_rgba(0,0,0,0.35)] overflow-hidden z-10 flex flex-col max-h-[92vh] sm:max-h-[88vh] pb-safe sm:pb-0 sm:my-auto"
+            className="relative w-full max-w-2xl rounded-t-[32px] sm:rounded-[28px] bg-[var(--bg-elevated)] border-t sm:border border-[var(--border-neutral)] shadow-[0_25px_70px_rgba(0,0,0,0.35)] overflow-hidden z-10 flex flex-col max-h-[92vh] sm:max-h-[88vh] pb-[calc(env(safe-area-inset-bottom,0px)+12px)] sm:pb-0 sm:my-auto"
             role="dialog"
             aria-modal="true"
             aria-label="Search Layerat Platform"
           >
             {/* Mobile Pull Handle Indicator */}
-            <div className="flex sm:hidden justify-center pt-2.5 pb-1 shrink-0 bg-[var(--bg-elevated)]">
+            <div className="flex sm:hidden justify-center pt-3 pb-2 shrink-0 bg-[var(--bg-elevated)]">
               <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
             </div>
 
