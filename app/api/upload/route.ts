@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isR2Configured, uploadBufferToR2, deleteKeysFromR2 } from "@/lib/r2/client";
+import { supabase } from "@/lib/supabase/client";
 
 export const dynamic = "force-dynamic";
 
@@ -12,9 +13,6 @@ const ALLOWED_MIME_TYPES = new Set([
   "image/svg+xml",
   "image/avif",
 ]);
-
-// Maximum allowed upload size (15MB)
-const MAX_FILE_SIZE = 15 * 1024 * 1024;
 
 export async function POST(req: NextRequest) {
   try {
@@ -36,9 +34,31 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (file.size > MAX_FILE_SIZE) {
+    // Dynamically retrieve configured max upload size from platform_settings
+    let maxUploadMb = 15;
+    try {
+      const { data: settings } = await supabase
+        .from("platform_settings")
+        .select("max_upload_size_mb")
+        .eq("id", "global")
+        .maybeSingle();
+
+      if (
+        settings?.max_upload_size_mb &&
+        typeof settings.max_upload_size_mb === "number" &&
+        settings.max_upload_size_mb > 0
+      ) {
+        maxUploadMb = settings.max_upload_size_mb;
+      }
+    } catch {
+      maxUploadMb = 15;
+    }
+
+    const maxSizeBytes = maxUploadMb * 1024 * 1024;
+
+    if (file.size > maxSizeBytes) {
       return NextResponse.json(
-        { error: "File exceeds the 15MB size limit." },
+        { error: `File exceeds the maximum allowed ${maxUploadMb}MB size limit.` },
         { status: 400 }
       );
     }

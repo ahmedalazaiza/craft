@@ -56,7 +56,7 @@ type SettingsTab = "profile" | "security" | "preferences" | "danger";
 export function SettingsClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, projects, updateProfile, isLoadingDb } = useSession();
+  const { user, projects, updateProfile, isLoadingDb, platformSettings } = useSession();
 
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
 
@@ -199,8 +199,9 @@ export function SettingsClient() {
       toast.error("Please upload a valid image file (PNG, JPG, WebP).", "Invalid File Type");
       return;
     }
-    if (file.size > 15 * 1024 * 1024) {
-      toast.warning("Image size should be under 15MB.", "File Too Large");
+    const maxMb = platformSettings?.maxUploadSizeMb || 15;
+    if (file.size > maxMb * 1024 * 1024) {
+      toast.warning(`Image size should be under ${maxMb}MB.`, "File Too Large");
       return;
     }
     const reader = new FileReader();

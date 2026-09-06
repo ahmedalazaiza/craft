@@ -40,7 +40,7 @@ export function EditProfileModal({
   onClose,
   creator,
 }: EditProfileModalProps) {
-  const { updateProfile, taxonomy } = useSession();
+  const { updateProfile, taxonomy, platformSettings } = useSession();
   const [mounted, setMounted] = useState(false);
 
   const [editName, setEditName] = useState(creator.displayName || "");
@@ -94,6 +94,11 @@ export function EditProfileModal({
   const handleAvatarFileSelected = (file: File) => {
     if (!file.type.startsWith("image/")) {
       toast.error("Please upload a valid image file (PNG, JPG, WebP).", "Invalid File");
+      return;
+    }
+    const maxMb = platformSettings?.maxUploadSizeMb || 15;
+    if (file.size > maxMb * 1024 * 1024) {
+      toast.warning(`Image size should be under ${maxMb}MB.`, "File Too Large");
       return;
     }
     const reader = new FileReader();

@@ -52,7 +52,11 @@ const MAX_SPECIALIZATIONS = 9;
 
 export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const router = useRouter();
-  const { user, saveProject, taxonomy } = useSession();
+  const { user, saveProject, taxonomy, platformSettings } = useSession();
+  const maxUploadSizeMb =
+    typeof platformSettings?.maxUploadSizeMb === "number" && platformSettings.maxUploadSizeMb > 0
+      ? platformSettings.maxUploadSizeMb
+      : 15;
 
   const galleryFileInputRef = useRef<HTMLInputElement>(null);
   const additionalFileInputRef = useRef<HTMLInputElement>(null);
@@ -224,14 +228,44 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   // GALLERY SPREAD MANIPULATION & UPLOADS
   // ---------------------------------------------------------------------------
   const handleGalleryFiles = async (files: FileList | File[]) => {
-    const fileList = Array.from(files).filter((f) => f.type.startsWith("image/"));
-    if (fileList.length === 0) return;
+    const rawFiles = Array.from(files);
+    const imageFiles = rawFiles.filter((f) => f.type.startsWith("image/"));
+    if (imageFiles.length === 0) {
+      if (rawFiles.length > 0) {
+        toast.error("Please upload valid image files only (PNG, JPG, WebP, GIF).", "Invalid File Type");
+      }
+      return;
+    }
+
+    const maxSizeBytes = maxUploadSizeMb * 1024 * 1024;
+    const validFiles: File[] = [];
+    const oversizedFiles: File[] = [];
+
+    for (const file of imageFiles) {
+      if (file.size > maxSizeBytes) {
+        oversizedFiles.push(file);
+      } else {
+        validFiles.push(file);
+      }
+    }
+
+    if (oversizedFiles.length > 0) {
+      const summary = oversizedFiles
+        .map((f) => `"${f.name}" (${(f.size / (1024 * 1024)).toFixed(1)}MB)`)
+        .join(", ");
+      toast.error(
+        `Rejected ${oversizedFiles.length === 1 ? "image" : `${oversizedFiles.length} images`} exceeding the ${maxUploadSizeMb}MB size limit: ${summary}`,
+        "Upload Size Limit Exceeded"
+      );
+    }
+
+    if (validFiles.length === 0) return;
 
     setIsProcessingFiles(true);
-    setUploadProgress({ current: 0, total: fileList.length });
+    setUploadProgress({ current: 0, total: validFiles.length });
     try {
       const cdnUrls = await uploadMultipleMediaFiles(
-        fileList,
+        validFiles,
         "project-media",
         (current, total) => setUploadProgress({ current, total })
       );
@@ -456,6 +490,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
         onChange={(e) => {
           if (e.target.files && e.target.files.length > 0) {
             handleGalleryFiles(e.target.files);
+            e.target.value = "";
           }
         }}
         className="hidden"
@@ -468,6 +503,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
         onChange={(e) => {
           if (e.target.files && e.target.files.length > 0) {
             handleGalleryFiles(e.target.files);
+            e.target.value = "";
           }
         }}
         className="hidden"
@@ -664,7 +700,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                           Drag & drop your images here, or Browse
                         </h3>
                         <p className="text-xs text-[var(--content-secondary)] leading-relaxed">
-                          PNG, JPG, WebP, GIF up to 25MB each. Upload all your project case study slides at once.
+                          PNG, JPG, WebP, GIF up to {maxUploadSizeMb}MB each. Upload all your project case study slides at once.
                         </p>
                       </div>
                     </>

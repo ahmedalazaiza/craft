@@ -53,6 +53,7 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
     toggleFollowCreator,
     updateProfile,
     isLoadingDb,
+    platformSettings,
   } = useSession();
 
   const isCurrentUser =
@@ -105,6 +106,11 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
   const handleAvatarFile = async (file: File) => {
     if (!file.type.startsWith("image/")) {
       toast.error("Please upload a valid image file (PNG, JPG, WebP).", "Invalid File");
+      return;
+    }
+    const maxMb = platformSettings?.maxUploadSizeMb || 15;
+    if (file.size > maxMb * 1024 * 1024) {
+      toast.warning(`Image size should be under ${maxMb}MB.`, "File Too Large");
       return;
     }
     setIsUploadingAvatar(true);

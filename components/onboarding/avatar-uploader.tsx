@@ -8,6 +8,7 @@ import { uploadMediaFile } from "@/lib/supabase/storage";
 import { ImageCropperModal } from "@/components/ui/image-cropper-modal";
 import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
+import { useSession } from "@/lib/session-context";
 
 interface AvatarUploaderProps {
   currentAvatar: string;
@@ -20,6 +21,7 @@ export function AvatarUploader({
   onAvatarChange,
   displayName,
 }: AvatarUploaderProps) {
+  const { platformSettings } = useSession();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -37,8 +39,9 @@ export function AvatarUploader({
       return;
     }
 
-    if (file.size > 15 * 1024 * 1024) {
-      toast.warning("Image size should be under 15MB.", "File Too Large");
+    const maxMb = platformSettings?.maxUploadSizeMb || 15;
+    if (file.size > maxMb * 1024 * 1024) {
+      toast.warning(`Image size should be under ${maxMb}MB.`, "File Too Large");
       return;
     }
 
