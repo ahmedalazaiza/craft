@@ -355,6 +355,59 @@ export async function getCurrentAuthUser(): Promise<Creator | null> {
         return creator;
       }
 
+      // Check if user is an authentic Google user whose profile initialization was interrupted
+      const isGoogleUser =
+        user.app_metadata?.provider === "google" ||
+        user.app_metadata?.providers?.includes("google") ||
+        Boolean(user.user_metadata?.picture || user.user_metadata?.avatar_url);
+
+      if (isGoogleUser) {
+        try {
+          const email = user.email?.trim().toLowerCase() || "";
+          const fullName =
+            user.user_metadata?.full_name?.trim() ||
+            user.user_metadata?.name?.trim() ||
+            (email ? email.split("@")[0] : "Creator");
+          const avatarUrl =
+            user.user_metadata?.avatar_url ||
+            user.user_metadata?.picture ||
+            DEFAULT_AVATAR_URL;
+          const uniqueUsername = await generateUniqueUsername(fullName, email);
+
+          const autoProfile = {
+            id: user.id,
+            username: uniqueUsername,
+            display_name: fullName,
+            email: email,
+            avatar_url: avatarUrl,
+            bio: "",
+            location: "Worldwide",
+            city: "Global",
+            skills: [],
+            is_online: false,
+            is_verified: true,
+            auth_provider: "google",
+            followers_count: 0,
+          };
+
+          const { data: createdProfile } = await supabase
+            .from("profiles")
+            .upsert(autoProfile, { onConflict: "id" })
+            .select("*")
+            .maybeSingle();
+
+          if (createdProfile) {
+            const creator = mapProfileToCreator(createdProfile);
+            creator.isCurrentUser = true;
+            creator.email = email;
+            creator.isVerified = true;
+            return creator;
+          }
+        } catch (e) {
+          console.warn("Could not auto-create Google profile fallback:", e);
+        }
+      }
+
       // IF PROFILE DOES NOT EXIST IN DATABASE:
       // The account was deleted by administration or self-purged.
       console.warn("Current user profile does not exist in database (deleted). Terminating local session.");

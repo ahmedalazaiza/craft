@@ -126,7 +126,7 @@ export function AuthCallbackClient() {
             location: "Worldwide",
             city: "Global",
             skills: [],
-            is_available: false,
+            is_online: false,
             is_verified: true,
             auth_provider: "google",
             followers_count: 0,
@@ -138,6 +138,10 @@ export function AuthCallbackClient() {
 
           if (insertErr) {
             console.error("Error creating Google creator profile:", insertErr);
+            if (!isCancelled) {
+              setError("Failed to initialize creator profile: " + insertErr.message);
+            }
+            return;
           } else {
             toast.success("Welcome to Layerat! Your profile is ready.", "Account Created 🎉", 4000);
           }
