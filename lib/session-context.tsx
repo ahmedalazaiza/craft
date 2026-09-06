@@ -41,6 +41,7 @@ import { CategoryTaxonomyItem, FALLBACK_TAXONOMY } from "@/lib/taxonomy";
 import {
   signInWithEmail,
   signUpWithEmail,
+  signInWithGoogle,
   signOut as authSignOut,
   getCurrentAuthUser,
   AuthResponse,
@@ -74,6 +75,7 @@ interface SessionContextType {
   openMobilePublishBlock: () => void;
   closeMobilePublishBlock: () => void;
   login: (email: string, password: string) => Promise<AuthResponse>;
+  loginWithGoogle: (redirectPath?: string) => Promise<{ error?: string }>;
   signup: (email: string, password: string, displayName: string, customUsername?: string) => Promise<AuthResponse>;
   logout: () => Promise<void>;
   refreshFromDb: () => Promise<void>;
@@ -569,6 +571,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       await refreshFromDb();
     }
     return res;
+  };
+
+  const loginWithGoogle = async (redirectPath: string = "/"): Promise<{ error?: string }> => {
+    return await signInWithGoogle(redirectPath);
   };
 
   const signup = async (
@@ -1148,6 +1154,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         openMobilePublishBlock,
         closeMobilePublishBlock,
         login,
+        loginWithGoogle,
         signup,
         logout,
         refreshFromDb,

@@ -85,6 +85,7 @@ export function mapProfileToCreator(row: any, currentUserId?: string): Creator {
         ? row.badge
         : undefined,
     isSuspended: Boolean(row.is_suspended),
+    authProvider: row.auth_provider || "email",
   };
 }
 

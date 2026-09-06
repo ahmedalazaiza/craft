@@ -11,6 +11,7 @@ import { FadeIn } from "@/components/ui/motion-wrapper";
 import { Lock, Mail, ArrowRight, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { bricolage } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
+import { GoogleAuthButton } from "@/components/ui/google-auth-button";
 
 export function LoginClient() {
   const router = useRouter();
@@ -73,6 +74,23 @@ export function LoginClient() {
                 <span>{errorMessage}</span>
               </div>
             )}
+
+            <GoogleAuthButton
+              redirectPath={redirectPath}
+              text="Continue with Google"
+              onError={(err) => setErrorMessage(err)}
+            />
+
+            <div className="relative my-2">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-[var(--border-neutral)]" />
+              </div>
+              <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
+                <span className="bg-[var(--bg-screen)] px-3 text-[var(--content-tertiary)] font-medium">
+                  Or continue with email
+                </span>
+              </div>
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">

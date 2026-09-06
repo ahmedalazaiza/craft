@@ -178,6 +178,7 @@ export async function signUpWithEmail(
       id: authUser.id,
       username: finalUsername,
       display_name: cleanDisplayName,
+      email: cleanEmail,
       avatar_url: DEFAULT_AVATAR_URL,
       bio: "",
       location: "Worldwide",
@@ -185,6 +186,7 @@ export async function signUpWithEmail(
       skills: [],
       is_verified: isEmailConfirmed,
       followers_count: 0,
+      auth_provider: "email",
     };
 
     const { data: profileData, error: profileError } = await supabase
@@ -407,5 +409,32 @@ export async function getCurrentAuthUser(): Promise<Creator | null> {
   } catch (err) {
     console.warn("Notice getting current auth user:", err);
     return null;
+  }
+}
+
+/**
+ * Sign in or sign up with Google OAuth
+ */
+export async function signInWithGoogle(redirectPath: string = "/"): Promise<{ error?: string }> {
+  try {
+    const callbackUrl = getAuthRedirectUrl(`/auth/callback?redirect=${encodeURIComponent(redirectPath)}`);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: callbackUrl,
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
+        },
+      },
+    });
+
+    if (error) {
+      return { error: error.message };
+    }
+    return {};
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "Failed to initiate Google sign in.";
+    return { error: errorMsg };
   }
 }

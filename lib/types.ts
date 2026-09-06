@@ -20,6 +20,7 @@ export interface Creator {
   isFeatured?: boolean;
   badge?: string;
   isSuspended?: boolean;
+  authProvider?: "google" | "email" | string;
 }
 
 export interface Comment {

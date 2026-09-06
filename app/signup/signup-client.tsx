@@ -32,6 +32,7 @@ import { generateUniqueUsername, slugifyUsername } from "@/lib/supabase/auth";
 import { bricolage } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
+import { GoogleAuthButton } from "@/components/ui/google-auth-button";
 
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -351,6 +352,23 @@ export function SignupClient() {
                 <span>{errorMessage}</span>
               </div>
             )}
+
+            <GoogleAuthButton
+              redirectPath={redirectPath}
+              text="Sign up with Google"
+              onError={(err) => setErrorMessage(err)}
+            />
+
+            <div className="relative my-2">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-[var(--border-neutral)]" />
+              </div>
+              <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
+                <span className="bg-[var(--bg-screen)] px-3 text-[var(--content-tertiary)] font-medium">
+                  Or register with email
+                </span>
+              </div>
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
