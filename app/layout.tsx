@@ -14,6 +14,7 @@ import { CookieConsentBanner } from "@/components/ui/cookie-consent-banner";
 import { ToastContainer } from "@/components/ui/toast";
 import { MaintenanceScreen } from "@/components/layout/maintenance-screen";
 import { SuspensionBanner } from "@/components/layout/suspension-banner";
+import { Analytics } from "@vercel/analytics/next";
 
 import Script from "next/script";
 
@@ -152,6 +153,7 @@ export default function RootLayout({
             </MaintenanceScreen>
           </SessionProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
