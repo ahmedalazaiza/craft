@@ -32,11 +32,11 @@ export function slugifyUsername(raw: string): string {
  */
 export async function generateUniqueUsername(
   displayName: string,
-  email: string
+  email?: string
 ): Promise<string> {
   const baseCandidate =
     slugifyUsername(displayName) ||
-    slugifyUsername(email.split("@")[0]) ||
+    (email ? slugifyUsername(email.split("@")[0]) : "") ||
     "creator";
 
   try {
@@ -202,6 +202,16 @@ export async function signUpWithEmail(
     creator.email = cleanEmail;
     creator.isVerified = isEmailConfirmed;
 
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("craft_cached_profile", JSON.stringify(creator));
+        localStorage.setItem("craft_last_registered_email", cleanEmail);
+        sessionStorage.removeItem("layerat_session_terminated");
+      } catch {
+        // ignore storage errors
+      }
+    }
+
     return {
       success: true,
       user: creator,
@@ -304,63 +314,95 @@ export async function signOut(): Promise<{ success: boolean; error?: string }> {
  */
 export async function getCurrentAuthUser(): Promise<Creator | null> {
   try {
-    // Check if client had a stored profile or session
-    const hadPreviousSession = typeof window !== "undefined" && (
-      Boolean(localStorage.getItem("craft_cached_profile")) ||
-      Boolean(localStorage.getItem("sb-pmswqujgbvquqbbmttfe-auth-token"))
-    );
-
     // 1. Verify authenticated user with Supabase Auth server
     const { data: userData, error: userErr } = await supabase.auth.getUser();
     const user = userData?.user ?? null;
 
-    if (userErr || !user) {
-      // User does not exist in auth.users or session has been revoked/deleted
-      if (hadPreviousSession) {
-        console.warn("Auth user not found or deleted on server. Terminating client session.");
-        await supabase.auth.signOut().catch(() => {});
-        if (typeof window !== "undefined") {
-          localStorage.removeItem("craft_cached_profile");
-          sessionStorage.setItem("layerat_session_terminated", "account_deleted");
+    if (user && !userErr) {
+      const isEmailConfirmed = Boolean(user.email_confirmed_at);
+
+      // 2. Query public.profiles
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (profile) {
+        if (profile.is_suspended) {
+          await supabase.auth.signOut().catch(() => {});
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("craft_cached_profile");
+            sessionStorage.setItem("layerat_session_terminated", "account_deleted");
+          }
+          return null;
         }
+
+        const creator = mapProfileToCreator(profile);
+        creator.isCurrentUser = true;
+        creator.email = user.email;
+        if (isEmailConfirmed || profile.is_verified) {
+          creator.isVerified = true;
+          // Sync database if it wasn't marked verified yet
+          if (!profile.is_verified) {
+            supabase.from("profiles").update({ is_verified: true }).eq("id", user.id).then();
+          }
+        } else {
+          creator.isVerified = false;
+        }
+        return creator;
+      }
+
+      // IF PROFILE DOES NOT EXIST IN DATABASE:
+      // The account was deleted by administration or self-purged.
+      console.warn("Current user profile does not exist in database (deleted). Terminating local session.");
+      await supabase.auth.signOut().catch(() => {});
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("craft_cached_profile");
+        sessionStorage.setItem("layerat_session_terminated", "account_deleted");
       }
       return null;
     }
 
-    const isEmailConfirmed = Boolean(user.email_confirmed_at);
-
-    // 2. Query public.profiles
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (profile) {
-      const creator = mapProfileToCreator(profile);
-      creator.isCurrentUser = true;
-      creator.email = user.email;
-      if (isEmailConfirmed || profile.is_verified) {
-        creator.isVerified = true;
-        // Sync database if it wasn't marked verified yet
-        if (!profile.is_verified) {
-          supabase.from("profiles").update({ is_verified: true }).eq("id", user.id).then();
-        }
-      } else {
-        creator.isVerified = false;
-      }
-      return creator;
-    }
-
-    // 3. IF PROFILE DOES NOT EXIST IN DATABASE:
-    // The account was deleted by administration or self-purged.
-    // HARD TERMINATE THE CLIENT SESSION immediately!
-    console.warn("Current user profile does not exist in database (deleted). Terminating local session.");
-    await supabase.auth.signOut().catch(() => {});
+    // 3. If no active Supabase Auth session token (e.g. newly registered user awaiting email confirmation):
+    // Check if there is a cached profile in localStorage that exists in the database
     if (typeof window !== "undefined") {
-      localStorage.removeItem("craft_cached_profile");
-      sessionStorage.setItem("layerat_session_terminated", "account_deleted");
+      const cachedRaw = localStorage.getItem("craft_cached_profile");
+      if (cachedRaw) {
+        try {
+          const cachedUser = JSON.parse(cachedRaw);
+          if (cachedUser && cachedUser.id) {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("*")
+              .eq("id", cachedUser.id)
+              .maybeSingle();
+
+            if (profile) {
+              if (profile.is_suspended) {
+                localStorage.removeItem("craft_cached_profile");
+                sessionStorage.setItem("layerat_session_terminated", "account_deleted");
+                return null;
+              }
+
+              const creator = mapProfileToCreator(profile);
+              creator.isCurrentUser = true;
+              creator.email = cachedUser.email || profile.email;
+              creator.isVerified = Boolean(profile.is_verified);
+              return creator;
+            } else {
+              // Profile record was genuinely deleted from the database
+              localStorage.removeItem("craft_cached_profile");
+              sessionStorage.setItem("layerat_session_terminated", "account_deleted");
+              return null;
+            }
+          }
+        } catch {
+          localStorage.removeItem("craft_cached_profile");
+        }
+      }
     }
+
     return null;
   } catch (err) {
     console.warn("Notice getting current auth user:", err);

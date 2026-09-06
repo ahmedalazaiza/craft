@@ -64,27 +64,24 @@ export function SignupClient() {
     email.trim().length > 0 &&
     isRequiredSatisfied;
 
-  // Real-time live check against Supabase profiles table
-  useEffect(() => {
-    if (!displayName.trim() && !email.trim()) {
+  // Verification of unique handle occurs when user finishes typing full name and moves to next field
+  const handleNameBlur = async () => {
+    const cleanName = displayName.trim();
+    if (!cleanName) {
       setResolvedUsername("");
       return;
     }
 
-    const timer = setTimeout(async () => {
-      setIsCheckingUsername(true);
-      try {
-        const unique = await generateUniqueUsername(displayName, email);
-        setResolvedUsername(unique);
-      } catch (err) {
-        console.error("Live handle generation error:", err);
-      } finally {
-        setIsCheckingUsername(false);
-      }
-    }, 250);
-
-    return () => clearTimeout(timer);
-  }, [displayName, email]);
+    setIsCheckingUsername(true);
+    try {
+      const unique = await generateUniqueUsername(cleanName, email.trim() || undefined);
+      setResolvedUsername(unique);
+    } catch (err) {
+      console.error("Handle generation error:", err);
+    } finally {
+      setIsCheckingUsername(false);
+    }
+  };
 
   // Rate limiter cooldown countdown for "Check Inbox" screen
   useEffect(() => {
@@ -115,13 +112,26 @@ export function SignupClient() {
       return;
     }
 
+    let finalUsername = resolvedUsername;
+    if (!finalUsername && displayName.trim()) {
+      try {
+        finalUsername = await generateUniqueUsername(displayName.trim(), email.trim() || undefined);
+        setResolvedUsername(finalUsername);
+      } catch (err) {
+        console.error("Handle generation fallback error:", err);
+      }
+    }
+
     setLoading(true);
     setErrorMessage(null);
 
     try {
       // Auto-generates unique username on the backend & Supabase with guaranteed uniqueness
-      const res = await signup(email, password, displayName, resolvedUsername || undefined);
+      const res = await signup(email, password, displayName, finalUsername || undefined);
       if (res.success) {
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem("layerat_session_terminated");
+        }
         toast.success(
           "Welcome to Layerat! Please check your inbox to confirm your email and unlock all creator perks.",
           "Account Created 🎉",
@@ -354,32 +364,32 @@ export function SignupClient() {
                     value={displayName}
                     onChange={(e) => {
                       setDisplayName(e.target.value);
-                      if (e.target.value.trim()) {
-                        setIsCheckingUsername(true);
+                      if (resolvedUsername) {
+                        setResolvedUsername("");
                       }
                     }}
+                    onBlur={handleNameBlur}
                     placeholder="e.g. Elena Vance"
                     autoComplete="name"
                   />
                   <User className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--content-tertiary)] pointer-events-none" />
                 </div>
-                {displayName.trim() && (
+                {displayName.trim() && (resolvedUsername || isCheckingUsername) && (
                   <div className="mt-2.5 min-h-[22px]">
                     {isCheckingUsername ? (
                       <div className="flex items-center gap-2 text-[11px] text-[var(--content-secondary)] animate-pulse">
                         <Loader2 className="h-3.5 w-3.5 text-[var(--content-primary)] animate-spin shrink-0" />
                         <span>Verifying unique handle availability...</span>
-                        <span className="h-3.5 w-20 rounded-md bg-[var(--bg-neutral)] inline-block" />
                       </div>
-                    ) : (
+                    ) : resolvedUsername ? (
                       <div className="flex items-center gap-1.5 text-[11px] text-[var(--content-tertiary)] animate-fade-in">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-[var(--content-primary)] shrink-0" />
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
                         <span>Your unique handle will be:</span>
                         <span className="font-mono font-semibold text-[var(--content-primary)] bg-[var(--bg-neutral)] px-2 py-0.5 rounded-md">
-                          @{resolvedUsername || slugifyUsername(displayName)}
+                          @{resolvedUsername}
                         </span>
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 )}
               </div>
