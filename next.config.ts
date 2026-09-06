@@ -32,7 +32,7 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com data:",
-      "img-src 'self' data: blob: https://media.layerat.com https://*.r2.cloudflarestorage.com https://*.supabase.co https://ttjobsgglwgyioqlldqj.supabase.co https://images.unsplash.com https://images.pexels.com https://avatar.vercel.sh https://api.dicebear.com https://res.cloudinary.com https://i.imgur.com https://i.postimg.cc https://mir-s3-cdn-cf.behance.net https://cdn.dribbble.com",
+      "img-src 'self' data: blob: https://media.layerat.com https://*.r2.cloudflarestorage.com https://*.supabase.co https://ttjobsgglwgyioqlldqj.supabase.co https://images.unsplash.com https://images.pexels.com https://avatar.vercel.sh https://api.dicebear.com https://res.cloudinary.com https://i.imgur.com https://i.postimg.cc https://mir-s3-cdn-cf.behance.net https://cdn.dribbble.com https://*.googleusercontent.com https://lh3.googleusercontent.com",
       "connect-src 'self' https://media.layerat.com https://*.r2.cloudflarestorage.com https://*.supabase.co https://ttjobsgglwgyioqlldqj.supabase.co wss://*.supabase.co",
       "frame-ancestors 'none'",
       "base-uri 'self'",
@@ -65,6 +65,14 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "ttjobsgglwgyioqlldqj.supabase.co",
+      },
+      {
+        protocol: "https",
+        hostname: "**.googleusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
       },
       {
         protocol: "https",
