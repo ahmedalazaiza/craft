@@ -785,7 +785,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         subCategories: projectData.subCategories && projectData.subCategories.length > 0 ? projectData.subCategories : (projectData.subCategory ? [projectData.subCategory] : []),
         medium: projectData.medium || "Image",
         published: projectData.published ?? true,
-        publishedAt: projectData.published ? "Just now" : "Draft",
+        publishedAt: new Date().toISOString(),
         appreciations: 0,
         views: 0,
         comments: [],

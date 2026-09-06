@@ -136,7 +136,12 @@ export function mapProjectRow(row: any, currentUserId?: string): Project {
     subCategories: Array.isArray(row.sub_categories) && row.sub_categories.length > 0 ? row.sub_categories : (row.sub_category ? [row.sub_category] : []),
     medium: row.medium,
     published: row.published ?? true,
-    publishedAt: formatTimeAgo(new Date(row.published_at || row.created_at || Date.now())),
+    publishedAt: (() => {
+      const raw = row.published_at || row.created_at;
+      if (!raw) return new Date().toISOString();
+      const d = new Date(raw);
+      return isNaN(d.getTime()) ? String(raw) : d.toISOString();
+    })(),
     createdAt: row.created_at || row.published_at,
     updatedAt: row.updated_at,
     appreciations: liveAppreciations,

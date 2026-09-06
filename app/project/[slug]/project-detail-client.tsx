@@ -21,6 +21,7 @@ import { getCanonicalShareUrl } from "@/lib/seo";
 import { categoryToSlug } from "@/lib/taxonomy";
 import { DeleteProjectModal } from "@/components/project/delete-project-modal";
 import { incrementProjectViewsInDb } from "@/lib/supabase/queries";
+import { formatProjectPublishedDate } from "@/lib/utils";
 import {
   Heart,
   MessageSquare,
@@ -140,17 +141,22 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
     }
   }
 
-  const displayDate = React.useMemo(() => {
-    if (isDraft) return "Draft • Unpublished";
-    if (!project.publishedAt) return "Recently Published";
-    const parsed = new Date(project.publishedAt);
-    if (isNaN(parsed.getTime())) return "Recently Published";
-    return parsed.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  }, [isDraft, project.publishedAt]);
+  const [now, setNow] = useState<number>(() => Date.now());
+
+  React.useEffect(() => {
+    // Keep relative timestamps fresh every 60 seconds
+    const interval = setInterval(() => {
+      setNow(Date.now());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const { display: displayDate, tooltip: tooltipDate } = React.useMemo(() => {
+    if (isDraft) {
+      return { display: "Draft • Unpublished", tooltip: undefined };
+    }
+    return formatProjectPublishedDate(project.publishedAt, { now });
+  }, [isDraft, project.publishedAt, now]);
 
   const handleToggleAppreciation = () => {
     toggleAppreciation(project.id);
@@ -307,7 +313,13 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                 {!isDraft && (
                   <>
                     <span className="text-[var(--content-tertiary)]">•</span>
-                    <span>{displayDate}</span>
+                    <span
+                      title={tooltipDate}
+                      suppressHydrationWarning
+                      className="cursor-default transition-colors hover:text-[var(--content-primary)]"
+                    >
+                      {displayDate}
+                    </span>
                   </>
                 )}
               </div>
