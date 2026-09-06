@@ -213,7 +213,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
   }, [project.coverImage, project.galleryImages]);
 
   return (
-    <article className="w-full px-4 sm:px-6 lg:px-[140px] py-4 sm:py-6 pb-28 sm:pb-32">
+    <article className="w-full px-4 sm:px-6 lg:px-[140px] py-4 sm:py-6 pb-48 sm:pb-32">
       <FadeIn>
         {/* Breadcrumb Navigation */}
         <Breadcrumbs
@@ -689,29 +689,32 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
       {/* ===================================================================== */}
       {/* MOBILE BOTTOM FLOATING ACTION BAR                                     */}
       {/* ===================================================================== */}
-      <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 p-1.5 rounded-full bg-[var(--bg-screen)]/95 backdrop-blur-md border border-[var(--border-neutral)] shadow-[0_12px_32px_rgba(0,0,0,0.18)]">
+      <div
+        className="md:hidden fixed left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 p-1.5 rounded-full bg-[var(--bg-elevated)]/95 backdrop-blur-2xl border border-[var(--border-neutral)] shadow-[0_12px_36px_rgba(0,0,0,0.16)] dark:shadow-none max-w-[calc(100vw-24px)] overflow-x-auto no-scrollbar"
+        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 90px)" }}
+      >
         {!isDraft && (
           <>
             <button
               type="button"
               onClick={handleToggleAppreciation}
               className={cn(
-                "h-12 min-h-[48px] px-4 rounded-full flex items-center gap-2 text-xs font-bold transition-all cursor-pointer select-none border-0",
+                "h-11 min-h-[44px] px-3.5 rounded-full flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer select-none border-0 shrink-0 active:scale-95",
                 isAppreciated
-                  ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-md"
+                  ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-sm"
                   : "bg-[var(--bg-neutral)] text-[var(--content-primary)]"
               )}
               title={isAppreciated ? "Unlike project" : "Appreciate project"}
               aria-label={isAppreciated ? `Remove appreciation (${project.appreciations})` : `Appreciate project (${project.appreciations})`}
             >
-              <Heart className={cn("h-4 w-4", isAppreciated ? "fill-current" : "text-[var(--content-primary)]")} />
-              <span>{project.appreciations}</span>
+              <Heart className={cn("h-4 w-4 shrink-0 transition-transform", isAppreciated ? "fill-current scale-110" : "text-[var(--content-primary)]")} />
+              <span className="font-mono text-xs">{project.appreciations}</span>
             </button>
 
             <button
               type="button"
               onClick={() => openAddToBoardModal(project)}
-              className="h-12 w-12 min-h-[48px] min-w-[48px] rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] flex items-center justify-center"
+              className="h-11 w-11 min-h-[44px] min-w-[44px] rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] flex items-center justify-center shrink-0 active:scale-95 transition-all"
               title="Add to Board"
               aria-label="Add to Board"
             >
@@ -721,18 +724,18 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
             <button
               type="button"
               onClick={handleScrollToComments}
-              className="h-12 min-h-[48px] px-4 rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] flex items-center gap-2 text-xs font-bold"
+              className="h-11 min-h-[44px] px-3 rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] flex items-center gap-1.5 text-xs font-bold shrink-0 active:scale-95 transition-all"
               title="Jump to discussion"
               aria-label="Jump to discussion"
             >
-              <MessageSquare className="h-4 w-4" />
-              <span>{project.comments?.length || 0}</span>
+              <MessageSquare className="h-4 w-4 shrink-0" />
+              <span className="font-mono text-xs">{project.comments?.length || 0}</span>
             </button>
 
             <button
               type="button"
               onClick={() => setIsShareModalOpen(true)}
-              className="h-12 w-12 min-h-[48px] min-w-[48px] rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] flex items-center justify-center"
+              className="h-11 w-11 min-h-[44px] min-w-[44px] rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] flex items-center justify-center shrink-0 active:scale-95 transition-all"
               title="Share Project"
               aria-label="Share Project"
             >
@@ -748,7 +751,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                 type="button"
                 onClick={handlePublishProject}
                 disabled={isPublishing}
-                className="h-12 min-h-[48px] px-4 rounded-full bg-[var(--btn-cta-bg)] text-[var(--btn-cta-fg)] hover:opacity-90 flex items-center gap-1.5 text-xs font-bold transition-all shrink-0 shadow-xs"
+                className="h-11 min-h-[44px] px-3.5 rounded-full bg-[var(--btn-cta-bg)] text-[var(--btn-cta-fg)] hover:opacity-90 flex items-center gap-1.5 text-xs font-bold transition-all shrink-0 shadow-xs active:scale-95"
                 title="Publish Project Live"
                 aria-label="Publish Project Live"
               >
@@ -763,7 +766,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
 
             <Link
               href={`/me/projects/${project.id}`}
-              className="h-12 w-12 min-h-[48px] min-w-[48px] rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] flex items-center justify-center transition-all shrink-0"
+              className="h-11 w-11 min-h-[44px] min-w-[44px] rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] flex items-center justify-center transition-all shrink-0 active:scale-95"
               title="Edit Case Study"
               aria-label="Edit Case Study"
             >
@@ -773,7 +776,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
             <button
               type="button"
               onClick={() => setIsDeleteModalOpen(true)}
-              className="h-12 w-12 min-h-[48px] min-w-[48px] rounded-full bg-red-500/10 text-red-600 flex items-center justify-center"
+              className="h-11 w-11 min-h-[44px] min-w-[44px] rounded-full bg-red-500/10 text-red-600 flex items-center justify-center shrink-0 active:scale-95 transition-all"
               title="Delete Project"
               aria-label="Delete Project"
             >
@@ -782,18 +785,20 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
           </>
         )}
 
-        <div className="h-6 w-[1px] bg-[var(--border-neutral)] mx-0.5" />
+        <div className="h-5 w-[1px] bg-[var(--border-neutral)] mx-0.5 shrink-0" />
 
         <Link
           href={`/u/${project.creator.username}`}
-          className="relative h-12 w-12 min-h-[48px] min-w-[48px] rounded-full ring-1 ring-[var(--border-neutral)] shrink-0"
+          className="relative h-11 w-11 min-h-[44px] min-w-[44px] rounded-full ring-1 ring-[var(--border-neutral)] shrink-0 overflow-hidden active:scale-95 transition-all"
+          title={project.creator.displayName}
+          aria-label={`View ${project.creator.displayName}'s profile`}
         >
           <div className="relative h-full w-full rounded-full overflow-hidden">
             <Image
               src={getValidAvatarUrl(project.creator.avatarUrl)}
               alt={project.creator.displayName}
               fill
-              sizes="40px"
+              sizes="44px"
               className="object-cover"
             />
           </div>
