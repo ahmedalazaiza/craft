@@ -68,7 +68,7 @@ export function Logo({
   // Height & Sizing scales
   const fullLogoHeights = {
     sm: "h-7",
-    default: "h-[34px]",
+    default: "h-[28px] sm:h-[34px]",
     lg: "h-11",
     xl: "h-14",
     "2xl": "h-20",
@@ -165,7 +165,7 @@ export function Logo({
 
   const betaBadge = showBeta ? (
     <span
-      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-[var(--bg-elevated)] border border-[var(--border-neutral)] text-[var(--content-secondary)] select-none shadow-2xs shrink-0"
+      className="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-mono font-bold tracking-wider uppercase bg-[var(--bg-elevated)] border border-[var(--border-neutral)] text-[var(--content-secondary)] select-none shadow-2xs shrink-0"
       title="Layerat Public Beta"
     >
       <span className="relative flex h-1.5 w-1.5">
@@ -178,7 +178,7 @@ export function Logo({
 
   if (linkHref !== undefined) {
     return (
-      <div className="inline-flex items-center gap-2.5 shrink-0">
+      <div className="inline-flex items-center gap-2 sm:gap-2.5 shrink-0">
         <Link
           href={linkHref}
           prefetch={true}
@@ -194,7 +194,7 @@ export function Logo({
 
   if (showBeta) {
     return (
-      <div className="inline-flex items-center gap-2.5 shrink-0">
+      <div className="inline-flex items-center gap-2 sm:gap-2.5 shrink-0">
         {renderContent()}
         {betaBadge}
       </div>

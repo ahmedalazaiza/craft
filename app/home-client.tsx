@@ -179,24 +179,24 @@ export function HomeClient({
           <h1
             className={cn(
               bricolage.className,
-              "text-[44px] sm:text-6xl md:text-7xl lg:text-[84px] xl:text-[92px] font-black tracking-[-0.04em] leading-[1.02] sm:leading-[0.96] text-[var(--content-primary)] text-center w-full flex flex-col items-center justify-center max-w-4xl"
+              "text-[34px] xs:text-[40px] sm:text-6xl md:text-7xl lg:text-[84px] xl:text-[92px] font-black tracking-[-0.035em] sm:tracking-[-0.04em] leading-[1.08] sm:leading-[0.96] text-[var(--content-primary)] text-center w-full flex flex-col items-center justify-center max-w-4xl"
             )}
           >
-            <span className="block w-full text-center overflow-hidden">
-              <span className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--content-primary)] text-center">
+            <span className="block w-full text-center">
+              <span className="inline-flex flex-wrap items-baseline justify-center gap-2 sm:gap-4 text-[var(--content-primary)] text-center">
                 <span>Showcase</span>
                 <span>your</span>
-                <span className="inline-flex items-center rounded-2xl bg-black text-white dark:bg-white dark:text-black px-3.5 sm:px-4 py-0.5 sm:py-1 shadow-md tracking-tight font-black transition-transform hover:scale-105 duration-200">
+                <span className="inline-flex items-center rounded-xl sm:rounded-2xl bg-black text-white dark:bg-white dark:text-black px-2.5 sm:px-4 py-0.5 sm:py-1 shadow-md tracking-tight font-black transition-transform hover:scale-105 duration-200">
                   work.
                 </span>
               </span>
             </span>
 
-            <span className="block w-full text-center overflow-hidden mt-1 sm:mt-2">
-              <span className="inline-flex flex-wrap items-baseline justify-center gap-2.5 sm:gap-4 text-[var(--content-primary)] text-center">
+            <span className="block w-full text-center mt-1 sm:mt-2">
+              <span className="inline-flex flex-wrap items-baseline justify-center gap-2 sm:gap-4 text-[var(--content-primary)] text-center">
                 <span>Connect</span>
                 <span>with</span>
-                <span className="inline-flex items-center rounded-2xl bg-black text-white dark:bg-white dark:text-black px-3.5 sm:px-4 py-0.5 sm:py-1 shadow-md tracking-tight font-black transition-transform hover:scale-105 duration-200">
+                <span className="inline-flex items-center rounded-xl sm:rounded-2xl bg-black text-white dark:bg-white dark:text-black px-2.5 sm:px-4 py-0.5 sm:py-1 shadow-md tracking-tight font-black transition-transform hover:scale-105 duration-200">
                   makers.
                 </span>
               </span>

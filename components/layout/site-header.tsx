@@ -62,7 +62,7 @@ export function SiteHeader() {
       <header className="sticky top-0 z-40 w-full border-b border-[var(--border-neutral)] bg-[var(--bg-screen)]/95 backdrop-blur-md transition-all">
         <div className="flex h-16 w-full items-center justify-between px-4 sm:px-6 lg:px-[80px] gap-4">
           {/* Left: Wordmark & Navigation Links */}
-          <div className="flex items-center gap-8 shrink-0">
+          <div className="flex items-center gap-4 sm:gap-8 min-w-0">
             <Logo linkHref="/" priority={true} showBeta={true} />
 
             {/* Desktop Navigation Links */}
@@ -135,12 +135,12 @@ export function SiteHeader() {
 
             {user ? (
               <>
-                {/* Favorites Icon Button (Unified Brand Styling) */}
+                {/* Favorites Icon Button (Desktop & Tablet) */}
                 <Link
                   href="/favorites"
                   prefetch={true}
                   className={cn(
-                    "relative h-9 w-9 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)] flex items-center justify-center transition-all cursor-pointer select-none shadow-xs",
+                    "hidden sm:flex relative h-9 w-9 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)] items-center justify-center transition-all cursor-pointer select-none shadow-xs",
                     isFavorites
                       ? "bg-[var(--bg-neutral)] text-[var(--content-primary)] border-[var(--content-primary)]"
                       : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
@@ -151,12 +151,12 @@ export function SiteHeader() {
                   <Heart className={cn("h-4 w-4 transition-all", isFavorites && "fill-current")} />
                 </Link>
 
-                {/* My Boards Icon Button */}
+                {/* My Boards Icon Button (Desktop & Tablet) */}
                 <Link
                   href="/boards"
                   prefetch={true}
                   className={cn(
-                    "relative h-9 w-9 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)] flex items-center justify-center transition-all cursor-pointer select-none shadow-xs",
+                    "hidden sm:flex relative h-9 w-9 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)] items-center justify-center transition-all cursor-pointer select-none shadow-xs",
                     isBoards
                       ? "bg-[var(--bg-neutral)] text-[var(--content-primary)] border-[var(--content-primary)]"
                       : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"

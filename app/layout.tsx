@@ -132,7 +132,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${inter.className} min-h-screen flex flex-col bg-[var(--bg-screen)] text-[var(--content-primary)] antialiased`}
+        className={`${inter.className} min-h-screen w-full max-w-full overflow-x-hidden flex flex-col bg-[var(--bg-screen)] text-[var(--content-primary)] antialiased`}
       >
         <ThemeProvider>
           <SessionProvider>
@@ -144,7 +144,7 @@ export default function RootLayout({
             <MaintenanceScreen>
               <SuspensionBanner />
               <SiteHeader />
-              <main className="flex-1 pb-20 md:pb-0">{children}</main>
+              <main className="flex-1 pb-20 md:pb-0 w-full max-w-full overflow-x-hidden">{children}</main>
               <SiteFooter />
               <MobileBottomNav />
               <NetworkStatusIndicator />
