@@ -543,9 +543,10 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                     <Image
                       src={img}
                       alt={`${project.title} gallery image ${idx + 1}`}
-                      width={1200}
-                      height={900}
-                      className="w-full h-auto object-cover transition-opacity duration-300 group-hover:opacity-95"
+                      width={2000}
+                      height={1200}
+                      unoptimized
+                      className="w-full h-auto block transition-opacity duration-300 group-hover:opacity-95"
                       priority={idx === 0}
                     />
 
