@@ -18,10 +18,14 @@ export function AuthCallbackClient() {
   const rawRedirect = searchParams.get("redirect") || "/";
   const redirectPath = rawRedirect.startsWith("/") ? rawRedirect : "/";
 
-  const { refreshFromDb } = useSession();
+  const { refreshFromDb, setUser } = useSession();
   const [error, setError] = useState<string | null>(null);
+  const hasExecutedRef = React.useRef(false);
 
   useEffect(() => {
+    if (hasExecutedRef.current) return;
+    hasExecutedRef.current = true;
+
     let isCancelled = false;
 
     async function processAuth() {
@@ -72,9 +76,11 @@ export function AuthCallbackClient() {
         // 4. Check existing profile or initialize new one
         const { data: existingProfile } = await supabase
           .from("profiles")
-          .select("id, is_verified, is_suspended, username, avatar_url, display_name, email, auth_provider")
+          .select("*")
           .eq("id", user.id)
           .maybeSingle();
+
+        let finalProfile = existingProfile;
 
         if (existingProfile) {
           if (existingProfile.is_suspended) {
@@ -111,7 +117,16 @@ export function AuthCallbackClient() {
             updates.display_name = fullName;
           }
 
-          await supabase.from("profiles").update(updates).eq("id", user.id);
+          const { data: updatedData } = await supabase
+            .from("profiles")
+            .update(updates)
+            .eq("id", user.id)
+            .select("*")
+            .single();
+
+          if (updatedData) {
+            finalProfile = updatedData;
+          }
         } else {
           // First-time Google user: Auto-initialize creator profile with rich details
           const uniqueUsername = await generateUniqueUsername(fullName, email);
@@ -132,9 +147,11 @@ export function AuthCallbackClient() {
             followers_count: 0,
           };
 
-          const { error: insertErr } = await supabase
+          const { data: insertedData, error: insertErr } = await supabase
             .from("profiles")
-            .upsert(newProfile, { onConflict: "id" });
+            .upsert(newProfile, { onConflict: "id" })
+            .select("*")
+            .single();
 
           if (insertErr) {
             console.error("Error creating Google creator profile:", insertErr);
@@ -143,18 +160,38 @@ export function AuthCallbackClient() {
             }
             return;
           } else {
+            finalProfile = insertedData || newProfile;
             toast.success("Welcome to Layerat! Your profile is ready.", "Account Created 🎉", 4000);
           }
         }
 
-        // 5. Clean termination flag and sync session context state
+        // 5. Build Creator object and immediately hydrate local session cache
+        const { mapProfileToCreator } = await import("@/lib/supabase/queries");
+        const creator = mapProfileToCreator(finalProfile);
+        creator.isCurrentUser = true;
+        creator.email = email;
+        creator.isVerified = true;
+
         if (typeof window !== "undefined") {
+          localStorage.setItem("craft_cached_profile", JSON.stringify(creator));
           sessionStorage.removeItem("layerat_session_terminated");
         }
+
+        setUser(creator);
         await refreshFromDb();
 
         if (!isCancelled) {
-          router.replace(redirectPath);
+          // If redirect was pointing to /me, send directly to the creator profile
+          const destination =
+            redirectPath === "/me" || redirectPath === "/me/"
+              ? `/u/${creator.username}`
+              : redirectPath;
+
+          if (typeof window !== "undefined") {
+            window.location.replace(destination);
+          } else {
+            router.replace(destination);
+          }
         }
       } catch (err: unknown) {
         console.error("OAuth callback handling failed:", err);
@@ -170,7 +207,7 @@ export function AuthCallbackClient() {
     return () => {
       isCancelled = true;
     };
-  }, [searchParams, redirectPath, refreshFromDb, router]);
+  }, [searchParams, redirectPath, refreshFromDb, router, setUser]);
 
   return (
     <div className="flex min-h-[calc(100vh-14rem)] flex-col items-center justify-center px-4 py-12 sm:px-6">
