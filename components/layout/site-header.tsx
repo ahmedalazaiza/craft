@@ -63,7 +63,7 @@ export function SiteHeader() {
         <div className="flex h-16 w-full items-center justify-between px-4 sm:px-6 lg:px-[80px] gap-4">
           {/* Left: Wordmark & Navigation Links */}
           <div className="flex items-center gap-8 shrink-0">
-            <Logo linkHref="/" priority={true} />
+            <Logo linkHref="/" priority={true} showBeta={true} />
 
             {/* Desktop Navigation Links */}
             <nav className="hidden md:flex items-center gap-1 bg-[var(--bg-elevated)]/90 border border-[var(--border-neutral)] p-1 rounded-full shadow-2xs">

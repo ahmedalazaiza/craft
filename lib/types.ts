@@ -198,6 +198,10 @@ export interface AboutPageContent {
   pillar2Desc: string;
   pillar3Title: string;
   pillar3Desc: string;
+  storyTitle?: string;
+  storyText1?: string;
+  storyText2?: string;
+  storyText3?: string;
 }
 
 export interface GuidelinesClause {
@@ -209,6 +213,13 @@ export interface GuidelinesClause {
 export interface GuidelinesPageContent {
   headline: string;
   subtitle: string;
+  summary?: string;
+  principle1Title?: string;
+  principle1Desc?: string;
+  principle2Title?: string;
+  principle2Desc?: string;
+  principle3Title?: string;
+  principle3Desc?: string;
   clauses: GuidelinesClause[];
 }
 

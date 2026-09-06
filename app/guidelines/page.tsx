@@ -14,7 +14,8 @@ export const metadata: Metadata = constructMetadata({
   path: "/guidelines",
 });
 
-export const revalidate = 60; // 1 minute revalidation for CMS updates
+export const revalidate = 0; // Immediate live CMS updates
+export const dynamic = "force-dynamic";
 
 export default async function GuidelinesPage() {
   const [doc, cmsPage] = await Promise.all([
@@ -24,7 +25,24 @@ export default async function GuidelinesPage() {
 
   const headline = cmsPage?.content?.headline || doc.title;
   const subtitle = cmsPage?.content?.subtitle || doc.subtitle || "Peer & Curation Standards";
+  const summary =
+    cmsPage?.content?.summary ||
+    doc.summary ||
+    "The shared principles and curation expectations that keep Layerat a high-signal sanctuary for creators worldwide.";
   const clauses = cmsPage?.content?.clauses;
+
+  const p1Title = cmsPage?.content?.principle1Title || "Originality & Provenance";
+  const p1Desc =
+    cmsPage?.content?.principle1Desc ||
+    "Publish authentic case studies that you personally designed, directed, or contributed to with accurate attribution.";
+  const p2Title = cmsPage?.content?.principle2Title || "Thoughtful Critique";
+  const p2Desc =
+    cmsPage?.content?.principle2Desc ||
+    "Provide respectful, substantive feedback on typography, layout hierarchy, interaction, and conceptual execution.";
+  const p3Title = cmsPage?.content?.principle3Title || "Zero Harassment";
+  const p3Desc =
+    cmsPage?.content?.principle3Desc ||
+    "Layerat maintains zero tolerance for hate speech, harassment, impersonation, or predatory behavior.";
 
   const formattedDate = new Intl.DateTimeFormat("en-US", {
     month: "long",
@@ -73,8 +91,7 @@ export default async function GuidelinesPage() {
         </h1>
 
         <p className="text-sm sm:text-base text-[var(--content-secondary)] font-normal leading-relaxed">
-          {doc.summary ||
-            "The shared principles and curation expectations that keep Layerat a high-signal sanctuary for creators worldwide."}
+          {summary}
         </p>
 
         <p className="text-xs sm:text-sm font-mono text-[var(--content-tertiary)]">
@@ -89,10 +106,10 @@ export default async function GuidelinesPage() {
             <Award className="h-5 w-5" />
           </div>
           <h3 className={cn(bricolage.className, "text-base font-bold text-[var(--content-primary)]")}>
-            Originality & Provenance
+            {p1Title}
           </h3>
           <p className="text-xs text-[var(--content-secondary)] leading-relaxed font-normal">
-            Publish authentic case studies that you personally designed, directed, or contributed to with accurate attribution.
+            {p1Desc}
           </p>
         </div>
 
@@ -101,10 +118,10 @@ export default async function GuidelinesPage() {
             <Sparkles className="h-5 w-5" />
           </div>
           <h3 className={cn(bricolage.className, "text-base font-bold text-[var(--content-primary)]")}>
-            Thoughtful Critique
+            {p2Title}
           </h3>
           <p className="text-xs text-[var(--content-secondary)] leading-relaxed font-normal">
-            Provide respectful, substantive feedback on typography, layout hierarchy, interaction, and conceptual execution.
+            {p2Desc}
           </p>
         </div>
 
@@ -113,10 +130,10 @@ export default async function GuidelinesPage() {
             <ShieldCheck className="h-5 w-5" />
           </div>
           <h3 className={cn(bricolage.className, "text-base font-bold text-[var(--content-primary)]")}>
-            Zero Harassment
+            {p3Title}
           </h3>
           <p className="text-xs text-[var(--content-secondary)] leading-relaxed font-normal">
-            Layerat maintains zero tolerance for hate speech, harassment, impersonation, or predatory behavior.
+            {p3Desc}
           </p>
         </div>
       </div>

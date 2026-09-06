@@ -22,7 +22,8 @@ export const metadata: Metadata = constructMetadata({
   path: "/about",
 });
 
-export const revalidate = 60; // 1 minute revalidation for CMS updates
+export const revalidate = 0; // Immediate live CMS updates
+export const dynamic = "force-dynamic";
 
 export default async function AboutPage() {
   const cmsRecord = await fetchCMSPage<AboutPageContent>("about");
@@ -141,17 +142,17 @@ export default async function AboutPage() {
             The Philosophy
           </span>
           <h2 className={cn(bricolage.className, "text-3xl sm:text-4xl font-black text-neutral-950 dark:text-white tracking-tight")}>
-            Why We Started Layerat
+            {content.storyTitle || "Why We Started Layerat"}
           </h2>
           <div className="space-y-4 text-neutral-600 dark:text-neutral-400 leading-relaxed text-sm sm:text-base font-normal">
             <p>
-              Layerat was created to give designers, art directors, and creative studios a clean, distraction-free home for their best work.
+              {content.storyText1 || "Layerat was created to give designers, art directors, and creative studios a clean, distraction-free home for their best work."}
             </p>
             <p>
-              While modern social feeds prioritize short-form clips and algorithmic hooks, we believe great design needs room to breathe—with clear typography, high-resolution imagery, and thoughtful write-ups.
+              {content.storyText2 || "While modern social feeds prioritize short-form clips and algorithmic hooks, we believe great design needs room to breathe—with clear typography, high-resolution imagery, and thoughtful write-ups."}
             </p>
             <p>
-              Whether you specialize in UI/UX design, branding, 3D motion, or architecture, Layerat gives you the tools to share your creative process and connect with other designers around the world.
+              {content.storyText3 || "Whether you specialize in UI/UX design, branding, 3D motion, or architecture, Layerat gives you the tools to share your creative process and connect with other designers around the world."}
             </p>
           </div>
         </div>

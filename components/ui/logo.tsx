@@ -10,6 +10,7 @@ export interface LogoProps {
   className?: string;
   linkHref?: string;
   priority?: boolean;
+  showBeta?: boolean;
 }
 
 /**
@@ -62,6 +63,7 @@ export function Logo({
   size = "default",
   className,
   linkHref,
+  showBeta = false,
 }: LogoProps) {
   // Height & Sizing scales
   const fullLogoHeights = {
@@ -161,16 +163,41 @@ export function Logo({
     );
   };
 
+  const betaBadge = showBeta ? (
+    <span
+      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-[var(--bg-elevated)] border border-[var(--border-neutral)] text-[var(--content-secondary)] select-none shadow-2xs shrink-0"
+      title="Layerat Public Beta"
+    >
+      <span className="relative flex h-1.5 w-1.5">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+      </span>
+      <span>Beta</span>
+    </span>
+  ) : null;
+
   if (linkHref !== undefined) {
     return (
-      <Link
-        href={linkHref}
-        prefetch={true}
-        className="inline-flex items-center group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--input-focus-ring)] rounded-lg"
-        aria-label="Layerat Home"
-      >
+      <div className="inline-flex items-center gap-2.5 shrink-0">
+        <Link
+          href={linkHref}
+          prefetch={true}
+          className="inline-flex items-center group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--input-focus-ring)] rounded-lg"
+          aria-label="Layerat Home"
+        >
+          {renderContent()}
+        </Link>
+        {betaBadge}
+      </div>
+    );
+  }
+
+  if (showBeta) {
+    return (
+      <div className="inline-flex items-center gap-2.5 shrink-0">
         {renderContent()}
-      </Link>
+        {betaBadge}
+      </div>
     );
   }
 

@@ -16,7 +16,8 @@ export const metadata: Metadata = constructMetadata({
   path: "/team",
 });
 
-export const revalidate = 60; // 1 minute revalidation for CMS updates
+export const revalidate = 0; // Immediate live CMS updates
+export const dynamic = "force-dynamic";
 
 interface TeamMember {
   name: string;

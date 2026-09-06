@@ -1910,6 +1910,10 @@ export const DEFAULT_ABOUT_CONTENT: AboutPageContent = {
   pillar2Desc: "No social feed noise or algorithmic feeds. Discoveries are driven purely by design quality and authentic peer appreciation.",
   pillar3Title: "100% Creator Ownership",
   pillar3Desc: "You retain full intellectual property rights to your work. Share your portfolio and story completely on your own terms.",
+  storyTitle: "Why We Started Layerat",
+  storyText1: "Layerat was created to give designers, art directors, and creative studios a clean, distraction-free home for their best work.",
+  storyText2: "While modern social feeds prioritize short-form clips and algorithmic hooks, we believe great design needs room to breathe—with clear typography, high-resolution imagery, and thoughtful write-ups.",
+  storyText3: "Whether you specialize in UI/UX design, branding, 3D motion, or architecture, Layerat gives you the tools to share your creative process and connect with other designers around the world.",
 };
 
 export const DEFAULT_TEAM_MEMBERS: TeamMemberCMS[] = [
@@ -1975,6 +1979,13 @@ export const DEFAULT_TEAM_MEMBERS: TeamMemberCMS[] = [
 export const DEFAULT_GUIDELINES_CONTENT: GuidelinesPageContent = {
   headline: "Community Guidelines",
   subtitle: "Peer & Curation Standards",
+  summary: "The shared principles and curation expectations that keep Layerat a high-signal sanctuary for creators worldwide.",
+  principle1Title: "Originality & Provenance",
+  principle1Desc: "Publish authentic case studies that you personally designed, directed, or contributed to with accurate attribution.",
+  principle2Title: "Thoughtful Critique",
+  principle2Desc: "Provide respectful, substantive feedback on typography, layout hierarchy, interaction, and conceptual execution.",
+  principle3Title: "Zero Harassment",
+  principle3Desc: "Layerat maintains zero tolerance for hate speech, harassment, impersonation, or predatory behavior.",
   clauses: [
     {
       id: "authorship",
