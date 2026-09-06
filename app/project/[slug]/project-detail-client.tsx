@@ -57,6 +57,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
     saveProject,
     isLoadingDb,
     isAuthReady,
+    syncProjectMetrics,
   } = useSession();
 
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
@@ -66,6 +67,13 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishToast, setPublishToast] = useState<string | null>(null);
+
+  // Synchronize live real-time metrics (appreciations & views) from DB on mount
+  React.useEffect(() => {
+    if (initialProject?.id && syncProjectMetrics) {
+      syncProjectMetrics(initialProject.id);
+    }
+  }, [initialProject?.id, syncProjectMetrics]);
 
   // Grab live project data from session context if updated
   const liveProject = projects.find((p) => p.id === initialProject.id || p.slug === initialProject.slug);

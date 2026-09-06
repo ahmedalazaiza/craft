@@ -105,11 +105,16 @@ export function mapProjectRow(row: any, currentUserId?: string): Project {
     ? row.comments.map(mapCommentRow)
     : [];
 
-  const liveAppreciations =
-    typeof row.appreciations_count === "number"
-      ? row.appreciations_count
-      : Array.isArray(row.appreciations) && row.appreciations.length > 0 && typeof row.appreciations[0].count === "number"
+  const countFromRelation =
+    Array.isArray(row.appreciations) && row.appreciations.length > 0 && typeof row.appreciations[0].count === "number"
       ? row.appreciations[0].count
+      : null;
+
+  const liveAppreciations =
+    countFromRelation !== null
+      ? countFromRelation
+      : typeof row.appreciations_count === "number"
+      ? row.appreciations_count
       : 0;
 
   const liveViews =
@@ -783,7 +788,11 @@ export async function insertComment(projectId: string, authorId: string, content
 /**
  * Toggle appreciation (like/heart)
  */
-export async function toggleAppreciationInDb(projectId: string, userId: string): Promise<boolean> {
+export async function toggleAppreciationInDb(
+  projectId: string,
+  userId: string,
+  forceState?: boolean
+): Promise<boolean> {
   try {
     // Check if already appreciated
     const { data } = await supabase
@@ -793,9 +802,13 @@ export async function toggleAppreciationInDb(projectId: string, userId: string):
       .eq("user_id", userId)
       .maybeSingle();
 
-    if (data) {
-      // Remove appreciation
-      await supabase.from("appreciations").delete().eq("id", data.id);
+    const shouldRemove = forceState !== undefined ? !forceState : Boolean(data);
+
+    if (shouldRemove) {
+      if (data) {
+        // Remove appreciation
+        await supabase.from("appreciations").delete().eq("id", data.id);
+      }
 
       // Recalculate true real count
       const { count } = await supabase
@@ -811,8 +824,10 @@ export async function toggleAppreciationInDb(projectId: string, userId: string):
       invalidateAppCache();
       return false;
     } else {
-      // Add appreciation
-      await supabase.from("appreciations").insert({ project_id: projectId, user_id: userId });
+      if (!data) {
+        // Add appreciation
+        await supabase.from("appreciations").insert({ project_id: projectId, user_id: userId });
+      }
 
       // Recalculate true real count
       const { count } = await supabase

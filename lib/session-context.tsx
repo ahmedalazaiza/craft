@@ -78,6 +78,7 @@ interface SessionContextType {
   logout: () => Promise<void>;
   refreshFromDb: () => Promise<void>;
   setUser: (user: Creator | null | ((prev: Creator | null) => Creator | null)) => void;
+  syncProjectMetrics: (projectId: string) => Promise<void>;
   toggleAppreciation: (projectId: string) => boolean;
   isProjectAppreciated: (projectId: string) => boolean;
   toggleFollowCreator: (creatorId: string) => boolean;
@@ -161,6 +162,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
   const [verificationModalAction, setVerificationModalAction] = useState<GatedActionType>("like");
   const [verificationModalTargetName, setVerificationModalTargetName] = useState<string | undefined>(undefined);
+  const inFlightAppreciations = useRef<Set<string>>(new Set());
 
   const openVerificationModal = (action: GatedActionType, targetName?: string) => {
     setVerificationModalAction(action);
@@ -203,6 +205,39 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const closeAddToBoardModal = useCallback(() => {
     setIsAddToBoardModalOpen(false);
     setActiveBoardProject(null);
+  }, []);
+
+  // Fetch live metrics (appreciations_count, views_count) directly from DB for a given project
+  const syncProjectMetrics = useCallback(async (projectId: string) => {
+    try {
+      const { data } = await supabase
+        .from("projects")
+        .select("id, appreciations_count, views_count")
+        .eq("id", projectId)
+        .maybeSingle();
+
+      if (data) {
+        setProjects((prev) =>
+          prev.map((p) =>
+            p.id === projectId
+              ? {
+                  ...p,
+                  appreciations:
+                    typeof data.appreciations_count === "number"
+                      ? data.appreciations_count
+                      : p.appreciations,
+                  views:
+                    typeof data.views_count === "number"
+                      ? data.views_count
+                      : p.views,
+                }
+              : p
+          )
+        );
+      }
+    } catch {
+      // ignore
+    }
   }, []);
 
   // Check auth and fetch live database on mount
@@ -282,9 +317,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           table: "notifications",
           filter: `recipient_id=eq.${user.id}`,
         },
-        async () => {
+        async (payload) => {
           const freshNotifs = await fetchUserNotifications(user.id);
           setNotifications(freshNotifs);
+
+          const newNotif = payload.new as { project_id?: string; type?: string };
+          if (newNotif && newNotif.project_id && newNotif.type === "appreciation") {
+            syncProjectMetrics(newNotif.project_id);
+          }
         }
       )
       .subscribe();
@@ -468,12 +508,58 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       )
       .subscribe();
 
+    // Realtime projects changes subscription (appreciations_count, views, status)
+    const projectsRealtimeChannel = supabase
+      .channel("public-projects-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "projects",
+        },
+        (payload) => {
+          const updated = payload.new as {
+            id: string;
+            appreciations_count?: number;
+            views_count?: number;
+            published?: boolean;
+          };
+          if (updated && updated.id) {
+            setProjects((prev) =>
+              prev.map((p) => {
+                if (p.id === updated.id) {
+                  return {
+                    ...p,
+                    appreciations:
+                      typeof updated.appreciations_count === "number"
+                        ? updated.appreciations_count
+                        : p.appreciations,
+                    views:
+                      typeof updated.views_count === "number"
+                        ? updated.views_count
+                        : p.views,
+                    published:
+                      typeof updated.published === "boolean"
+                        ? updated.published
+                        : p.published,
+                  };
+                }
+                return p;
+              })
+            );
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
       authListener?.subscription.unsubscribe();
       supabase.removeChannel(categoriesChannel);
       supabase.removeChannel(settingsChannel);
+      supabase.removeChannel(projectsRealtimeChannel);
     };
-  }, [refreshFromDb, setUser]);
+  }, [refreshFromDb, setUser, syncProjectMetrics]);
 
   // Auth Operations
   const login = async (email: string, password: string): Promise<AuthResponse> => {
@@ -621,7 +707,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       return false;
     }
 
+    if (inFlightAppreciations.current.has(projectId)) {
+      return false;
+    }
+    inFlightAppreciations.current.add(projectId);
+
     const wasAppreciated = appreciatedProjectIds.has(projectId);
+    const nextState = !wasAppreciated;
 
     setAppreciatedProjectIds((prev) => {
       const next = new Set(prev);
@@ -658,7 +750,16 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     );
 
     if (user?.id) {
-      toggleAppreciationInDb(projectId, user.id).catch(console.error);
+      toggleAppreciationInDb(projectId, user.id, nextState)
+        .then(() => syncProjectMetrics(projectId))
+        .catch(console.error)
+        .finally(() => {
+          setTimeout(() => {
+            inFlightAppreciations.current.delete(projectId);
+          }, 300);
+        });
+    } else {
+      inFlightAppreciations.current.delete(projectId);
     }
 
     return true;
@@ -1051,6 +1152,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         logout,
         refreshFromDb,
         setUser,
+        syncProjectMetrics,
         toggleAppreciation,
         isProjectAppreciated,
         toggleFollowCreator,
