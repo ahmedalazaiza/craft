@@ -25,6 +25,7 @@ export function VerifiedBadge({
 
   return (
     <span
+      role="img"
       className={cn(
         "inline-flex items-center justify-center shrink-0 align-middle select-none",
         className

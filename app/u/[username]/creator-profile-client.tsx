@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { useSession } from "@/lib/session-context";
-import { Creator } from "@/lib/types";
+import { Creator, Project } from "@/lib/types";
 import { bricolage } from "@/lib/fonts";
 
 import { ProjectCard } from "@/components/project/project-card";
@@ -44,7 +44,13 @@ import { EditProfileModal } from "@/components/creator/edit-profile-modal";
 import { toast } from "@/components/ui/toast";
 import { getCanonicalShareUrl } from "@/lib/seo";
 
-export function CreatorProfileClient({ initialCreator }: { initialCreator: Creator }) {
+export function CreatorProfileClient({
+  initialCreator,
+  initialProjects = [],
+}: {
+  initialCreator: Creator;
+  initialProjects?: Project[];
+}) {
   const {
     projects,
     creators,
@@ -152,11 +158,15 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
   const isFollowing = isFollowingCreator(creator.id);
 
   // All projects for this creator (published and drafts)
+  // Use live session projects when hydrated; otherwise use server pre-rendered initialProjects
   const allCreatorProjects = useMemo(() => {
-    return projects.filter(
-      (p) => p.creator.username.toLowerCase() === creator.username.toLowerCase()
-    );
-  }, [projects, creator.username]);
+    if (projects && projects.length > 0) {
+      return projects.filter(
+        (p) => p.creator.username.toLowerCase() === creator.username.toLowerCase()
+      );
+    }
+    return initialProjects;
+  }, [projects, creator.username, initialProjects]);
 
   const publishedProjects = useMemo(() => {
     return allCreatorProjects
@@ -521,13 +531,13 @@ export function CreatorProfileClient({ initialCreator }: { initialCreator: Creat
                   <FolderKanban className="h-7 w-7" />
                 </div>
 
-                <h3 className="type-title-subsection text-[var(--content-primary)]">
+                <h2 className="type-title-subsection text-[var(--content-primary)]">
                   {isCurrentUser
                     ? activeTab === "published"
                       ? "No published projects yet"
                       : "No draft projects"
                     : "No public projects yet"}
-                </h3>
+                </h2>
 
                 <p className="mt-2 type-body-default text-[var(--content-secondary)] max-w-md">
                   {isCurrentUser
