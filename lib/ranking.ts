@@ -35,8 +35,9 @@ export function computeProjectExploreRank(project: Project): number {
   }
 
   // 6. Recency Freshness Bonus (smooth time decay)
-  const time = project.createdAt ? new Date(project.createdAt).getTime() : 0;
-  if (time > 0) {
+  const rawTime = project.createdAt || project.publishedAt;
+  const time = rawTime ? new Date(rawTime).getTime() : 0;
+  if (time > 0 && !isNaN(time)) {
     const hoursAgo = Math.max(0, (Date.now() - time) / (1000 * 60 * 60));
     if (hoursAgo < 48) {
       score += 50 * (1 - hoursAgo / 48); // Linearly scales from 50 to 0 over 48h
@@ -52,6 +53,13 @@ export function computeProjectExploreRank(project: Project): number {
   return score;
 }
 
+function getProjectTime(project: Project): number {
+  const raw = project.createdAt || project.publishedAt;
+  if (!raw) return 0;
+  const t = new Date(raw).getTime();
+  return isNaN(t) ? 0 : t;
+}
+
 /**
  * Sorts an array of Projects based on the selected mode.
  */
@@ -63,15 +71,11 @@ export function sortProjects(
     if (sortBy === "appreciated") {
       const diff = (b.appreciations || 0) - (a.appreciations || 0);
       if (diff !== 0) return diff;
-      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return timeB - timeA;
+      return getProjectTime(b) - getProjectTime(a);
     }
 
     if (sortBy === "newest") {
-      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return timeB - timeA;
+      return getProjectTime(b) - getProjectTime(a);
     }
 
     // Default: "curated" / trending score
@@ -81,9 +85,7 @@ export function sortProjects(
       return scoreB - scoreA;
     }
 
-    const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-    const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-    return timeB - timeA;
+    return getProjectTime(b) - getProjectTime(a);
   });
 }
 

@@ -199,7 +199,8 @@ export function ExploreClient({ initialProjects = [], categoryTaxonomy }: Explor
         }
 
           return true;
-        })
+        }),
+      filters.sortBy
     );
   }, [publishedProjects, searchQuery, filters]);
 
@@ -447,7 +448,7 @@ export function ExploreClient({ initialProjects = [], categoryTaxonomy }: Explor
                     tags: [],
                     tools: [],
                     medium: "All",
-                    sortBy: "newest",
+                    sortBy: "curated",
                   })
                 }
                 className="text-xs text-neutral-900 dark:text-white hover:underline ml-auto font-bold cursor-pointer"
@@ -480,7 +481,7 @@ export function ExploreClient({ initialProjects = [], categoryTaxonomy }: Explor
                   tags: [],
                   tools: [],
                   medium: "All",
-                  sortBy: "newest",
+                  sortBy: "curated",
                 });
               }}
               className="mt-5 rounded-full px-6 text-xs font-bold"

@@ -82,7 +82,8 @@ export function SearchClient() {
         }
 
         return true;
-      })
+      }),
+      filters.sortBy
     );
   }, [projects, q, filters]);
 
