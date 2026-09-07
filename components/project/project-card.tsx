@@ -120,14 +120,15 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
               <BookmarkPlus className="h-4.5 w-4.5 stroke-[2]" />
             </button>
 
-            {/* Favorite / Appreciate Button: Always visible on mobile & desktop */}
+            {/* Favorite / Appreciate Button: Only visible on hover */}
             <button
               type="button"
               onClick={handleFavClick}
               className={cn(
                 "group/fav flex h-10 w-10 min-h-[40px] min-w-[40px] sm:min-h-0 sm:min-w-0 sm:h-11 sm:w-11 items-center justify-center rounded-full backdrop-blur-md transition-all duration-200 cursor-pointer shadow-md sm:shadow-lg active:scale-90 border",
+                "opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
                 isLiked
-                  ? "bg-black/80 text-rose-500 border-rose-500/40 shadow-rose-500/20 hover:bg-black/95 hover:scale-105"
+                  ? "bg-black/80 text-white border-white/40 hover:bg-black/95 hover:scale-105"
                   : "bg-black/60 text-white border-white/20 hover:bg-black/85 hover:border-white/40 hover:scale-105"
               )}
               title={isLiked ? "Unlike project" : "Appreciate project"}
@@ -137,8 +138,8 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
                 className={cn(
                   "h-4.5 w-4.5 sm:h-4.5 sm:w-4.5 transition-transform duration-200",
                   isLiked
-                    ? "fill-rose-500 text-rose-500 scale-110"
-                    : "text-white group-hover/fav:scale-110"
+                    ? "fill-white text-white scale-110"
+                    : "text-white fill-none group-hover/fav:scale-110"
                 )}
               />
             </button>
@@ -230,10 +231,10 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
             <span
               className={cn(
                 "inline-flex items-center gap-1 font-medium transition-colors",
-                isLiked ? "text-rose-500 font-semibold" : "text-[var(--content-tertiary)]"
+                isLiked ? "text-[var(--content-primary)] font-semibold" : "text-[var(--content-tertiary)]"
               )}
             >
-              <Heart className={cn("h-3.5 w-3.5", isLiked && "fill-rose-500 text-rose-500")} />
+              <Heart className={cn("h-3.5 w-3.5", isLiked ? "fill-[var(--content-primary)] text-[var(--content-primary)]" : "text-current")} />
               <span>{liveProject.appreciations}</span>
             </span>
             <span className="inline-flex items-center gap-1 font-medium text-[var(--content-tertiary)]">

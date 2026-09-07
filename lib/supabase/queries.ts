@@ -787,6 +787,29 @@ export async function insertComment(projectId: string, authorId: string, content
 }
 
 /**
+ * Fetch all comments for a specific project
+ */
+export async function fetchProjectComments(projectId: string): Promise<Comment[]> {
+  try {
+    const { data, error } = await supabase
+      .from("comments")
+      .select(`*, author:profiles!author_id(*)`)
+      .eq("project_id", projectId)
+      .order("created_at", { ascending: false });
+
+    if (error || !data) {
+      return [];
+    }
+
+    return data.map(mapCommentRow);
+  } catch (err) {
+    console.error("Error fetching comments for project:", err);
+    return [];
+  }
+}
+
+
+/**
  * Toggle appreciation (like/heart)
  */
 export async function toggleAppreciationInDb(

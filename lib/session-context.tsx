@@ -36,6 +36,7 @@ import {
   addProjectToBoardInDb,
   removeProjectFromBoardInDb,
   fetchProjectBoards,
+  mapCommentRow,
 } from "./supabase/queries";
 import { CategoryTaxonomyItem, FALLBACK_TAXONOMY } from "@/lib/taxonomy";
 import {
@@ -209,12 +210,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setActiveBoardProject(null);
   }, []);
 
-  // Fetch live metrics (appreciations_count, views_count) directly from DB for a given project
+  // Fetch live metrics (appreciations_count, views_count, comments) directly from DB for a given project
   const syncProjectMetrics = useCallback(async (projectId: string) => {
     try {
       const { data } = await supabase
         .from("projects")
-        .select("id, appreciations_count, views_count")
+        .select("id, appreciations_count, views_count, comments(*, author:profiles!author_id(*))")
         .eq("id", projectId)
         .maybeSingle();
 
@@ -232,6 +233,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
                     typeof data.views_count === "number"
                       ? data.views_count
                       : p.views,
+                  comments: Array.isArray(data.comments)
+                    ? data.comments.map(mapCommentRow)
+                    : p.comments,
                 }
               : p
           )
@@ -315,33 +319,155 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     }
   }, [setUser]);
 
-  // Realtime notifications and account status subscription for active session user
+  // Realtime notifications, interactions, and account status subscription for active session user
   useEffect(() => {
     if (!user) return;
 
+    // 1. Instant Realtime Notifications for current user (recipient)
     const notifChannel = supabase
       .channel(`notifications-recipient-${user.id}`)
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*",
           schema: "public",
           table: "notifications",
           filter: `recipient_id=eq.${user.id}`,
         },
         async (payload) => {
-          const freshNotifs = await fetchUserNotifications(user.id);
-          setNotifications(freshNotifs);
+          if (payload.eventType === "INSERT") {
+            const newNotif = payload.new as {
+              id: string;
+              type?: string;
+              content?: string;
+              project_id?: string;
+            };
 
-          const newNotif = payload.new as { project_id?: string; type?: string };
-          if (newNotif && newNotif.project_id && newNotif.type === "appreciation") {
-            syncProjectMetrics(newNotif.project_id);
+            // Instant alert sound / toast popup
+            if (newNotif && newNotif.content) {
+              toast.info(newNotif.content, "New Notification");
+            }
+
+            const freshNotifs = await fetchUserNotifications(user.id);
+            setNotifications(freshNotifs);
+
+            if (newNotif && newNotif.project_id) {
+              syncProjectMetrics(newNotif.project_id);
+            }
+          } else if (payload.eventType === "UPDATE") {
+            const updated = payload.new as { id: string; read?: boolean };
+            if (updated && updated.id) {
+              setNotifications((prev) =>
+                prev.map((n) =>
+                  n.id === updated.id
+                    ? { ...n, read: typeof updated.read === "boolean" ? updated.read : n.read }
+                    : n
+                )
+              );
+            }
+          } else if (payload.eventType === "DELETE") {
+            const oldRecord = payload.old as { id?: string };
+            if (oldRecord && oldRecord.id) {
+              setNotifications((prev) => prev.filter((n) => n.id !== oldRecord.id));
+            } else {
+              const freshNotifs = await fetchUserNotifications(user.id);
+              setNotifications(freshNotifs);
+            }
           }
         }
       )
       .subscribe();
 
-    // Listen to real-time deletion of this user's profile
+    // 2. Realtime Appreciations for current user (syncs hearts across devices/tabs)
+    const userAppreciationsChannel = supabase
+      .channel(`user-appreciations-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "appreciations",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            const row = payload.new as { project_id: string };
+            if (row?.project_id) {
+              setAppreciatedProjectIds((prev) => new Set([...prev, row.project_id]));
+            }
+          } else if (payload.eventType === "DELETE") {
+            const row = payload.old as { project_id: string };
+            if (row?.project_id) {
+              setAppreciatedProjectIds((prev) => {
+                const next = new Set(prev);
+                next.delete(row.project_id);
+                return next;
+              });
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    // 3. Realtime Follows made by current user (syncs following across devices/tabs)
+    const userFollowsChannel = supabase
+      .channel(`user-follows-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "follows",
+          filter: `follower_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            const row = payload.new as { following_id: string };
+            if (row?.following_id) {
+              setFollowingCreatorIds((prev) => new Set([...prev, row.following_id]));
+            }
+          } else if (payload.eventType === "DELETE") {
+            const row = payload.old as { following_id: string };
+            if (row?.following_id) {
+              setFollowingCreatorIds((prev) => {
+                const next = new Set(prev);
+                next.delete(row.following_id);
+                return next;
+              });
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    // 4. Realtime Followers received by current user (instant followers_count update)
+    const creatorFollowersChannel = supabase
+      .channel(`creator-followers-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "follows",
+          filter: `following_id=eq.${user.id}`,
+        },
+        (payload) => {
+          setUser((prev) => {
+            if (!prev) return prev;
+            const currentCount = prev.followersCount || 0;
+            return {
+              ...prev,
+              followersCount:
+                payload.eventType === "INSERT"
+                  ? currentCount + 1
+                  : Math.max(0, currentCount - 1),
+            };
+          });
+        }
+      )
+      .subscribe();
+
+    // 5. Listen to real-time deletion of this user's profile
     const profileDeleteChannel = supabase
       .channel(`profile-delete-listener-${user.id}`)
       .on(
@@ -367,7 +493,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       )
       .subscribe();
 
-    // Listen to real-time verification of this user's profile (from mobile, another tab, or email link)
+    // 6. Listen to real-time verification of this user's profile (from mobile, another tab, or email link)
     const profileUpdateChannel = supabase
       .channel(`profile-update-listener-${user.id}`)
       .on(
@@ -384,24 +510,27 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
             display_name?: string;
             avatar_url?: string;
             username?: string;
+            followers_count?: number;
           };
-          if (newRecord && newRecord.is_verified) {
+          if (newRecord) {
             setUser((prev) => {
               if (!prev) return null;
-              if (prev.isVerified) return prev; // Already verified, no-op
               return {
                 ...prev,
-                isVerified: true,
+                isVerified: typeof newRecord.is_verified === "boolean" ? newRecord.is_verified : prev.isVerified,
                 displayName: newRecord.display_name || prev.displayName,
                 avatarUrl: newRecord.avatar_url || prev.avatarUrl,
                 username: newRecord.username || prev.username,
+                followersCount: typeof newRecord.followers_count === "number" ? newRecord.followers_count : prev.followersCount,
               };
             });
-            toast.success(
-              "Your account is now verified! All creator privileges have been unlocked.",
-              "Account Verified 🎉"
-            );
-            refreshFromDb();
+            if (newRecord.is_verified) {
+              toast.success(
+                "Your account is now verified! All creator privileges have been unlocked.",
+                "Account Verified 🎉"
+              );
+              refreshFromDb();
+            }
           }
         }
       )
@@ -409,10 +538,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       supabase.removeChannel(notifChannel);
+      supabase.removeChannel(userAppreciationsChannel);
+      supabase.removeChannel(userFollowsChannel);
+      supabase.removeChannel(creatorFollowersChannel);
       supabase.removeChannel(profileDeleteChannel);
       supabase.removeChannel(profileUpdateChannel);
     };
-  }, [user?.id, setUser, refreshFromDb]);
+  }, [user?.id, setUser, refreshFromDb, syncProjectMetrics]);
 
   const hasInitializedRef = useRef(false);
 
@@ -526,40 +658,66 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       .on(
         "postgres_changes",
         {
-          event: "UPDATE",
+          event: "*",
           schema: "public",
           table: "projects",
         },
         (payload) => {
-          const updated = payload.new as {
-            id: string;
-            appreciations_count?: number;
-            views_count?: number;
-            published?: boolean;
-          };
-          if (updated && updated.id) {
-            setProjects((prev) =>
-              prev.map((p) => {
-                if (p.id === updated.id) {
-                  return {
-                    ...p,
-                    appreciations:
-                      typeof updated.appreciations_count === "number"
-                        ? updated.appreciations_count
-                        : p.appreciations,
-                    views:
-                      typeof updated.views_count === "number"
-                        ? updated.views_count
-                        : p.views,
-                    published:
-                      typeof updated.published === "boolean"
-                        ? updated.published
-                        : p.published,
-                  };
-                }
-                return p;
-              })
-            );
+          if (payload.eventType === "UPDATE") {
+            const updated = payload.new as {
+              id: string;
+              appreciations_count?: number;
+              views_count?: number;
+              published?: boolean;
+            };
+            if (updated && updated.id) {
+              setProjects((prev) =>
+                prev.map((p) => {
+                  if (p.id === updated.id) {
+                    return {
+                      ...p,
+                      appreciations:
+                        typeof updated.appreciations_count === "number"
+                          ? updated.appreciations_count
+                          : p.appreciations,
+                      views:
+                        typeof updated.views_count === "number"
+                          ? updated.views_count
+                          : p.views,
+                      published:
+                        typeof updated.published === "boolean"
+                          ? updated.published
+                          : p.published,
+                    };
+                  }
+                  return p;
+                })
+              );
+            }
+          } else if (payload.eventType === "DELETE") {
+            const oldRecord = payload.old as { id?: string };
+            if (oldRecord && oldRecord.id) {
+              setProjects((prev) => prev.filter((p) => p.id !== oldRecord.id));
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    // Realtime public comments subscription (keeps project comment counters fresh everywhere)
+    const commentsRealtimeChannel = supabase
+      .channel("public-comments-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "comments",
+        },
+        (payload) => {
+          const targetId = (payload.new as { project_id?: string })?.project_id || (payload.old as { project_id?: string })?.project_id;
+          if (targetId) {
+            syncProjectMetrics(targetId);
           }
         }
       )
@@ -570,6 +728,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       supabase.removeChannel(categoriesChannel);
       supabase.removeChannel(settingsChannel);
       supabase.removeChannel(projectsRealtimeChannel);
+      supabase.removeChannel(commentsRealtimeChannel);
     };
   }, [refreshFromDb, setUser, syncProjectMetrics]);
 
@@ -659,15 +818,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         next.delete(creatorId);
       } else {
         next.add(creatorId);
-        // Strictly send notification only to the target creator in DB (never to the actor)
-        if (targetCreator && targetCreator.id !== user.id) {
-          insertNotificationInDb({
-            recipientId: targetCreator.id,
-            actorId: user.id,
-            type: "follow",
-            content: `${user.displayName} started following your studio`,
-          }).catch(console.error);
-        }
       }
       return next;
     });
@@ -737,16 +887,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         next.delete(projectId);
       } else {
         next.add(projectId);
-        // Strictly send notification only to the project creator in DB (never to self)
-        if (user && targetProject?.creator?.id && targetProject.creator.id !== user.id) {
-          insertNotificationInDb({
-            recipientId: targetProject.creator.id,
-            actorId: user.id,
-            type: "appreciation",
-            projectId: targetProject.id,
-            content: `${user.displayName} appreciated your project "${targetProject.title}"`,
-          }).catch(console.error);
-        }
       }
       return next;
     });
@@ -816,20 +956,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       })
     );
 
-    // Strictly notify the project creator in Supabase (never the actor)
-    if (targetProject && targetProject.creator && targetProject.creator.id !== user.id) {
-      insertNotificationInDb({
-        recipientId: targetProject.creator.id,
-        actorId: user.id,
-        type: "comment",
-        projectId: targetProject.id,
-        content: `${user.displayName} commented on "${targetProject.title}": "${content}"`,
-      }).catch(console.error);
-    }
-
     // Persist to Supabase
     try {
       await insertComment(projectId, user.id, content);
+      syncProjectMetrics(projectId);
     } catch (err) {
       console.error("Failed to save comment to database:", err);
     }

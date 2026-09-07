@@ -22,6 +22,7 @@ import { getCanonicalShareUrl } from "@/lib/seo";
 import { categoryToSlug } from "@/lib/taxonomy";
 import { DeleteProjectModal } from "@/components/project/delete-project-modal";
 import { incrementProjectViewsInDb } from "@/lib/supabase/queries";
+import { supabase } from "@/lib/supabase/client";
 import { formatProjectPublishedDate } from "@/lib/utils";
 import {
   Heart,
@@ -69,11 +70,58 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishToast, setPublishToast] = useState<string | null>(null);
 
-  // Synchronize live real-time metrics (appreciations & views) from DB on mount
+  // Synchronize live real-time metrics (appreciations, views, comments) from DB on mount & listen live
   React.useEffect(() => {
-    if (initialProject?.id && syncProjectMetrics) {
+    if (!initialProject?.id) return;
+
+    if (syncProjectMetrics) {
       syncProjectMetrics(initialProject.id);
     }
+
+    // Subscribe to live changes specifically for this project (metrics, comments, appreciations)
+    const detailChannel = supabase
+      .channel(`project-detail-live-${initialProject.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "projects",
+          filter: `id=eq.${initialProject.id}`,
+        },
+        () => {
+          if (syncProjectMetrics) syncProjectMetrics(initialProject.id);
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "comments",
+          filter: `project_id=eq.${initialProject.id}`,
+        },
+        () => {
+          if (syncProjectMetrics) syncProjectMetrics(initialProject.id);
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "appreciations",
+          filter: `project_id=eq.${initialProject.id}`,
+        },
+        () => {
+          if (syncProjectMetrics) syncProjectMetrics(initialProject.id);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(detailChannel);
+    };
   }, [initialProject?.id, syncProjectMetrics]);
 
   // Grab live project data from session context if updated
@@ -205,9 +253,6 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
   const allImages = React.useMemo(() => {
     const gallery = (project.galleryImages || []).filter(Boolean);
     if (gallery.length > 0) {
-      if (project.coverImage && !gallery.includes(project.coverImage)) {
-        return [project.coverImage, ...gallery];
-      }
       return gallery;
     }
     return project.coverImage ? [project.coverImage] : [];

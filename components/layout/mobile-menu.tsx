@@ -26,6 +26,7 @@ import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { Logo } from "@/components/ui/logo";
 import { bricolage } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -321,11 +322,20 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                 <Bell className="h-5 w-5 shrink-0" />
                 <span>Notifications</span>
               </div>
-              {unreadNotificationsCount > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-[var(--brand-secondary)] text-black">
-                  {unreadNotificationsCount}
-                </span>
-              )}
+              <AnimatePresence>
+                {unreadNotificationsCount > 0 && (
+                  <motion.span
+                    key={unreadNotificationsCount}
+                    initial={{ scale: 0.3, opacity: 0 }}
+                    animate={{ scale: [1.35, 0.95, 1], opacity: 1 }}
+                    exit={{ scale: 0.3, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 600, damping: 22 }}
+                    className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-[var(--brand-secondary)] text-black"
+                  >
+                    {unreadNotificationsCount}
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </Link>
 
             <Link

@@ -87,11 +87,20 @@ export function NotificationsPopover() {
         aria-label="Notifications"
       >
         <Bell className={cn("h-4.5 w-4.5 sm:h-4 sm:w-4 transition-all", isOpen && "fill-current")} />
-        {unreadNotificationsCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--content-primary)] px-1 text-[10px] font-black text-[var(--bg-screen)] ring-2 ring-[var(--bg-screen)] shadow-xs">
-            {unreadNotificationsCount}
-          </span>
-        )}
+        <AnimatePresence>
+          {unreadNotificationsCount > 0 && (
+            <motion.span
+              key={unreadNotificationsCount}
+              initial={{ scale: 0.3, opacity: 0 }}
+              animate={{ scale: [1.35, 0.95, 1], opacity: 1 }}
+              exit={{ scale: 0.3, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 600, damping: 22 }}
+              className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--content-primary)] px-1 text-[10px] font-black text-[var(--bg-screen)] ring-2 ring-[var(--bg-screen)] shadow-xs pointer-events-none"
+            >
+              {unreadNotificationsCount}
+            </motion.span>
+          )}
+        </AnimatePresence>
       </button>
 
       {/* Popover Dropdown */}

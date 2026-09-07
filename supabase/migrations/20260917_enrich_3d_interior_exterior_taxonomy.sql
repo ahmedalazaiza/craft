@@ -1,0 +1,81 @@
+-- =============================================================================
+-- Migration: 20260917_enrich_3d_interior_exterior_taxonomy.sql
+-- Description: Enrich 3D Design category with Interior Design, Exterior Design,
+--              Landscape Architecture, and specialized architectural CAD/BIM tools.
+-- =============================================================================
+
+UPDATE public.categories
+SET
+  description = '3D modeling, photorealistic rendering, architectural visualization, interior & exterior architecture, and spatial CGI environments.',
+  sub_categories = ARRAY[
+    '3D Modeling',
+    'Architectural Visualization',
+    'Interior Design',
+    'Exterior Design',
+    'Landscape Architecture',
+    'Environment Design',
+    '3D Rendering',
+    'Spatial Design',
+    'Character Sculpting',
+    'Product Visualization',
+    'Abstract 3D'
+  ],
+  tags = ARRAY[
+    'Interior Design',
+    'Exterior Design',
+    'Architectural Design',
+    'Landscape Design',
+    'Facade Design',
+    'Space Planning',
+    'Floor Plans',
+    'Residential Design',
+    'Commercial Interiors',
+    'Hospitality Design',
+    'Materials & Finishes',
+    'Lighting Design',
+    'Texturing',
+    'Shading',
+    'Lighting',
+    'UV Mapping',
+    'Photorealism',
+    'Low Poly',
+    'High Poly',
+    'Hard Surface Modeling',
+    'Ray Tracing',
+    'Organic Sculpting',
+    'Retopology',
+    'Rigging',
+    'Procedural Generation',
+    'Fluid Simulations',
+    'PBR Materials',
+    'ArchViz',
+    'Matte Painting',
+    'Voxel Art'
+  ],
+  tools = ARRAY[
+    'Blender',
+    '3ds Max',
+    'SketchUp',
+    'Autodesk Revit',
+    'AutoCAD',
+    'Rhino (Rhinoceros)',
+    'Corona Renderer',
+    'Lumion',
+    'V-Ray',
+    'D5 Render',
+    'Enscape',
+    'Twinmotion',
+    'ArchiCAD',
+    'Cinema 4D',
+    'Autodesk Maya',
+    'ZBrush',
+    'KeyShot',
+    'Unreal Engine',
+    'Substance 3D Painter',
+    'Substance 3D Designer',
+    'Houdini',
+    'Marvelous Designer',
+    'OctaneRender'
+  ],
+  updated_at = NOW()
+WHERE id = '3d-design';

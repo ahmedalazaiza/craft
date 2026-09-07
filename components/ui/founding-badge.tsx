@@ -72,10 +72,8 @@ export function FoundingBadge({
       }}
       className={cn(
         "relative inline-flex items-center rounded-full font-bold uppercase tracking-wider select-none transition-all duration-200 cursor-pointer focus:outline-hidden",
-        "bg-amber-500/10 dark:bg-amber-500/15",
-        "text-amber-900 dark:text-amber-200",
-        "border border-amber-400/40 dark:border-amber-400/30",
-        "shadow-xs hover:border-amber-500/60 dark:hover:border-amber-300/50 hover:shadow-[0_0_12px_rgba(245,158,11,0.22)]",
+        "bg-[var(--brand-secondary)] hover:bg-[var(--brand-secondary-hover)] text-white border border-transparent",
+        "shadow-xs hover:shadow-[0_0_14px_var(--brand-secondary-glow)]",
         "active:scale-95",
         sizeClasses[size],
         className
@@ -84,10 +82,10 @@ export function FoundingBadge({
       <Sparkles
         className={cn(
           iconSizes[size],
-          "text-amber-500 dark:text-amber-400 fill-amber-400/30 shrink-0 transition-transform duration-300 group-hover:rotate-12"
+          "text-white fill-white/40 shrink-0 transition-transform duration-300 group-hover:rotate-12"
         )}
       />
-      <span>Founding Member</span>
+      <span className="text-white font-bold">Founding Member</span>
 
       {/* ================================================================= */}
       {/* CUSTOM BRANDED LAYERAT TOOLTIP                                   */}
@@ -115,18 +113,18 @@ export function FoundingBadge({
                 ? "bottom-full left-1/2 -translate-x-1/2 mb-2.5"
                 : "top-full left-1/2 -translate-x-1/2 mt-2.5",
               "bg-white dark:bg-[#121214]",
-              "border border-amber-500/30 dark:border-amber-400/25",
-              "shadow-[0_20px_45px_rgba(0,0,0,0.14),0_2px_8px_rgba(245,158,11,0.06)] dark:shadow-[0_24px_50px_rgba(0,0,0,0.7),0_0_24px_rgba(245,158,11,0.1)]",
+              "border border-[var(--brand-secondary)]/30 dark:border-[var(--brand-secondary)]/25",
+              "shadow-[0_20px_45px_rgba(0,0,0,0.14),0_2px_8px_var(--brand-secondary-subtle)] dark:shadow-[0_24px_50px_rgba(0,0,0,0.7),0_0_24px_var(--brand-secondary-glow)]",
               tooltipClassName
             )}
           >
             {/* Ambient subtle glow inside tooltip card */}
-            <div className="absolute -top-6 -right-6 w-20 h-20 bg-amber-500/10 rounded-full blur-xl pointer-events-none" />
+            <div className="absolute -top-6 -right-6 w-20 h-20 bg-[var(--brand-secondary-subtle)] rounded-full blur-xl pointer-events-none" />
 
             {/* Header: Badge Tag + Brand Seal */}
             <div className="relative flex items-center justify-between gap-2 pb-2.5 border-b border-neutral-100 dark:border-neutral-800">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/15 dark:bg-amber-500/20 border border-amber-500/30 text-[11px] font-semibold text-amber-900 dark:text-amber-200">
-                <Sparkles className="h-3 w-3 fill-amber-400 text-amber-500 shrink-0" />
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[var(--brand-secondary)] text-white text-[11px] font-bold shadow-2xs">
+                <Sparkles className="h-3 w-3 fill-white/40 text-white shrink-0" />
                 <span>Founding Member</span>
               </div>
               <span className="text-[11px] font-bold tracking-wider uppercase text-neutral-400 dark:text-neutral-500">
@@ -142,10 +140,10 @@ export function FoundingBadge({
             {/* Footer Distinction */}
             <div className="relative flex items-center justify-between gap-2 pt-2.5 mt-3 border-t border-neutral-100 dark:border-neutral-800 text-[11px] text-neutral-500 dark:text-neutral-400">
               <span className="inline-flex items-center gap-1.5 font-medium">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-500 dark:bg-amber-400 animate-pulse" />
+                <span className="h-1.5 w-1.5 rounded-full bg-[var(--brand-secondary)] animate-pulse" />
                 <span>Honorary Distinction</span>
               </span>
-              <span className="text-amber-600 dark:text-amber-400 font-semibold">
+              <span className="text-[var(--brand-secondary)] font-bold">
                 Lifetime
               </span>
             </div>
@@ -155,8 +153,8 @@ export function FoundingBadge({
               className={cn(
                 "absolute left-1/2 -translate-x-1/2 h-2.5 w-2.5 rotate-45 bg-white dark:bg-[#121214]",
                 position === "top"
-                  ? "top-full -mt-[6px] border-b border-r border-amber-500/30 dark:border-amber-400/25"
-                  : "bottom-full -mb-[6px] border-t border-l border-amber-500/30 dark:border-amber-400/25"
+                  ? "top-full -mt-[6px] border-b border-r border-[var(--brand-secondary)]/30 dark:border-[var(--brand-secondary)]/25"
+                  : "bottom-full -mb-[6px] border-t border-l border-[var(--brand-secondary)]/30 dark:border-[var(--brand-secondary)]/25"
               )}
             />
           </motion.div>
