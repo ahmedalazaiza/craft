@@ -11,15 +11,17 @@ import { VerificationBanner } from "@/components/layout/verification-banner";
 import { AnnouncementBanner } from "@/components/layout/announcement-banner";
 import { SearchModal } from "@/components/search/search-modal";
 import { NewProjectLink } from "@/components/project/new-project-link";
-import { Plus, Search, Heart, LayoutGrid } from "lucide-react";
+import { Plus, Search, Heart, LayoutGrid, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/logo";
+import { MobileMenu } from "@/components/layout/mobile-menu";
 
 export function SiteHeader() {
   const pathname = usePathname();
   const { user, platformSettings, isAdmin } = useSession();
 
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isHome = pathname === "/";
   const isExplore = pathname === "/explore";
@@ -206,6 +208,16 @@ export function SiteHeader() {
                 </Link>
               </div>
             )}
+            {/* Mobile Hamburger Menu Button */}
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="md:hidden relative h-9 w-9 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)] flex items-center justify-center text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] active:scale-95 transition-all cursor-pointer select-none shadow-xs"
+              title="Menu"
+              aria-label="Open Navigation Menu"
+            >
+              <Menu className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </header>
@@ -214,6 +226,12 @@ export function SiteHeader() {
       <SearchModal
         isOpen={isSearchModalOpen}
         onClose={() => setIsSearchModalOpen(false)}
+      />
+
+      {/* Mobile Navigation Drawer */}
+      <MobileMenu
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
       />
     </>
   );
