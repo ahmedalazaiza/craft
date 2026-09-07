@@ -120,15 +120,15 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
               <BookmarkPlus className="h-4.5 w-4.5 stroke-[2]" />
             </button>
 
-            {/* Favorite / Appreciate Button: Only visible on hover */}
+            {/* Favorite / Appreciate Button: Always visible on mobile, hover on desktop */}
             <button
               type="button"
               onClick={handleFavClick}
               className={cn(
                 "group/fav flex h-10 w-10 min-h-[40px] min-w-[40px] sm:min-h-0 sm:min-w-0 sm:h-11 sm:w-11 items-center justify-center rounded-full backdrop-blur-md transition-all duration-200 cursor-pointer shadow-md sm:shadow-lg active:scale-90 border",
-                "opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
+                "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100",
                 isLiked
-                  ? "bg-black/80 text-white border-white/40 hover:bg-black/95 hover:scale-105"
+                  ? "bg-black/80 text-rose-500 border-rose-500/30 hover:bg-black/95 hover:scale-105"
                   : "bg-black/60 text-white border-white/20 hover:bg-black/85 hover:border-white/40 hover:scale-105"
               )}
               title={isLiked ? "Unlike project" : "Appreciate project"}
@@ -138,7 +138,7 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
                 className={cn(
                   "h-4.5 w-4.5 sm:h-4.5 sm:w-4.5 transition-transform duration-200",
                   isLiked
-                    ? "fill-white text-white scale-110"
+                    ? "fill-rose-500 text-rose-500 scale-110"
                     : "text-white fill-none group-hover/fav:scale-110"
                 )}
               />
