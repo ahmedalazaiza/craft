@@ -441,3 +441,14 @@ body {
   will-change: transform;
 }
 
+/* Disable heavy GPU animations on mobile and for users who prefer reduced motion.
+   This frees GPU layers, reduces battery drain, and eliminates janky scroll on
+   low-end devices. The visual effect is still present — just static. */
+@media (max-width: 768px), (prefers-reduced-motion: reduce) {
+  .animate-ambient-pulse,
+  .animate-ambient-float-slow,
+  .animate-ambient-float {
+    animation: none;
+    will-change: auto;
+  }
+}

@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession } from "@/lib/session-context";
-import { motion } from "framer-motion";
 import { Home, Compass, Plus, Users, User } from "lucide-react";
 import { getValidAvatarUrl } from "@/lib/avatar";
 import { cn } from "@/lib/utils";
@@ -47,93 +46,88 @@ export function MobileBottomNav() {
           {/* 1. Home */}
           <Link
             href="/"
-            prefetch={true}
+            prefetch={false}
             className={cn(
-              "relative flex flex-col items-center justify-center min-h-[48px] min-w-[48px] w-12 h-12 rounded-full transition-all duration-200",
+              "relative flex flex-col items-center justify-center min-h-[48px] min-w-[48px] w-12 h-12 rounded-full transition-colors duration-150",
               isHome
                 ? "text-[var(--content-primary)] font-bold"
                 : "text-[var(--content-tertiary)] hover:text-[var(--content-primary)]"
             )}
           >
-            <Home className={cn("h-5 w-5 transition-transform", isHome ? "scale-110 text-[var(--content-primary)] stroke-[2.5]" : "stroke-[1.8]")} />
+            <Home className={cn("h-5 w-5", isHome ? "scale-110 text-[var(--content-primary)] stroke-[2.5]" : "stroke-[1.8]")} />
             <span className="text-xs mt-0.5 tracking-tight font-medium">Home</span>
-            {isHome && (
-              <motion.div
-                layoutId="mobile-nav-pill"
-                className="absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--content-primary)]"
-                transition={{ type: "spring", stiffness: 380, damping: 30 }}
-              />
-            )}
+            {/* CSS-only active indicator: opacity transition is GPU-composited and requires zero JS */}
+            <span
+              className={cn(
+                "absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--content-primary)] transition-opacity duration-150",
+                isHome ? "opacity-100" : "opacity-0"
+              )}
+            />
           </Link>
 
           {/* 2. Explore */}
           <Link
             href="/explore"
-            prefetch={true}
+            prefetch={false}
             className={cn(
-              "relative flex flex-col items-center justify-center min-h-[48px] min-w-[48px] w-12 h-12 rounded-full transition-all duration-200",
+              "relative flex flex-col items-center justify-center min-h-[48px] min-w-[48px] w-12 h-12 rounded-full transition-colors duration-150",
               isExplore
                 ? "text-[var(--content-primary)] font-bold"
                 : "text-[var(--content-tertiary)] hover:text-[var(--content-primary)]"
             )}
           >
-            <Compass className={cn("h-5 w-5 transition-transform", isExplore ? "scale-110 text-[var(--content-primary)] stroke-[2.5]" : "stroke-[1.8]")} />
+            <Compass className={cn("h-5 w-5", isExplore ? "scale-110 text-[var(--content-primary)] stroke-[2.5]" : "stroke-[1.8]")} />
             <span className="text-xs mt-0.5 tracking-tight font-medium">Explore</span>
-            {isExplore && (
-              <motion.div
-                layoutId="mobile-nav-pill"
-                className="absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--content-primary)]"
-                transition={{ type: "spring", stiffness: 380, damping: 30 }}
-              />
-            )}
+            <span
+              className={cn(
+                "absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--content-primary)] transition-opacity duration-150",
+                isExplore ? "opacity-100" : "opacity-0"
+              )}
+            />
           </Link>
 
           {/* 3. Center CTA: + Publish New Project (blocked on mobile) or Sign In */}
           <Link
             href={user ? "#" : "/login"}
-            prefetch={!user}
-            onClick={handlePlusClick}
+            prefetch={false}
+            onClick={user ? handlePlusClick : undefined}
             className="relative -top-2 flex items-center justify-center min-h-[48px] min-w-[48px]"
             title={user ? "Publish Project" : "Log In"}
             aria-label={user ? "Publish Project (desktop only)" : "Log In"}
           >
-            <motion.div
-              whileTap={{ scale: 0.92 }}
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--btn-cta-bg)] text-[var(--btn-cta-fg)] shadow-md border-2 border-[var(--bg-screen)]"
-            >
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--btn-cta-bg)] text-[var(--btn-cta-fg)] shadow-md border-2 border-[var(--bg-screen)] active:scale-95 transition-transform duration-100">
               <Plus className="h-6 w-6 stroke-[2.5]" />
-            </motion.div>
+            </div>
           </Link>
 
           {/* 4. Creators Directory */}
           <Link
             href="/creators"
-            prefetch={true}
+            prefetch={false}
             className={cn(
-              "relative flex flex-col items-center justify-center min-h-[48px] min-w-[48px] w-12 h-12 rounded-full transition-all duration-200",
+              "relative flex flex-col items-center justify-center min-h-[48px] min-w-[48px] w-12 h-12 rounded-full transition-colors duration-150",
               isCreators
                 ? "text-[var(--content-primary)] font-bold"
                 : "text-[var(--content-tertiary)] hover:text-[var(--content-primary)]"
             )}
           >
-            <Users className={cn("h-5 w-5 transition-transform", isCreators ? "scale-110 text-[var(--content-primary)] stroke-[2.5]" : "stroke-[1.8]")} />
+            <Users className={cn("h-5 w-5", isCreators ? "scale-110 text-[var(--content-primary)] stroke-[2.5]" : "stroke-[1.8]")} />
             <span className="text-xs mt-0.5 tracking-tight font-medium">Creators</span>
-            {isCreators && (
-              <motion.div
-                layoutId="mobile-nav-pill"
-                className="absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--content-primary)]"
-                transition={{ type: "spring", stiffness: 380, damping: 30 }}
-              />
-            )}
+            <span
+              className={cn(
+                "absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--content-primary)] transition-opacity duration-150",
+                isCreators ? "opacity-100" : "opacity-0"
+              )}
+            />
           </Link>
 
           {/* 5. Me / Profile (or Login) */}
           <Link
             href={profileHref}
-            prefetch={true}
+            prefetch={false}
             aria-label={user ? "Profile" : "Log In"}
             className={cn(
-              "relative flex flex-col items-center justify-center min-h-[48px] min-w-[48px] w-12 h-12 rounded-full transition-all duration-200",
+              "relative flex flex-col items-center justify-center min-h-[48px] min-w-[48px] w-12 h-12 rounded-full transition-colors duration-150",
               isMe
                 ? "text-[var(--content-primary)] font-bold"
                 : "text-[var(--content-tertiary)] hover:text-[var(--content-primary)]"
@@ -150,19 +144,19 @@ export function MobileBottomNav() {
                 />
               </div>
             ) : (
-              <User className={cn("h-5 w-5 transition-transform", isMe ? "scale-110 text-[var(--content-primary)] stroke-[2.5]" : "stroke-[1.8]")} />
+              <User className={cn("h-5 w-5", isMe ? "scale-110 text-[var(--content-primary)] stroke-[2.5]" : "stroke-[1.8]")} />
             )}
             <span className="text-xs mt-0.5 tracking-tight font-medium">Profile</span>
-            {isMe && (
-              <motion.div
-                layoutId="mobile-nav-pill"
-                className="absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--content-primary)]"
-                transition={{ type: "spring", stiffness: 380, damping: 30 }}
-              />
-            )}
+            <span
+              className={cn(
+                "absolute -bottom-1 h-1 w-5 rounded-full bg-[var(--content-primary)] transition-opacity duration-150",
+                isMe ? "opacity-100" : "opacity-0"
+              )}
+            />
           </Link>
         </nav>
       </div>
     </>
   );
 }
+

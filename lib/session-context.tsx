@@ -242,15 +242,19 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Check auth and fetch live database on mount
+  // Check auth and fetch live database on mount.
+  // PHASE 1: Fetch public content data (projects, creators, categories, settings) in parallel.
+  //          Release isLoadingDb immediately so the UI renders without waiting for auth.
+  // PHASE 2: Silently resolve auth + user-specific data in the background.
   const refreshFromDb = useCallback(async () => {
     try {
-      const [dbProjects, dbCreators, dbCategories, dbSettings, activeAuthUser] = await Promise.all([
+      // ── Phase 1: Public content (no auth dependency) ─────────────────────
+      // Fetch and release loading state ASAP so the page renders on mobile.
+      const [dbProjects, dbCreators, dbCategories, dbSettings] = await Promise.all([
         fetchProjects({ publishedOnly: false }),
         fetchCreators(),
         fetchCategories(),
         fetchPlatformSettings(),
-        getCurrentAuthUser(),
       ]);
 
       if (dbProjects && dbProjects.length > 0) {
@@ -265,6 +269,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       if (dbSettings) {
         setPlatformSettings(dbSettings);
       }
+
+      // ← UI is unblocked here. Content renders immediately on mobile.
+      setIsLoadingDb(false);
+
+      // ── Phase 2: Auth + user-specific data (background, non-blocking) ────
+      const activeAuthUser = await getCurrentAuthUser();
 
       if (activeAuthUser) {
         setUser(activeAuthUser);
@@ -300,7 +310,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       if (errorObj?.name !== "AbortError") {
         console.error("Failed to load initial data from Supabase:", errorObj?.message || err);
       }
-    } finally {
+      // Ensure loading state is always released even on error
       setIsLoadingDb(false);
     }
   }, [setUser]);
