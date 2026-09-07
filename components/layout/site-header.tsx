@@ -23,6 +23,10 @@ export function SiteHeader() {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const handleCloseMobileMenu = React.useCallback(() => {
+    setIsMobileMenuOpen(false);
+  }, []);
+
   const isHome = pathname === "/";
   const isExplore = pathname === "/explore";
   const isCreators = pathname === "/creators";
@@ -228,10 +232,10 @@ export function SiteHeader() {
         onClose={() => setIsSearchModalOpen(false)}
       />
 
-      {/* Mobile Navigation Drawer */}
+      {/* Mobile Navigation Full-View Drawer */}
       <MobileMenu
         isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
+        onClose={handleCloseMobileMenu}
       />
     </>
   );
