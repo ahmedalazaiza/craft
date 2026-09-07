@@ -90,7 +90,6 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
   // Workflow Step: 1 = Image Uploader & Stacks, 2 = Project Details & Publishing
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
-  const [isUploadingCover, setIsUploadingCover] = useState(false);
 
   // Autocomplete Search States
   const [toolSearchOpen, setToolSearchOpen] = useState(false);
@@ -147,6 +146,11 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   );
   const [newTool, setNewTool] = useState("");
 
+  // Pending uncommitted files mapped by their local blob URL
+  const pendingFilesRef = useRef<Map<string, File>>(new Map());
+  // CDN URLs removed while editing an existing project (purged on commit)
+  const deletedCdnUrlsRef = useRef<string[]>([]);
+
   // Storage / Draft tracking ID in DB (if already saved once as draft)
   const [dbDraftId, setDbDraftId] = useState<string | undefined>(initialData?.id);
 
@@ -159,6 +163,17 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
   const [isOffline, setIsOffline] = useState(false);
   const [draftSaveFeedback, setDraftSaveFeedback] = useState<string | null>(null);
+
+  // Cleanup blob URLs on unmount to free browser memory
+  useEffect(() => {
+    return () => {
+      pendingFilesRef.current.forEach((_, blobUrl) => {
+        try {
+          URL.revokeObjectURL(blobUrl);
+        } catch {}
+      });
+    };
+  }, []);
 
   // ---------------------------------------------------------------------------
   // LOCK BODY SCROLL FOR FULL-SCREEN POPUP
@@ -373,28 +388,18 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
     if (validFiles.length === 0) return;
 
-    setIsProcessingFiles(true);
-    setUploadProgress({ current: 0, total: validFiles.length });
-    try {
-      const cdnUrls = await uploadMultipleMediaFiles(
-        validFiles,
-        "project-media",
-        (current, total) => setUploadProgress({ current, total })
-      );
+    // Deferred upload: create instant local preview URLs without uploading to storage!
+    const newBlobUrls: string[] = [];
+    for (const file of validFiles) {
+      const blobUrl = URL.createObjectURL(file);
+      pendingFilesRef.current.set(blobUrl, file);
+      newBlobUrls.push(blobUrl);
+    }
 
-      if (cdnUrls.length > 0) {
-        const nextGallery = [...galleryImages, ...cdnUrls];
-        setGalleryImages(nextGallery);
-        if (!coverImage && nextGallery.length > 0) {
-          setCoverImage(nextGallery[0]);
-        }
-      }
-    } catch (err) {
-      console.error("Gallery files upload error:", err);
-      toast.error("Failed to upload some images. Please try again.", "Upload Error");
-    } finally {
-      setIsProcessingFiles(false);
-      setUploadProgress(null);
+    const nextGallery = [...galleryImages, ...newBlobUrls];
+    setGalleryImages(nextGallery);
+    if (!coverImage && nextGallery.length > 0) {
+      setCoverImage(nextGallery[0]);
     }
   };
 
@@ -418,9 +423,18 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
       setCoverImage(updated[0] || "");
     }
     if (removedUrl) {
-      deleteStorageFiles([removedUrl], "project-media").catch((err) =>
-        console.warn("Storage hard delete warning:", err)
-      );
+      if (removedUrl.startsWith("blob:")) {
+        // Revoke and remove if not used elsewhere
+        if (coverImage !== removedUrl || updated.length > 0) {
+          try {
+            URL.revokeObjectURL(removedUrl);
+          } catch {}
+          pendingFilesRef.current.delete(removedUrl);
+        }
+      } else {
+        // Track existing CDN URL to be purged from storage upon save
+        deletedCdnUrlsRef.current.push(removedUrl);
+      }
     }
   };
 
@@ -439,19 +453,19 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
       return;
     }
 
-    setIsUploadingCover(true);
-    try {
-      const cdnUrls = await uploadMultipleMediaFiles([file], "project-media");
-      if (cdnUrls && cdnUrls[0]) {
-        setCoverImage(cdnUrls[0]);
-        toast.success("Custom cover thumbnail uploaded successfully!", "Cover Updated");
-      }
-    } catch (err) {
-      console.error("Failed to upload custom cover:", err);
-      toast.error("Failed to upload custom cover. Please try again.", "Upload Error");
-    } finally {
-      setIsUploadingCover(false);
+    // Revoke previous custom cover if it was an uncommitted blob not in the gallery
+    if (coverImage && coverImage.startsWith("blob:") && !galleryImages.includes(coverImage)) {
+      try {
+        URL.revokeObjectURL(coverImage);
+      } catch {}
+      pendingFilesRef.current.delete(coverImage);
     }
+
+    // Deferred upload: create instant local preview URL
+    const blobUrl = URL.createObjectURL(file);
+    pendingFilesRef.current.set(blobUrl, file);
+    setCoverImage(blobUrl);
+    toast.success("Custom cover thumbnail selected!", "Cover Selected");
   };
 
   // ---------------------------------------------------------------------------
@@ -649,10 +663,8 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
       }
     }
 
-    const finalCover = coverImage || galleryImages[0];
-    const finalCategories = categories.length > 0 ? categories : [taxonomy[0]?.name || "User Interface Design (UI)"];
-    const finalSubCategories = specializations.slice(0, MAX_SPECIALIZATIONS);
-    const combinedTags = Array.from(new Set([...finalSubCategories, ...tags]));
+    let finalGalleryImages = [...galleryImages];
+    let finalCover = coverImage || galleryImages[0];
 
     if (isPublish) {
       setIsSaving(true);
@@ -661,20 +673,86 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     }
 
     try {
-      // Clean up orphaned images if in edit mode
+      // 1. Identify all active pending blob URLs that must now be uploaded to storage
+      const neededBlobUrls = Array.from(
+        new Set(
+          [...finalGalleryImages, finalCover].filter(
+            (url) => typeof url === "string" && url.startsWith("blob:")
+          )
+        )
+      );
+
+      if (neededBlobUrls.length > 0) {
+        setIsProcessingFiles(true);
+        setUploadProgress({ current: 0, total: neededBlobUrls.length });
+
+        const filesToUpload: File[] = [];
+        const blobUrlsToUpload: string[] = [];
+
+        for (const bUrl of neededBlobUrls) {
+          const file = pendingFilesRef.current.get(bUrl);
+          if (file) {
+            filesToUpload.push(file);
+            blobUrlsToUpload.push(bUrl);
+          }
+        }
+
+        if (filesToUpload.length > 0) {
+          const uploadedCdnUrls = await uploadMultipleMediaFiles(
+            filesToUpload,
+            "project-media",
+            (current, total) => setUploadProgress({ current, total })
+          );
+
+          const blobToCdnMap = new Map<string, string>();
+          blobUrlsToUpload.forEach((bUrl, idx) => {
+            const cdn = uploadedCdnUrls[idx];
+            if (cdn) {
+              blobToCdnMap.set(bUrl, cdn);
+              try {
+                URL.revokeObjectURL(bUrl);
+              } catch {}
+              pendingFilesRef.current.delete(bUrl);
+            }
+          });
+
+          // Replace blob URLs with the permanent CDN URLs
+          finalGalleryImages = finalGalleryImages.map((url) => blobToCdnMap.get(url) || url);
+          finalCover = blobToCdnMap.get(finalCover) || finalCover;
+
+          setGalleryImages(finalGalleryImages);
+          setCoverImage(finalCover);
+        }
+      }
+
+      // 2. Clean up deleted CDN images from existing project if any
+      if (deletedCdnUrlsRef.current.length > 0) {
+        deleteStorageFiles(deletedCdnUrlsRef.current, "project-media").catch((e) =>
+          console.warn("Storage hard delete removed CDN files warning:", e)
+        );
+        deletedCdnUrlsRef.current = [];
+      }
+
+      // 3. Clean up orphaned images if in edit mode from initialData
       if (initialData) {
         const previousImages = [
           initialData.coverImage,
           ...(initialData.galleryImages || []),
         ].filter(Boolean);
-        const currentImageSet = new Set([finalCover, ...galleryImages]);
-        const orphanedImages = previousImages.filter((url) => !currentImageSet.has(url));
+        const currentImageSet = new Set([finalCover, ...finalGalleryImages]);
+        const orphanedImages = previousImages.filter(
+          (url) => url && !url.startsWith("blob:") && !currentImageSet.has(url)
+        );
         if (orphanedImages.length > 0) {
           deleteStorageFiles(orphanedImages, "project-media").catch((e) =>
             console.warn("Storage hard delete orphaned warning:", e)
           );
         }
       }
+
+      const finalCategories = categories.length > 0 ? categories : [taxonomy[0]?.name || "User Interface Design (UI)"];
+      const finalSubCategories = specializations.slice(0, MAX_SPECIALIZATIONS);
+      const combinedTags = Array.from(new Set([...finalSubCategories, ...tags]));
 
       const effectiveId = initialData?.id || dbDraftId;
 
@@ -689,7 +767,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
         subCategories: finalSubCategories,
         medium: "Image",
         coverImage: finalCover,
-        galleryImages,
+        galleryImages: finalGalleryImages,
         tags: combinedTags,
         tools,
         published: isPublish,
@@ -721,6 +799,8 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     } finally {
       setIsSaving(false);
       setIsDraftSaving(false);
+      setIsProcessingFiles(false);
+      setUploadProgress(null);
     }
   };
 
@@ -857,6 +937,26 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           </div>
         </div>
       </header>
+
+      {/* Active Upload Progress Banner when Saving / Publishing */}
+      {uploadProgress && (
+        <div className="shrink-0 bg-[var(--primary-forest-green)]/10 border-b border-[var(--primary-forest-green)]/20 px-4 sm:px-8 lg:px-[140px] py-2.5 text-xs font-bold text-[var(--primary-forest-green)] flex items-center justify-between gap-4 animate-fade-in z-20">
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+            <span>
+              Uploading media files to cloud storage ({uploadProgress.current} of {uploadProgress.total})...
+            </span>
+          </div>
+          <div className="w-28 sm:w-48 h-1.5 rounded-full bg-[var(--border-neutral)] overflow-hidden shrink-0">
+            <div
+              className="h-full bg-[var(--primary-forest-green)] transition-all duration-300 rounded-full"
+              style={{
+                width: `${Math.round((uploadProgress.current / uploadProgress.total) * 100)}%`,
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* ===================================================================== */}
       {/* SCROLLABLE POPUP CANVAS BODY                                          */}
@@ -1050,6 +1150,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                               className="w-full h-auto object-contain max-h-[800px]"
                               sizes="(max-width: 1024px) 100vw, 900px"
                               priority={idx === 0}
+                              unoptimized={url.startsWith("blob:")}
                             />
                           </div>
                         </div>
@@ -1116,21 +1217,12 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                     type="button"
                     variant="accent"
                     size="sm"
-                    disabled={isUploadingCover}
+                    disabled={isSaving || isDraftSaving}
                     onClick={() => coverFileInputRef.current?.click()}
                     className="gap-2 shrink-0 font-bold shadow-xs"
                   >
-                    {isUploadingCover ? (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        <span>Uploading Cover...</span>
-                      </>
-                    ) : (
-                      <>
-                        <UploadCloud className="h-4 w-4" />
-                        <span>Upload Custom Cover</span>
-                      </>
-                    )}
+                    <UploadCloud className="h-4 w-4" />
+                    <span>Upload Custom Cover</span>
                   </Button>
                 </div>
 
@@ -1144,7 +1236,15 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                       {coverImage && coverImage !== galleryImages[0] && (
                         <button
                           type="button"
-                          onClick={() => setCoverImage(galleryImages[0] || "")}
+                          onClick={() => {
+                            if (coverImage && coverImage.startsWith("blob:") && !galleryImages.includes(coverImage)) {
+                              try {
+                                URL.revokeObjectURL(coverImage);
+                              } catch {}
+                              pendingFilesRef.current.delete(coverImage);
+                            }
+                            setCoverImage(galleryImages[0] || "");
+                          }}
                           className="text-[11px] font-semibold text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:underline cursor-pointer"
                         >
                           Revert to Slide #1
@@ -1159,6 +1259,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                           fill
                           className="object-cover"
                           sizes="(max-width: 768px) 100vw, 450px"
+                          unoptimized={Boolean(activeCoverUrl?.startsWith("blob:"))}
                         />
                       ) : (
                         <div className="h-full w-full flex items-center justify-center text-xs text-[var(--content-tertiary)]">
@@ -1203,7 +1304,14 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                             )}
                             title={`Use slide #${i + 1} as cover`}
                           >
-                            <Image src={url} alt={`Slide ${i + 1}`} fill className="object-cover" sizes="96px" />
+                            <Image
+                              src={url}
+                              alt={`Slide ${i + 1}`}
+                              fill
+                              className="object-cover"
+                              sizes="96px"
+                              unoptimized={url.startsWith("blob:")}
+                            />
                             <span className="absolute bottom-1 left-1 bg-black/75 text-white text-[9px] font-mono px-1 rounded">
                               #{i + 1}
                             </span>
@@ -1681,11 +1789,20 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                   className="gap-1.5 font-semibold text-xs shadow-xs px-4"
                 >
                   {isDraftSaving ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span>
+                        {uploadProgress
+                          ? `Saving (${uploadProgress.current}/${uploadProgress.total})...`
+                          : "Saving Draft..."}
+                      </span>
+                    </>
                   ) : (
-                    <Save className="h-3.5 w-3.5" />
+                    <>
+                      <Save className="h-3.5 w-3.5" />
+                      <span>Save Draft</span>
+                    </>
                   )}
-                  <span>Save Draft</span>
                 </Button>
 
                 <Button
@@ -1719,11 +1836,20 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                   className="gap-1.5 font-semibold text-xs shadow-xs px-4"
                 >
                   {isDraftSaving ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span>
+                        {uploadProgress
+                          ? `Saving (${uploadProgress.current}/${uploadProgress.total})...`
+                          : "Saving Draft..."}
+                      </span>
+                    </>
                   ) : (
-                    <Save className="h-3.5 w-3.5" />
+                    <>
+                      <Save className="h-3.5 w-3.5" />
+                      <span>Save Draft</span>
+                    </>
                   )}
-                  <span>Save Draft</span>
                 </Button>
 
                 <Button
@@ -1737,7 +1863,11 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                   {isSaving ? (
                     <>
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      <span>Publishing...</span>
+                      <span>
+                        {uploadProgress
+                          ? `Uploading (${uploadProgress.current}/${uploadProgress.total})...`
+                          : "Publishing..."}
+                      </span>
                     </>
                   ) : (
                     <>
