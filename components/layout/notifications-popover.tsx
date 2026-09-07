@@ -78,7 +78,7 @@ export function NotificationsPopover() {
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "relative h-9 w-9 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)] flex items-center justify-center transition-all cursor-pointer select-none shadow-xs",
+          "relative h-10 w-10 min-h-[40px] min-w-[40px] sm:min-h-0 sm:min-w-0 sm:h-9 sm:w-9 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)] flex items-center justify-center transition-all cursor-pointer select-none shadow-xs",
           isOpen
             ? "bg-[var(--bg-neutral)] text-[var(--content-primary)] border-[var(--content-primary)]"
             : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
@@ -86,7 +86,7 @@ export function NotificationsPopover() {
         title="Notifications"
         aria-label="Notifications"
       >
-        <Bell className={cn("h-4 w-4 transition-all", isOpen && "fill-current")} />
+        <Bell className={cn("h-4.5 w-4.5 sm:h-4 sm:w-4 transition-all", isOpen && "fill-current")} />
         {unreadNotificationsCount > 0 && (
           <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--content-primary)] px-1 text-[10px] font-black text-[var(--bg-screen)] ring-2 ring-[var(--bg-screen)] shadow-xs">
             {unreadNotificationsCount}

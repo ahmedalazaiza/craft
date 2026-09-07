@@ -128,7 +128,7 @@ export function SiteHeader() {
               type="button"
               onClick={() => setIsSearchModalOpen(true)}
               className={cn(
-                "relative h-9 w-9 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)] flex items-center justify-center transition-all cursor-pointer select-none shadow-xs",
+                "relative h-10 w-10 min-h-[40px] min-w-[40px] sm:min-h-0 sm:min-w-0 sm:h-9 sm:w-9 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)] flex items-center justify-center transition-all cursor-pointer select-none shadow-xs",
                 isSearch
                   ? "bg-[var(--bg-neutral)] text-[var(--content-primary)] border-[var(--content-primary)]"
                   : "text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
@@ -136,7 +136,7 @@ export function SiteHeader() {
               title="Search (⌘K)"
               aria-label="Search"
             >
-              <Search className="h-4 w-4 transition-all" />
+              <Search className="h-4.5 w-4.5 sm:h-4 sm:w-4 transition-all" />
             </button>
 
             {user ? (
@@ -216,11 +216,11 @@ export function SiteHeader() {
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(true)}
-              className="md:hidden relative h-9 w-9 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)] flex items-center justify-center text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] active:scale-95 transition-all cursor-pointer select-none shadow-xs"
+              className="md:hidden relative h-10 w-10 min-h-[40px] min-w-[40px] rounded-full border border-[var(--border-neutral)] bg-[var(--bg-elevated)] flex items-center justify-center text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] active:scale-95 transition-all cursor-pointer select-none shadow-xs"
               title="Menu"
               aria-label="Open Navigation Menu"
             >
-              <Menu className="h-4 w-4" />
+              <Menu className="h-5 w-5" />
             </button>
           </div>
         </div>

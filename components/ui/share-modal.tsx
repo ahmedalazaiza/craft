@@ -138,10 +138,10 @@ export function ShareModal({
             {/* Top Close Button */}
             <button
               onClick={onClose}
-              className="absolute right-5 top-5 h-8 w-8 rounded-full flex items-center justify-center text-[var(--content-tertiary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-colors cursor-pointer"
+              className="absolute right-4 sm:right-5 top-4 sm:top-5 h-10 w-10 sm:h-8 sm:w-8 min-h-[40px] min-w-[40px] sm:min-h-0 sm:min-w-0 rounded-full flex items-center justify-center text-[var(--content-tertiary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-colors cursor-pointer"
               title="Close modal"
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5 sm:h-4 sm:w-4" />
             </button>
 
             {/* Header */}

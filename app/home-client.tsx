@@ -135,7 +135,7 @@ export function HomeClient({
   }, [publishedProjects, taxonomy]);
 
   return (
-    <div className="flex flex-col gap-12 sm:gap-14 pb-14">
+    <div className="flex flex-col gap-12 sm:gap-14 pb-4 sm:pb-8">
       {/* ========================================================================= */}
       {/* CENTERED MONUMENTAL HERO SECTION WITH AMBIENT AURA & PATTERN              */}
       {/* ========================================================================= */}
@@ -428,7 +428,7 @@ export function HomeClient({
       {/* HIGH-CONVERSION CREATOR CTA SECTION (Only for Guests / Not Logged In)     */}
       {/* ========================================================================= */}
       {!user && (
-        <section className="w-full px-4 sm:px-6 lg:px-[140px] pt-6 pb-10">
+        <section className="w-full px-4 sm:px-6 lg:px-[140px] pt-6 pb-4 sm:pb-8">
           <div className="relative rounded-[32px] bg-neutral-950 dark:bg-[#121511] text-white border border-neutral-800 px-6 py-12 sm:px-12 sm:py-16 lg:py-20 overflow-hidden shadow-xl text-center">
             {/* Ambient Brand Violet Glows */}
             <div className="absolute -right-16 -bottom-16 w-80 h-80 rounded-full bg-[var(--brand-secondary-glow)]/20 blur-3xl pointer-events-none" />

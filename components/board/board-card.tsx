@@ -168,10 +168,10 @@ export function BoardCard({ board, creatorName, onDelete, onEdit }: BoardCardPro
             <button
               type="button"
               onClick={() => setMenuOpen(!menuOpen)}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--content-tertiary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-colors cursor-pointer"
+              className="flex h-10 w-10 sm:h-8 sm:w-8 min-h-[40px] min-w-[40px] sm:min-h-0 sm:min-w-0 items-center justify-center rounded-full text-[var(--content-tertiary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-colors cursor-pointer"
               aria-label="Board options"
             >
-              <MoreVertical className="h-4 w-4" />
+              <MoreVertical className="h-4.5 w-4.5 sm:h-4 sm:w-4" />
             </button>
 
             {menuOpen && (

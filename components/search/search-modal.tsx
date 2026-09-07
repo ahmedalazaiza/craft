@@ -247,10 +247,10 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                     setSelectedIndex(-1);
                     inputRef.current?.focus();
                   }}
-                  className="h-7 w-7 rounded-full bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:text-[var(--content-primary)] flex items-center justify-center cursor-pointer transition-colors shrink-0"
+                  className="h-9 w-9 sm:h-7 sm:w-7 min-h-[36px] sm:min-h-0 min-w-[36px] sm:min-w-0 rounded-full bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:text-[var(--content-primary)] flex items-center justify-center cursor-pointer transition-colors shrink-0"
                   title="Clear query"
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <X className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
                 </button>
               )}
 

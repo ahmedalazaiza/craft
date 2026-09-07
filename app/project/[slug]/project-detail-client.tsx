@@ -691,7 +691,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
       {/* ===================================================================== */}
       <div
         className="md:hidden fixed left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 p-1.5 rounded-full bg-[var(--bg-elevated)]/95 backdrop-blur-2xl border border-[var(--border-neutral)] shadow-[0_12px_36px_rgba(0,0,0,0.16)] dark:shadow-none max-w-[calc(100vw-24px)] overflow-x-auto no-scrollbar"
-        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 90px)" }}
+        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}
       >
         {!isDraft && (
           <>

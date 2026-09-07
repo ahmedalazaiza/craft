@@ -149,15 +149,15 @@ export function CreatorListItem({
             <button
               type="button"
               onClick={handleShareClick}
-              className="h-9 w-9 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-screen)] text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+              className="h-10 w-10 min-h-[40px] min-w-[40px] sm:min-h-0 sm:min-w-0 sm:h-9 sm:w-9 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-screen)] text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] flex items-center justify-center transition-all cursor-pointer shadow-2xs"
               title={`Share ${creator.displayName}'s profile`}
             >
-              <Share2 className="h-4 w-4" />
+              <Share2 className="h-4.5 w-4.5 sm:h-4 sm:w-4" />
             </button>
             <Link
               href={`/u/${creator.username}`}
               prefetch={true}
-              className="inline-flex items-center gap-1.5 rounded-full bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 hover:bg-neutral-800 dark:hover:bg-neutral-100 px-4 py-2 text-xs font-bold transition-all shadow-xs active:scale-95"
+              className="inline-flex items-center justify-center gap-1.5 rounded-full bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 hover:bg-neutral-800 dark:hover:bg-neutral-100 px-4 h-10 sm:h-9 text-xs font-bold transition-all shadow-xs active:scale-95"
             >
               <span>View Profile</span>
               <ArrowRight className="h-3.5 w-3.5" />

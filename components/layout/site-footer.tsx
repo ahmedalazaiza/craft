@@ -8,7 +8,10 @@ import { Logo } from "@/components/ui/logo";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-[var(--border-neutral)] bg-[var(--bg-screen)] pt-12 pb-16">
+    <footer
+      className="border-t border-[var(--border-neutral)] bg-[var(--bg-screen)] pt-10 sm:pt-12 pb-6 sm:pb-10"
+      style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom, 0px))" }}
+    >
       <div className="w-full px-4 sm:px-6 lg:px-[80px] space-y-12">
         {/* Main 4-Column Navigation Grid */}
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 pb-12 border-b border-[var(--border-neutral)]">

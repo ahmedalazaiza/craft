@@ -56,7 +56,7 @@ export function buttonVariants({
     sm: "h-9 min-h-[36px] px-4 text-xs",
     lg: "h-13 min-h-[52px] px-7 text-base",
     icon: "h-11 w-11 min-h-[44px] min-w-[44px] p-0 rounded-full shrink-0",
-    "icon-sm": "h-9 w-9 min-h-[36px] min-w-[36px] p-0 rounded-full shrink-0",
+    "icon-sm": "h-10 w-10 min-h-[40px] min-w-[40px] sm:h-9 sm:w-9 sm:min-h-[36px] sm:min-w-[36px] p-0 rounded-full shrink-0",
   };
 
   return cn(baseStyles, variantStyles[variant], sizeStyles[size], className);
