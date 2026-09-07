@@ -51,10 +51,8 @@ function applyThemeInstantly(resolved: "light" | "dark") {
   // Remove the transition blocker on the next frame so normal hover transitions resume cleanly
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      const el = document.getElementById("craft-theme-freeze");
-      if (el && el.parentNode) {
-        el.parentNode.removeChild(el);
-      }
+      const el = document.getElementById("layerat-theme-freeze") || document.getElementById("craft-theme-freeze");
+      if (el) el.remove();
     });
   });
 }
@@ -72,7 +70,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     /* PRESERVED FOR FUTURE RE-ACTIVATION:
     try {
-      const stored = localStorage.getItem("craft-theme") as Theme | null;
+      const stored = (localStorage.getItem("layerat-theme") || localStorage.getItem("craft-theme")) as Theme | null;
       const initialTheme: Theme =
         stored === "light" || stored === "dark" || stored === "system"
           ? stored
@@ -88,7 +86,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleSystemChange = (e: MediaQueryListEvent) => {
-      const stored = localStorage.getItem("craft-theme");
+      const stored = localStorage.getItem("layerat-theme") || localStorage.getItem("craft-theme");
       if (!stored || stored === "system") {
         const sys = e.matches ? "dark" : "light";
         setResolvedTheme(sys);
@@ -106,7 +104,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const resolved = newTheme === "system" ? getSystemTheme() : newTheme;
     applyThemeInstantly(resolved);
     try {
-      localStorage.setItem("craft-theme", newTheme);
+      localStorage.setItem("layerat-theme", newTheme);
     } catch {
       // ignore
     }

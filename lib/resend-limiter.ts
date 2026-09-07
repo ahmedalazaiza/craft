@@ -14,13 +14,15 @@ interface LimiterStatus {
 
 function getStorageKey(email: string): string {
   const cleanEmail = email.trim().toLowerCase();
-  return `craft_resend_attempts_${cleanEmail}`;
+  return `layerat_resend_attempts_${cleanEmail}`;
 }
 
 function getStoredTimestamps(email: string): number[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = localStorage.getItem(getStorageKey(email));
+    const key = getStorageKey(email);
+    const legacyKey = `craft_resend_attempts_${email.trim().toLowerCase()}`;
+    const raw = localStorage.getItem(key) || localStorage.getItem(legacyKey);
     if (!raw) return [];
     const parsed: number[] = JSON.parse(raw);
     const now = Date.now();

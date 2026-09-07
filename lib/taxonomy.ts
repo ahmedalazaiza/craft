@@ -1,5 +1,5 @@
 // =============================================================================
-// CRAFT PLATFORM — MASTER TAXONOMY (13 CATEGORIES, SUB-CATEGORIES, TAGS & TOOLS)
+// LAYERAT PLATFORM — MASTER TAXONOMY (13 CATEGORIES, SUB-CATEGORIES, TAGS & TOOLS)
 // =============================================================================
 
 export interface CategoryTaxonomyItem {

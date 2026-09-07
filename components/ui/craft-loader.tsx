@@ -118,3 +118,5 @@ export function CraftLoader({
     </div>
   );
 }
+
+export { CraftLoader as LayeratLoader };

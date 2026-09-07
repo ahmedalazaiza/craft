@@ -1,5 +1,5 @@
 /**
- * Location utilities for Craft.
+ * Location utilities for Layerat.
  * Includes curated global/regional cities and resilient client-side IP/Timezone auto-detection.
  */
 
