@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { inter } from "@/lib/fonts";
 
 interface FoundingBadgeProps {
   size?: "sm" | "default" | "lg";
@@ -70,7 +71,7 @@ export function FoundingBadge({
         setIsOpen((prev) => !prev);
       }}
       className={cn(
-        "relative inline-flex items-center rounded-full font-bold uppercase tracking-wider font-mono select-none transition-all duration-200 cursor-pointer focus:outline-hidden",
+        "relative inline-flex items-center rounded-full font-bold uppercase tracking-wider select-none transition-all duration-200 cursor-pointer focus:outline-hidden",
         "bg-amber-500/10 dark:bg-amber-500/15",
         "text-amber-900 dark:text-amber-200",
         "border border-amber-400/40 dark:border-amber-400/30",
@@ -108,50 +109,51 @@ export function FoundingBadge({
             transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
             role="tooltip"
             className={cn(
-              "absolute z-50 w-72 max-w-[calc(100vw-32px)] p-3.5 rounded-[20px] select-none text-left pointer-events-none font-sans",
+              inter.className,
+              "absolute z-50 w-72 max-w-[calc(100vw-32px)] p-4 rounded-[20px] select-none text-left pointer-events-none font-normal",
               position === "top"
                 ? "bottom-full left-1/2 -translate-x-1/2 mb-2.5"
                 : "top-full left-1/2 -translate-x-1/2 mt-2.5",
-              "bg-white/95 dark:bg-[#0c0c0e]/95 backdrop-blur-xl",
+              "bg-white dark:bg-[#121214]",
               "border border-amber-500/30 dark:border-amber-400/25",
-              "shadow-[0_20px_45px_rgba(0,0,0,0.16),0_2px_8px_rgba(245,158,11,0.06)] dark:shadow-[0_24px_50px_rgba(0,0,0,0.7),0_0_24px_rgba(245,158,11,0.1)]",
+              "shadow-[0_20px_45px_rgba(0,0,0,0.14),0_2px_8px_rgba(245,158,11,0.06)] dark:shadow-[0_24px_50px_rgba(0,0,0,0.7),0_0_24px_rgba(245,158,11,0.1)]",
               tooltipClassName
             )}
           >
-            {/* Ambient luxury glow inside tooltip card */}
-            <div className="absolute -top-6 -right-6 w-20 h-20 bg-amber-500/15 rounded-full blur-xl pointer-events-none" />
+            {/* Ambient subtle glow inside tooltip card */}
+            <div className="absolute -top-6 -right-6 w-20 h-20 bg-amber-500/10 rounded-full blur-xl pointer-events-none" />
 
             {/* Header: Badge Tag + Brand Seal */}
-            <div className="relative flex items-center justify-between gap-2 pb-2 border-b border-neutral-100 dark:border-neutral-800/80">
-              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 dark:bg-amber-500/20 border border-amber-500/30 text-[9px] font-mono font-bold uppercase tracking-wider text-amber-900 dark:text-amber-200">
-                <Sparkles className="h-2.5 w-2.5 fill-amber-400 text-amber-500 shrink-0" />
+            <div className="relative flex items-center justify-between gap-2 pb-2.5 border-b border-neutral-100 dark:border-neutral-800">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/15 dark:bg-amber-500/20 border border-amber-500/30 text-[11px] font-semibold text-amber-900 dark:text-amber-200">
+                <Sparkles className="h-3 w-3 fill-amber-400 text-amber-500 shrink-0" />
                 <span>Founding Member</span>
               </div>
-              <span className="text-[10px] font-mono font-bold tracking-widest uppercase text-neutral-400 dark:text-neutral-500">
-                LAYERAT
+              <span className="text-[11px] font-bold tracking-wider uppercase text-neutral-400 dark:text-neutral-500">
+                Layerat
               </span>
             </div>
 
-            {/* Body Description */}
-            <p className="relative text-xs text-neutral-700 dark:text-neutral-200 font-medium leading-relaxed mt-2 normal-case tracking-normal">
+            {/* Body Description - Crisp, high contrast, standard body font (Inter) */}
+            <p className="relative text-[13px] text-neutral-900 dark:text-neutral-100 font-normal leading-relaxed mt-2.5 normal-case tracking-normal">
               An early visionary creator who helped shape Layerat from day one.
             </p>
 
             {/* Footer Distinction */}
-            <div className="relative flex items-center justify-between gap-2 pt-2.5 mt-2.5 border-t border-neutral-100 dark:border-neutral-800/60 text-[10px] text-neutral-500 dark:text-neutral-400 font-mono">
-              <span className="inline-flex items-center gap-1.5">
+            <div className="relative flex items-center justify-between gap-2 pt-2.5 mt-3 border-t border-neutral-100 dark:border-neutral-800 text-[11px] text-neutral-500 dark:text-neutral-400">
+              <span className="inline-flex items-center gap-1.5 font-medium">
                 <span className="h-1.5 w-1.5 rounded-full bg-amber-500 dark:bg-amber-400 animate-pulse" />
                 <span>Honorary Distinction</span>
               </span>
-              <span className="text-amber-600 dark:text-amber-400 font-bold">
-                ● Lifetime
+              <span className="text-amber-600 dark:text-amber-400 font-semibold">
+                Lifetime
               </span>
             </div>
 
             {/* Arrow Caret */}
             <div
               className={cn(
-                "absolute left-1/2 -translate-x-1/2 h-2.5 w-2.5 rotate-45 bg-white dark:bg-[#0c0c0e]",
+                "absolute left-1/2 -translate-x-1/2 h-2.5 w-2.5 rotate-45 bg-white dark:bg-[#121214]",
                 position === "top"
                   ? "top-full -mt-[6px] border-b border-r border-amber-500/30 dark:border-amber-400/25"
                   : "bottom-full -mb-[6px] border-t border-l border-amber-500/30 dark:border-amber-400/25"
