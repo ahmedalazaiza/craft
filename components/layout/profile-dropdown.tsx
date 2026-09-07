@@ -24,6 +24,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
+import { FoundingBadge } from "@/components/ui/founding-badge";
 import { getValidAvatarUrl } from "@/lib/avatar";
 
 export function ProfileDropdown() {
@@ -108,7 +109,13 @@ export function ProfileDropdown() {
             {/* Header: User Identity & Studio Badge */}
             <div className="p-3.5 flex items-center gap-3">
               <div className="relative h-11 w-11 shrink-0">
-                <div className="relative h-full w-full rounded-full overflow-hidden ring-1 ring-[var(--border-neutral)]">
+                <div
+                  className={cn(
+                    "relative h-full w-full rounded-full overflow-hidden ring-1 ring-[var(--border-neutral)]",
+                    (user.badge as string | undefined)?.trim().toLowerCase() === "founding member" &&
+                      "ring-2 ring-amber-400/60 dark:ring-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]"
+                  )}
+                >
                   <Image
                     src={getValidAvatarUrl(user.avatarUrl)}
                     alt={user.displayName}
@@ -119,7 +126,7 @@ export function ProfileDropdown() {
                 </div>
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-xs font-bold text-[var(--content-primary)] truncate">
                     {user.displayName}
                   </span>
@@ -128,8 +135,14 @@ export function ProfileDropdown() {
                 <div className="text-[11px] text-[var(--content-tertiary)] truncate">
                   @{user.username}
                 </div>
-                <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-[var(--chip-bg)] px-2 py-0.5 text-[10px] font-semibold text-[var(--chip-fg)]">
-                  <span>Verified Creator</span>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {(user.badge as string | undefined)?.trim().toLowerCase() === "founding member" ? (
+                    <FoundingBadge size="sm" />
+                  ) : user.isVerified !== false ? (
+                    <div className="inline-flex items-center gap-1 rounded-full bg-[var(--chip-bg)] px-2 py-0.5 text-[10px] font-semibold text-[var(--chip-fg)]">
+                      <span>Verified Creator</span>
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>

@@ -14,6 +14,7 @@ import { useSession } from "@/lib/session-context";
 import { FadeIn } from "@/components/ui/motion-wrapper";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
+import { FoundingBadge } from "@/components/ui/founding-badge";
 import { ReportModal } from "@/components/ui/report-modal";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { getValidAvatarUrl } from "@/lib/avatar";
@@ -314,6 +315,9 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                   </div>
                   <span>{project.creator.displayName}</span>
                   {project.creator.isVerified !== false && <VerifiedBadge size="sm" />}
+                  {project.creator.badge?.trim().toLowerCase() === "founding member" && (
+                    <FoundingBadge size="sm" />
+                  )}
                 </Link>
 
                 <span className="text-[var(--content-tertiary)]">•</span>
@@ -533,7 +537,11 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
               <div className="mt-4 pt-2">
                 <Link
                   href={`/u/${project.creator.username}`}
-                  className="group relative block h-12 w-12 rounded-full ring-2 ring-[var(--border-neutral)] hover:ring-[var(--primary-forest-green)] transition-all shadow-md"
+                  className={cn(
+                    "group relative block h-12 w-12 rounded-full ring-2 ring-[var(--border-neutral)] hover:ring-[var(--primary-forest-green)] transition-all shadow-md",
+                    project.creator.badge?.trim().toLowerCase() === "founding member" &&
+                      "ring-amber-400/60 dark:ring-amber-400/40 shadow-[0_0_12px_rgba(245,158,11,0.2)]"
+                  )}
                   title={`View ${project.creator.displayName}'s studio profile`}
                 >
                   <div className="relative h-full w-full rounded-full overflow-hidden">

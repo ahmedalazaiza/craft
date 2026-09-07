@@ -37,6 +37,7 @@ import { ShareModal } from "@/components/ui/share-modal";
 import { ReportModal } from "@/components/ui/report-modal";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
+import { FoundingBadge } from "@/components/ui/founding-badge";
 import { uploadMediaFile } from "@/lib/supabase/storage";
 import { DEFAULT_AVATAR_URL, getValidAvatarUrl } from "@/lib/avatar";
 import { LocationInput } from "@/components/ui/location-input";
@@ -217,54 +218,65 @@ export function CreatorProfileClient({
             <div className="rounded-[28px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] p-6 sm:p-7 shadow-[0_12px_32px_rgba(9,12,9,0.04)] space-y-6">
               {/* Creator Avatar & Identity */}
               <div className="flex flex-col items-center text-center">
-                <div className="relative mb-4">
-                  <div
-                    onClick={() => {
-                      if (isCurrentUser) setIsEditingProfile(true);
-                    }}
-                    className={cn(
-                      "group relative h-28 w-28 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-4 ring-[var(--border-neutral)] shadow-sm",
-                      isCurrentUser && "cursor-pointer hover:ring-[var(--primary-forest-green)] transition-all"
-                    )}
-                    title={isCurrentUser ? "Click to edit studio profile & avatar" : undefined}
-                  >
-                    <Image
-                      src={getValidAvatarUrl(creator.avatarUrl)}
-                      alt={creator.displayName}
-                      fill
-                      sizes="112px"
-                      priority
-                      className="object-cover"
-                    />
-                    {isCurrentUser && (
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white gap-1">
-                        <Camera className="h-5 w-5" />
-                        <span className="text-[10px] font-bold">Edit</span>
+                {(() => {
+                  const isFoundingMember = creator.badge?.trim().toLowerCase() === "founding member";
+                  return (
+                    <>
+                      <div className="relative mb-4">
+                        <div
+                          onClick={() => {
+                            if (isCurrentUser) setIsEditingProfile(true);
+                          }}
+                          className={cn(
+                            "group relative h-28 w-28 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-4 ring-[var(--border-neutral)] shadow-sm",
+                            isFoundingMember && "ring-amber-400/50 dark:ring-amber-400/40 shadow-[0_0_20px_rgba(245,158,11,0.18)]",
+                            isCurrentUser && "cursor-pointer hover:ring-[var(--primary-forest-green)] transition-all"
+                          )}
+                          title={isCurrentUser ? "Click to edit studio profile & avatar" : undefined}
+                        >
+                          <Image
+                            src={getValidAvatarUrl(creator.avatarUrl)}
+                            alt={creator.displayName}
+                            fill
+                            sizes="112px"
+                            priority
+                            className="object-cover"
+                          />
+                          {isCurrentUser && (
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white gap-1">
+                              <Camera className="h-5 w-5" />
+                              <span className="text-[10px] font-bold">Edit</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
-                  </div>
-                </div>
 
-
-                <div className="flex items-center gap-2 justify-center">
-                  <h1
-                    className={cn(
-                      bricolage.className,
-                      "text-2xl font-bold text-[var(--content-primary)]"
-                    )}
-                  >
-                    {creator.displayName}
-                  </h1>
-                  {Boolean(creator.isVerified) && <VerifiedBadge size="lg" />}
-                  {creator.badge &&
-                    !["superadmin", "super_admin", "admin", "curator", "moderator", "root"].includes(
-                      creator.badge.toLowerCase().replace(/[\s_-]/g, "")
-                    ) && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[var(--chip-bg)] border border-[var(--border-neutral)] px-2.5 py-0.5 text-xs font-bold text-[var(--chip-fg)] uppercase tracking-wider">
-                        {creator.badge}
-                      </span>
-                    )}
-                </div>
+                      <div className="flex flex-wrap items-center gap-2 justify-center">
+                        <h1
+                          className={cn(
+                            bricolage.className,
+                            "text-2xl font-bold text-[var(--content-primary)]"
+                          )}
+                        >
+                          {creator.displayName}
+                        </h1>
+                        {Boolean(creator.isVerified) && <VerifiedBadge size="lg" />}
+                        {isFoundingMember ? (
+                          <FoundingBadge size="default" />
+                        ) : (
+                          creator.badge &&
+                          !["superadmin", "super_admin", "admin", "curator", "moderator", "root"].includes(
+                            creator.badge.toLowerCase().replace(/[\s_-]/g, "")
+                          ) && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--chip-bg)] border border-[var(--border-neutral)] px-2.5 py-0.5 text-xs font-bold text-[var(--chip-fg)] uppercase tracking-wider">
+                              {creator.badge}
+                            </span>
+                          )
+                        )}
+                      </div>
+                    </>
+                  );
+                })()}
 
                 <p className="text-xs font-semibold text-[var(--content-tertiary)] mt-0.5">
                   @{creator.username}

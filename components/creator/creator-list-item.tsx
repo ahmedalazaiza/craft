@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Creator } from "@/lib/types";
 import { useSession } from "@/lib/session-context";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
+import { FoundingBadge } from "@/components/ui/founding-badge";
 import { ShareModal } from "@/components/ui/share-modal";
 import { getValidAvatarUrl } from "@/lib/avatar";
 import { getCanonicalShareUrl } from "@/lib/seo";
@@ -41,19 +42,26 @@ export function CreatorListItem({
     setIsShareOpen(true);
   };
 
-  // Compact variant for dropdowns or minimal search results
+  const isFoundingMember = creator.badge?.trim().toLowerCase() === "founding member";
+
+  // Compact variant: Clean list row (ideal for search popups / compact directory)
   if (variant === "compact") {
     return (
       <Link
         href={`/u/${creator.username}`}
         prefetch={true}
         className={cn(
-          "flex items-center justify-between gap-3 p-3 rounded-2xl bg-[var(--bg-elevated)] hover:bg-[var(--bg-neutral)] border border-[var(--border-neutral)] transition-all",
+          "flex items-center justify-between gap-3 p-3 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] hover:border-[var(--content-primary)]/40 transition-all",
           className
         )}
       >
         <div className="flex items-center gap-3 min-w-0">
-          <div className="relative h-10 w-10 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-1 ring-[var(--border-neutral)] shrink-0">
+          <div
+            className={cn(
+              "relative h-10 w-10 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-1 ring-[var(--border-neutral)] shrink-0",
+              isFoundingMember && "ring-2 ring-amber-400/50 dark:ring-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]"
+            )}
+          >
             <Image
               src={getValidAvatarUrl(creator.avatarUrl)}
               alt={creator.displayName}
@@ -63,11 +71,12 @@ export function CreatorListItem({
             />
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-sm font-bold text-[var(--content-primary)] truncate">
                 {creator.displayName}
               </span>
               {creator.isVerified && <VerifiedBadge size="sm" />}
+              {isFoundingMember && <FoundingBadge size="sm" />}
             </div>
             <div className="text-xs text-[var(--content-tertiary)] truncate font-mono">
               @{creator.username} • {creator.city || creator.location || "Global"}
@@ -100,7 +109,10 @@ export function CreatorListItem({
           <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
             <Link
               href={`/u/${creator.username}`}
-              className="relative h-12 w-12 sm:h-14 sm:w-14 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-2 ring-[var(--border-neutral)] shrink-0 hover:opacity-90 transition-opacity"
+              className={cn(
+                "relative h-12 w-12 sm:h-14 sm:w-14 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-2 ring-[var(--border-neutral)] shrink-0 hover:opacity-90 transition-opacity",
+                isFoundingMember && "ring-amber-400/50 dark:ring-amber-400/40 shadow-[0_0_12px_rgba(245,158,11,0.2)]"
+              )}
             >
               <Image
                 src={getValidAvatarUrl(creator.avatarUrl)}
@@ -121,14 +133,18 @@ export function CreatorListItem({
                 </Link>
 
                 {creator.isVerified && <VerifiedBadge size="sm" />}
-                {creator.badge &&
+                {isFoundingMember ? (
+                  <FoundingBadge size="sm" />
+                ) : (
+                  creator.badge &&
                   !["superadmin", "super_admin", "admin", "curator", "moderator", "root"].includes(
                     creator.badge.toLowerCase().replace(/[\s_-]/g, "")
                   ) && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-[var(--chip-bg)] border border-[var(--border-neutral)] px-2 py-0.5 text-[10px] font-bold text-[var(--chip-fg)] uppercase tracking-wider">
                       {creator.badge}
                     </span>
-                  )}
+                  )
+                )}
               </div>
 
               <div className="flex items-center gap-2 text-xs text-[var(--content-secondary)] mt-1 flex-wrap">

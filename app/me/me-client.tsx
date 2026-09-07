@@ -36,6 +36,7 @@ import { cn, normalizeUrl, formatDisplayUrl } from "@/lib/utils";
 import { ShareModal } from "@/components/ui/share-modal";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
+import { FoundingBadge } from "@/components/ui/founding-badge";
 import { getValidAvatarUrl } from "@/lib/avatar";
 import { CreatorProfileSkeleton } from "@/components/creator/creator-profile-skeleton";
 import { EditProfileModal } from "@/components/creator/edit-profile-modal";
@@ -155,30 +156,43 @@ export function MeClient() {
             <div className="rounded-[28px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] p-6 sm:p-7 shadow-[0_12px_32px_rgba(9,12,9,0.04)] space-y-6">
               {/* Creator Avatar & Identity */}
               <div className="flex flex-col items-center text-center">
-                <div className="relative mb-4">
-                  <div className="relative h-24 w-24 rounded-full overflow-hidden border-2 border-[var(--border-neutral)] shadow-md bg-[var(--bg-neutral)]">
-                    <Image
-                      src={getValidAvatarUrl(user.avatarUrl)}
-                      alt={user.displayName}
-                      fill
-                      sizes="96px"
-                      className="object-cover"
-                      priority
-                    />
-                  </div>
-                </div>
+                {(() => {
+                  const isFoundingMember = (user.badge as string | undefined)?.trim().toLowerCase() === "founding member";
+                  return (
+                    <>
+                      <div className="relative mb-4">
+                        <div
+                          className={cn(
+                            "relative h-24 w-24 rounded-full overflow-hidden border-2 border-[var(--border-neutral)] shadow-md bg-[var(--bg-neutral)]",
+                            isFoundingMember && "ring-4 ring-amber-400/50 dark:ring-amber-400/40 shadow-[0_0_20px_rgba(245,158,11,0.18)]"
+                          )}
+                        >
+                          <Image
+                            src={getValidAvatarUrl(user.avatarUrl)}
+                            alt={user.displayName}
+                            fill
+                            sizes="96px"
+                            className="object-cover"
+                            priority
+                          />
+                        </div>
+                      </div>
 
-                <div className="flex items-center gap-1.5 justify-center">
-                  <h1
-                    className={cn(
-                      bricolage.className,
-                      "text-xl font-bold text-[var(--content-primary)]"
-                    )}
-                  >
-                    {user.displayName}
-                  </h1>
-                  {user.isVerified !== false && <VerifiedBadge size="default" />}
-                </div>
+                      <div className="flex flex-wrap items-center gap-1.5 justify-center">
+                        <h1
+                          className={cn(
+                            bricolage.className,
+                            "text-xl font-bold text-[var(--content-primary)]"
+                          )}
+                        >
+                          {user.displayName}
+                        </h1>
+                        {user.isVerified !== false && <VerifiedBadge size="default" />}
+                        {isFoundingMember && <FoundingBadge size="default" />}
+                      </div>
+                    </>
+                  );
+                })()}
 
                 <p className="type-body-small text-[var(--content-tertiary)] mt-0.5">
                   @{user.username}
