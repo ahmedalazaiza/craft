@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "@/lib/session-context";
 import { supabase } from "@/lib/supabase/client";
 import { generateUniqueUsername } from "@/lib/supabase/auth";
-import { DEFAULT_AVATAR_URL } from "@/lib/avatar";
+import { DEFAULT_AVATAR_URL, upgradeGoogleAvatarUrl } from "@/lib/avatar";
 import { FadeIn } from "@/components/ui/motion-wrapper";
 import { Loader2, AlertCircle } from "lucide-react";
 import { bricolage } from "@/lib/fonts";
@@ -95,10 +95,11 @@ export function AuthCallbackClient() {
           user.user_metadata?.given_name?.trim() ||
           (email ? email.split("@")[0] : "Creator");
 
-        const avatarUrl =
+        const rawAvatarUrl =
           user.user_metadata?.avatar_url ||
           user.user_metadata?.picture ||
           DEFAULT_AVATAR_URL;
+        const avatarUrl = upgradeGoogleAvatarUrl(rawAvatarUrl, 400);
 
         // 6. Check existing profile or initialize new one
         const { data: existingProfile } = await supabase
@@ -133,6 +134,15 @@ export function AuthCallbackClient() {
             avatarUrl !== DEFAULT_AVATAR_URL
           ) {
             updates.avatar_url = avatarUrl;
+          } else if (
+            existingProfile.avatar_url &&
+            existingProfile.avatar_url.includes("googleusercontent.com") &&
+            /=s\d+/i.test(existingProfile.avatar_url)
+          ) {
+            const upgradedUrl = upgradeGoogleAvatarUrl(existingProfile.avatar_url, 400);
+            if (upgradedUrl !== existingProfile.avatar_url) {
+              updates.avatar_url = upgradedUrl;
+            }
           }
 
           if (

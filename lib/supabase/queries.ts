@@ -16,7 +16,7 @@ import {
   Board,
   BoardItem,
 } from "@/lib/types";
-import { DEFAULT_AVATAR_URL } from "@/lib/avatar";
+import { DEFAULT_AVATAR_URL, upgradeGoogleAvatarUrl } from "@/lib/avatar";
 import { getAuthRedirectUrl } from "@/lib/seo";
 import { deleteStorageFiles } from "./storage";
 import { CategoryTaxonomyItem, FALLBACK_TAXONOMY } from "@/lib/taxonomy";
@@ -66,7 +66,7 @@ export function mapProfileToCreator(row: any, currentUserId?: string): Creator {
     username: row.username || "creator",
     displayName: row.display_name || row.username || "Creator",
     email: row.email || undefined,
-    avatarUrl: row.avatar_url || DEFAULT_AVATAR_URL,
+    avatarUrl: upgradeGoogleAvatarUrl(row.avatar_url) || DEFAULT_AVATAR_URL,
     bio: row.bio || "",
     location: row.location || "",
     city: row.city || row.location || "",

@@ -14,7 +14,7 @@ import {
 import { POPULAR_CITIES } from "@/lib/location";
 import { Button } from "@/components/ui/button";
 import { Badge, FilterChip } from "@/components/ui/badge";
-import { SlidersHorizontal, X, RotateCcw, Check, Wrench, Tag, Layers, Search, MapPin } from "lucide-react";
+import { SlidersHorizontal, X, RotateCcw, Check, Wrench, Tag, Layers, Search, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface ProjectFilters {
@@ -75,6 +75,42 @@ export function FilterDrawer({
   const { taxonomy } = useSession();
   const [isMounted, setIsMounted] = useState(false);
   const [locationQuery, setLocationQuery] = useState("");
+  const [showTags, setShowTags] = useState(false);
+  const [showTools, setShowTools] = useState(false);
+
+  // Auto-expand tags and tools if user has any active selections
+  useEffect(() => {
+    if (projectFilters?.tags && projectFilters.tags.length > 0) {
+      setShowTags(true);
+    }
+  }, [projectFilters?.tags]);
+
+  useEffect(() => {
+    if (projectFilters?.tools && projectFilters.tools.length > 0) {
+      setShowTools(true);
+    }
+  }, [projectFilters?.tools]);
+
+  const activeFilterCount = useMemo(() => {
+    if (mode === "projects" && projectFilters) {
+      let count = 0;
+      if (projectFilters.category && projectFilters.category !== "All") count++;
+      if (projectFilters.subCategory && projectFilters.subCategory !== "All") count++;
+      if (projectFilters.medium && projectFilters.medium !== "All") count++;
+      if (projectFilters.sortBy && projectFilters.sortBy !== "curated") count++;
+      count += projectFilters.tags?.length || 0;
+      count += projectFilters.tools?.length || 0;
+      return count;
+    }
+    if (mode === "creators" && creatorFilters) {
+      let count = 0;
+      if (creatorFilters.discipline && creatorFilters.discipline !== "All") count++;
+      if (creatorFilters.city && creatorFilters.city !== "All") count++;
+      if (creatorFilters.hasPublishedOnly) count++;
+      return count;
+    }
+    return 0;
+  }, [mode, projectFilters, creatorFilters]);
 
   const availableCities = useMemo(() => {
     const baseCities = POPULAR_CITIES.filter((c) => c !== "Worldwide");
@@ -211,24 +247,31 @@ export function FilterDrawer({
             animate={{ y: 0, x: 0 }}
             exit={{ y: "100%", x: 0 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="relative flex max-h-[90vh] sm:max-h-full h-auto sm:h-full w-full max-w-lg flex-col rounded-t-[32px] sm:rounded-l-[28px] sm:rounded-tr-none bg-[var(--bg-elevated)] border-t sm:border-t-0 sm:border-l border-[var(--border-neutral)] shadow-[0_24px_60px_rgba(0,0,0,0.25)] p-5 sm:p-7 overflow-y-auto pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-7"
+            className="relative flex h-[90vh] sm:h-full w-full max-w-lg flex-col rounded-t-[32px] sm:rounded-l-[28px] sm:rounded-tr-none bg-[var(--bg-elevated)] border-t sm:border-t-0 sm:border-l border-[var(--border-neutral)] shadow-[0_24px_60px_rgba(0,0,0,0.25)] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Mobile Pull Handle Indicator */}
-            <div className="flex sm:hidden justify-center pt-3 pb-2 shrink-0">
+            <div className="flex sm:hidden justify-center pt-3 pb-1 shrink-0 bg-[var(--bg-elevated)]">
               <div className="h-1.5 w-12 rounded-full bg-[var(--border-neutral)]" />
             </div>
 
-            {/* Header */}
-            <div className="flex items-center justify-between pb-4 sm:pb-5 border-b border-[var(--border-neutral)] shrink-0">
+            {/* Header: PINNED AT TOP */}
+            <div className="flex items-center justify-between px-5 sm:px-7 py-4 sm:py-5 border-b border-[var(--border-neutral)] shrink-0 bg-[var(--bg-elevated)] z-10">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--bg-neutral)] border border-[var(--border-neutral)] shrink-0 text-[var(--content-primary)]">
                   <SlidersHorizontal className="h-4.5 w-4.5" />
                 </div>
                 <div>
-                  <h2 className="text-base sm:text-lg font-bold text-[var(--content-primary)]">
-                    {mode === "projects" ? "Filter Projects" : "Filter Creators"}
-                  </h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base sm:text-lg font-bold text-[var(--content-primary)]">
+                      {mode === "projects" ? "Filter Projects" : "Filter Creators"}
+                    </h2>
+                    {activeFilterCount > 0 && (
+                      <span className="flex h-5 items-center justify-center rounded-full bg-[var(--primary-forest-green)] px-2 text-[10px] font-bold text-white">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-[var(--content-tertiary)]">
                     {mode === "projects" ? "Refine by medium, tools, or taxonomy" : "Filter creators by city or discipline"}
                   </p>
@@ -236,15 +279,15 @@ export function FilterDrawer({
               </div>
               <button
                 onClick={onClose}
-                className="flex h-10 w-10 sm:h-8 sm:w-8 min-h-[40px] min-w-[40px] sm:min-h-0 sm:min-w-0 items-center justify-center rounded-full text-[var(--content-tertiary)] hover:bg-[var(--bg-neutral)] hover:text-[var(--content-primary)] transition-colors cursor-pointer"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--content-tertiary)] hover:bg-[var(--bg-neutral)] hover:text-[var(--content-primary)] transition-colors cursor-pointer"
                 aria-label="Close filters"
               >
-                <X className="h-5 w-5 sm:h-4 sm:w-4" />
+                <X className="h-4.5 w-4.5" />
               </button>
             </div>
 
-        {/* Filters Content */}
-        <div className="flex-1 py-6 space-y-7">
+            {/* Filters Content: SCROLLABLE MIDDLE ONLY */}
+            <div className="flex-1 overflow-y-auto px-5 sm:px-7 py-6 space-y-6 overscroll-contain">
           {mode === "projects" && projectFilters && onProjectFiltersChange ? (
             <>
               {/* Sort Order */}
@@ -401,98 +444,166 @@ export function FilterDrawer({
                 </div>
               </div>
 
-              {/* Secondary Tags Multi-select */}
+              {/* Project Medium / Format */}
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="type-body-default-bold text-[var(--content-primary)] block text-xs uppercase tracking-wider font-mono">
-                    Tags ({projectFilters.tags.length} selected)
-                  </label>
-                  {projectFilters.tags.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        onProjectFiltersChange({
-                          ...projectFilters,
-                          tags: [],
-                        })
-                      }
-                      className="text-[11px] text-[var(--content-link)] hover:underline"
-                    >
-                      Clear ({projectFilters.tags.length})
-                    </button>
-                  )}
-                </div>
-                <p className="type-label text-[var(--content-tertiary)] mb-2.5 text-xs">
-                  Filter by design principles, styles, and methodologies.
-                </p>
-                <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto p-1">
-                  {availableTags.map((tag) => {
-                    const isSelected = projectFilters.tags.includes(tag);
+                <label className="type-body-default-bold text-[var(--content-primary)] block mb-2.5 text-xs uppercase tracking-wider font-mono">
+                  Medium & Format
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {MEDIUMS.map((med) => {
+                    const isSelected = (!projectFilters.medium && med === "All") || projectFilters.medium === med;
                     return (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() => handleToggleTag(tag)}
-                        className={cn(
-                          "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-all cursor-pointer",
-                          isSelected
-                            ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] ring-1 ring-[var(--chip-bg)]"
-                            : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:bg-[var(--bg-neutral-hover)]"
-                        )}
+                      <FilterChip
+                        key={med}
+                        active={isSelected}
+                        onClick={() =>
+                          onProjectFiltersChange({
+                            ...projectFilters,
+                            medium: med,
+                          })
+                        }
                       >
-                        {isSelected && <Check className="h-3 w-3 text-[var(--chip-fg)]" />}
-                        <span>#{tag}</span>
-                      </button>
+                        {med}
+                      </FilterChip>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Tools & Software Multi-select */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="type-body-default-bold text-[var(--content-primary)] block text-xs uppercase tracking-wider font-mono">
-                    Tools & Stack ({projectFilters.tools?.length || 0} selected)
-                  </label>
-                  {projectFilters.tools && projectFilters.tools.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        onProjectFiltersChange({
-                          ...projectFilters,
-                          tools: [],
-                        })
-                      }
-                      className="text-[11px] text-[var(--content-link)] hover:underline"
-                    >
-                      Clear ({projectFilters.tools.length})
-                    </button>
-                  )}
-                </div>
-                <p className="type-label text-[var(--content-tertiary)] mb-2.5 text-xs">
-                  Filter by creative software and production engines.
-                </p>
-                <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-1">
-                  {availableTools.map((tool) => {
-                    const isSelected = (projectFilters.tools || []).includes(tool);
-                    return (
-                      <button
-                        key={tool}
-                        type="button"
-                        onClick={() => handleToggleTool(tool)}
-                        className={cn(
-                          "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-all cursor-pointer",
-                          isSelected
-                            ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] font-bold shadow-xs"
-                            : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:bg-[var(--bg-neutral-hover)]"
-                        )}
+              {/* Secondary Tags Multi-select (Collapsible for a simplified, clean UX) */}
+              <div className="rounded-2xl border border-[var(--border-neutral)] bg-[var(--bg-neutral)]/20 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setShowTags(!showTags)}
+                  className="w-full flex items-center justify-between p-3.5 hover:bg-[var(--bg-neutral)]/60 transition-colors cursor-pointer text-left"
+                >
+                  <div className="flex items-center gap-2">
+                    <Tag className="h-4 w-4 text-[var(--content-tertiary)] shrink-0" />
+                    <span className="text-xs font-bold uppercase tracking-wider font-mono text-[var(--content-primary)]">
+                      Tags & Methodologies
+                    </span>
+                    {projectFilters.tags.length > 0 && (
+                      <span className="flex h-5 items-center justify-center rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] px-2 text-[10px] font-bold">
+                        {projectFilters.tags.length}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {projectFilters.tags.length > 0 && (
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onProjectFiltersChange({ ...projectFilters, tags: [] });
+                        }}
+                        className="text-[11px] text-[var(--content-link)] hover:underline"
                       >
-                        {isSelected && <Check className="h-3 w-3 stroke-[2.5]" />}
-                        <span>{tool}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+                        Clear
+                      </span>
+                    )}
+                    {showTags ? (
+                      <ChevronUp className="h-4 w-4 text-[var(--content-tertiary)]" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-[var(--content-tertiary)]" />
+                    )}
+                  </div>
+                </button>
+
+                {showTags && (
+                  <div className="p-3.5 pt-0 border-t border-[var(--border-neutral)]/40">
+                    <p className="type-label text-[var(--content-tertiary)] my-2 text-xs">
+                      Filter by design principles, styles, and methodologies.
+                    </p>
+                    <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto p-1">
+                      {availableTags.map((tag) => {
+                        const isSelected = projectFilters.tags.includes(tag);
+                        return (
+                          <button
+                            key={tag}
+                            type="button"
+                            onClick={() => handleToggleTag(tag)}
+                            className={cn(
+                              "inline-flex h-7.5 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-all cursor-pointer",
+                              isSelected
+                                ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] ring-1 ring-[var(--chip-bg)]"
+                                : "bg-[var(--bg-screen)] text-[var(--content-secondary)] border border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)]"
+                            )}
+                          >
+                            {isSelected && <Check className="h-3 w-3 text-[var(--chip-fg)]" />}
+                            <span>#{tag}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Tools & Software Multi-select (Collapsible for a simplified, clean UX) */}
+              <div className="rounded-2xl border border-[var(--border-neutral)] bg-[var(--bg-neutral)]/20 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setShowTools(!showTools)}
+                  className="w-full flex items-center justify-between p-3.5 hover:bg-[var(--bg-neutral)]/60 transition-colors cursor-pointer text-left"
+                >
+                  <div className="flex items-center gap-2">
+                    <Wrench className="h-4 w-4 text-[var(--content-tertiary)] shrink-0" />
+                    <span className="text-xs font-bold uppercase tracking-wider font-mono text-[var(--content-primary)]">
+                      Tools & Software Stack
+                    </span>
+                    {(projectFilters.tools?.length || 0) > 0 && (
+                      <span className="flex h-5 items-center justify-center rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] px-2 text-[10px] font-bold">
+                        {projectFilters.tools?.length}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {(projectFilters.tools?.length || 0) > 0 && (
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onProjectFiltersChange({ ...projectFilters, tools: [] });
+                        }}
+                        className="text-[11px] text-[var(--content-link)] hover:underline"
+                      >
+                        Clear
+                      </span>
+                    )}
+                    {showTools ? (
+                      <ChevronUp className="h-4 w-4 text-[var(--content-tertiary)]" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-[var(--content-tertiary)]" />
+                    )}
+                  </div>
+                </button>
+
+                {showTools && (
+                  <div className="p-3.5 pt-0 border-t border-[var(--border-neutral)]/40">
+                    <p className="type-label text-[var(--content-tertiary)] my-2 text-xs">
+                      Filter by creative software and production engines.
+                    </p>
+                    <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto p-1">
+                      {availableTools.map((tool) => {
+                        const isSelected = (projectFilters.tools || []).includes(tool);
+                        return (
+                          <button
+                            key={tool}
+                            type="button"
+                            onClick={() => handleToggleTool(tool)}
+                            className={cn(
+                              "inline-flex h-7.5 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-all cursor-pointer",
+                              isSelected
+                                ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] font-bold shadow-xs"
+                                : "bg-[var(--bg-screen)] text-[var(--content-secondary)] border border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)]"
+                            )}
+                          >
+                            {isSelected && <Check className="h-3 w-3 stroke-[2.5]" />}
+                            <span>{tool}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
 
@@ -661,17 +772,18 @@ export function FilterDrawer({
           ) : null}
         </div>
 
-        {/* Footer Actions */}
-        <div className="flex items-center gap-3 pt-5 border-t border-[var(--border-neutral)] shrink-0">
+        {/* Footer Actions: PINNED PERMANENTLY AT BASE */}
+        <div className="shrink-0 px-5 sm:px-7 py-4 border-t border-[var(--border-neutral)] bg-[var(--bg-elevated)]/95 backdrop-blur-md flex items-center gap-3 z-10 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-4 shadow-[0_-8px_24px_rgba(0,0,0,0.04)]">
           <Button
             type="button"
             variant="secondary"
             size="default"
+            disabled={activeFilterCount === 0}
             onClick={mode === "projects" ? handleResetProjects : handleResetCreators}
             className="flex-1 gap-2 font-semibold"
           >
             <RotateCcw className="h-4 w-4" />
-            <span>Reset</span>
+            <span>Reset {activeFilterCount > 0 ? `(${activeFilterCount})` : ""}</span>
           </Button>
           <Button
             type="button"
@@ -680,7 +792,7 @@ export function FilterDrawer({
             onClick={onClose}
             className="flex-1 font-bold shadow-xs"
           >
-            <span>Apply Filters</span>
+            <span>Apply Filters {activeFilterCount > 0 ? `(${activeFilterCount})` : ""}</span>
           </Button>
         </div>
       </motion.div>

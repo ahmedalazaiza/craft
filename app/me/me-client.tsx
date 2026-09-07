@@ -135,7 +135,7 @@ export function MeClient() {
   };
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-[140px] py-4 sm:py-6">
+    <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-6 md:px-8 xl:px-10 2xl:px-14 py-4 sm:py-6">
       <FadeIn>
         {/* Breadcrumbs Navigation */}
         <Breadcrumbs
@@ -148,11 +148,11 @@ export function MeClient() {
         {/* ========================================================================= */}
         {/* 2-COLUMN PROFILE DASHBOARD LAYOUT (Identical to Creator Profile Structure) */}
         {/* ========================================================================= */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 xl:gap-10 items-start">
           {/* ===================================================================== */}
-          {/* LEFT COLUMN: Sticky Profile Card (Sleek 3 cols on desktop)           */}
+          {/* LEFT COLUMN: Sticky Profile Card (4 cols on lg/xl, 3 on 2xl)         */}
           {/* ===================================================================== */}
-          <aside className="lg:col-span-4 xl:col-span-3 lg:sticky lg:top-24 space-y-6">
+          <aside className="lg:col-span-4 xl:col-span-4 2xl:col-span-3 lg:sticky lg:top-24 space-y-6">
             <div className="rounded-[28px] bg-[var(--bg-elevated)] border border-[var(--border-neutral)] p-6 sm:p-7 shadow-[0_12px_32px_rgba(9,12,9,0.04)] space-y-6">
               {/* Creator Avatar & Identity */}
               <div className="flex flex-col items-center text-center">
@@ -178,23 +178,30 @@ export function MeClient() {
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-1.5 justify-center">
-                        <h1
-                          className={cn(
-                            bricolage.className,
-                            "text-xl font-bold text-[var(--content-primary)]"
-                          )}
-                        >
-                          {user.displayName}
-                        </h1>
-                        {user.isVerified !== false && <VerifiedBadge size="default" />}
-                        {isFoundingMember && <FoundingBadge size="default" />}
+                      <div className="flex flex-col items-center gap-1.5 w-full">
+                        <div className="inline-flex items-center gap-2 justify-center max-w-full">
+                          <h1
+                            className={cn(
+                              bricolage.className,
+                              "text-xl sm:text-2xl font-bold text-[var(--content-primary)] truncate"
+                            )}
+                            title={user.displayName}
+                          >
+                            {user.displayName}
+                          </h1>
+                          {user.isVerified !== false && <VerifiedBadge size="default" className="shrink-0" />}
+                        </div>
+                        {isFoundingMember && (
+                          <div className="pt-0.5">
+                            <FoundingBadge size="default" />
+                          </div>
+                        )}
                       </div>
                     </>
                   );
                 })()}
 
-                <p className="type-body-small text-[var(--content-tertiary)] mt-0.5">
+                <p className="type-body-small text-[var(--content-tertiary)] mt-1">
                   @{user.username}
                 </p>
 
@@ -225,7 +232,7 @@ export function MeClient() {
 
               {/* Action Buttons: Edit Profile + Settings + Share Icon & View Public Profile */}
               <div className="space-y-2 pt-2">
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2">
                   <Button
                     variant="secondary"
                     size="default"
@@ -236,10 +243,10 @@ export function MeClient() {
                       setEditWebsite(user.website || "");
                       setIsEditingProfile(true);
                     }}
-                    className="flex-1 gap-2 font-semibold"
+                    className="flex-1 gap-2 font-semibold whitespace-nowrap px-3 sm:px-4"
                   >
-                    <Edit3 className="h-4 w-4" />
-                    <span>Edit Profile</span>
+                    <Edit3 className="h-4 w-4 shrink-0" />
+                    <span className="whitespace-nowrap">Edit Profile</span>
                   </Button>
 
                   <Link
@@ -247,7 +254,7 @@ export function MeClient() {
                     className={buttonVariants({
                       variant: "secondary",
                       size: "icon",
-                      className: "transition-transform hover:scale-105 active:scale-95",
+                      className: "shrink-0 transition-transform hover:scale-105 active:scale-95",
                     })}
                     title="Account Settings"
                     aria-label="Account Settings"
@@ -260,7 +267,7 @@ export function MeClient() {
                     variant="secondary"
                     size="icon"
                     onClick={() => setIsShareModalOpen(true)}
-                    className="transition-transform hover:scale-105 active:scale-95"
+                    className="shrink-0 transition-transform hover:scale-105 active:scale-95"
                     title="Share Profile"
                     aria-label="Share Profile"
                   >
@@ -344,9 +351,9 @@ export function MeClient() {
           </aside>
 
           {/* ===================================================================== */}
-          {/* RIGHT COLUMN: Studio Projects Management (9 cols on desktop)          */}
+          {/* RIGHT COLUMN: Studio Projects Management (8 cols on lg/xl, 9 on 2xl)   */}
           {/* ===================================================================== */}
-          <main className="lg:col-span-8 xl:col-span-9 space-y-6 min-w-0">
+          <main className="lg:col-span-8 xl:col-span-8 2xl:col-span-9 space-y-6 min-w-0">
             {/* Header Toolbar: Tabs on Left + New Project Button on Right */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[var(--border-neutral)]">
               {/* Tab Switcher: Published vs Drafts */}
@@ -404,7 +411,7 @@ export function MeClient() {
                   </NewProjectLink>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-5 sm:gap-6">
                   {publishedProjects.map((project, idx) => (
                     <StaggerGridItem key={project.id} index={idx} className="relative group">
                       <ProjectCard project={project} />
@@ -441,7 +448,7 @@ export function MeClient() {
                 </NewProjectLink>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-5 sm:gap-6">
                 {draftProjects.map((project, idx) => (
                   <StaggerGridItem key={project.id} index={idx} className="relative group">
                     <ProjectCard project={project} />

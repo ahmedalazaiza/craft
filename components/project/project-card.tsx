@@ -215,7 +215,7 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
                 {liveProject.creator.displayName}
               </span>
               {liveProject.creator.isVerified && (
-                <VerifiedBadge size="sm" />
+                <VerifiedBadge size="sm" className="shrink-0" />
               )}
             </div>
           </Link>

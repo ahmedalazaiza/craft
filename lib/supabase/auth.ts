@@ -1,7 +1,7 @@
 import { supabase } from "./client";
 import { Creator } from "@/lib/types";
 import { mapProfileToCreator } from "./queries";
-import { DEFAULT_AVATAR_URL } from "@/lib/avatar";
+import { DEFAULT_AVATAR_URL, upgradeGoogleAvatarUrl } from "@/lib/avatar";
 import { getAuthRedirectUrl } from "@/lib/seo";
 
 export { getAuthRedirectUrl };
@@ -368,10 +368,11 @@ export async function getCurrentAuthUser(): Promise<Creator | null> {
             user.user_metadata?.full_name?.trim() ||
             user.user_metadata?.name?.trim() ||
             (email ? email.split("@")[0] : "Creator");
-          const avatarUrl =
+          const rawAvatarUrl =
             user.user_metadata?.avatar_url ||
             user.user_metadata?.picture ||
             DEFAULT_AVATAR_URL;
+          const avatarUrl = upgradeGoogleAvatarUrl(rawAvatarUrl, 400);
           const uniqueUsername = await generateUniqueUsername(fullName, email);
 
           const autoProfile = {
