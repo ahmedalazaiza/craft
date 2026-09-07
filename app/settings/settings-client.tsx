@@ -162,8 +162,8 @@ export function SettingsClient() {
     if (typeof window !== "undefined") {
       const hash = window.location.hash;
       const isRecoveryHash = hash.includes("type=recovery") || hash.includes("access_token");
-      const isCancelled = sessionStorage.getItem("craft_password_reset_cancelled") === "true";
-      const isCompleted = sessionStorage.getItem("craft_password_reset_completed") === "true";
+      const isCancelled = sessionStorage.getItem("layerat_password_reset_cancelled") === "true" || sessionStorage.getItem("craft_password_reset_cancelled") === "true";
+      const isCompleted = sessionStorage.getItem("layerat_password_reset_completed") === "true" || sessionStorage.getItem("craft_password_reset_completed") === "true";
 
       if ((isResetParam || isRecoveryHash) && !isCancelled && !isCompleted) {
         setIsPasswordModalOpen(true);

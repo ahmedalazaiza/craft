@@ -49,7 +49,7 @@ export function ResetPasswordClient() {
   useEffect(() => {
     // 1. If password was already reset in this browser session, prevent returning via Back button
     if (typeof window !== "undefined") {
-      const alreadyCompleted = sessionStorage.getItem("craft_password_reset_completed");
+      const alreadyCompleted = sessionStorage.getItem("layerat_password_reset_completed") || sessionStorage.getItem("craft_password_reset_completed");
       if (alreadyCompleted === "true") {
         router.replace("/explore");
         return;
@@ -119,7 +119,7 @@ export function ResetPasswordClient() {
       } else {
         // Mark as completed in sessionStorage & clean URL hash
         if (typeof window !== "undefined") {
-          sessionStorage.setItem("craft_password_reset_completed", "true");
+          sessionStorage.setItem("layerat_password_reset_completed", "true");
           window.history.replaceState(null, "", "/reset-password");
         }
         setIsUpdated(true);

@@ -206,8 +206,8 @@ export async function signUpWithEmail(
 
     if (typeof window !== "undefined") {
       try {
-        localStorage.setItem("craft_cached_profile", JSON.stringify(creator));
-        localStorage.setItem("craft_last_registered_email", cleanEmail);
+        localStorage.setItem("layerat_cached_profile", JSON.stringify(creator));
+        localStorage.setItem("layerat_last_registered_email", cleanEmail);
         sessionStorage.removeItem("layerat_session_terminated");
       } catch {
         // ignore storage errors
@@ -334,6 +334,7 @@ export async function getCurrentAuthUser(): Promise<Creator | null> {
         if (profile.is_suspended) {
           await supabase.auth.signOut().catch(() => {});
           if (typeof window !== "undefined") {
+            localStorage.removeItem("layerat_cached_profile");
             localStorage.removeItem("craft_cached_profile");
             sessionStorage.setItem("layerat_session_terminated", "account_deleted");
           }
@@ -414,6 +415,7 @@ export async function getCurrentAuthUser(): Promise<Creator | null> {
       console.warn("Current user profile does not exist in database (deleted). Terminating local session.");
       await supabase.auth.signOut().catch(() => {});
       if (typeof window !== "undefined") {
+        localStorage.removeItem("layerat_cached_profile");
         localStorage.removeItem("craft_cached_profile");
         sessionStorage.setItem("layerat_session_terminated", "account_deleted");
       }
@@ -423,7 +425,7 @@ export async function getCurrentAuthUser(): Promise<Creator | null> {
     // 3. If no active Supabase Auth session token (e.g. newly registered user awaiting email confirmation):
     // Check if there is a cached profile in localStorage that exists in the database
     if (typeof window !== "undefined") {
-      const cachedRaw = localStorage.getItem("craft_cached_profile");
+      const cachedRaw = localStorage.getItem("layerat_cached_profile") || localStorage.getItem("craft_cached_profile");
       if (cachedRaw) {
         try {
           const cachedUser = JSON.parse(cachedRaw);
@@ -436,6 +438,7 @@ export async function getCurrentAuthUser(): Promise<Creator | null> {
 
             if (profile) {
               if (profile.is_suspended) {
+                localStorage.removeItem("layerat_cached_profile");
                 localStorage.removeItem("craft_cached_profile");
                 sessionStorage.setItem("layerat_session_terminated", "account_deleted");
                 return null;
@@ -448,12 +451,14 @@ export async function getCurrentAuthUser(): Promise<Creator | null> {
               return creator;
             } else {
               // Profile record was genuinely deleted from the database
+              localStorage.removeItem("layerat_cached_profile");
               localStorage.removeItem("craft_cached_profile");
               sessionStorage.setItem("layerat_session_terminated", "account_deleted");
               return null;
             }
           }
         } catch {
+          localStorage.removeItem("layerat_cached_profile");
           localStorage.removeItem("craft_cached_profile");
         }
       }

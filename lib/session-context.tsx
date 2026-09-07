@@ -117,7 +117,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window !== "undefined") {
       try {
-        const cached = localStorage.getItem("craft_cached_profile");
+        const cached = localStorage.getItem("layerat_cached_profile") || localStorage.getItem("craft_cached_profile");
         if (cached) {
           const parsed = JSON.parse(cached);
           if (parsed && parsed.id) {
@@ -139,8 +139,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         if (typeof window !== "undefined") {
           try {
             if (nextUser) {
-              localStorage.setItem("craft_cached_profile", JSON.stringify(nextUser));
+              localStorage.setItem("layerat_cached_profile", JSON.stringify(nextUser));
             } else {
+              localStorage.removeItem("layerat_cached_profile");
               localStorage.removeItem("craft_cached_profile");
             }
           } catch {
@@ -302,6 +303,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         setBoards([]);
 
         if (typeof window !== "undefined") {
+          localStorage.removeItem("layerat_cached_profile");
           localStorage.removeItem("craft_cached_profile");
           const terminationReason = sessionStorage.getItem("layerat_session_terminated");
           if (terminationReason === "account_deleted") {
@@ -483,6 +485,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           console.warn("User account was deleted. Terminating active session immediately.");
           await supabase.auth.signOut().catch(() => {});
           if (typeof window !== "undefined") {
+            localStorage.removeItem("layerat_cached_profile");
             localStorage.removeItem("craft_cached_profile");
           }
           setUser(null);
@@ -591,6 +594,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           setAppreciatedProjectIds(new Set());
           setBoards([]);
           if (typeof window !== "undefined") {
+            localStorage.removeItem("layerat_cached_profile");
             localStorage.removeItem("craft_cached_profile");
             const terminationReason = sessionStorage.getItem("layerat_session_terminated");
             if (terminationReason === "account_deleted") {
@@ -605,6 +609,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         setAppreciatedProjectIds(new Set());
         setFollowingCreatorIds(new Set());
         if (typeof window !== "undefined") {
+          localStorage.removeItem("layerat_cached_profile");
           localStorage.removeItem("craft_cached_profile");
           const terminationReason = sessionStorage.getItem("layerat_session_terminated");
           if (terminationReason === "account_deleted") {
@@ -757,7 +762,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     if (res.success && res.user) {
       setUser(res.user);
       if (typeof window !== "undefined") {
-        localStorage.setItem("craft_last_registered_email", email.trim().toLowerCase());
+        localStorage.setItem("layerat_last_registered_email", email.trim().toLowerCase());
       }
     }
     return res;
@@ -765,7 +770,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     if (typeof window !== "undefined") {
+      localStorage.removeItem("layerat_last_registered_email");
       localStorage.removeItem("craft_last_registered_email");
+      sessionStorage.removeItem("layerat_hide_verification_banner");
       sessionStorage.removeItem("craft_hide_verification_banner");
     }
     await authSignOut();

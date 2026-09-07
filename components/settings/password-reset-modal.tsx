@@ -49,7 +49,7 @@ export function PasswordResetModal({ isOpen, onClose, onSuccess }: PasswordReset
   // Invalidate on dismissal / unload
   const handleDismiss = () => {
     if (typeof window !== "undefined") {
-      sessionStorage.setItem("craft_password_reset_cancelled", "true");
+      sessionStorage.setItem("layerat_password_reset_cancelled", "true");
       // Clean query params from URL without reload
       const url = new URL(window.location.href);
       url.searchParams.delete("reset_password");
@@ -83,7 +83,7 @@ export function PasswordResetModal({ isOpen, onClose, onSuccess }: PasswordReset
 
       setIsSuccess(true);
       if (typeof window !== "undefined") {
-        sessionStorage.setItem("craft_password_reset_completed", "true");
+        sessionStorage.setItem("layerat_password_reset_completed", "true");
         const url = new URL(window.location.href);
         url.searchParams.delete("reset_password");
         url.hash = "";

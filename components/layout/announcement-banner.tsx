@@ -12,9 +12,9 @@ export function AnnouncementBanner() {
   // Check if banner was dismissed in this session
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const dismissed = sessionStorage.getItem("craft_announcement_dismissed");
+      const dismissed = sessionStorage.getItem("layerat_announcement_dismissed") || sessionStorage.getItem("craft_announcement_dismissed");
       // If the announcement text changed, re-show even if previously dismissed
-      const lastDismissedText = sessionStorage.getItem("craft_announcement_text");
+      const lastDismissedText = sessionStorage.getItem("layerat_announcement_text") || sessionStorage.getItem("craft_announcement_text");
       if (!dismissed || lastDismissedText !== platformSettings.announcementBannerText) {
         setIsDismissed(false);
       }
@@ -32,8 +32,8 @@ export function AnnouncementBanner() {
   const handleDismiss = () => {
     setIsDismissed(true);
     if (typeof window !== "undefined") {
-      sessionStorage.setItem("craft_announcement_dismissed", "true");
-      sessionStorage.setItem("craft_announcement_text", platformSettings.announcementBannerText);
+      sessionStorage.setItem("layerat_announcement_dismissed", "true");
+      sessionStorage.setItem("layerat_announcement_text", platformSettings.announcementBannerText);
     }
   };
 

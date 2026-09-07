@@ -32,10 +32,14 @@ export function PageLoadingOverlay() {
       setLoadingText(undefined);
     };
 
+    window.addEventListener("layerat:start-page-loading", handleStartLoading);
+    window.addEventListener("layerat:stop-page-loading", handleStopLoading);
     window.addEventListener("craft:start-page-loading", handleStartLoading);
     window.addEventListener("craft:stop-page-loading", handleStopLoading);
 
     return () => {
+      window.removeEventListener("layerat:start-page-loading", handleStartLoading);
+      window.removeEventListener("layerat:stop-page-loading", handleStopLoading);
       window.removeEventListener("craft:start-page-loading", handleStartLoading);
       window.removeEventListener("craft:stop-page-loading", handleStopLoading);
     };

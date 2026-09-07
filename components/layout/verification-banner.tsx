@@ -19,7 +19,7 @@ export function VerificationBanner() {
   const userEmail =
     user?.email ||
     (typeof window !== "undefined"
-      ? localStorage.getItem("craft_last_registered_email") || ""
+      ? localStorage.getItem("layerat_last_registered_email") || localStorage.getItem("craft_last_registered_email") || ""
       : "");
 
   // Rate limiter cooldown countdown

@@ -313,7 +313,7 @@ export function generateFoundingMemberEmailHtml({
             </tr>
             <tr>
               <td align="center" class="footer-text" style="font-size: 12px; line-height: 18px; color: #71717a;">
-                Layerat Platforms Inc. &middot; The Sanctuary for Creative Craft
+                Layerat Platforms Inc. &middot; The Sanctuary for Independent Creators
               </td>
             </tr>
             <tr>
