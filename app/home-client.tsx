@@ -312,7 +312,7 @@ export function HomeClient({
                 key={project.id}
                 className="w-[82vw] max-w-[320px] shrink-0 snap-start sm:w-auto sm:max-w-none"
               >
-                <ProjectCard project={project} priority={idx < 4} />
+                <ProjectCard project={project} priority={idx === 0} />
               </div>
             ))}
 

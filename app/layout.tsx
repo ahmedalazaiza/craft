@@ -15,7 +15,6 @@ import { MaintenanceScreen } from "@/components/layout/maintenance-screen";
 import { SuspensionBanner } from "@/components/layout/suspension-banner";
 import { Analytics } from "@vercel/analytics/next";
 
-import Script from "next/script";
 
 import {
   SITE_NAME,
@@ -106,27 +105,15 @@ export default function RootLayout({
     <html lang="en" className={bricolage.variable} suppressHydrationWarning>
       <head>
         {/* Preconnect & DNS-Prefetch for Speed & LCP Core Web Vitals */}
+        <link rel="preconnect" href="https://media.layerat.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://media.layerat.com" />
         <link rel="preconnect" href="https://ttjobsgglwgyioqlldqj.supabase.co" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
 
-        {/* Blocking theme script: locked to light theme for now, dynamic logic preserved */}
-        <Script
-          id="craft-theme-init"
-          strategy="beforeInteractive"
+        {/* Fast inline theme script: locked to light theme for now, dynamic logic preserved */}
+        <script
           dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  document.documentElement.setAttribute('data-theme', 'light');
-                  /* PRESERVED FOR FUTURE RE-ACTIVATION:
-                  var stored = localStorage.getItem('craft-theme');
-                  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  var theme = (stored === 'light' || stored === 'dark') ? stored : (prefersDark ? 'dark' : 'light');
-                  document.documentElement.setAttribute('data-theme', theme);
-                  */
-                } catch (e) {}
-              })();
-            `,
+            __html: `(function(){try{document.documentElement.setAttribute('data-theme','light');}catch(e){}})();`,
           }}
         />
       </head>

@@ -494,8 +494,8 @@ export function ExploreClient({ initialProjects = [], categoryTaxonomy }: Explor
               <ProjectCard
                 key={project.id}
                 project={project}
-                // Priority-load the first 6 cards (above-fold on 4-col desktop)
-                priority={index < 6}
+                // Priority-load only the first card (the LCP hero element on mobile/desktop)
+                priority={index === 0}
               />
             ))}
           </div>
