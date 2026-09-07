@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useEffect, useCallback, useState } from "react";
+import React, { useEffect, useCallback, useState, useRef } from "react";
 import { createPortal } from "react-dom";
-import Image from "next/image";
 import {
   ChevronLeft,
   ChevronRight,
@@ -11,7 +10,6 @@ import {
   Check,
   ZoomIn,
   ZoomOut,
-  Maximize2,
   Loader2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -38,6 +36,9 @@ export function ProjectLightbox({
   const [isLoadingImage, setIsLoadingImage] = useState(true);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const pointerDownPos = useRef<{ x: number; y: number } | null>(null);
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -52,6 +53,13 @@ export function ProjectLightbox({
     setIsZoomed(false);
     setIsLoadingImage(true);
   }, [safeIndex, isOpen]);
+
+  // When entering zoom mode, ensure scroll container starts at top
+  useEffect(() => {
+    if (isZoomed && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
+  }, [isZoomed]);
 
   const handleCopyLink = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -82,6 +90,8 @@ export function ProjectLightbox({
         handlePrev();
       } else if (e.key === "ArrowRight") {
         handleNext();
+      } else if (e.key === "z" || e.key === "Z") {
+        setIsZoomed((prev) => !prev);
       }
     };
 
@@ -96,6 +106,7 @@ export function ProjectLightbox({
   }, [isOpen, onClose, handlePrev, handleNext]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (isZoomed) return;
     setTouchStartX(e.touches[0].clientX);
   };
 
@@ -111,6 +122,23 @@ export function ProjectLightbox({
     setTouchStartX(null);
   };
 
+  const handlePointerDown = (e: React.PointerEvent) => {
+    pointerDownPos.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const handleImagePointerUp = (e: React.PointerEvent) => {
+    if (!pointerDownPos.current) return;
+    const dx = Math.abs(e.clientX - pointerDownPos.current.x);
+    const dy = Math.abs(e.clientY - pointerDownPos.current.y);
+    pointerDownPos.current = null;
+
+    // If pointer moved more than 7px, treat as scroll or drag, not a toggle click
+    if (dx > 7 || dy > 7) return;
+
+    e.stopPropagation();
+    setIsZoomed((prev) => !prev);
+  };
+
   if (!mounted || !isOpen || !currentImage) return null;
 
   const lightboxContent = (
@@ -121,14 +149,13 @@ export function ProjectLightbox({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[99999] flex flex-col items-center justify-between bg-black/95 backdrop-blur-md select-none"
-          onClick={onClose}
+          className="fixed inset-0 z-[99999] flex flex-col bg-black/95 backdrop-blur-md select-none overflow-hidden"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
           {/* TOP ACTION BAR */}
           <div
-            className="w-full flex items-center justify-between px-4 sm:px-6 py-4 z-20 bg-gradient-to-b from-black/80 to-transparent"
+            className="w-full flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 z-30 bg-gradient-to-b from-black/90 via-black/70 to-transparent shrink-0"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3">
@@ -146,18 +173,18 @@ export function ProjectLightbox({
                 type="button"
                 onClick={() => setIsZoomed((prev) => !prev)}
                 className="flex items-center gap-1.5 rounded-full p-2.5 sm:px-3.5 sm:py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-all cursor-pointer"
-                title={isZoomed ? "Fit to screen (Zoom Out)" : "100% View (Zoom In)"}
+                title={isZoomed ? "عرض عادي (Fit)" : "تكبير (Zoom In)"}
                 aria-label="Toggle image zoom"
               >
                 {isZoomed ? (
                   <>
                     <ZoomOut className="h-4 w-4" />
-                    <span className="hidden sm:inline">Fit</span>
+                    <span className="hidden sm:inline">عرض عادي</span>
                   </>
                 ) : (
                   <>
                     <ZoomIn className="h-4 w-4" />
-                    <span className="hidden sm:inline">Zoom</span>
+                    <span className="hidden sm:inline">تكبير</span>
                   </>
                 )}
               </button>
@@ -198,13 +225,22 @@ export function ProjectLightbox({
 
           {/* MAIN IMAGE DISPLAY AREA */}
           <div
+            ref={scrollContainerRef}
             className={cn(
-              "relative flex-1 w-full flex items-center justify-center p-2 sm:p-6 overflow-hidden",
-              isZoomed ? "overflow-auto cursor-zoom-out" : "cursor-zoom-in"
+              "relative flex-1 w-full",
+              isZoomed
+                ? "overflow-y-auto overflow-x-hidden flex flex-col items-center justify-start overscroll-contain touch-pan-y pt-4 pb-28 px-2 sm:px-4 md:px-8"
+                : "overflow-hidden flex items-center justify-center p-2 sm:p-6 cursor-zoom-in"
             )}
             onClick={(e) => {
-              e.stopPropagation();
-              setIsZoomed((prev) => !prev);
+              // Clicking empty backdrop space
+              if (e.target === e.currentTarget) {
+                if (isZoomed) {
+                  setIsZoomed(false);
+                } else {
+                  onClose();
+                }
+              }
             }}
           >
             <motion.div
@@ -214,13 +250,15 @@ export function ProjectLightbox({
               exit={{ opacity: 0, scale: 0.96 }}
               transition={{ duration: 0.22, ease: "easeOut" }}
               className={cn(
-                "relative flex items-center justify-center transition-transform duration-300",
-                isZoomed ? "max-w-none max-h-none py-10" : "max-h-[78vh] max-w-[90vw]"
+                "relative transition-all duration-300",
+                isZoomed
+                  ? "w-full max-w-full sm:max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto flex flex-col items-center"
+                  : "flex items-center justify-center max-h-[78vh] max-w-[90vw]"
               )}
             >
               {/* Sleek Loading Indicator */}
               {isLoadingImage && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10">
+                <div className="absolute inset-0 min-h-[250px] flex flex-col items-center justify-center gap-3 z-10">
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 shadow-xl">
                     <Loader2 className="h-7 w-7 animate-spin text-white" />
                   </div>
@@ -236,17 +274,41 @@ export function ProjectLightbox({
                 alt={currentImage.alt}
                 onLoad={() => setIsLoadingImage(false)}
                 onError={() => setIsLoadingImage(false)}
+                onPointerDown={handlePointerDown}
+                onPointerUp={handleImagePointerUp}
                 className={cn(
-                  "rounded-[14px] shadow-2xl object-contain transition-all select-none",
+                  "rounded-xl sm:rounded-2xl shadow-2xl transition-opacity duration-300 select-none",
                   isLoadingImage ? "opacity-0" : "opacity-100",
                   isZoomed
-                    ? "w-auto max-w-none h-auto"
-                    : "max-h-[76vh] max-w-[88vw] w-auto h-auto"
+                    ? "w-full max-w-full h-auto object-contain cursor-zoom-out block"
+                    : "max-h-[76vh] max-w-[88vw] w-auto h-auto object-contain cursor-zoom-in"
                 )}
                 draggable={false}
               />
             </motion.div>
           </div>
+
+          {/* FLOATING ACTION PILL ON ZOOM */}
+          <AnimatePresence>
+            {isZoomed && (
+              <motion.button
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsZoomed(false);
+                }}
+                className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 rounded-full px-5 py-2.5 bg-black/85 hover:bg-black text-white text-xs font-semibold backdrop-blur-xl border border-white/20 shadow-2xl active:scale-95 transition-all cursor-pointer"
+                aria-label="Fit to screen"
+              >
+                <ZoomOut className="h-4 w-4 text-white/90" />
+                <span>تصغير (عرض الشاشة كاملة)</span>
+              </motion.button>
+            )}
+          </AnimatePresence>
 
           {/* PREV / NEXT NAVIGATION CONTROLS */}
           {total > 1 && (
@@ -257,7 +319,7 @@ export function ProjectLightbox({
                   e.stopPropagation();
                   handlePrev();
                 }}
-                className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 rounded-full p-3 sm:p-3.5 bg-black/60 hover:bg-white/20 text-white transition-all cursor-pointer backdrop-blur-md shadow-xl border border-white/10 active:scale-95"
+                className="fixed left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 rounded-full p-3 sm:p-3.5 bg-black/60 hover:bg-white/20 text-white transition-all cursor-pointer backdrop-blur-md shadow-xl border border-white/10 active:scale-95"
                 title="Previous Image (← Left Arrow)"
                 aria-label="Previous image"
               >
@@ -270,7 +332,7 @@ export function ProjectLightbox({
                   e.stopPropagation();
                   handleNext();
                 }}
-                className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 rounded-full p-3 sm:p-3.5 bg-black/60 hover:bg-white/20 text-white transition-all cursor-pointer backdrop-blur-md shadow-xl border border-white/10 active:scale-95"
+                className="fixed right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 rounded-full p-3 sm:p-3.5 bg-black/60 hover:bg-white/20 text-white transition-all cursor-pointer backdrop-blur-md shadow-xl border border-white/10 active:scale-95"
                 title="Next Image (→ Right Arrow)"
                 aria-label="Next image"
               >
@@ -279,10 +341,10 @@ export function ProjectLightbox({
             </>
           )}
 
-          {/* BOTTOM THUMBNAILS CAROUSEL STRIP */}
-          {total > 1 && (
+          {/* BOTTOM THUMBNAILS CAROUSEL STRIP (Visible when not zoomed) */}
+          {total > 1 && !isZoomed && (
             <div
-              className="w-full flex items-center justify-center py-4 px-4 z-20 bg-gradient-to-t from-black/80 to-transparent overflow-x-auto no-scrollbar gap-2"
+              className="w-full flex items-center justify-center py-4 px-4 z-20 bg-gradient-to-t from-black/80 to-transparent overflow-x-auto no-scrollbar gap-2 shrink-0"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center gap-2 max-w-full overflow-x-auto py-1 px-2 rounded-2xl bg-black/40 backdrop-blur-md border border-white/10">
