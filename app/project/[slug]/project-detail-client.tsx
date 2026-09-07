@@ -615,11 +615,6 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                           {cat}
                         </Link>
                       ))}
-                      {project.medium && (
-                        <span className="rounded-full bg-[var(--bg-neutral)] border border-[var(--border-neutral)] px-3.5 py-1.5 text-xs font-semibold text-[var(--content-secondary)]">
-                          {project.medium}
-                        </span>
-                      )}
                     </div>
                   </div>
 
