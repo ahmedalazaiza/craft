@@ -20,6 +20,7 @@ import {
   ChevronRight,
   Heart,
   LayoutGrid,
+  ShieldCheck,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -29,7 +30,7 @@ import { getValidAvatarUrl } from "@/lib/avatar";
 
 export function ProfileDropdown() {
   const router = useRouter();
-  const { user, logout } = useSession();
+  const { user, logout, isAdmin } = useSession();
   const { theme, resolvedTheme, setTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -200,6 +201,21 @@ export function ProfileDropdown() {
                 </div>
                 <ChevronRight className="h-3.5 w-3.5 text-[var(--content-tertiary)]" />
               </Link>
+
+              {isAdmin && (
+                <Link
+                  href="/settings?tab=admin"
+                  prefetch={true}
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center justify-between gap-2.5 rounded-[12px] px-3 py-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    <span>لوحة التحكم (Projects Control)</span>
+                  </div>
+                  <ChevronRight className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                </Link>
+              )}
             </div>
 
             {/* Appearance & Theme Switcher Section - Suspended for now as requested

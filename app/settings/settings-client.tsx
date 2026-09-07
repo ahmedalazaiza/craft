@@ -24,9 +24,11 @@ import { uploadMediaFile } from "@/lib/supabase/storage";
 import { DEFAULT_AVATAR_URL, getValidAvatarUrl } from "@/lib/avatar";
 import { toast } from "@/components/ui/toast";
 import { supabase } from "@/lib/supabase/client";
+import { AdminProjectsPanel } from "@/components/admin/admin-projects-panel";
 import {
   User,
   Shield,
+  ShieldCheck,
   Bell,
   Trash2,
   Mail,
@@ -51,12 +53,12 @@ import {
 } from "lucide-react";
 import { cn, normalizeUrl } from "@/lib/utils";
 
-type SettingsTab = "profile" | "security" | "preferences" | "danger";
+type SettingsTab = "profile" | "security" | "preferences" | "danger" | "admin";
 
 export function SettingsClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, projects, updateProfile, isLoadingDb, platformSettings } = useSession();
+  const { user, projects, updateProfile, isLoadingDb, platformSettings, isAdmin } = useSession();
 
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
 
@@ -179,6 +181,16 @@ export function SettingsClient() {
       authListener.subscription.unsubscribe();
     };
   }, [searchParams]);
+
+  // Synchronize tab parameter from URL
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam === "admin" && isAdmin) {
+      setActiveTab("admin");
+    } else if (tabParam === "profile" || tabParam === "security" || tabParam === "preferences" || tabParam === "danger") {
+      setActiveTab(tabParam as SettingsTab);
+    }
+  }, [searchParams, isAdmin]);
 
   // Cropper Modal state for avatar
   const [cropperSrc, setCropperSrc] = useState<string | null>(null);
@@ -559,6 +571,22 @@ export function SettingsClient() {
                 <Trash2 className="h-4 w-4 shrink-0" />
                 <span>Danger Zone</span>
               </button>
+
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("admin")}
+                  className={cn(
+                    "flex items-center gap-3 rounded-[14px] px-4 py-3 text-xs font-bold transition-all whitespace-nowrap cursor-pointer text-left w-full border border-emerald-500/20",
+                    activeTab === "admin"
+                      ? "bg-[var(--primary-forest-green)] text-white shadow-xs"
+                      : "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
+                  )}
+                >
+                  <ShieldCheck className="h-4 w-4 shrink-0" />
+                  <span>لوحة التحكم (Projects Control)</span>
+                </button>
+              )}
             </nav>
 
             {/* Quick Context Card */}
@@ -1073,6 +1101,13 @@ export function SettingsClient() {
                   </button>
                 </div>
               </Card>
+            )}
+
+            {/* ============================================================= */}
+            {/* 5. ADMIN CONTROL PANEL: PROJECTS MODERATION                   */}
+            {/* ============================================================= */}
+            {activeTab === "admin" && isAdmin && (
+              <AdminProjectsPanel />
             )}
           </main>
         </div>

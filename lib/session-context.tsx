@@ -91,6 +91,7 @@ interface SessionContextType {
   addComment: (projectId: string, content: string) => Promise<void>;
   saveProject: (projectData: Partial<Project> & { title: string }) => Promise<Project>;
   deleteProject: (id: string) => Promise<boolean>;
+  adminUpdateProjectCategory: (projectId: string, newCategory: string, newCategories?: string[]) => Promise<boolean>;
   updateProfile: (updatedData: Partial<Creator>) => Promise<boolean>;
   deleteAccount: () => Promise<boolean>;
   boards: Board[];
@@ -1064,6 +1065,46 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     return await deleteProjectFromDb(id);
   };
 
+  const adminUpdateProjectCategory = async (
+    projectId: string,
+    newCategory: string,
+    newCategories?: string[]
+  ): Promise<boolean> => {
+    if (!isAdmin) {
+      toast.error("Unauthorized: Only platform administrators can reassign project categories.", "Admin Access Required");
+      return false;
+    }
+
+    const cats = newCategories && newCategories.length > 0 ? newCategories : [newCategory];
+
+    // Optimistic UI update across all active project feeds in memory
+    setProjects((prev) =>
+      prev.map((p) => {
+        if (p.id === projectId) {
+          return {
+            ...p,
+            category: newCategory,
+            categories: cats,
+          };
+        }
+        return p;
+      })
+    );
+
+    try {
+      await updateProjectInDb(projectId, {
+        category: newCategory,
+        categories: cats,
+      });
+      toast.success(`Project category updated to "${newCategory}" successfully!`, "Category Updated");
+      return true;
+    } catch (err) {
+      console.error("Failed to update project category in Supabase:", err);
+      toast.error("Failed to update project category in database.", "Update Error");
+      return false;
+    }
+  };
+
   const updateProfile = async (updatedData: Partial<Creator>): Promise<boolean> => {
     if (!user) return false;
     const cleanUsername = updatedData.username
@@ -1309,6 +1350,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         addComment,
         saveProject,
         deleteProject,
+        adminUpdateProjectCategory,
         updateProfile,
         deleteAccount,
         boards,

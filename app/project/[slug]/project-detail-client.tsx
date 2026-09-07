@@ -60,6 +60,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
     isLoadingDb,
     isAuthReady,
     syncProjectMetrics,
+    isAdmin,
   } = useSession();
 
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
@@ -144,6 +145,8 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
       (user.username && project.creator.username && user.username.toLowerCase() === project.creator.username.toLowerCase())
     )
   );
+
+  const canEdit = isAuthor || isAdmin;
 
   const isDraft = project.published === false;
 
@@ -398,7 +401,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                 </span>
               </div>
 
-              {isAuthor && (
+              {canEdit && (
                 <div className="flex items-center gap-2 flex-wrap">
                   {/* If Draft, Show Direct Publish Button */}
                   {isDraft ? (
@@ -424,14 +427,20 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                     href={`/me/projects/${project.id}`}
                     prefetch={true}
                     className={buttonVariants({
-                      variant: "secondary",
+                      variant: isAdmin && !isAuthor ? "accent" : "secondary",
                       size: "default",
                       className: "shrink-0 gap-2 font-bold shadow-xs",
                     })}
                     title="Edit Case Study"
                   >
                     <Edit3 className="h-4 w-4" />
-                    <span>{isDraft ? "Edit Details" : "Edit Case Study"}</span>
+                    <span>
+                      {isAdmin && !isAuthor
+                        ? "Edit Project (Admin)"
+                        : isDraft
+                        ? "Edit Details"
+                        : "Edit Case Study"}
+                    </span>
                   </Link>
 
                   {/* Delete Project Button */}
@@ -521,8 +530,8 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                       <Share2 className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
                     </button>
 
-                    {/* 4. Report Project (Non-author) */}
-                    {!isAuthor && (
+                    {/* 4. Report Project (Non-author / Non-admin) */}
+                    {!canEdit && (
                       <button
                         type="button"
                         onClick={() => setIsReportModalOpen(true)}
@@ -536,8 +545,8 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                   </>
                 )}
 
-                {/* 4. Author Action Icons */}
-                {isAuthor && (
+                {/* 4. Author / Admin Action Icons */}
+                {canEdit && (
                   <>
                     {isDraft && (
                       <button

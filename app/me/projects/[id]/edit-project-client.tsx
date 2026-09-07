@@ -16,7 +16,7 @@ interface EditProjectClientProps {
 }
 
 export function EditProjectClient({ projectId, initialProject }: EditProjectClientProps) {
-  const { projects, user, isLoadingDb } = useSession();
+  const { projects, user, isLoadingDb, isAdmin } = useSession();
 
   // Find project in live session context (most up-to-date) or fallback to initialProject
   const project = projects.find((p) => p.id === projectId) || initialProject;
@@ -35,7 +35,7 @@ export function EditProjectClient({ projectId, initialProject }: EditProjectClie
             Authentication Required
           </h1>
           <p className="mt-2 type-body-default text-[var(--content-secondary)]">
-            You must be logged in as the author to edit this project.
+            You must be logged in as the author or an administrator to edit this project.
           </p>
           <div className="mt-6 flex justify-center gap-3">
             <Link href="/login">
@@ -52,14 +52,16 @@ export function EditProjectClient({ projectId, initialProject }: EditProjectClie
     notFound();
   }
 
-  // If user is not the author of this project
+  // User is allowed if author OR administrator
   const isAuthor =
     user &&
     project.creator &&
     (user.id === project.creator.id ||
       user.username.toLowerCase() === project.creator.username.toLowerCase());
 
-  if (!isAuthor && !isLoadingDb) {
+  const canEdit = isAuthor || isAdmin;
+
+  if (!canEdit && !isLoadingDb) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-20 text-center">
         <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] p-10 rounded-[28px] shadow-sm">
@@ -67,7 +69,7 @@ export function EditProjectClient({ projectId, initialProject }: EditProjectClie
             Access Denied
           </h1>
           <p className="mt-2 type-body-default text-[var(--content-secondary)]">
-            You do not have permission to edit this case study. Only the original author can edit it.
+            You do not have permission to edit this case study. Only the original author or a platform administrator can edit it.
           </p>
           <div className="mt-6 flex justify-center gap-3">
             <Link href={`/project/${project.slug}`}>
@@ -82,5 +84,19 @@ export function EditProjectClient({ projectId, initialProject }: EditProjectClie
     );
   }
 
-  return <ProjectForm initialData={project} mode="edit" />;
+  return (
+    <div className="relative w-full">
+      {isAdmin && !isAuthor && (
+        <div className="sticky top-0 z-50 bg-amber-500 text-neutral-950 px-4 py-2 text-xs font-bold text-center flex items-center justify-center gap-2 shadow-md">
+          <span className="px-2 py-0.5 rounded-full bg-black/20 text-[11px] uppercase tracking-wider">
+            Admin Moderation
+          </span>
+          <span>
+            You are editing a project published by @{project.creator?.username || "creator"}. Changes will update live across the platform.
+          </span>
+        </div>
+      )}
+      <ProjectForm initialData={project} mode="edit" />
+    </div>
+  );
 }

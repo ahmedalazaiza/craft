@@ -354,12 +354,12 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
 
             {isAdmin && (
               <Link
-                href="/settings"
+                href="/settings?tab=admin"
                 onClick={onClose}
-                className="flex items-center gap-3.5 px-4 py-3 rounded-2xl text-base font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+                className="flex items-center gap-3.5 px-4 py-3 rounded-2xl text-base font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
               >
                 <ShieldCheck className="h-5 w-5 shrink-0" />
-                <span>Admin Settings</span>
+                <span>لوحة التحكم (Projects Control)</span>
               </Link>
             )}
           </div>
