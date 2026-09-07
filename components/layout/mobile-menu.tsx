@@ -34,7 +34,7 @@ interface MobileMenuProps {
 
 export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
   const pathname = usePathname();
-  const { user, isAdmin, notifications, logout } = useSession();
+  const { user, isAdmin, notifications, logout, creators } = useSession();
 
   // 1. ONLY close when pathname actually changes (prevents premature closure on click)
   const prevPathnameRef = useRef(pathname);
@@ -130,31 +130,80 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
             <ChevronRight className="h-5 w-5 text-[var(--content-tertiary)] group-hover:text-[var(--content-primary)] transition-colors shrink-0" />
           </Link>
         ) : (
-          /* Guest CTA Banner */
-          <div className="p-5 rounded-3xl bg-gradient-to-br from-[var(--bg-elevated)] via-[var(--bg-neutral)] to-[var(--bg-screen)] border border-[var(--border-neutral)] shadow-xs space-y-3.5">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-[var(--brand-secondary)]" />
-              <span className={cn(bricolage.className, "text-base font-bold text-[var(--content-primary)]")}>
-                Layerat Creative Network
+          /* Guest Branded Card */
+          <div className="relative overflow-hidden rounded-[28px] bg-neutral-950 dark:bg-[#121511] text-white border border-neutral-800/80 p-5 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.35)] space-y-4">
+            {/* Ambient Brand Violet Glows */}
+            <div className="absolute -top-10 -right-10 h-36 w-36 rounded-full bg-[var(--brand-secondary-glow)]/30 blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-8 -left-8 h-28 w-28 rounded-full bg-[var(--brand-secondary-subtle)]/30 blur-2xl pointer-events-none" />
+            <div className="absolute inset-0 bg-[radial-gradient(#ffffff0a_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+
+            {/* Header Badge */}
+            <div className="relative z-10 flex items-center justify-between gap-2">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-2.5 py-1 backdrop-blur-md">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                </span>
+                <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-neutral-300">
+                  Creative Network
+                </span>
+              </div>
+              <span className="text-[10px] font-mono text-neutral-400">
+                Free to Join
               </span>
             </div>
-            <p className="text-xs text-[var(--content-secondary)] leading-relaxed">
-              Showcase your portfolio, discover curated case studies, and connect with design studios worldwide.
-            </p>
-            <div className="grid grid-cols-2 gap-2.5 pt-1">
+
+            {/* Headline & Description */}
+            <div className="relative z-10 space-y-1.5">
+              <h3 className={cn(bricolage.className, "text-lg font-black tracking-tight text-white leading-snug")}>
+                Where designers showcase world-class craft.
+              </h3>
+              <p className="text-xs text-neutral-300 leading-relaxed font-normal">
+                Publish case studies, get discovered by studios, and connect with creative peers worldwide.
+              </p>
+            </div>
+
+            {/* Social Proof Creators Avatars */}
+            {creators && creators.length > 0 && (
+              <div className="relative z-10 flex items-center gap-2.5 pt-0.5">
+                <div className="flex items-center -space-x-2">
+                  {creators.slice(0, 3).map((c) => (
+                    <div
+                      key={c.id}
+                      className="relative h-6 w-6 rounded-full overflow-hidden ring-2 ring-neutral-950 shrink-0"
+                    >
+                      <Image
+                        src={getValidAvatarUrl(c.avatarUrl)}
+                        alt={c.displayName}
+                        fill
+                        sizes="24px"
+                        className="object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <span className="text-[11px] text-neutral-300 font-medium">
+                  Joined by independent creators & studios
+                </span>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="relative z-10 flex items-center gap-2.5 pt-1">
               <Link
                 href="/login"
                 onClick={onClose}
-                className="flex items-center justify-center h-11 rounded-full text-xs font-semibold bg-[var(--bg-elevated)] border border-[var(--border-neutral)] text-[var(--content-primary)] active:scale-95 transition-transform"
+                className="flex items-center justify-center h-11 px-5 rounded-full text-xs font-semibold border border-white/20 bg-white/10 hover:bg-white/15 text-white active:scale-95 transition-all backdrop-blur-md shrink-0"
               >
                 Log In
               </Link>
               <Link
                 href="/signup"
                 onClick={onClose}
-                className="flex items-center justify-center h-11 rounded-full text-xs font-bold bg-[var(--btn-cta-bg)] text-[var(--btn-cta-fg)] active:scale-95 transition-transform shadow-xs"
+                className="flex-1 flex items-center justify-center gap-2 h-11 rounded-full text-xs font-bold bg-white text-neutral-950 hover:bg-neutral-100 shadow-md active:scale-95 transition-all"
               >
-                Join as Creator
+                <span>Join as Creator</span>
+                <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
           </div>
