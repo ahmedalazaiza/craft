@@ -262,7 +262,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
   }, [project.coverImage, project.galleryImages]);
 
   return (
-    <article className="w-full px-4 sm:px-6 lg:px-[140px] py-4 sm:py-6 pb-48 sm:pb-32">
+    <article className="w-full max-w-[1480px] mx-auto px-4 sm:px-6 md:px-8 xl:px-12 py-4 sm:py-6 pb-48 sm:pb-32">
       <FadeIn>
         {/* Breadcrumb Navigation */}
         <Breadcrumbs
@@ -625,11 +625,13 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                     <Image
                       src={img}
                       alt={`${project.title} gallery image ${idx + 1}`}
-                      width={2000}
-                      height={1200}
+                      width={2880}
+                      height={1800}
                       unoptimized
-                      className="w-full h-auto block transition-opacity duration-300 group-hover:opacity-95"
                       priority={idx === 0}
+                      loading={idx === 0 ? "eager" : "lazy"}
+                      className="w-full h-auto block"
+                      style={{ imageRendering: "auto" }}
                     />
 
                     {/* Subtle Zoom/Expand Overlay */}

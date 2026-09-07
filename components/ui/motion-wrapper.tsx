@@ -37,7 +37,7 @@ export function FadeIn({
         delay,
         ease: MOTION_EASE,
       }}
-      className={cn("w-full will-change-[transform,opacity]", className)}
+      className={cn("w-full", className)}
     >
       {children}
     </motion.div>

@@ -2,15 +2,16 @@ import { supabase } from "./client";
 
 /**
  * Client-side fast image optimization
- * Resizes camera photos to optimal web scale (e.g. 2000px / WebP) with high quality
+ * Resizes large camera photos to optimal web scale (e.g. 2880px / WebP) with ultra-high quality (0.94)
+ * Preserves original pristine image bytes if already within bounds to avoid lossy re-encoding
  */
 export async function optimizeImage(
   file: File,
-  maxWidth = 2000,
-  maxHeight = 2000,
-  quality = 0.88
+  maxWidth = 2880,
+  maxHeight = 2880,
+  quality = 0.94
 ): Promise<{ blob: Blob; mimeType: string }> {
-  // If it's already a small SVG or GIF, return as is
+  // If it's already an SVG or GIF, return as is
   if (file.type === "image/svg+xml" || file.type === "image/gif") {
     return { blob: file, mimeType: file.type };
   }
@@ -26,6 +27,17 @@ export async function optimizeImage(
     img.onload = () => {
       let width = img.width;
       let height = img.height;
+
+      // If already within bounds and reasonable size (<6MB), preserve pristine original pixels
+      if (
+        width <= maxWidth &&
+        height <= maxHeight &&
+        file.size < 6 * 1024 * 1024 &&
+        (file.type === "image/webp" || file.type === "image/png" || file.type === "image/jpeg")
+      ) {
+        resolve({ blob: file, mimeType: file.type });
+        return;
+      }
 
       // Maintain aspect ratio
       if (width > height) {
@@ -50,12 +62,12 @@ export async function optimizeImage(
         return;
       }
 
-      // Smooth interpolation
+      // High-fidelity bicubic interpolation
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
       ctx.drawImage(img, 0, 0, width, height);
 
-      // WebP compression for superior quality & small size
+      // WebP compression at 0.94 for gallery-grade clarity without compression banding
       canvas.toBlob(
         (blob) => {
           if (blob) {
@@ -86,8 +98,8 @@ export async function uploadMediaFile(
   folder = "projects"
 ): Promise<string> {
   try {
-    // 1. Optimize image client-side to WebP
-    const { blob, mimeType } = await optimizeImage(file, 2000, 2000, 0.88);
+    // 1. Optimize image client-side to high-res WebP (2880px / 0.94)
+    const { blob, mimeType } = await optimizeImage(file, 2880, 2880, 0.94);
 
     // 2. Attempt primary high-speed upload to Cloudflare R2 via /api/upload
     try {
