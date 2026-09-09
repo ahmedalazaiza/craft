@@ -62,15 +62,31 @@ export function ProjectCard({ project, priority = false, className }: ProjectCar
             className="absolute inset-0 z-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--content-primary)]"
             aria-label={`View project: ${liveProject.title}`}
           >
-            <Image
-              src={liveProject.coverImage}
-              alt={liveProject.title}
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-              className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
-              priority={priority}
-              fetchPriority={priority ? "high" : undefined}
-            />
+            {liveProject.coverImage?.trim() || (liveProject.galleryImages && liveProject.galleryImages.length > 0) ? (
+              <Image
+                src={liveProject.coverImage?.trim() || liveProject.galleryImages[0]}
+                alt={liveProject.title}
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+                priority={priority}
+                fetchPriority={priority ? "high" : undefined}
+              />
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 bg-gradient-to-br from-[var(--bg-neutral)] to-[var(--border-neutral)]/40 text-center select-none">
+                <div className="h-12 w-12 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-secondary)] mb-2 shadow-xs">
+                  <span className="font-mono text-sm font-black uppercase">
+                    {(liveProject.title || "PR").slice(0, 2)}
+                  </span>
+                </div>
+                <span className="text-xs font-bold text-[var(--content-primary)] truncate max-w-[85%]">
+                  {liveProject.title || "Untitled"}
+                </span>
+                <span className="text-[10px] font-mono text-[var(--content-tertiary)] uppercase mt-0.5">
+                  {liveProject.category}
+                </span>
+              </div>
+            )}
           </Link>
 
           {/* Subtle Hover Dark Dimmer Scrim */}

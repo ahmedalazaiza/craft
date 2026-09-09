@@ -78,6 +78,25 @@ export async function generateUniqueUsername(
 }
 
 /**
+ * Check if a custom username is available
+ */
+export async function isUsernameAvailable(username: string): Promise<boolean> {
+  const clean = slugifyUsername(username);
+  if (!clean || clean.length < 2) return false;
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id")
+      .ilike("username", clean)
+      .maybeSingle();
+    if (error) return false;
+    return !data;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Sign up a new user with Email and Password
  */
 export async function signUpWithEmail(

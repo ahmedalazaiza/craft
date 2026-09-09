@@ -22,13 +22,20 @@ import {
   ShieldCheck,
   ExternalLink,
   Loader2,
+  Globe,
+  Edit2,
+  Check,
 } from "lucide-react";
 import {
   PasswordStrengthIndicator,
   getPasswordStrength,
 } from "@/components/ui/password-strength-indicator";
 import { getResendStatus, sendVerificationEmail } from "@/lib/resend-limiter";
-import { generateUniqueUsername, slugifyUsername } from "@/lib/supabase/auth";
+import {
+  generateUniqueUsername,
+  slugifyUsername,
+  isUsernameAvailable,
+} from "@/lib/supabase/auth";
 import { bricolage } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
@@ -48,11 +55,16 @@ export function SignupClient() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Live Unique Username Check State
+  // Live Unique Username & Custom Handle State
   const [resolvedUsername, setResolvedUsername] = useState("");
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [customUsername, setCustomUsername] = useState("");
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [isCheckingCustom, setIsCheckingCustom] = useState(false);
 
   // Success "Check Inbox" screen state
+  const [emailTouched, setEmailTouched] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
@@ -60,27 +72,64 @@ export function SignupClient() {
 
   const { isRequiredSatisfied } = getPasswordStrength(password);
 
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const isEmailValid = EMAIL_REGEX.test(email.trim());
+
+  const activeUsername = (customUsername || resolvedUsername).trim();
+
   const isFormValid =
     displayName.trim().length > 0 &&
-    email.trim().length > 0 &&
-    isRequiredSatisfied;
+    isEmailValid &&
+    isRequiredSatisfied &&
+    !usernameError &&
+    !isCheckingUsername &&
+    !isCheckingCustom;
 
-  // Verification of unique handle occurs when user finishes typing full name and moves to next field
+  // Verification of unique handle occurs when user finishes typing full name
   const handleNameBlur = async () => {
     const cleanName = displayName.trim();
     if (!cleanName) {
       setResolvedUsername("");
       return;
     }
+    if (customUsername.trim()) return; // User manually chose a handle
 
     setIsCheckingUsername(true);
     try {
       const unique = await generateUniqueUsername(cleanName, email.trim() || undefined);
       setResolvedUsername(unique);
+      setUsernameError(null);
     } catch (err) {
       console.error("Handle generation error:", err);
     } finally {
       setIsCheckingUsername(false);
+    }
+  };
+
+  const handleCustomUsernameChange = async (val: string) => {
+    const clean = slugifyUsername(val);
+    setCustomUsername(clean);
+    if (!clean) {
+      setUsernameError("Please enter a valid handle.");
+      return;
+    }
+    if (clean.length < 3) {
+      setUsernameError("Handle must be at least 3 characters.");
+      return;
+    }
+
+    setIsCheckingCustom(true);
+    try {
+      const available = await isUsernameAvailable(clean);
+      if (!available) {
+        setUsernameError("Handle is already taken. Please choose another.");
+      } else {
+        setUsernameError(null);
+      }
+    } catch {
+      setUsernameError(null);
+    } finally {
+      setIsCheckingCustom(false);
     }
   };
 
@@ -100,6 +149,7 @@ export function SignupClient() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setEmailTouched(true);
     if (!displayName.trim()) {
       setErrorMessage("Please enter your full name.");
       return;
@@ -330,36 +380,31 @@ export function SignupClient() {
   return (
     <div className="flex min-h-[calc(100vh-14rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-[140px]">
       <FadeIn className="w-full max-w-md">
-        <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[24px] p-2">
-          <CardHeader className="text-center pb-4 pt-6 sm:pt-7">
+        <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[28px] p-6 sm:p-8 shadow-sm">
+          <CardHeader className="p-0 mb-6 text-center space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--bg-neutral)] border border-[var(--border-neutral)] text-[11px] font-semibold text-[var(--content-secondary)] mx-auto mb-1">
+              <Sparkles className="h-3 w-3 text-[var(--brand-secondary)]" />
+              <span>Join Independent Creators</span>
+            </div>
             <h1
               className={cn(
                 bricolage.className,
-                "text-2xl sm:text-3xl font-bold text-[var(--content-primary)] tracking-tight"
+                "text-2xl sm:text-3xl font-black text-[var(--content-primary)] tracking-tight"
               )}
             >
-              Create your profile
+              Create your account
             </h1>
-            <p className="mt-1.5 text-xs sm:text-sm text-[var(--content-secondary)] leading-relaxed max-w-xs mx-auto">
-              Publish living case studies and connect with makers worldwide.
+            <p className="type-body-default text-[var(--content-secondary)]">
+              Build your design portfolio and showcase your work.
             </p>
           </CardHeader>
 
-          <CardContent className="space-y-5">
-            {errorMessage && (
-              <div className="flex items-center gap-2.5 rounded-xl bg-red-500/10 border border-red-500/20 p-3.5 text-xs text-red-600 dark:text-red-400">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                <span>{errorMessage}</span>
-              </div>
-            )}
+          <CardContent className="p-0">
+            {/* Google OAuth Button */}
+            <div className="space-y-4 mb-5">
+            <GoogleAuthButton text="signup_with" redirectPath={redirectPath} />
 
-            <GoogleAuthButton
-              redirectPath={redirectPath}
-              text="Sign up with Google"
-              onError={(err) => setErrorMessage(err)}
-            />
-
-            <div className="relative my-2">
+            <div className="relative flex items-center justify-center">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-[var(--border-neutral)]" />
               </div>
@@ -369,65 +414,132 @@ export function SignupClient() {
                 </span>
               </div>
             </div>
+          </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5">
-                  Full name
-                </label>
-                <div className="relative">
-                  <Input
-                    type="text"
-                    required
-                    value={displayName}
-                    onChange={(e) => {
-                      setDisplayName(e.target.value);
-                      if (resolvedUsername) {
-                        setResolvedUsername("");
-                      }
-                    }}
-                    onBlur={handleNameBlur}
-                    placeholder="e.g. Elena Vance"
-                    autoComplete="name"
-                  />
-                  <User className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--content-tertiary)] pointer-events-none" />
-                </div>
-                {displayName.trim() && (resolvedUsername || isCheckingUsername) && (
-                  <div className="mt-2.5 min-h-[22px]">
-                    {isCheckingUsername ? (
-                      <div className="flex items-center gap-2 text-[11px] text-[var(--content-secondary)] animate-pulse">
-                        <Loader2 className="h-3.5 w-3.5 text-[var(--content-primary)] animate-spin shrink-0" />
-                        <span>Verifying unique handle availability...</span>
-                      </div>
-                    ) : resolvedUsername ? (
-                      <div className="flex items-center gap-1.5 text-[11px] text-[var(--content-tertiary)] animate-fade-in">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-                        <span>Your unique handle will be:</span>
-                        <span className="font-mono font-semibold text-[var(--content-primary)] bg-[var(--bg-neutral)] px-2 py-0.5 rounded-md">
-                          @{resolvedUsername}
-                        </span>
-                      </div>
-                    ) : null}
+          {errorMessage && (
+            <div className="mb-4 flex items-center gap-2.5 rounded-xl bg-red-500/10 border border-red-500/20 p-3.5 text-xs text-red-600 dark:text-red-400">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5">
+                Full name
+              </label>
+              <div className="relative">
+                <Input
+                  type="text"
+                  required
+                  value={displayName}
+                  onChange={(e) => {
+                    setDisplayName(e.target.value);
+                    if (resolvedUsername && !customUsername) {
+                      setResolvedUsername("");
+                    }
+                  }}
+                  onBlur={handleNameBlur}
+                  placeholder="e.g. Elena Vance"
+                  autoComplete="name"
+                />
+                <User className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--content-tertiary)] pointer-events-none" />
+              </div>
+
+              {/* Stable Handle Slot (Zero Layout Shift) */}
+              <div className="mt-2 min-h-[34px] flex flex-col justify-center">
+                {isEditingUsername ? (
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1 flex items-center">
+                      <span className="absolute left-2.5 text-xs font-mono font-bold text-[var(--content-tertiary)]">@</span>
+                      <input
+                        type="text"
+                        value={customUsername || resolvedUsername}
+                        onChange={(e) => handleCustomUsernameChange(e.target.value)}
+                        placeholder="yourhandle"
+                        className="w-full bg-[var(--bg-neutral)] border border-[var(--border-neutral)] focus:border-[var(--content-primary)] rounded-lg pl-7 pr-7 py-1 text-xs font-mono font-semibold text-[var(--content-primary)] focus:outline-none"
+                      />
+                      {isCheckingCustom && (
+                        <Loader2 className="absolute right-2.5 h-3.5 w-3.5 animate-spin text-[var(--content-tertiary)]" />
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingUsername(false)}
+                      className="text-xs text-[var(--content-primary)] font-bold px-2 py-1 rounded-md bg-[var(--bg-neutral)] hover:bg-[var(--border-neutral)] transition-colors cursor-pointer"
+                    >
+                      Done
+                    </button>
+                  </div>
+                ) : isCheckingUsername ? (
+                  <div className="flex items-center gap-2 text-[11px] text-[var(--content-secondary)] animate-pulse">
+                    <Loader2 className="h-3.5 w-3.5 text-[var(--content-primary)] animate-spin shrink-0" />
+                    <span>Checking unique handle availability...</span>
+                  </div>
+                ) : activeUsername ? (
+                  <div className="flex items-center justify-between text-[11px] text-[var(--content-tertiary)]">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                      <span className="hidden sm:inline">Unique handle:</span>
+                      <span className="font-mono font-bold text-[var(--content-primary)] bg-[var(--bg-neutral)] px-2 py-0.5 rounded-md truncate max-w-[180px]">
+                        @{activeUsername}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!customUsername) setCustomUsername(resolvedUsername);
+                        setIsEditingUsername(true);
+                      }}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors cursor-pointer ml-2 shrink-0 underline decoration-[var(--border-neutral)] hover:decoration-current"
+                    >
+                      <Edit2 className="h-3 w-3" />
+                      <span>Customize</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 text-[11px] text-[var(--content-tertiary)]">
+                    <Globe className="h-3.5 w-3.5 shrink-0 opacity-70" />
+                    <span>Your portfolio URL will be layerat.com/u/handle</span>
                   </div>
                 )}
-              </div>
 
-              <div>
-                <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5">
-                  Email address
-                </label>
-                <div className="relative">
-                  <Input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="elena@example.com"
-                    autoComplete="email"
-                  />
-                  <Mail className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--content-tertiary)] pointer-events-none" />
-                </div>
+                {usernameError && (
+                  <p className="text-[10px] text-rose-500 font-semibold mt-1 animate-fade-in">
+                    {usernameError}
+                  </p>
+                )}
               </div>
+            </div>
+
+            <div>
+              <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5">
+                Email address
+              </label>
+              <div className="relative">
+                <Input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (emailTouched && isEmailValid) setEmailTouched(false);
+                  }}
+                  onBlur={() => {
+                    if (email.trim().length > 0) setEmailTouched(true);
+                  }}
+                  error={emailTouched && email.trim().length > 0 && !isEmailValid}
+                  placeholder="elena@example.com"
+                  autoComplete="email"
+                />
+                <Mail className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--content-tertiary)] pointer-events-none" />
+              </div>
+              {emailTouched && email.trim().length > 0 && !isEmailValid && (
+                <p className="text-[11px] text-rose-500 font-semibold mt-1.5 animate-fade-in flex items-center gap-1">
+                  <span>Please enter a valid email address (e.g. name@domain.com)</span>
+                </p>
+              )}
+            </div>
 
               <div>
                 <label className="type-body-default-bold text-[var(--content-primary)] block mb-1.5">

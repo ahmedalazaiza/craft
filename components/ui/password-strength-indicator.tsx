@@ -49,15 +49,17 @@ export function getPasswordStrength(password: string) {
 interface PasswordStrengthIndicatorProps {
   password: string;
   className?: string;
+  alwaysVisible?: boolean;
 }
 
 export function PasswordStrengthIndicator({
   password,
   className,
+  alwaysVisible = true,
 }: PasswordStrengthIndicatorProps) {
-  if (!password) return null;
+  if (!alwaysVisible && !password) return null;
 
-  const { score, isRequiredSatisfied } = getPasswordStrength(password);
+  const { score, isRequiredSatisfied } = getPasswordStrength(password || "");
 
   return (
     <div className={cn("space-y-2 pt-1.5", className)}>

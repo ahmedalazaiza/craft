@@ -21,6 +21,7 @@ import { getValidAvatarUrl } from "@/lib/avatar";
 import { getCanonicalShareUrl } from "@/lib/seo";
 import { categoryToSlug } from "@/lib/taxonomy";
 import { DeleteProjectModal } from "@/components/project/delete-project-modal";
+import { FormattedCaseStudy } from "@/components/project/formatted-case-study";
 import { incrementProjectViewsInDb } from "@/lib/supabase/queries";
 import { supabase } from "@/lib/supabase/client";
 import { formatProjectPublishedDate } from "@/lib/utils";
@@ -389,15 +390,18 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
             <div className="flex flex-col md:items-end gap-3 shrink-0">
               <div className="flex items-center gap-3 sm:gap-4 text-xs font-mono">
                 <span className="text-[var(--content-secondary)]">
-                  <strong className="text-[var(--content-primary)] font-bold">{project.appreciations}</strong> appreciations
+                  <strong className="text-[var(--content-primary)] font-bold">{project.appreciations}</strong>{" "}
+                  {project.appreciations === 1 ? "appreciation" : "appreciations"}
                 </span>
                 <span className="text-[var(--content-tertiary)]">•</span>
                 <span className="text-[var(--content-secondary)]">
-                  <strong className="text-[var(--content-primary)] font-bold">{project.views ?? 0}</strong> views
+                  <strong className="text-[var(--content-primary)] font-bold">{project.views ?? 0}</strong>{" "}
+                  {(project.views ?? 0) === 1 ? "view" : "views"}
                 </span>
                 <span className="text-[var(--content-tertiary)]">•</span>
                 <span className="text-[var(--content-secondary)]">
-                  <strong className="text-[var(--content-primary)] font-bold">{project.comments?.length || 0}</strong> comments
+                  <strong className="text-[var(--content-primary)] font-bold">{project.comments?.length || 0}</strong>{" "}
+                  {(project.comments?.length || 0) === 1 ? "comment" : "comments"}
                 </span>
               </div>
 
@@ -620,7 +624,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                   <div
                     key={idx}
                     onClick={() => openLightbox(idx)}
-                    className="relative w-full rounded-none bg-[var(--bg-neutral)] overflow-hidden cursor-pointer select-none group"
+                    className="relative w-full rounded-none bg-[var(--bg-neutral)] overflow-hidden cursor-pointer select-none group min-h-[280px] sm:min-h-[480px]"
                   >
                     <Image
                       src={img}
@@ -651,9 +655,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                   <h2 className="type-title-section text-[var(--content-primary)] mb-4">
                     About this Project
                   </h2>
-                  <div className="type-body-large text-[var(--content-secondary)] leading-relaxed whitespace-pre-line font-normal">
-                    {project.body || project.summary}
-                  </div>
+                  <FormattedCaseStudy content={project.body || project.summary} />
                 </div>
 
                 {/* Project Details: Categories, Disciplines, Tags & Tools Matrix */}
