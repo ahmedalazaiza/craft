@@ -382,10 +382,6 @@ export function SignupClient() {
       <FadeIn className="w-full max-w-md">
         <Card elevated className="border border-[var(--border-neutral)] bg-[var(--bg-screen)] rounded-[28px] p-6 sm:p-8 shadow-sm">
           <CardHeader className="p-0 mb-6 text-center space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--bg-neutral)] border border-[var(--border-neutral)] text-[11px] font-semibold text-[var(--content-secondary)] mx-auto mb-1">
-              <Sparkles className="h-3 w-3 text-[var(--brand-secondary)]" />
-              <span>Join Independent Creators</span>
-            </div>
             <h1
               className={cn(
                 bricolage.className,
@@ -402,7 +398,7 @@ export function SignupClient() {
           <CardContent className="p-0">
             {/* Google OAuth Button */}
             <div className="space-y-4 mb-5">
-            <GoogleAuthButton text="signup_with" redirectPath={redirectPath} />
+            <GoogleAuthButton text="Continue with Google" redirectPath={redirectPath} />
 
             <div className="relative flex items-center justify-center">
               <div className="absolute inset-0 flex items-center">

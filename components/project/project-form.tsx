@@ -100,8 +100,8 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const tagInputRef = useRef<HTMLInputElement>(null);
   const tagDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Workflow Step: 1 = Image Uploader & Stacks, 2 = Project Details & Publishing
-  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+  // AI Auto-Fill State
+  const [isAiAnalyzing, setIsAiAnalyzing] = useState(false);
 
   // Autocomplete Search States
   const [toolSearchOpen, setToolSearchOpen] = useState(false);
@@ -802,35 +802,84 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   };
 
   // ---------------------------------------------------------------------------
-  // STEP TRANSITIONS & NAVIGATION (AUTO-SCROLL TO TOP ON STEP CHANGE)
+  // AI AUTO-FILL ASSISTANT (GEMINI MULTIMODAL ANALYSIS)
   // ---------------------------------------------------------------------------
-  const handleProceedToDetails = () => {
-    if (!title.trim()) {
-      toast.error("Please enter a title for your project before proceeding.", "Title Required");
-      titleInputRef.current?.focus();
-      return;
-    }
-    if (galleryImages.length === 0) {
-      toast.warning("Please upload at least one image spread before proceeding.", "Images Required");
-      return;
-    }
-    setCurrentStep(2);
-    if (mainScrollRef.current) {
-      mainScrollRef.current.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    }
-    if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  const handleGenerateAiAnalysis = async () => {
+    if (galleryImages.length === 0 || isAiAnalyzing) return;
+    setIsAiAnalyzing(true);
+    try {
+      const filenames: string[] = [];
+      const imageDataList: { data: string; mimeType: string }[] = [];
+      const remoteUrls: string[] = [];
+
+      for (const url of galleryImages.slice(0, 3)) {
+        if (url.startsWith("blob:")) {
+          const file = pendingFilesRef.current.get(url);
+          if (file) {
+            filenames.push(file.name);
+            const reader = new FileReader();
+            const base64Promise = new Promise<{ data: string; mimeType: string }>((resolve, reject) => {
+              reader.onload = () => {
+                const res = reader.result as string;
+                const match = res.match(/^data:([^;]+);base64,(.+)$/);
+                if (match) {
+                  resolve({ mimeType: match[1], data: match[2] });
+                } else {
+                  resolve({ mimeType: file.type || "image/jpeg", data: res.split(",")[1] || "" });
+                }
+              };
+              reader.onerror = reject;
+            });
+            reader.readAsDataURL(file);
+            imageDataList.push(await base64Promise);
+          }
+        } else {
+          remoteUrls.push(url);
+        }
+      }
+
+      const res = await fetch("/api/ai/analyze-project", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageUrls: remoteUrls,
+          imageDataList,
+          filenames,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to analyze project with AI.");
+      }
+
+      const aiData = await res.json();
+      if (aiData.title && !title.trim()) setTitle(aiData.title);
+      if (aiData.body && !body.trim()) setBody(aiData.body);
+      if (Array.isArray(aiData.categories) && aiData.categories.length > 0) {
+        setCategories(aiData.categories.slice(0, MAX_CATEGORIES));
+      } else if (aiData.category) {
+        setCategories([aiData.category]);
+      }
+      if (Array.isArray(aiData.subCategories) && aiData.subCategories.length > 0) {
+        setSpecializations(aiData.subCategories.slice(0, MAX_SPECIALIZATIONS));
+      }
+      if (Array.isArray(aiData.tags) && aiData.tags.length > 0) {
+        setTags((prev) => Array.from(new Set([...prev, ...aiData.tags])).slice(0, 20));
+      }
+      if (Array.isArray(aiData.tools) && aiData.tools.length > 0) {
+        setTools((prev) => Array.from(new Set([...prev, ...aiData.tools])).slice(0, 10));
+      }
+
+      toast.success("Project details auto-filled using AI analysis!", "AI Assistant");
+    } catch (err: unknown) {
+      console.error("AI Analysis error:", err);
+      const msg = err instanceof Error ? err.message : "AI analysis failed. Please enter details manually.";
+      toast.error(msg, "AI Analysis");
+    } finally {
+      setIsAiAnalyzing(false);
     }
   };
-
-  useEffect(() => {
-    if (mainScrollRef.current) {
-      mainScrollRef.current.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    }
-    if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    }
-  }, [currentStep]);
 
   // ---------------------------------------------------------------------------
   // SAVE / PUBLISH DISPATCHER
@@ -843,15 +892,13 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
     if (galleryImages.length === 0) {
       toast.warning("Please upload at least one image for your project.", "Images Required");
-      setCurrentStep(1);
       return;
     }
 
     if (isPublish) {
       if (!title.trim()) {
         toast.error("Please enter a title for your project.", "Title Required");
-        setCurrentStep(2);
-        setTimeout(() => titleInputRef.current?.focus(), 100);
+        titleInputRef.current?.focus();
         return;
       }
     }
@@ -1048,8 +1095,8 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
       {/* TOP STICKY HEADER (NAVIGATION & STEP TRACKER)                         */}
       {/* ===================================================================== */}
       <header className="shrink-0 border-b border-[var(--border-neutral)] bg-[var(--bg-screen)]/95 backdrop-blur-md sticky top-0 z-30">
-        <div className="flex w-full items-center justify-between px-4 sm:px-8 lg:px-[140px] py-3.5 gap-4">
-          {/* Left: Close X Button */}
+        <div className="flex w-full items-center justify-between px-4 sm:px-8 lg:px-12 py-3.5 gap-4 max-w-[1720px] mx-auto">
+          {/* Left: Close X Button & Status */}
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
@@ -1062,10 +1109,10 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
             <span className="h-4 w-[1px] bg-[var(--border-neutral)] shrink-0 hidden sm:inline-block" />
 
-            {/* Step Indicator & Project Title */}
+            {/* Project Title & Status */}
             <div className="flex items-center gap-2 min-w-0">
               <span className="text-sm font-black text-[var(--content-primary)] truncate max-w-[180px] sm:max-w-[320px]">
-                {currentStep === 1 ? "Step 1: Upload Images" : title.trim() || "Step 2: Project Details"}
+                {title.trim() || (mode === "edit" ? "Edit Project" : "New Project")}
               </span>
 
               {mode === "edit" ? (
@@ -1088,36 +1135,95 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
             </div>
           </div>
 
-          {/* Right: Step Switcher & Edit Delete */}
-          <div className="flex items-center gap-3 shrink-0">
-            {/* Step Navigator Pills */}
-            <div className="hidden sm:flex items-center gap-1 p-1 rounded-full bg-[var(--bg-elevated)] border border-[var(--border-neutral)] text-xs font-bold">
-              <button
+          {/* Right: Actions */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            {/* AI Assistant */}
+            {mode === "new" && (
+              <Button
                 type="button"
-                onClick={() => setCurrentStep(1)}
-                className={cn(
-                  "px-3 py-1 rounded-full transition-all cursor-pointer",
-                  currentStep === 1
-                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
-                    : "text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
-                )}
+                variant="secondary"
+                size="sm"
+                onClick={handleGenerateAiAnalysis}
+                disabled={isAiAnalyzing || galleryImages.length === 0}
+                className="gap-1.5 font-bold text-xs shadow-xs hidden sm:inline-flex"
+                title="Use Gemini to suggest description, tags, and tools based on your project"
               >
-                1. Upload Images ({galleryImages.length})
-              </button>
-              <button
-                type="button"
-                onClick={handleProceedToDetails}
-                disabled={galleryImages.length === 0}
-                className={cn(
-                  "px-3 py-1 rounded-full transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed",
-                  currentStep === 2
-                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
-                    : "text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
+                {isAiAnalyzing ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-[var(--brand-secondary)]" />
+                    <span>Analyzing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-3.5 w-3.5 text-[var(--brand-secondary)]" />
+                    <span>Auto-Fill with AI</span>
+                  </>
                 )}
-              >
-                2. Project Details
-              </button>
-            </div>
+              </Button>
+            )}
+
+            {/* Pre-Publish Live Preview Button */}
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={galleryImages.length === 0}
+              onClick={() => setIsPreviewModalOpen(true)}
+              className="gap-1.5 font-bold text-xs shadow-xs"
+            >
+              <Eye className="h-3.5 w-3.5 text-[var(--content-secondary)]" />
+              <span className="hidden sm:inline">Preview</span>
+            </Button>
+
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={isDraftSaving || isSaving || galleryImages.length === 0 || Boolean(user?.isSuspended)}
+              onClick={() => handleSave(false)}
+              className="gap-1.5 font-semibold text-xs shadow-xs"
+            >
+              {isDraftSaving ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span className="hidden sm:inline">
+                    {uploadProgress
+                      ? `Saving (${uploadProgress.current}/${uploadProgress.total})...`
+                      : "Saving Draft..."}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Save className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Save Draft</span>
+                </>
+              )}
+            </Button>
+
+            <Button
+              type="button"
+              variant="accent"
+              size="sm"
+              disabled={isSaving || isDraftSaving || galleryImages.length === 0 || Boolean(user?.isSuspended)}
+              onClick={() => handleSave(true)}
+              className="gap-2 font-black shadow-sm px-4 sm:px-5"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>
+                    {uploadProgress
+                      ? `Uploading (${uploadProgress.current}/${uploadProgress.total})...`
+                      : "Publishing..."}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span>{mode === "edit" ? "Save Changes" : "Publish Project"}</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </>
+              )}
+            </Button>
 
             {mode === "edit" && initialData?.id && (
               <Button
@@ -1125,10 +1231,10 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsDeleteModalOpen(true)}
-                className="text-rose-600 hover:text-rose-700 hover:bg-rose-500/10 font-bold text-xs gap-1.5"
+                className="text-rose-600 hover:text-rose-700 hover:bg-rose-500/10 font-bold text-xs gap-1.5 ml-1"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Delete</span>
+                <span className="hidden lg:inline">Delete</span>
               </Button>
             )}
           </div>
@@ -1158,11 +1264,11 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
       {/* ===================================================================== */}
       {/* SCROLLABLE POPUP CANVAS BODY                                          */}
       {/* ===================================================================== */}
-      <main ref={mainScrollRef} className="flex-1 overflow-y-auto min-h-0">
-        <div className="w-full px-4 sm:px-8 lg:px-[140px] py-8 sm:py-12">
+      <main ref={mainScrollRef} className="flex-1 overflow-y-auto min-h-0 bg-[var(--bg-screen)]">
+        <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-8">
           {/* Draft Save Feedback Banner */}
           {draftSaveFeedback && (
-            <div className="mb-8 p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center justify-between gap-2 animate-fade-in">
+            <div className="mb-6 p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center justify-between gap-2 animate-fade-in">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 shrink-0" />
                 <span>{draftSaveFeedback}</span>
@@ -1179,7 +1285,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
           {/* Recoverable Local Draft Banner */}
           {hasRecoverableDraft && mode === "new" && (
-            <div className="max-w-4xl mx-auto mb-8 p-4 sm:p-5 rounded-3xl bg-amber-500/10 border border-amber-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in shadow-xs">
+            <div className="mb-6 p-4 sm:p-5 rounded-3xl bg-amber-500/10 border border-amber-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in shadow-xs">
               <div className="flex items-center gap-3.5 min-w-0">
                 <div className="h-10 w-10 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 shadow-xs">
                   <RotateCcw className="h-5 w-5" />
@@ -1217,26 +1323,80 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           )}
 
           {/* ================================================================= */}
-          {/* STEP 1: PROJECT TITLE & IMAGE SPREADS                            */}
+          {/* UNIFIED TWO-COLUMN LAYOUT: MEDIA (LEFT) & DETAILS (RIGHT)         */}
           {/* ================================================================= */}
-          {currentStep === 1 && (
-            <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
-              {/* Project Title Input */}
-              <div className="space-y-2">
-                <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] block">
-                  Project Title *
-                </label>
-                <input
-                  ref={titleInputRef}
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Give your project a title..."
-                  className={cn(
-                    bricolage.className,
-                    "w-full text-3xl sm:text-5xl font-black text-[var(--content-primary)] bg-transparent border-b-2 border-transparent hover:border-[var(--border-neutral)] focus:border-[var(--primary-forest-green)] pb-3 transition-all focus:outline-none placeholder:text-[var(--content-tertiary)]/60 tracking-tight"
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* --------------------------------------------------------------- */}
+            {/* LEFT COLUMN: IMAGE UPLOADS & SPREADS DECK (lg:col-span-7)        */}
+            {/* --------------------------------------------------------------- */}
+            <div className="lg:col-span-7 space-y-6">
+              {/* Media Section Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 rounded-3xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] shadow-xs">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-2xl bg-[var(--primary-forest-green)]/10 text-[var(--primary-forest-green)] flex items-center justify-center shrink-0">
+                    <ImageIcon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-black text-[var(--content-primary)] flex items-center gap-2">
+                      <span>Project Case Study Media</span>
+                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-[var(--bg-neutral)] text-[var(--content-secondary)] border border-[var(--border-neutral)]">
+                        {galleryImages.length} {galleryImages.length === 1 ? "slide" : "slides"}
+                      </span>
+                    </h2>
+                    <p className="text-xs text-[var(--content-secondary)]">
+                      Upload and arrange high-resolution presentation slides and mocks.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                  {galleryImages.length > 0 && (
+                    <>
+                      {/* Segmented View Mode Toggle */}
+                      <div className="flex items-center gap-1 p-1 rounded-2xl bg-[var(--bg-neutral)] border border-[var(--border-neutral)] shadow-2xs">
+                        <button
+                          type="button"
+                          onClick={() => setSlideViewMode("grid")}
+                          className={cn(
+                            "flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer",
+                            slideViewMode === "grid"
+                              ? "bg-[var(--bg-elevated)] text-[var(--content-primary)] shadow-xs"
+                              : "text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
+                          )}
+                          title="Compact thumbnail grid for rapid reordering"
+                        >
+                          <LayoutGrid className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline">Deck</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSlideViewMode("stack")}
+                          className={cn(
+                            "flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer",
+                            slideViewMode === "stack"
+                              ? "bg-[var(--bg-elevated)] text-[var(--content-primary)] shadow-xs"
+                              : "text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
+                          )}
+                          title="Full-size spread stack"
+                        >
+                          <Rows3 className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline">Full</span>
+                        </button>
+                      </div>
+
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => additionalFileInputRef.current?.click()}
+                        className="gap-1.5 font-bold text-xs shadow-xs"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        <span>Add Slides</span>
+                      </Button>
+                    </>
                   )}
-                />
+                </div>
               </div>
 
               {/* Upload Dropzone (When Empty) */}
@@ -1256,7 +1416,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                   }}
                   onClick={() => galleryFileInputRef.current?.click()}
                   className={cn(
-                    "rounded-[32px] bg-[var(--bg-elevated)] border-2 border-dashed p-16 sm:p-28 text-center cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-5 group shadow-xs",
+                    "rounded-[32px] bg-[var(--bg-elevated)] border-2 border-dashed p-12 sm:p-20 text-center cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-5 group shadow-xs min-h-[420px]",
                     isDraggingGallery
                       ? "border-[var(--primary-forest-green)] bg-[var(--bg-neutral)] scale-[0.99] ring-8 ring-[var(--primary-forest-green)]/10"
                       : "border-[var(--border-neutral)] hover:border-[var(--primary-forest-green)] hover:shadow-sm"
@@ -1267,10 +1427,10 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                       <Loader2 className="h-14 w-14 animate-spin text-[var(--primary-forest-green)]" />
                       <div className="space-y-1 text-center">
                         <h3 className="text-base font-bold text-[var(--content-primary)]">
-                          Uploading Images ({uploadProgress?.current || 0}/{uploadProgress?.total || 0})...
+                          Processing Images ({uploadProgress?.current || 0}/{uploadProgress?.total || 0})...
                         </h3>
                         <p className="text-xs text-[var(--content-secondary)]">
-                          Optimizing and saving to CDN storage
+                          Validating and staging media slides
                         </p>
                       </div>
                       {uploadProgress && (
@@ -1286,12 +1446,12 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                     </div>
                   ) : (
                     <>
-                      <div className="h-24 w-24 rounded-3xl bg-[var(--bg-screen)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-tertiary)] group-hover:text-[var(--primary-forest-green)] group-hover:border-[var(--primary-forest-green)] group-hover:scale-105 transition-all shadow-2xs">
-                        <UploadCloud className="h-12 w-12 stroke-[1.5]" />
+                      <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-3xl bg-[var(--bg-screen)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-tertiary)] group-hover:text-[var(--primary-forest-green)] group-hover:border-[var(--primary-forest-green)] group-hover:scale-105 transition-all shadow-2xs">
+                        <UploadCloud className="h-10 w-10 sm:h-12 sm:w-12 stroke-[1.5]" />
                       </div>
 
                       <div className="space-y-2 max-w-md">
-                        <h3 className="text-xl font-black text-[var(--content-primary)]">
+                        <h3 className="text-lg sm:text-xl font-black text-[var(--content-primary)]">
                           Drag & drop your images here, or Browse
                         </h3>
                         <p className="text-xs text-[var(--content-secondary)] leading-relaxed">
@@ -1302,63 +1462,11 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                   )}
                 </div>
               ) : (
-                /* Images List with Grid / Stack View Switcher */
+                /* Gallery Slides */
                 <div className="space-y-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <span className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] flex items-center gap-1.5">
-                      <ImageIcon className="h-4 w-4 text-[var(--primary-forest-green)]" />
-                      <span>{galleryImages.length} Images Uploaded</span>
-                    </span>
-
-                    <div className="flex items-center gap-2 self-end sm:self-auto">
-                      {/* Segmented View Mode Toggle */}
-                      <div className="flex items-center gap-1 p-1 rounded-2xl bg-[var(--bg-neutral)] border border-[var(--border-neutral)] shadow-2xs">
-                        <button
-                          type="button"
-                          onClick={() => setSlideViewMode("grid")}
-                          className={cn(
-                            "flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer",
-                            slideViewMode === "grid"
-                              ? "bg-[var(--bg-elevated)] text-[var(--content-primary)] shadow-xs"
-                              : "text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
-                          )}
-                          title="Compact thumbnail grid for rapid reordering"
-                        >
-                          <LayoutGrid className="h-3.5 w-3.5" />
-                          <span>Reorder Deck</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setSlideViewMode("stack")}
-                          className={cn(
-                            "flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer",
-                            slideViewMode === "stack"
-                              ? "bg-[var(--bg-elevated)] text-[var(--content-primary)] shadow-xs"
-                              : "text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
-                          )}
-                          title="Full-size spread stack"
-                        >
-                          <Rows3 className="h-3.5 w-3.5" />
-                          <span>Full View</span>
-                        </button>
-                      </div>
-
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => additionalFileInputRef.current?.click()}
-                        className="gap-1.5 font-bold text-xs shadow-xs"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                        <span>Add Images</span>
-                      </Button>
-                    </div>
-                  </div>
-
                   {/* 1. COMPACT REORDER GRID DECK */}
                   {slideViewMode === "grid" ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 animate-fade-in">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 animate-fade-in">
                       {galleryImages.map((url, idx) => {
                         const isCover = coverImage === url || (!coverImage && idx === 0);
                         return (
@@ -1395,7 +1503,6 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                               draggedSlideIdx === idx && "opacity-40"
                             )}
                           >
-                            {/* Slide Badges */}
                             <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5">
                               <span className="rounded-md bg-black/80 backdrop-blur-xs text-white font-mono font-bold px-1.5 py-0.5 text-[10px] shadow-xs">
                                 #{idx + 1}
@@ -1408,7 +1515,6 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                               )}
                             </div>
 
-                            {/* Slide Thumbnail */}
                             <div className="relative aspect-4/3 w-full bg-[var(--bg-neutral)] overflow-hidden flex items-center justify-center">
                               <Image
                                 src={url}
@@ -1421,7 +1527,6 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                               />
                             </div>
 
-                            {/* Action Toolbar */}
                             <div className="p-2 bg-[var(--bg-elevated)] border-t border-[var(--border-neutral)] flex items-center justify-between gap-1 text-xs">
                               <div className="flex items-center gap-1">
                                 <button
@@ -1429,7 +1534,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                                   disabled={idx === 0}
                                   onClick={() => handleMoveImage(idx, idx - 1)}
                                   className="h-7 w-7 rounded-lg bg-[var(--bg-screen)] hover:bg-[var(--bg-neutral)] border border-[var(--border-neutral)] disabled:opacity-25 disabled:pointer-events-none flex items-center justify-center text-[var(--content-primary)] transition-colors cursor-pointer"
-                                  title="Move earlier (#1)"
+                                  title="Move earlier"
                                 >
                                   <ArrowLeft className="h-3 w-3" />
                                 </button>
@@ -1490,7 +1595,6 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                             key={url + idx}
                             className="group rounded-3xl border border-[var(--border-neutral)] hover:border-[var(--content-secondary)] bg-[var(--bg-elevated)] overflow-hidden shadow-sm transition-all duration-200"
                           >
-                            {/* Image Card Top Toolbar */}
                             <div className="p-3.5 bg-[var(--bg-elevated)] border-b border-[var(--border-neutral)] flex items-center justify-between gap-3 text-xs">
                               <div className="flex items-center gap-2.5">
                                 <span className="rounded-lg bg-black/80 dark:bg-white/15 text-white font-mono font-bold px-2 py-0.5 text-xs">
@@ -1508,7 +1612,6 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                                 )}
                               </div>
 
-                              {/* Move & Delete Controls */}
                               <div className="flex items-center gap-1.5">
                                 {idx > 0 && (
                                   <button
@@ -1567,15 +1670,14 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                               </div>
                             </div>
 
-                            {/* Large Image Preview */}
-                            <div className="relative w-full bg-[var(--bg-neutral)] overflow-hidden flex items-center justify-center min-h-[300px] sm:min-h-[440px]">
+                            <div className="relative w-full bg-[var(--bg-neutral)] overflow-hidden flex items-center justify-center min-h-[260px] sm:min-h-[380px]">
                               <Image
                                 src={url}
                                 alt={`Project Spread ${idx + 1}`}
                                 width={1200}
                                 height={800}
-                                className="w-full h-auto object-contain max-h-[800px]"
-                                sizes="(max-width: 1024px) 100vw, 900px"
+                                className="w-full h-auto object-contain max-h-[700px]"
+                                sizes="(max-width: 1024px) 100vw, 800px"
                                 priority={idx === 0}
                                 unoptimized={url.startsWith("blob:")}
                               />
@@ -1589,59 +1691,54 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                   {/* Add Another Image Box at bottom */}
                   <div
                     onClick={() => additionalFileInputRef.current?.click()}
-                    className="rounded-3xl border-2 border-dashed border-[var(--border-neutral)] hover:border-[var(--primary-forest-green)] bg-[var(--bg-elevated)]/40 hover:bg-[var(--bg-neutral)]/40 p-8 text-center flex flex-col items-center justify-center gap-2 text-[var(--content-tertiary)] hover:text-[var(--primary-forest-green)] transition-all cursor-pointer group"
+                    className="rounded-3xl border-2 border-dashed border-[var(--border-neutral)] hover:border-[var(--primary-forest-green)] bg-[var(--bg-elevated)]/40 hover:bg-[var(--bg-neutral)]/40 p-6 text-center flex flex-col items-center justify-center gap-2 text-[var(--content-tertiary)] hover:text-[var(--primary-forest-green)] transition-all cursor-pointer group"
                   >
-                    <div className="h-12 w-12 rounded-full bg-[var(--bg-screen)] border border-[var(--border-neutral)] group-hover:border-[var(--primary-forest-green)] flex items-center justify-center">
-                      <Plus className="h-6 w-6" />
+                    <div className="h-10 w-10 rounded-full bg-[var(--bg-screen)] border border-[var(--border-neutral)] group-hover:border-[var(--primary-forest-green)] flex items-center justify-center">
+                      <Plus className="h-5 w-5" />
                     </div>
-                    <span className="text-sm font-bold">Add Another Image Spread</span>
+                    <span className="text-xs font-bold">Add More Slides</span>
                   </div>
                 </div>
               )}
             </div>
-          )}
 
-          {/* ================================================================= */}
-          {/* STEP 2: ALL PROJECT DETAILS & PUBLISHING (باقي التفاصيل)           */}
-          {/* ================================================================= */}
-          {currentStep === 2 && (
-            <div className="max-w-5xl mx-auto space-y-10 animate-fade-in">
-              {/* 1. Project Identity Overview (No redundant input) */}
-              <div className="p-5 sm:p-6 rounded-3xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
-                <div className="min-w-0 space-y-1">
-                  <div className="flex items-center gap-1.5">
-                    <Sparkles className="h-3.5 w-3.5 text-[var(--brand-secondary)]" />
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
-                      Project Case Study
-                    </span>
-                  </div>
-                  <h3 className={cn(bricolage.className, "text-xl sm:text-2xl font-black text-[var(--content-primary)] truncate")}>
-                    {title.trim() || "Untitled Project"}
-                  </h3>
+            {/* --------------------------------------------------------------- */}
+            {/* RIGHT COLUMN: PROJECT DETAILS, NARRATIVE & TAXONOMY (lg:col-span-5) */}
+            {/* --------------------------------------------------------------- */}
+            <div className="lg:col-span-5 space-y-6">
+              {/* 1. Project Title */}
+              <div className="p-5 sm:p-6 rounded-3xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] space-y-2.5 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] block">
+                    Project Title *
+                  </label>
+                  <span className="text-[10px] font-mono text-[var(--content-tertiary)]">
+                    Required
+                  </span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCurrentStep(1);
-                    setTimeout(() => titleInputRef.current?.focus(), 100);
-                  }}
-                  className="px-3.5 py-1.5 rounded-xl border border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)] text-xs font-bold text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors shrink-0 cursor-pointer self-start sm:self-auto"
-                  title="Return to Step 1 to edit title"
-                >
-                  Edit in Step 1
-                </button>
+                <input
+                  ref={titleInputRef}
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Give your project a title..."
+                  className={cn(
+                    bricolage.className,
+                    "w-full text-2xl sm:text-3xl font-black text-[var(--content-primary)] bg-transparent border-b-2 border-[var(--border-neutral)] focus:border-[var(--primary-forest-green)] pb-2 transition-all focus:outline-none placeholder:text-[var(--content-tertiary)]/50 tracking-tight"
+                  )}
+                />
               </div>
 
-              {/* 2. Custom Project Cover / Thumbnail Studio */}
-              <div className="p-6 sm:p-8 rounded-3xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] space-y-6 shadow-xs">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              {/* 2. Custom Project Cover (Thumbnail Studio) */}
+              <div className="p-5 sm:p-6 rounded-3xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] space-y-4 shadow-xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
                     <span className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] flex items-center gap-1.5">
                       <Star className="h-4 w-4 text-[var(--brand-secondary)]" />
-                      <span>Custom Project Cover (Thumbnail)</span>
+                      <span>Card Cover (Thumbnail)</span>
                     </span>
-                    <p className="text-xs text-[var(--content-secondary)] mt-1">
-                      This cover thumbnail appears on project cards and discovery feeds. It is separate and will not appear inside the case study spreads.
+                    <p className="text-[11px] text-[var(--content-secondary)] mt-0.5">
+                      Cover shown on feeds and directory cards.
                     </p>
                   </div>
                   <Button
@@ -1650,134 +1747,118 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                     size="sm"
                     disabled={isSaving || isDraftSaving}
                     onClick={() => coverFileInputRef.current?.click()}
-                    className="gap-2 shrink-0 font-bold shadow-xs"
+                    className="gap-1.5 shrink-0 font-bold text-xs shadow-xs self-start sm:self-auto"
                   >
-                    <UploadCloud className="h-4 w-4" />
-                    <span>Upload Custom Cover</span>
+                    <UploadCloud className="h-3.5 w-3.5" />
+                    <span>Upload Custom</span>
                   </Button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-                  {/* Left: Active Cover Preview */}
-                  <div className="md:col-span-6 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-[var(--content-primary)] block">
-                        Current Card Thumbnail
-                      </span>
-                      {coverImage && coverImage !== galleryImages[0] && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (coverImage && coverImage.startsWith("blob:") && !galleryImages.includes(coverImage)) {
-                              try {
-                                URL.revokeObjectURL(coverImage);
-                              } catch {}
-                              pendingFilesRef.current.delete(coverImage);
-                            }
-                            setCoverImage(galleryImages[0] || "");
-                          }}
-                          className="text-[11px] font-semibold text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:underline cursor-pointer"
-                        >
-                          Revert to Slide #1
-                        </button>
-                      )}
-                    </div>
-                    <div className="relative aspect-[16/10] w-full rounded-2xl bg-[var(--bg-neutral)] overflow-hidden border border-[var(--border-neutral)] shadow-sm group">
-                      {activeCoverUrl ? (
-                        <Image
-                          src={activeCoverUrl}
-                          alt="Project thumbnail cover"
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 768px) 100vw, 450px"
-                          unoptimized={Boolean(activeCoverUrl?.startsWith("blob:"))}
-                        />
-                      ) : (
-                        <div className="h-full w-full flex items-center justify-center text-xs text-[var(--content-tertiary)]">
-                          No cover image selected
-                        </div>
-                      )}
-                      <div className="absolute top-2.5 right-2.5 rounded-full bg-[var(--brand-secondary)] px-2.5 py-0.5 text-[10px] font-mono font-bold text-white shadow-xs flex items-center gap-1">
-                        <Star className="h-3 w-3 fill-current" />
-                        <span>Cover</span>
+                {/* Active Cover Preview & Slide Picker */}
+                <div className="space-y-3">
+                  <div className="relative aspect-[16/10] w-full rounded-2xl bg-[var(--bg-neutral)] overflow-hidden border border-[var(--border-neutral)] shadow-sm group">
+                    {activeCoverUrl ? (
+                      <Image
+                        src={activeCoverUrl}
+                        alt="Project thumbnail cover"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 1024px) 100vw, 400px"
+                        unoptimized={Boolean(activeCoverUrl?.startsWith("blob:"))}
+                      />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-xs text-[var(--content-tertiary)]">
+                        No cover selected
                       </div>
-                      {coverImage && coverImage !== galleryImages[0] && (
-                        <div className="absolute bottom-2.5 left-2.5 rounded-full bg-black/75 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-mono font-bold text-white shadow-xs">
-                          Custom Uploaded Cover
-                        </div>
-                      )}
+                    )}
+                    <div className="absolute top-2.5 right-2.5 rounded-full bg-[var(--brand-secondary)] px-2 py-0.5 text-[10px] font-mono font-bold text-white shadow-xs flex items-center gap-1">
+                      <Star className="h-3 w-3 fill-current" />
+                      <span>Cover</span>
                     </div>
+                    {coverImage && coverImage !== galleryImages[0] && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (coverImage && coverImage.startsWith("blob:") && !galleryImages.includes(coverImage)) {
+                            try {
+                              URL.revokeObjectURL(coverImage);
+                            } catch {}
+                            pendingFilesRef.current.delete(coverImage);
+                          }
+                          setCoverImage(galleryImages[0] || "");
+                        }}
+                        className="absolute bottom-2.5 left-2.5 rounded-full bg-black/80 hover:bg-black text-white px-2.5 py-0.5 text-[10px] font-mono font-bold shadow-xs cursor-pointer transition-colors"
+                        title="Revert to first slide"
+                      >
+                        Revert to Slide #1
+                      </button>
+                    )}
                   </div>
 
-                  {/* Right: Pick from uploaded images as fallback / alternative */}
-                  <div className="md:col-span-6 space-y-3">
-                    <div>
-                      <span className="text-xs font-bold text-[var(--content-primary)] block">
-                        Or select from your {galleryImages.length} uploaded slides:
+                  {galleryImages.length > 0 && (
+                    <div className="space-y-1.5 pt-1">
+                      <span className="text-[11px] font-bold text-[var(--content-secondary)] block">
+                        Or pick from uploaded slides:
                       </span>
-                      <p className="text-[11px] text-[var(--content-secondary)] mt-0.5">
-                        Click any slide below if you prefer using it as the card cover instead of a custom upload.
-                      </p>
+                      <div className="flex gap-2 overflow-x-auto pb-1.5 pt-0.5">
+                        {galleryImages.map((url, i) => {
+                          const isSelected = activeCoverUrl === url;
+                          return (
+                            <div
+                              key={url + i}
+                              onClick={() => setCoverImage(url)}
+                              className={cn(
+                                "relative h-14 w-20 rounded-xl overflow-hidden shrink-0 cursor-pointer border-2 transition-all",
+                                isSelected
+                                  ? "border-[var(--brand-secondary)] ring-2 ring-[var(--brand-secondary)]/30 scale-105"
+                                  : "border-[var(--border-neutral)] opacity-70 hover:opacity-100"
+                              )}
+                              title={`Use slide #${i + 1} as cover`}
+                            >
+                              <Image
+                                src={url}
+                                alt={`Slide ${i + 1}`}
+                                fill
+                                className="object-cover"
+                                sizes="80px"
+                                unoptimized={url.startsWith("blob:")}
+                              />
+                              <span className="absolute bottom-1 left-1 bg-black/80 text-white text-[8px] font-mono px-1 rounded">
+                                #{i + 1}
+                              </span>
+                              {isSelected && (
+                                <div className="absolute top-1 right-1 bg-[var(--brand-secondary)] text-white p-0.5 rounded-full">
+                                  <Check className="h-2 w-2 stroke-[3]" />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-
-                    <div className="flex flex-wrap gap-2.5 max-h-48 overflow-y-auto p-1">
-                      {galleryImages.map((url, i) => {
-                        const isSelected = activeCoverUrl === url;
-                        return (
-                          <div
-                            key={url + i}
-                            onClick={() => setCoverImage(url)}
-                            className={cn(
-                              "relative h-16 w-24 rounded-xl overflow-hidden shrink-0 cursor-pointer border-2 transition-all",
-                              isSelected
-                                ? "border-[var(--brand-secondary)] ring-4 ring-[var(--brand-secondary)]/20 scale-105"
-                                : "border-[var(--border-neutral)] opacity-70 hover:opacity-100"
-                            )}
-                            title={`Use slide #${i + 1} as cover`}
-                          >
-                            <Image
-                              src={url}
-                              alt={`Slide ${i + 1}`}
-                              fill
-                              className="object-cover"
-                              sizes="96px"
-                              unoptimized={url.startsWith("blob:")}
-                            />
-                            <span className="absolute bottom-1 left-1 bg-black/75 text-white text-[9px] font-mono px-1 rounded">
-                              #{i + 1}
-                            </span>
-                            {isSelected && (
-                              <div className="absolute top-1 right-1 bg-[var(--brand-secondary)] text-white p-0.5 rounded-full">
-                                <Check className="h-2.5 w-2.5 stroke-[3]" />
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
-              {/* 3. Design Disciplines & Specializations (Categories & Subcategories) */}
-              <div className="p-6 sm:p-8 rounded-3xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] space-y-6 shadow-xs">
+              {/* 3. Creative Disciplines & Specializations */}
+              <div className="p-5 sm:p-6 rounded-3xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] space-y-4 shadow-xs">
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] flex items-center gap-1.5">
                       <Sparkles className="h-4 w-4 text-[var(--brand-secondary)]" />
-                      <span>Primary Creative Disciplines ({categories.length}/{MAX_CATEGORIES})</span>
+                      <span>Disciplines ({categories.length}/{MAX_CATEGORIES})</span>
                     </span>
                     <span className="text-[11px] text-[var(--content-secondary)]">
-                      Select up to {MAX_CATEGORIES} fields
+                      Max {MAX_CATEGORIES}
                     </span>
                   </div>
                   <p className="text-xs text-[var(--content-secondary)]">
-                    Categorize your project so curators, studios, and visitors discover your work in the right directories.
+                    Categorize your project for curation and directory discovery.
                   </p>
                 </div>
 
                 {/* Category Pills Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {taxonomy.map((cat) => {
                     const isSelected = categories.includes(cat.name);
                     return (
@@ -1786,14 +1867,14 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                         type="button"
                         onClick={() => handleToggleCategory(cat.name)}
                         className={cn(
-                          "flex items-center justify-between gap-2 p-3 rounded-2xl border text-left transition-all duration-150 cursor-pointer text-xs font-bold shadow-2xs select-none",
+                          "flex items-center justify-between gap-2 p-2.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer text-xs font-bold shadow-2xs select-none",
                           isSelected
-                            ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-xs scale-[1.02]"
+                            ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-xs scale-[1.01]"
                             : "bg-[var(--bg-screen)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:text-[var(--content-primary)] hover:border-[var(--content-secondary)]/40"
                         )}
                       >
                         <span className="truncate">{cat.name}</span>
-                        {isSelected && <Check className="h-3.5 w-3.5 shrink-0 stroke-[3]" />}
+                        {isSelected && <Check className="h-3 w-3 shrink-0 stroke-[3]" />}
                       </button>
                     );
                   })}
@@ -1801,18 +1882,18 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
                 {/* Subcategory / Specializations Chips */}
                 {availableSubCategories.length > 0 && (
-                  <div className="space-y-2.5 pt-4 border-t border-[var(--border-neutral)]">
+                  <div className="space-y-2 pt-3 border-t border-[var(--border-neutral)]">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] flex items-center gap-1.5">
                         <Tag className="h-3.5 w-3.5 text-[var(--brand-secondary)]" />
-                        <span>Specializations & Sub-disciplines ({specializations.length}/{MAX_SPECIALIZATIONS})</span>
+                        <span>Specializations ({specializations.length}/{MAX_SPECIALIZATIONS})</span>
                       </label>
                       <span className="text-[10px] text-[var(--content-tertiary)] font-mono">
                         Optional
                       </span>
                     </div>
 
-                    <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-0.5">
+                    <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto p-0.5">
                       {availableSubCategories.map((sub) => {
                         const isSubSelected = specializations.includes(sub);
                         return (
@@ -1821,7 +1902,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                             type="button"
                             onClick={() => handleToggleSpecialization(sub)}
                             className={cn(
-                              "rounded-full px-3 py-1.5 text-xs font-semibold border transition-all cursor-pointer select-none",
+                              "rounded-full px-2.5 py-1 text-[11px] font-semibold border transition-all cursor-pointer select-none",
                               isSubSelected
                                 ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-2xs"
                                 : "bg-[var(--bg-screen)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
@@ -1837,70 +1918,70 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                 )}
               </div>
 
-              {/* 4. Project Story & Narrative */}
-              <div className="space-y-3">
+              {/* 4. Project Story & Case Study Narrative */}
+              <div className="p-5 sm:p-6 rounded-3xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] space-y-3 shadow-xs">
                 <div className="space-y-1">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
                       <FileText className="h-4 w-4 text-[var(--primary-forest-green)]" />
-                      <h2 className={cn(bricolage.className, "text-xl sm:text-2xl font-black text-[var(--content-primary)]")}>
-                        Project Story & Case Study Narrative
-                      </h2>
+                      <span className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
+                        Project Story & Narrative
+                      </span>
                     </div>
-                    <span className="text-[11px] font-mono text-[var(--content-tertiary)]">
-                      Markdown formatting supported
+                    <span className="text-[10px] font-mono text-[var(--content-tertiary)]">
+                      Markdown supported
                     </span>
                   </div>
                   <p className="text-xs text-[var(--content-secondary)]">
-                    Detail your design rationale, problem framing, research, and visual decisions. You can structure your writeup using markdown sections.
+                    Share your design rationale, user challenges, and creative solutions.
                   </p>
                 </div>
 
-                {/* Markdown Formatting Toolbar */}
-                <div className="flex flex-wrap items-center gap-1.5 p-1.5 rounded-2xl bg-[var(--bg-neutral)] border border-[var(--border-neutral)] text-xs">
+                {/* Markdown Toolbar */}
+                <div className="flex flex-wrap items-center gap-1 p-1 rounded-xl bg-[var(--bg-neutral)] border border-[var(--border-neutral)] text-xs">
                   <button
                     type="button"
                     onClick={() => insertMarkdown("## ", "\n")}
-                    className="px-2.5 py-1 rounded-xl bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                    className="px-2 py-0.5 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
                     title="Add Section Heading"
                   >
-                    <Heading2 className="h-3.5 w-3.5" />
+                    <Heading2 className="h-3 w-3" />
                     <span>Heading</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => insertMarkdown("### ", "\n")}
-                    className="px-2.5 py-1 rounded-xl bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                    className="px-2 py-0.5 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
                     title="Add Subheading"
                   >
-                    <Heading3 className="h-3.5 w-3.5" />
+                    <Heading3 className="h-3 w-3" />
                     <span>Subhead</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => insertMarkdown("**", "**")}
-                    className="px-2.5 py-1 rounded-xl bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                    className="px-2 py-0.5 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
                     title="Bold text"
                   >
-                    <Bold className="h-3.5 w-3.5" />
+                    <Bold className="h-3 w-3" />
                     <span>Bold</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => insertMarkdown("- ", "\n")}
-                    className="px-2.5 py-1 rounded-xl bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                    className="px-2 py-0.5 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
                     title="Bullet list"
                   >
-                    <List className="h-3.5 w-3.5" />
-                    <span>Bullet</span>
+                    <List className="h-3 w-3" />
+                    <span>List</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => insertMarkdown("> ", "\n")}
-                    className="px-2.5 py-1 rounded-xl bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                    className="px-2 py-0.5 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
                     title="Quote or Insight block"
                   >
-                    <Quote className="h-3.5 w-3.5" />
+                    <Quote className="h-3 w-3" />
                     <span>Quote</span>
                   </button>
                 </div>
@@ -1911,25 +1992,25 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                     value={body}
                     onChange={(e) => setBody(e.target.value)}
                     maxLength={25000}
-                    placeholder="Write your case study story, problem statement, design rationale, or insights here...&#10;&#10;Use ## Heading for new sections and - for bullet points."
-                    rows={8}
-                    className="text-base bg-[var(--bg-elevated)] leading-relaxed rounded-3xl border-[var(--border-neutral)] p-5 pb-9 focus:border-[var(--primary-forest-green)] shadow-2xs w-full resize-y min-h-[220px]"
+                    placeholder="Write your case study story, problem statement, and design rationale here...&#10;&#10;Use ## Heading for sections and - for bullets."
+                    rows={6}
+                    className="text-sm bg-[var(--bg-screen)] leading-relaxed rounded-2xl border-[var(--border-neutral)] p-4 pb-8 focus:border-[var(--primary-forest-green)] shadow-2xs w-full resize-y min-h-[160px]"
                   />
-                  <div className="absolute bottom-3.5 right-5 pointer-events-none select-none flex items-center gap-1.5">
-                    <span className="text-[11px] font-mono font-bold text-[var(--content-tertiary)] px-2 py-0.5 rounded-full bg-[var(--bg-screen)] border border-[var(--border-neutral)] shadow-2xs">
-                      {body.length.toLocaleString()} characters
+                  <div className="absolute bottom-2.5 right-4 pointer-events-none select-none">
+                    <span className="text-[10px] font-mono font-bold text-[var(--content-tertiary)] px-2 py-0.5 rounded-full bg-[var(--bg-screen)] border border-[var(--border-neutral)] shadow-2xs">
+                      {body.length.toLocaleString()} chars
                     </span>
                   </div>
                 </div>
               </div>
 
               {/* 5. Discovery Deck (Tools & Tags) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t border-[var(--border-neutral)]">
+              <div className="p-5 sm:p-6 rounded-3xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] space-y-5 shadow-xs">
                 {/* Tools */}
-                <div className="p-6 rounded-3xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] space-y-4 shadow-xs">
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] flex items-center gap-1.5">
-                      <Wrench className="h-4 w-4 text-[var(--primary-forest-green)]" />
+                      <Wrench className="h-3.5 w-3.5 text-[var(--primary-forest-green)]" />
                       <span>Tools & Software ({tools.length}/10)</span>
                     </label>
                     <span className="text-[10px] font-mono text-[var(--content-tertiary)]">
@@ -1953,10 +2034,10 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                             if (newTool.trim()) setToolSearchOpen(true);
                           }}
                           onKeyDown={handleToolKeyDown}
-                          placeholder="e.g. Figma, Illustrator, Blender..."
-                          className="w-full h-10 rounded-xl bg-[var(--bg-screen)] border border-[var(--border-neutral)] pl-9 pr-3.5 text-xs text-[var(--content-primary)] focus:outline-none focus:border-[var(--primary-forest-green)] transition-all"
+                          placeholder="e.g. Figma, Blender, After Effects..."
+                          className="w-full h-9 rounded-xl bg-[var(--bg-screen)] border border-[var(--border-neutral)] pl-8 pr-3 text-xs text-[var(--content-primary)] focus:outline-none focus:border-[var(--primary-forest-green)] transition-all"
                         />
-                        <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--content-tertiary)] pointer-events-none" />
+                        <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--content-tertiary)] pointer-events-none" />
                       </div>
                       <Button
                         type="button"
@@ -1964,7 +2045,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                         size="sm"
                         onClick={handleAddTool}
                         disabled={!newTool.trim()}
-                        className="px-4 text-xs font-bold"
+                        className="px-3 h-9 text-xs font-bold"
                       >
                         Add
                       </Button>
@@ -1972,17 +2053,17 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
                     {/* Autocomplete Search Dropdown */}
                     {toolSearchOpen && newTool.trim().length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-1.5 z-50 bg-[var(--bg-elevated)] border border-[var(--border-neutral)] rounded-2xl shadow-xl shadow-black/10 dark:shadow-black/60 overflow-hidden">
-                        <div className="px-3.5 py-2 bg-[var(--bg-neutral)]/60 border-b border-[var(--border-neutral)] flex items-center justify-between text-[11px] text-[var(--content-tertiary)] font-mono">
-                          <span className="flex items-center gap-1.5 font-bold">
-                            <Search className="h-3 w-3" />
-                            <span>Tools & Software ({filteredTools.length})</span>
+                      <div className="absolute top-full left-0 right-0 mt-1.5 z-50 bg-[var(--bg-elevated)] border border-[var(--border-neutral)] rounded-2xl shadow-xl overflow-hidden">
+                        <div className="px-3 py-1.5 bg-[var(--bg-neutral)]/60 border-b border-[var(--border-neutral)] flex items-center justify-between text-[10px] text-[var(--content-tertiary)] font-mono">
+                          <span className="flex items-center gap-1 font-bold">
+                            <Search className="h-2.5 w-2.5" />
+                            <span>Tools ({filteredTools.length})</span>
                           </span>
                           <span className="text-[9px] opacity-75">↑↓ select · ↵ add</span>
                         </div>
 
                         {filteredTools.length > 0 ? (
-                          <div className="max-h-60 overflow-y-auto p-1.5 space-y-0.5">
+                          <div className="max-h-48 overflow-y-auto p-1 space-y-0.5">
                             {filteredTools.map((toolItem, idx) => {
                               const isAdded = tools.includes(toolItem);
                               const isHighlighted = idx === activeToolIndex;
@@ -1993,7 +2074,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                                   disabled={isAdded}
                                   onClick={() => handleSelectTool(toolItem)}
                                   className={cn(
-                                    "w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-left transition-colors cursor-pointer",
+                                    "w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold text-left transition-colors cursor-pointer",
                                     isAdded
                                       ? "opacity-50 cursor-not-allowed bg-transparent text-[var(--content-tertiary)]"
                                       : isHighlighted
@@ -2002,16 +2083,16 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                                   )}
                                 >
                                   <span className="flex items-center gap-2 truncate">
-                                    <Wrench className="h-3.5 w-3.5 shrink-0 opacity-60" />
+                                    <Wrench className="h-3 w-3 shrink-0 opacity-60" />
                                     <span className="truncate">{highlightMatch(toolItem, newTool)}</span>
                                   </span>
                                   {isAdded ? (
-                                    <span className="text-[10px] font-mono text-[var(--content-tertiary)] px-2 py-0.5 rounded-full bg-[var(--bg-neutral)]">
+                                    <span className="text-[10px] font-mono text-[var(--content-tertiary)]">
                                       Added
                                     </span>
                                   ) : (
                                     <span className="text-[10px] font-mono text-[var(--primary-forest-green)] flex items-center gap-0.5">
-                                      <Plus className="h-3 w-3" />
+                                      <Plus className="h-2.5 w-2.5" />
                                       <span>Select</span>
                                     </span>
                                   )}
@@ -2020,8 +2101,8 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                             })}
                           </div>
                         ) : (
-                          <div className="p-3 text-center text-xs text-[var(--content-secondary)]">
-                            No stored tools match &quot;{newTool.trim()}&quot;. Press <kbd className="px-1.5 py-0.5 rounded-md bg-[var(--bg-screen)] border border-[var(--border-neutral)] text-[10px] font-mono">Enter</kbd> to add as custom tool.
+                          <div className="p-2.5 text-center text-xs text-[var(--content-secondary)]">
+                            No standard tool matches &quot;{newTool.trim()}&quot;. Press <kbd className="px-1 py-0.5 rounded bg-[var(--bg-screen)] border border-[var(--border-neutral)] text-[10px] font-mono">Enter</kbd> to add.
                           </div>
                         )}
                       </div>
@@ -2033,7 +2114,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                       {tools.map((tool) => (
                         <span
                           key={tool}
-                          className="inline-flex items-center gap-1.5 rounded-full bg-[var(--bg-screen)] border border-[var(--border-neutral)] px-3 py-1 text-xs font-bold text-[var(--content-primary)] shadow-2xs"
+                          className="inline-flex items-center gap-1.5 rounded-full bg-[var(--bg-screen)] border border-[var(--border-neutral)] px-2.5 py-0.5 text-xs font-bold text-[var(--content-primary)] shadow-2xs"
                         >
                           <span>{tool}</span>
                           <button
@@ -2047,36 +2128,13 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                       ))}
                     </div>
                   )}
-
-                  {suggestedTools.length > 0 && (
-                    <div className="space-y-1.5 pt-2 border-t border-[var(--border-neutral)]">
-                      <p className="text-[11px] text-[var(--content-tertiary)] font-medium">
-                        Quick add:
-                      </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {suggestedTools
-                          .filter((t) => !tools.includes(t))
-                          .slice(0, 8)
-                          .map((tool) => (
-                            <button
-                              key={tool}
-                              type="button"
-                              onClick={() => handleQuickAddTool(tool)}
-                              className="rounded-full bg-[var(--bg-screen)] hover:bg-[var(--bg-neutral)] border border-[var(--border-neutral)] px-2.5 py-0.5 text-[11px] text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors cursor-pointer"
-                            >
-                              + {tool}
-                            </button>
-                          ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 {/* Tags */}
-                <div className="p-6 rounded-3xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] space-y-4 shadow-xs">
+                <div className="space-y-3 pt-4 border-t border-[var(--border-neutral)]">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] flex items-center gap-1.5">
-                      <Tag className="h-4 w-4 text-[var(--brand-secondary)]" />
+                      <Tag className="h-3.5 w-3.5 text-[var(--brand-secondary)]" />
                       <span>Tags & Keywords ({tags.length}/20)</span>
                     </label>
                     <span className="text-[10px] font-mono text-[var(--content-tertiary)]">
@@ -2100,10 +2158,10 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                             if (newTag.trim()) setTagSearchOpen(true);
                           }}
                           onKeyDown={handleTagKeyDown}
-                          placeholder="e.g. mobile, design-system, dark-mode..."
-                          className="w-full h-10 rounded-xl bg-[var(--bg-screen)] border border-[var(--border-neutral)] pl-9 pr-3.5 text-xs text-[var(--content-primary)] focus:outline-none focus:border-[var(--brand-secondary)] transition-all"
+                          placeholder="e.g. mobile, dark-mode, minimal..."
+                          className="w-full h-9 rounded-xl bg-[var(--bg-screen)] border border-[var(--border-neutral)] pl-8 pr-3 text-xs text-[var(--content-primary)] focus:outline-none focus:border-[var(--brand-secondary)] transition-all"
                         />
-                        <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--content-tertiary)] pointer-events-none" />
+                        <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--content-tertiary)] pointer-events-none" />
                       </div>
                       <Button
                         type="button"
@@ -2111,7 +2169,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                         size="sm"
                         onClick={handleAddTag}
                         disabled={!newTag.trim()}
-                        className="px-4 text-xs font-bold"
+                        className="px-3 h-9 text-xs font-bold"
                       >
                         Add
                       </Button>
@@ -2119,17 +2177,17 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
                     {/* Autocomplete Search Dropdown */}
                     {tagSearchOpen && newTag.trim().length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-1.5 z-50 bg-[var(--bg-elevated)] border border-[var(--border-neutral)] rounded-2xl shadow-xl shadow-black/10 dark:shadow-black/60 overflow-hidden">
-                        <div className="px-3.5 py-2 bg-[var(--bg-neutral)]/60 border-b border-[var(--border-neutral)] flex items-center justify-between text-[11px] text-[var(--content-tertiary)] font-mono">
-                          <span className="flex items-center gap-1.5 font-bold">
-                            <Search className="h-3 w-3" />
-                            <span>Tags & Keywords ({filteredTags.length})</span>
+                      <div className="absolute top-full left-0 right-0 mt-1.5 z-50 bg-[var(--bg-elevated)] border border-[var(--border-neutral)] rounded-2xl shadow-xl overflow-hidden">
+                        <div className="px-3 py-1.5 bg-[var(--bg-neutral)]/60 border-b border-[var(--border-neutral)] flex items-center justify-between text-[10px] text-[var(--content-tertiary)] font-mono">
+                          <span className="flex items-center gap-1 font-bold">
+                            <Search className="h-2.5 w-2.5" />
+                            <span>Tags ({filteredTags.length})</span>
                           </span>
                           <span className="text-[9px] opacity-75">↑↓ select · ↵ add</span>
                         </div>
 
                         {filteredTags.length > 0 ? (
-                          <div className="max-h-60 overflow-y-auto p-1.5 space-y-0.5">
+                          <div className="max-h-48 overflow-y-auto p-1 space-y-0.5">
                             {filteredTags.map((tagItem, idx) => {
                               const isAdded = tags.includes(tagItem);
                               const isHighlighted = idx === activeTagIndex;
@@ -2140,7 +2198,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                                   disabled={isAdded}
                                   onClick={() => handleSelectTag(tagItem)}
                                   className={cn(
-                                    "w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-left transition-colors cursor-pointer",
+                                    "w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold text-left transition-colors cursor-pointer",
                                     isAdded
                                       ? "opacity-50 cursor-not-allowed bg-transparent text-[var(--content-tertiary)]"
                                       : isHighlighted
@@ -2149,16 +2207,16 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                                   )}
                                 >
                                   <span className="flex items-center gap-2 truncate">
-                                    <Tag className="h-3.5 w-3.5 shrink-0 opacity-60" />
+                                    <Tag className="h-3 w-3 shrink-0 opacity-60" />
                                     <span className="truncate">#{highlightMatch(tagItem, newTag)}</span>
                                   </span>
                                   {isAdded ? (
-                                    <span className="text-[10px] font-mono text-[var(--content-tertiary)] px-2 py-0.5 rounded-full bg-[var(--bg-neutral)]">
+                                    <span className="text-[10px] font-mono text-[var(--content-tertiary)]">
                                       Added
                                     </span>
                                   ) : (
                                     <span className="text-[10px] font-mono text-[var(--brand-secondary)] flex items-center gap-0.5">
-                                      <Plus className="h-3 w-3" />
+                                      <Plus className="h-2.5 w-2.5" />
                                       <span>Select</span>
                                     </span>
                                   )}
@@ -2167,8 +2225,8 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                             })}
                           </div>
                         ) : (
-                          <div className="p-3 text-center text-xs text-[var(--content-secondary)]">
-                            No platform tags match &quot;{newTag.trim()}&quot;. Press <kbd className="px-1.5 py-0.5 rounded-md bg-[var(--bg-screen)] border border-[var(--border-neutral)] text-[10px] font-mono">Enter</kbd> to add as custom tag.
+                          <div className="p-2.5 text-center text-xs text-[var(--content-secondary)]">
+                            No platform tags match &quot;{newTag.trim()}&quot;. Press <kbd className="px-1 py-0.5 rounded bg-[var(--bg-screen)] border border-[var(--border-neutral)] text-[10px] font-mono">Enter</kbd> to add.
                           </div>
                         )}
                       </div>
@@ -2180,7 +2238,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                       {tags.map((tag) => (
                         <span
                           key={tag}
-                          className="inline-flex items-center gap-1.5 rounded-full bg-[var(--bg-screen)] border border-[var(--border-neutral)] px-3 py-1 text-xs font-bold text-[var(--content-primary)] shadow-2xs"
+                          className="inline-flex items-center gap-1.5 rounded-full bg-[var(--bg-screen)] border border-[var(--border-neutral)] px-2.5 py-0.5 text-xs font-bold text-[var(--content-primary)] shadow-2xs"
                         >
                           <span>#{tag}</span>
                           <button
@@ -2196,20 +2254,20 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                   )}
 
                   {suggestedTags.length > 0 && (
-                    <div className="space-y-1.5 pt-2 border-t border-[var(--border-neutral)]">
-                      <p className="text-[11px] text-[var(--content-tertiary)] font-medium">
-                        Suggested tags:
+                    <div className="space-y-1 pt-1.5 border-t border-[var(--border-neutral)]">
+                      <p className="text-[10px] text-[var(--content-tertiary)] font-medium">
+                        Suggested:
                       </p>
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex flex-wrap gap-1">
                         {suggestedTags
                           .filter((tg) => !tags.includes(tg))
-                          .slice(0, 8)
+                          .slice(0, 6)
                           .map((tg) => (
                             <button
                               key={tg}
                               type="button"
                               onClick={() => handleQuickAddTag(tg)}
-                              className="rounded-full bg-[var(--bg-screen)] hover:bg-[var(--bg-neutral)] border border-[var(--border-neutral)] px-2.5 py-0.5 text-[11px] text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors cursor-pointer"
+                              className="rounded-full bg-[var(--bg-screen)] hover:bg-[var(--bg-neutral)] border border-[var(--border-neutral)] px-2 py-0.5 text-[10px] text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors cursor-pointer"
                             >
                               + #{tg}
                             </button>
@@ -2220,155 +2278,99 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                 </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </main>
 
       {/* ===================================================================== */}
-      {/* STICKY BOTTOM FOOTER                                                  */}
+      {/* STICKY BOTTOM FOOTER (ACTIONS & PUBLISHING)                           */}
       {/* ===================================================================== */}
       <footer className="shrink-0 border-t border-[var(--border-neutral)] bg-[var(--bg-screen)]/95 backdrop-blur-md sticky bottom-0 z-30">
-        <div className="flex w-full items-center justify-between px-4 sm:px-8 lg:px-[140px] py-3.5 gap-4">
-          {/* Left: Close/Back Actions */}
+        <div className="flex w-full items-center justify-between px-4 sm:px-8 lg:px-12 py-3.5 gap-4 max-w-[1720px] mx-auto">
+          {/* Left: Cancel */}
           <div className="flex items-center gap-3">
-            {currentStep === 1 ? (
-              <button
-                type="button"
-                onClick={handleExitClick}
-                className="text-xs font-bold text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors py-1.5 px-3 rounded-xl hover:bg-[var(--bg-neutral)] cursor-pointer"
-              >
-                Cancel
-              </button>
-            ) : (
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => setCurrentStep(1)}
-                className="gap-1.5 font-semibold text-xs shadow-xs px-4"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                <span>Back to Images</span>
-              </Button>
-            )}
+            <button
+              type="button"
+              onClick={handleExitClick}
+              className="text-xs font-bold text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors py-2 px-3.5 rounded-xl hover:bg-[var(--bg-neutral)] cursor-pointer"
+            >
+              Cancel
+            </button>
           </div>
 
-          {/* Right: Actions depending on currentStep */}
+          {/* Right: Actions */}
           <div className="flex items-center gap-2.5 shrink-0">
-            {/* Step 1: Save Draft or Continue to Details */}
-            {currentStep === 1 ? (
-              <>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  disabled={isDraftSaving || isSaving || galleryImages.length === 0}
-                  onClick={() => handleSave(false)}
-                  className="gap-1.5 font-semibold text-xs shadow-xs px-4"
-                >
-                  {isDraftSaving ? (
-                    <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      <span>
-                        {uploadProgress
-                          ? `Saving (${uploadProgress.current}/${uploadProgress.total})...`
-                          : "Saving Draft..."}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-3.5 w-3.5" />
-                      <span>Save Draft</span>
-                    </>
-                  )}
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="accent"
-                  size="sm"
-                  disabled={galleryImages.length === 0}
-                  onClick={handleProceedToDetails}
-                  className="gap-2 font-black shadow-sm px-6 min-w-[140px]"
-                >
-                  <span>Continue to Details</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Button>
-              </>
-            ) : (
-              /* Step 2: Preview, Save Draft or Publish */
-              <>
-                {user?.isSuspended && (
-                  <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 font-semibold px-2">
-                    <ShieldAlert className="h-4 w-4 shrink-0" />
-                    <span>Account Suspended</span>
-                  </div>
-                )}
-
-                {/* Pre-Publish Live Preview Button */}
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  disabled={galleryImages.length === 0}
-                  onClick={() => setIsPreviewModalOpen(true)}
-                  className="gap-1.5 font-bold text-xs shadow-xs px-4"
-                >
-                  <Eye className="h-3.5 w-3.5 text-[var(--content-secondary)]" />
-                  <span>Preview</span>
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  disabled={isDraftSaving || isSaving || galleryImages.length === 0 || Boolean(user?.isSuspended)}
-                  onClick={() => handleSave(false)}
-                  className="gap-1.5 font-semibold text-xs shadow-xs px-4"
-                >
-                  {isDraftSaving ? (
-                    <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      <span>
-                        {uploadProgress
-                          ? `Saving (${uploadProgress.current}/${uploadProgress.total})...`
-                          : "Saving Draft..."}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-3.5 w-3.5" />
-                      <span>Save Draft</span>
-                    </>
-                  )}
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="accent"
-                  size="sm"
-                  disabled={isSaving || isDraftSaving || galleryImages.length === 0 || Boolean(user?.isSuspended)}
-                  onClick={() => handleSave(true)}
-                  className="gap-2 font-black shadow-sm px-6 min-w-[140px]"
-                >
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      <span>
-                        {uploadProgress
-                          ? `Uploading (${uploadProgress.current}/${uploadProgress.total})...`
-                          : "Publishing..."}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <Send className="h-3.5 w-3.5" />
-                      <span>{mode === "edit" ? "Save Changes" : "Publish Project"}</span>
-                    </>
-                  )}
-                </Button>
-              </>
+            {user?.isSuspended && (
+              <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 font-semibold px-2">
+                <ShieldAlert className="h-4 w-4 shrink-0" />
+                <span>Account Suspended</span>
+              </div>
             )}
+
+            {/* Pre-Publish Live Preview Button */}
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={galleryImages.length === 0}
+              onClick={() => setIsPreviewModalOpen(true)}
+              className="gap-1.5 font-bold text-xs shadow-xs px-4"
+            >
+              <Eye className="h-3.5 w-3.5 text-[var(--content-secondary)]" />
+              <span>Preview</span>
+            </Button>
+
+            {/* Save Draft */}
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={isDraftSaving || isSaving || galleryImages.length === 0 || Boolean(user?.isSuspended)}
+              onClick={() => handleSave(false)}
+              className="gap-1.5 font-semibold text-xs shadow-xs px-4"
+            >
+              {isDraftSaving ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>
+                    {uploadProgress
+                      ? `Saving (${uploadProgress.current}/${uploadProgress.total})...`
+                      : "Saving Draft..."}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Save className="h-3.5 w-3.5" />
+                  <span>Save Draft</span>
+                </>
+              )}
+            </Button>
+
+            {/* Publish / Save Changes */}
+            <Button
+              type="button"
+              variant="accent"
+              size="sm"
+              disabled={isSaving || isDraftSaving || galleryImages.length === 0 || Boolean(user?.isSuspended)}
+              onClick={() => handleSave(true)}
+              className="gap-2 font-black shadow-sm px-6 min-w-[140px]"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>
+                    {uploadProgress
+                      ? `Uploading (${uploadProgress.current}/${uploadProgress.total})...`
+                      : "Publishing..."}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Send className="h-3.5 w-3.5" />
+                  <span>{mode === "edit" ? "Save Changes" : "Publish Project"}</span>
+                </>
+              )}
+            </Button>
           </div>
         </div>
       </footer>
