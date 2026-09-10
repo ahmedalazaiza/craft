@@ -45,7 +45,6 @@ import {
   Rows3,
   ChevronsUp,
   Eye,
-  Heart,
   Heading2,
   Heading3,
   Bold,
@@ -183,7 +182,6 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isFinalTouchesOpen, setIsFinalTouchesOpen] = useState(false);
   const [isCoverPickerExpanded, setIsCoverPickerExpanded] = useState(false);
-  const [lookingForFeedback, setLookingForFeedback] = useState(false);
   const [slideViewMode, setSlideViewMode] = useState<"grid" | "stack">("grid");
   const [draggedSlideIdx, setDraggedSlideIdx] = useState<number | null>(null);
   const [dragOverSlideIdx, setDragOverSlideIdx] = useState<number | null>(null);
@@ -435,20 +433,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   };
 
   const suggestedTags = useMemo(() => {
-    const screenshotDefaults = [
-      "ui",
-      "ux",
-      "branding",
-      "figma",
-      "app navigation",
-      "arabic",
-      "design",
-      "illustration",
-      "logo",
-      "graphic design",
-    ];
-    const fromTaxonomy = activeTaxonomies.map((t) => t.tags).flat();
-    return Array.from(new Set([...screenshotDefaults, ...fromTaxonomy])).slice(0, 16);
+    return Array.from(new Set(activeTaxonomies.map((t) => t.tags).flat())).slice(0, 16);
   }, [activeTaxonomies]);
 
   const suggestedTools = useMemo(() => {
@@ -1797,15 +1782,20 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="px-6 pt-6 pb-2 sm:px-8 sm:pt-8 sm:pb-3 flex items-center justify-between">
-              <h2 className={cn(bricolage.className, "text-2xl sm:text-3xl font-extrabold text-[var(--content-primary)] tracking-tight")}>
-                Final Touches
-              </h2>
+            <div className="px-6 py-5 sm:px-8 sm:py-6 border-b border-[var(--border-neutral)] flex items-center justify-between bg-[var(--bg-screen)]/95 sticky top-0 z-20 backdrop-blur-md">
+              <div>
+                <h2 className={cn(bricolage.className, "text-2xl sm:text-3xl font-black text-[var(--content-primary)] tracking-tight")}>
+                  Final Touches
+                </h2>
+                <p className="text-xs text-[var(--content-secondary)] mt-0.5">
+                  Review your thumbnail, creative disciplines, tags, and project story.
+                </p>
+              </div>
 
               <button
                 type="button"
                 onClick={() => setIsFinalTouchesOpen(false)}
-                className="h-8 w-8 rounded-full hover:bg-[var(--bg-neutral)] flex items-center justify-center text-[var(--content-tertiary)] hover:text-[var(--content-primary)] transition-colors cursor-pointer"
+                className="h-9 w-9 rounded-full border border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)] flex items-center justify-center text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors cursor-pointer shadow-xs"
                 title="Close"
               >
                 <X className="h-4 w-4" />
@@ -1813,14 +1803,14 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
             </div>
 
             {/* Modal Scrollable Body */}
-            <div className="overflow-y-auto px-6 pb-6 pt-2 sm:px-8 sm:pb-8 sm:pt-3 space-y-6 flex-1 custom-scrollbar">
+            <div className="overflow-y-auto p-6 sm:p-8 space-y-8 flex-1 custom-scrollbar">
               <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
                 {/* ------------------------------------------------------------- */}
                 {/* LEFT COLUMN: THUMBNAIL PREVIEW & SELECTION (md:col-span-5)    */}
                 {/* ------------------------------------------------------------- */}
                 <div className="md:col-span-5 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-[var(--content-primary)]">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
                       Thumbnail preview
                     </span>
                     {coverImage && coverImage !== galleryImages[0] && (
@@ -1842,8 +1832,8 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                     )}
                   </div>
 
-                  {/* Card Preview Mockup (Matching Screenshot) */}
-                  <div className="relative aspect-[16/11] w-full rounded-2xl overflow-hidden border border-[var(--border-neutral)] bg-[var(--bg-elevated)] shadow-sm group">
+                  {/* Card Preview Mockup */}
+                  <div className="relative aspect-[16/10] w-full rounded-2xl overflow-hidden border border-[var(--border-neutral)] bg-[var(--bg-neutral)] shadow-xs group">
                     {activeCoverUrl ? (
                       <Image
                         src={activeCoverUrl}
@@ -1858,32 +1848,20 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                         No cover image
                       </div>
                     )}
-                    <div className="absolute top-2.5 right-2.5 rounded-full bg-black/60 backdrop-blur-xs px-2 py-0.5 text-[10px] font-mono font-bold text-white shadow-xs flex items-center gap-1">
+                    <div className="absolute top-2.5 right-2.5 rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] px-2.5 py-0.5 text-[10px] font-mono font-bold shadow-xs flex items-center gap-1">
                       <Star className="h-2.5 w-2.5 fill-current text-amber-400" />
                       <span>Cover</span>
                     </div>
                   </div>
 
-                  {/* Bottom of preview: Likes / Views on right (real data law) */}
-                  <div className="flex items-center justify-end gap-3 text-xs text-[var(--content-secondary)] font-mono">
-                    <span className="flex items-center gap-1">
-                      <Heart className="h-3.5 w-3.5 fill-current text-[var(--content-tertiary)]" />
-                      <span>{initialData?.appreciations ?? 0}</span>
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Eye className="h-3.5 w-3.5 text-[var(--content-tertiary)]" />
-                      <span>{initialData?.views ?? 0}</span>
-                    </span>
-                  </div>
-
-                  {/* Crop / Select Thumbnail Trigger with pink underline like screenshot */}
-                  <div className="space-y-3 pt-0.5">
+                  {/* Crop / Select Thumbnail Trigger */}
+                  <div className="space-y-3 pt-1">
                     <button
                       type="button"
                       onClick={() => setIsCoverPickerExpanded(!isCoverPickerExpanded)}
-                      className="text-xs font-semibold text-[var(--content-primary)] underline decoration-[#ea4c89] decoration-2 underline-offset-4 hover:opacity-80 transition-opacity cursor-pointer select-none"
+                      className="text-xs font-bold text-[var(--brand-secondary)] hover:underline flex items-center gap-1 cursor-pointer select-none"
                     >
-                      <span>{isCoverPickerExpanded ? "Hide thumbnail selector" : "Crop/Select thumbnail"}</span>
+                      <span>{isCoverPickerExpanded ? "Hide thumbnail selector" : "Change cover thumbnail"}</span>
                     </button>
 
                     {/* Slide Picker Strip & Custom Cover Uploader */}
@@ -1896,7 +1874,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                           <button
                             type="button"
                             onClick={() => coverFileInputRef.current?.click()}
-                            className="text-[11px] font-bold text-[#ea4c89] hover:underline flex items-center gap-1 cursor-pointer"
+                            className="text-[11px] font-bold text-[var(--brand-secondary)] hover:underline flex items-center gap-1 cursor-pointer"
                           >
                             <UploadCloud className="h-3 w-3" />
                             <span>Upload Custom</span>
@@ -1913,7 +1891,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                                 className={cn(
                                   "relative h-14 w-20 rounded-xl overflow-hidden shrink-0 cursor-pointer border-2 transition-all",
                                   isSelected
-                                    ? "border-[#ea4c89] ring-2 ring-[#ea4c89]/30 scale-105"
+                                    ? "border-[var(--brand-secondary)] ring-2 ring-[var(--brand-secondary)]/25 scale-105"
                                     : "border-[var(--border-neutral)] opacity-70 hover:opacity-100"
                                 )}
                                 title={`Use slide #${i + 1} as cover`}
@@ -1930,7 +1908,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                                   #{i + 1}
                                 </span>
                                 {isSelected && (
-                                  <div className="absolute top-1 right-1 bg-[#ea4c89] text-white p-0.5 rounded-full">
+                                  <div className="absolute top-1 right-1 bg-[var(--brand-secondary)] text-white p-0.5 rounded-full">
                                     <Check className="h-2 w-2 stroke-[3]" />
                                   </div>
                                 )}
@@ -1944,14 +1922,81 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                 </div>
 
                 {/* ------------------------------------------------------------- */}
-                {/* RIGHT COLUMN: TAGS, FEEDBACK, DISCIPLINES, TOOLS & STORY      */}
+                {/* RIGHT COLUMN: DISCIPLINES, TAGS, TOOLS & STORY (md:col-span-7) */}
                 {/* ------------------------------------------------------------- */}
-                <div className="md:col-span-7 space-y-5">
-                  {/* 1. Tags */}
-                  <div className="space-y-2.5">
+                <div className="md:col-span-7 space-y-6">
+                  {/* 1. Creative Disciplines & Specializations */}
+                  <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-[var(--content-primary)]">
-                        Tags (maximum 20)
+                      <label className="text-xs font-bold text-[var(--content-primary)] flex items-center gap-1.5">
+                        <Sparkles className="h-3.5 w-3.5 text-[var(--brand-secondary)]" />
+                        <span>Creative Disciplines ({categories.length}/{MAX_CATEGORIES})</span>
+                      </label>
+                      <span className="text-[11px] text-[var(--content-secondary)]">
+                        Select up to {MAX_CATEGORIES}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {taxonomy.map((cat) => {
+                        const isSelected = categories.includes(cat.name);
+                        return (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => handleToggleCategory(cat.name)}
+                            className={cn(
+                              "flex items-center justify-between gap-2 p-2.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer text-xs font-bold shadow-2xs select-none",
+                              isSelected
+                                ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-xs scale-[1.01]"
+                                : "bg-[var(--bg-screen)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:text-[var(--content-primary)] hover:border-[var(--content-secondary)]/40"
+                            )}
+                          >
+                            <span className="truncate">{cat.name}</span>
+                            {isSelected && <Check className="h-3 w-3 shrink-0 stroke-[3]" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {availableSubCategories.length > 0 && (
+                      <div className="space-y-1.5 pt-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-[var(--content-secondary)]">
+                            Specializations ({specializations.length}/{MAX_SPECIALIZATIONS})
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-0.5">
+                          {availableSubCategories.map((sub) => {
+                            const isSubSelected = specializations.includes(sub);
+                            return (
+                              <button
+                                key={sub}
+                                type="button"
+                                onClick={() => handleToggleSpecialization(sub)}
+                                className={cn(
+                                  "rounded-full px-2.5 py-1 text-[11px] font-semibold border transition-all cursor-pointer select-none",
+                                  isSubSelected
+                                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-2xs"
+                                    : "bg-[var(--bg-screen)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
+                                )}
+                              >
+                                {isSubSelected ? "✓ " : "+ "}
+                                {sub}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 2. Tags */}
+                  <div className="space-y-2.5 pt-4 border-t border-[var(--border-neutral)]">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-[var(--content-primary)] flex items-center gap-1.5">
+                        <Tag className="h-3.5 w-3.5 text-[var(--brand-secondary)]" />
+                        <span>Tags (maximum 20)</span>
                       </label>
                       <span className="text-[10px] font-mono text-[var(--content-tertiary)]">
                         {tags.length}/20
@@ -1975,8 +2020,9 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                             }}
                             onKeyDown={handleTagKeyDown}
                             placeholder="Add tags..."
-                            className="w-full h-11 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] pl-4 pr-3 text-xs text-[var(--content-primary)] focus:outline-none focus:border-[#ea4c89] transition-all shadow-xs"
+                            className="w-full h-11 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] pl-10 pr-3 text-xs text-[var(--content-primary)] focus:outline-none focus:border-[var(--brand-secondary)] transition-all shadow-xs"
                           />
+                          <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--content-tertiary)] pointer-events-none" />
                         </div>
                         <Button
                           type="button"
@@ -2069,126 +2115,23 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                       </div>
                     )}
 
-                    {/* Suggested tags (clickable links matching screenshot) */}
-                    <div className="text-xs text-[var(--content-secondary)] pt-1 leading-relaxed flex flex-wrap items-center">
-                      <span className="font-bold text-[var(--content-primary)] mr-1.5">Suggested:</span>
-                      {suggestedTags
-                        .filter((tg) => !tags.includes(tg))
-                        .slice(0, 10)
-                        .map((tg, idx, arr) => (
-                          <React.Fragment key={tg}>
+                    {/* Suggested tags from taxonomy */}
+                    {suggestedTags.filter((tg) => !tags.includes(tg)).length > 0 && (
+                      <div className="text-xs text-[var(--content-secondary)] pt-1 flex flex-wrap items-center gap-1.5 leading-relaxed">
+                        <span className="font-bold text-[var(--content-primary)]">Suggested:</span>
+                        {suggestedTags
+                          .filter((tg) => !tags.includes(tg))
+                          .slice(0, 8)
+                          .map((tg) => (
                             <button
+                              key={tg}
                               type="button"
                               onClick={() => handleQuickAddTag(tg)}
-                              className="text-[var(--content-secondary)] hover:text-[#ea4c89] hover:underline cursor-pointer"
+                              className="text-[var(--content-secondary)] hover:text-[var(--brand-secondary)] hover:underline cursor-pointer"
                             >
-                              {tg}
+                              {tg},
                             </button>
-                            {idx < arr.length - 1 && <span className="mr-1">, </span>}
-                          </React.Fragment>
-                        ))}
-                    </div>
-                  </div>
-
-                  {/* Looking for feedback Toggle (Matching Screenshot) */}
-                  <div className="flex items-center justify-between pt-1">
-                    <span className="text-sm font-bold text-[var(--content-primary)]">
-                      Looking for feedback
-                    </span>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={lookingForFeedback}
-                      onClick={() => {
-                        const next = !lookingForFeedback;
-                        setLookingForFeedback(next);
-                        if (next) {
-                          if (!tags.includes("feedback") && tags.length < 20) {
-                            setTags((prev) => [...prev, "feedback"]);
-                          }
-                        } else {
-                          setTags((prev) => prev.filter((t) => t !== "feedback"));
-                        }
-                      }}
-                      className={cn(
-                        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
-                        lookingForFeedback ? "bg-[#ea4c89]" : "bg-neutral-300 dark:bg-neutral-700"
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out",
-                          lookingForFeedback ? "translate-x-5" : "translate-x-0"
-                        )}
-                      />
-                    </button>
-                  </div>
-
-                  {/* Subtle Dotted Divider Line (Matching Screenshot) */}
-                  <hr className="border-t border-dashed border-[var(--border-neutral)] my-2" />
-
-                  {/* 2. Creative Disciplines & Specializations */}
-                  <div className="space-y-3 pt-4 border-t border-[var(--border-neutral)]">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-[var(--content-primary)] flex items-center gap-1.5">
-                        <Sparkles className="h-3.5 w-3.5 text-[var(--brand-secondary)]" />
-                        <span>Creative Disciplines ({categories.length}/{MAX_CATEGORIES})</span>
-                      </label>
-                      <span className="text-[11px] text-[var(--content-secondary)]">
-                        Select up to {MAX_CATEGORIES}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {taxonomy.map((cat) => {
-                        const isSelected = categories.includes(cat.name);
-                        return (
-                          <button
-                            key={cat.id}
-                            type="button"
-                            onClick={() => handleToggleCategory(cat.name)}
-                            className={cn(
-                              "flex items-center justify-between gap-2 p-2.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer text-xs font-bold shadow-2xs select-none",
-                              isSelected
-                                ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-xs scale-[1.01]"
-                                : "bg-[var(--bg-screen)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:text-[var(--content-primary)] hover:border-[var(--content-secondary)]/40"
-                            )}
-                          >
-                            <span className="truncate">{cat.name}</span>
-                            {isSelected && <Check className="h-3 w-3 shrink-0 stroke-[3]" />}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {availableSubCategories.length > 0 && (
-                      <div className="space-y-1.5 pt-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-bold text-[var(--content-secondary)]">
-                            Specializations ({specializations.length}/{MAX_SPECIALIZATIONS})
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-0.5">
-                          {availableSubCategories.map((sub) => {
-                            const isSubSelected = specializations.includes(sub);
-                            return (
-                              <button
-                                key={sub}
-                                type="button"
-                                onClick={() => handleToggleSpecialization(sub)}
-                                className={cn(
-                                  "rounded-full px-2.5 py-1 text-[11px] font-semibold border transition-all cursor-pointer select-none",
-                                  isSubSelected
-                                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-2xs"
-                                    : "bg-[var(--bg-screen)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
-                                )}
-                              >
-                                {isSubSelected ? "✓ " : "+ "}
-                                {sub}
-                              </button>
-                            );
-                          })}
-                        </div>
+                          ))}
                       </div>
                     )}
                   </div>
@@ -2402,20 +2345,24 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
             {/* Modal Footer */}
             <div className="px-6 py-4 sm:px-8 sm:py-5 bg-[var(--bg-screen)] border-t border-[var(--border-neutral)] flex items-center justify-between gap-3 sticky bottom-0 z-20">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => setIsFinalTouchesOpen(false)}
-                className="px-6 py-2.5 rounded-full border border-[var(--border-neutral)] text-xs font-bold text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-colors cursor-pointer"
+                className="rounded-full border border-[var(--border-neutral)] px-5 text-xs font-bold text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
               >
                 Close
-              </button>
+              </Button>
 
               <div className="flex items-center gap-2.5">
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="sm"
                   disabled={isDraftSaving || isSaving}
                   onClick={() => handleSave(false)}
-                  className="px-6 py-2.5 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-screen)] hover:bg-[var(--bg-neutral)] text-xs font-bold text-[var(--content-primary)] transition-colors cursor-pointer shadow-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                  className="rounded-full px-5 text-xs font-bold shadow-xs"
                 >
                   {isDraftSaving ? (
                     <>
@@ -2425,23 +2372,25 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                   ) : (
                     <span>Save as draft</span>
                   )}
-                </button>
+                </Button>
 
-                <button
+                <Button
                   type="button"
+                  variant="accent"
+                  size="sm"
                   disabled={isSaving || isDraftSaving || galleryImages.length === 0 || !title.trim() || Boolean(user?.isSuspended)}
                   onClick={() => handleSave(true)}
-                  className="px-7 py-2.5 rounded-full bg-[#0d0c22] hover:bg-[#201f3d] dark:bg-white dark:text-black text-white text-xs font-black transition-all cursor-pointer shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[120px]"
+                  className="rounded-full px-6 text-xs font-bold min-w-[120px]"
                 >
                   {isSaving ? (
                     <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
                       <span>Publishing...</span>
                     </>
                   ) : (
                     <span>{mode === "edit" ? "Save changes" : "Publish now"}</span>
                   )}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
