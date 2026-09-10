@@ -45,6 +45,7 @@ import {
   Rows3,
   ChevronsUp,
   Eye,
+  Heart,
   Heading2,
   Heading3,
   Bold,
@@ -180,6 +181,9 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [isFinalTouchesOpen, setIsFinalTouchesOpen] = useState(false);
+  const [isCoverPickerExpanded, setIsCoverPickerExpanded] = useState(false);
+  const [lookingForFeedback, setLookingForFeedback] = useState(false);
   const [slideViewMode, setSlideViewMode] = useState<"grid" | "stack">("grid");
   const [draggedSlideIdx, setDraggedSlideIdx] = useState<number | null>(null);
   const [dragOverSlideIdx, setDragOverSlideIdx] = useState<number | null>(null);
@@ -431,7 +435,20 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   };
 
   const suggestedTags = useMemo(() => {
-    return Array.from(new Set(activeTaxonomies.map((t) => t.tags).flat())).slice(0, 15);
+    const screenshotDefaults = [
+      "ui",
+      "ux",
+      "branding",
+      "figma",
+      "app navigation",
+      "arabic",
+      "design",
+      "illustration",
+      "logo",
+      "graphic design",
+    ];
+    const fromTaxonomy = activeTaxonomies.map((t) => t.tags).flat();
+    return Array.from(new Set([...screenshotDefaults, ...fromTaxonomy])).slice(0, 16);
   }, [activeTaxonomies]);
 
   const suggestedTools = useMemo(() => {
@@ -882,6 +899,22 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   };
 
   // ---------------------------------------------------------------------------
+  // FINAL TOUCHES POPUP TRANSITION
+  // ---------------------------------------------------------------------------
+  const handleProceedToFinalTouches = () => {
+    if (!title.trim()) {
+      toast.error("Please enter a title for your project before continuing.", "Title Required");
+      titleInputRef.current?.focus();
+      return;
+    }
+    if (galleryImages.length === 0) {
+      toast.warning("Please upload at least one image before continuing.", "Images Required");
+      return;
+    }
+    setIsFinalTouchesOpen(true);
+  };
+
+  // ---------------------------------------------------------------------------
   // SAVE / PUBLISH DISPATCHER
   // ---------------------------------------------------------------------------
   const handleSave = async (isPublish: boolean) => {
@@ -1101,10 +1134,10 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
             <button
               type="button"
               onClick={handleExitClick}
-              className="h-9 w-9 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-screen)] hover:bg-[var(--bg-neutral)] flex items-center justify-center text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors cursor-pointer shadow-xs shrink-0"
-              title="Close & Exit"
+              className="px-4 py-1.5 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-screen)] hover:bg-[var(--bg-neutral)] text-xs font-bold text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors cursor-pointer shadow-xs shrink-0"
+              title="Cancel & Exit"
             >
-              <X className="h-4 w-4" />
+              Cancel
             </button>
 
             <span className="h-4 w-[1px] bg-[var(--border-neutral)] shrink-0 hidden sm:inline-block" />
@@ -1181,7 +1214,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
               size="sm"
               disabled={isDraftSaving || isSaving || galleryImages.length === 0 || Boolean(user?.isSuspended)}
               onClick={() => handleSave(false)}
-              className="gap-1.5 font-semibold text-xs shadow-xs"
+              className="gap-1.5 font-semibold text-xs shadow-xs px-3 sm:px-4"
             >
               {isDraftSaving ? (
                 <>
@@ -1195,7 +1228,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
               ) : (
                 <>
                   <Save className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Save Draft</span>
+                  <span className="hidden sm:inline">Save as draft</span>
                 </>
               )}
             </Button>
@@ -1204,25 +1237,12 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
               type="button"
               variant="accent"
               size="sm"
-              disabled={isSaving || isDraftSaving || galleryImages.length === 0 || Boolean(user?.isSuspended)}
-              onClick={() => handleSave(true)}
-              className="gap-2 font-black shadow-sm px-4 sm:px-5"
+              disabled={galleryImages.length === 0 || !title.trim() || Boolean(user?.isSuspended)}
+              onClick={handleProceedToFinalTouches}
+              className="gap-2 font-black shadow-sm px-5 rounded-full bg-black text-white hover:bg-neutral-800 dark:bg-white dark:text-black"
             >
-              {isSaving ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  <span>
-                    {uploadProgress
-                      ? `Uploading (${uploadProgress.current}/${uploadProgress.total})...`
-                      : "Publishing..."}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <span>{mode === "edit" ? "Save Changes" : "Publish Project"}</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </>
-              )}
+              <span>Continue</span>
+              <ArrowRight className="h-3.5 w-3.5" />
             </Button>
 
             {mode === "edit" && initialData?.id && (
@@ -1265,10 +1285,10 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
       {/* SCROLLABLE POPUP CANVAS BODY                                          */}
       {/* ===================================================================== */}
       <main ref={mainScrollRef} className="flex-1 overflow-y-auto min-h-0 bg-[var(--bg-screen)]">
-        <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-8">
+        <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8">
           {/* Draft Save Feedback Banner */}
           {draftSaveFeedback && (
-            <div className="mb-6 p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center justify-between gap-2 animate-fade-in">
+            <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center justify-between gap-2 animate-fade-in">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 shrink-0" />
                 <span>{draftSaveFeedback}</span>
@@ -1285,7 +1305,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
           {/* Recoverable Local Draft Banner */}
           {hasRecoverableDraft && mode === "new" && (
-            <div className="mb-6 p-4 sm:p-5 rounded-3xl bg-amber-500/10 border border-amber-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in shadow-xs">
+            <div className="p-4 sm:p-5 rounded-3xl bg-amber-500/10 border border-amber-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in shadow-xs">
               <div className="flex items-center gap-3.5 min-w-0">
                 <div className="h-10 w-10 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 shadow-xs">
                   <RotateCcw className="h-5 w-5" />
@@ -1323,976 +1343,398 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
           )}
 
           {/* ================================================================= */}
-          {/* UNIFIED TWO-COLUMN LAYOUT: MEDIA (LEFT) & DETAILS (RIGHT)         */}
+          {/* STEP 1 CANVAS: TITLE & IMAGES UPLOADER                            */}
           {/* ================================================================= */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* --------------------------------------------------------------- */}
-            {/* LEFT COLUMN: IMAGE UPLOADS & SPREADS DECK (lg:col-span-7)        */}
-            {/* --------------------------------------------------------------- */}
-            <div className="lg:col-span-7 space-y-6">
-              {/* Media Section Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 rounded-3xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] shadow-xs">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-2xl bg-[var(--primary-forest-green)]/10 text-[var(--primary-forest-green)] flex items-center justify-center shrink-0">
-                    <ImageIcon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-black text-[var(--content-primary)] flex items-center gap-2">
-                      <span>Project Case Study Media</span>
-                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-[var(--bg-neutral)] text-[var(--content-secondary)] border border-[var(--border-neutral)]">
-                        {galleryImages.length} {galleryImages.length === 1 ? "slide" : "slides"}
-                      </span>
-                    </h2>
-                    <p className="text-xs text-[var(--content-secondary)]">
-                      Upload and arrange high-resolution presentation slides and mocks.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-                  {galleryImages.length > 0 && (
-                    <>
-                      {/* Segmented View Mode Toggle */}
-                      <div className="flex items-center gap-1 p-1 rounded-2xl bg-[var(--bg-neutral)] border border-[var(--border-neutral)] shadow-2xs">
-                        <button
-                          type="button"
-                          onClick={() => setSlideViewMode("grid")}
-                          className={cn(
-                            "flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer",
-                            slideViewMode === "grid"
-                              ? "bg-[var(--bg-elevated)] text-[var(--content-primary)] shadow-xs"
-                              : "text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
-                          )}
-                          title="Compact thumbnail grid for rapid reordering"
-                        >
-                          <LayoutGrid className="h-3.5 w-3.5" />
-                          <span className="hidden sm:inline">Deck</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setSlideViewMode("stack")}
-                          className={cn(
-                            "flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer",
-                            slideViewMode === "stack"
-                              ? "bg-[var(--bg-elevated)] text-[var(--content-primary)] shadow-xs"
-                              : "text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
-                          )}
-                          title="Full-size spread stack"
-                        >
-                          <Rows3 className="h-3.5 w-3.5" />
-                          <span className="hidden sm:inline">Full</span>
-                        </button>
-                      </div>
-
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => additionalFileInputRef.current?.click()}
-                        className="gap-1.5 font-bold text-xs shadow-xs"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                        <span>Add Slides</span>
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Upload Dropzone (When Empty) */}
-              {galleryImages.length === 0 ? (
-                <div
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    setIsDraggingGallery(true);
-                  }}
-                  onDragLeave={() => setIsDraggingGallery(false)}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    setIsDraggingGallery(false);
-                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                      handleGalleryFiles(e.dataTransfer.files);
-                    }
-                  }}
-                  onClick={() => galleryFileInputRef.current?.click()}
-                  className={cn(
-                    "rounded-[32px] bg-[var(--bg-elevated)] border-2 border-dashed p-12 sm:p-20 text-center cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-5 group shadow-xs min-h-[420px]",
-                    isDraggingGallery
-                      ? "border-[var(--primary-forest-green)] bg-[var(--bg-neutral)] scale-[0.99] ring-8 ring-[var(--primary-forest-green)]/10"
-                      : "border-[var(--border-neutral)] hover:border-[var(--primary-forest-green)] hover:shadow-sm"
-                  )}
-                >
-                  {isProcessingFiles ? (
-                    <div className="flex flex-col items-center py-6 space-y-4">
-                      <Loader2 className="h-14 w-14 animate-spin text-[var(--primary-forest-green)]" />
-                      <div className="space-y-1 text-center">
-                        <h3 className="text-base font-bold text-[var(--content-primary)]">
-                          Processing Images ({uploadProgress?.current || 0}/{uploadProgress?.total || 0})...
-                        </h3>
-                        <p className="text-xs text-[var(--content-secondary)]">
-                          Validating and staging media slides
-                        </p>
-                      </div>
-                      {uploadProgress && (
-                        <div className="w-64 h-2 rounded-full bg-[var(--bg-neutral)] overflow-hidden border border-[var(--border-neutral)]">
-                          <div
-                            className="h-full bg-[var(--primary-forest-green)] transition-all duration-300 rounded-full"
-                            style={{
-                              width: `${Math.round((uploadProgress.current / uploadProgress.total) * 100)}%`,
-                            }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <>
-                      <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-3xl bg-[var(--bg-screen)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-tertiary)] group-hover:text-[var(--primary-forest-green)] group-hover:border-[var(--primary-forest-green)] group-hover:scale-105 transition-all shadow-2xs">
-                        <UploadCloud className="h-10 w-10 sm:h-12 sm:w-12 stroke-[1.5]" />
-                      </div>
-
-                      <div className="space-y-2 max-w-md">
-                        <h3 className="text-lg sm:text-xl font-black text-[var(--content-primary)]">
-                          Drag & drop your images here, or Browse
-                        </h3>
-                        <p className="text-xs text-[var(--content-secondary)] leading-relaxed">
-                          PNG, JPG, WebP, GIF up to {maxUploadSizeMb}MB each. Upload all your project case study slides at once.
-                        </p>
-                      </div>
-                    </>
-                  )}
-                </div>
-              ) : (
-                /* Gallery Slides */
-                <div className="space-y-6">
-                  {/* 1. COMPACT REORDER GRID DECK */}
-                  {slideViewMode === "grid" ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 animate-fade-in">
-                      {galleryImages.map((url, idx) => {
-                        const isCover = coverImage === url || (!coverImage && idx === 0);
-                        return (
-                          <div
-                            key={url + idx}
-                            draggable
-                            onDragStart={(e) => {
-                              setDraggedSlideIdx(idx);
-                              e.dataTransfer.effectAllowed = "move";
-                            }}
-                            onDragOver={(e) => {
-                              e.preventDefault();
-                              e.dataTransfer.dropEffect = "move";
-                              if (dragOverSlideIdx !== idx) setDragOverSlideIdx(idx);
-                            }}
-                            onDragLeave={() => {
-                              if (dragOverSlideIdx === idx) setDragOverSlideIdx(null);
-                            }}
-                            onDrop={(e) => {
-                              e.preventDefault();
-                              setDragOverSlideIdx(null);
-                              if (draggedSlideIdx !== null && draggedSlideIdx !== idx) {
-                                handleMoveImage(draggedSlideIdx, idx);
-                                setDraggedSlideIdx(null);
-                              }
-                            }}
-                            className={cn(
-                              "group relative rounded-2xl border bg-[var(--bg-elevated)] overflow-hidden shadow-xs transition-all flex flex-col cursor-grab active:cursor-grabbing",
-                              isCover
-                                ? "border-[var(--brand-secondary)] ring-2 ring-[var(--brand-secondary)]/20"
-                                : dragOverSlideIdx === idx
-                                ? "border-[var(--primary-forest-green)] ring-2 ring-[var(--primary-forest-green)]/40 scale-[1.02]"
-                                : "border-[var(--border-neutral)] hover:border-[var(--content-secondary)]/50",
-                              draggedSlideIdx === idx && "opacity-40"
-                            )}
-                          >
-                            <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5">
-                              <span className="rounded-md bg-black/80 backdrop-blur-xs text-white font-mono font-bold px-1.5 py-0.5 text-[10px] shadow-xs">
-                                #{idx + 1}
-                              </span>
-                              {isCover && (
-                                <span className="rounded-md bg-amber-500 text-black font-bold px-1.5 py-0.5 text-[10px] flex items-center gap-0.5 shadow-xs">
-                                  <Star className="h-2.5 w-2.5 fill-black" />
-                                  <span>Cover</span>
-                                </span>
-                              )}
-                            </div>
-
-                            <div className="relative aspect-4/3 w-full bg-[var(--bg-neutral)] overflow-hidden flex items-center justify-center">
-                              <Image
-                                src={url}
-                                alt={`Slide ${idx + 1}`}
-                                fill
-                                className="object-cover transition-transform duration-300 group-hover:scale-105"
-                                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                                priority={idx === 0}
-                                unoptimized={url.startsWith("blob:")}
-                              />
-                            </div>
-
-                            <div className="p-2 bg-[var(--bg-elevated)] border-t border-[var(--border-neutral)] flex items-center justify-between gap-1 text-xs">
-                              <div className="flex items-center gap-1">
-                                <button
-                                  type="button"
-                                  disabled={idx === 0}
-                                  onClick={() => handleMoveImage(idx, idx - 1)}
-                                  className="h-7 w-7 rounded-lg bg-[var(--bg-screen)] hover:bg-[var(--bg-neutral)] border border-[var(--border-neutral)] disabled:opacity-25 disabled:pointer-events-none flex items-center justify-center text-[var(--content-primary)] transition-colors cursor-pointer"
-                                  title="Move earlier"
-                                >
-                                  <ArrowLeft className="h-3 w-3" />
-                                </button>
-                                <button
-                                  type="button"
-                                  disabled={idx === galleryImages.length - 1}
-                                  onClick={() => handleMoveImage(idx, idx + 1)}
-                                  className="h-7 w-7 rounded-lg bg-[var(--bg-screen)] hover:bg-[var(--bg-neutral)] border border-[var(--border-neutral)] disabled:opacity-25 disabled:pointer-events-none flex items-center justify-center text-[var(--content-primary)] transition-colors cursor-pointer"
-                                  title="Move later"
-                                >
-                                  <ArrowRight className="h-3 w-3" />
-                                </button>
-                                {idx > 0 && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleMoveToTop(idx)}
-                                    className="h-7 px-1.5 rounded-lg bg-[var(--primary-forest-green)]/10 hover:bg-[var(--primary-forest-green)]/20 text-[var(--primary-forest-green)] font-bold text-[10px] flex items-center gap-0.5 transition-colors cursor-pointer"
-                                    title="Move directly to position #1 (Top)"
-                                  >
-                                    <ChevronsUp className="h-3 w-3" />
-                                    <span>Top</span>
-                                  </button>
-                                )}
-                              </div>
-
-                              <div className="flex items-center gap-1">
-                                {!isCover && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleSetAsCover(url)}
-                                    className="h-7 w-7 rounded-lg hover:bg-[var(--bg-neutral)] text-[var(--content-tertiary)] hover:text-amber-500 flex items-center justify-center transition-colors cursor-pointer"
-                                    title="Set as Card Cover"
-                                  >
-                                    <Star className="h-3.5 w-3.5" />
-                                  </button>
-                                )}
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveImage(idx)}
-                                  className="h-7 w-7 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
-                                  title="Delete image"
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    /* 2. FULL BLEED SPREAD STACK VIEW */
-                    <div className="space-y-6 animate-fade-in">
-                      {galleryImages.map((url, idx) => {
-                        const isCover = coverImage === url || (!coverImage && idx === 0);
-                        return (
-                          <div
-                            key={url + idx}
-                            className="group rounded-3xl border border-[var(--border-neutral)] hover:border-[var(--content-secondary)] bg-[var(--bg-elevated)] overflow-hidden shadow-sm transition-all duration-200"
-                          >
-                            <div className="p-3.5 bg-[var(--bg-elevated)] border-b border-[var(--border-neutral)] flex items-center justify-between gap-3 text-xs">
-                              <div className="flex items-center gap-2.5">
-                                <span className="rounded-lg bg-black/80 dark:bg-white/15 text-white font-mono font-bold px-2 py-0.5 text-xs">
-                                  #{idx + 1}
-                                </span>
-                                {isCover ? (
-                                  <span className="rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold px-2 py-0.5 text-[11px] flex items-center gap-1 border border-amber-500/30">
-                                    <Star className="h-3 w-3 fill-amber-500" />
-                                    <span>Card Cover</span>
-                                  </span>
-                                ) : (
-                                  <span className="text-[11px] font-semibold text-[var(--content-secondary)]">
-                                    Case study slide
-                                  </span>
-                                )}
-                              </div>
-
-                              <div className="flex items-center gap-1.5">
-                                {idx > 0 && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleMoveToTop(idx)}
-                                    className="h-8 px-2 rounded-xl bg-[var(--primary-forest-green)]/10 hover:bg-[var(--primary-forest-green)]/20 text-[var(--primary-forest-green)] font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
-                                    title="Move directly to position #1"
-                                  >
-                                    <ChevronsUp className="h-3.5 w-3.5" />
-                                    <span>To Top</span>
-                                  </button>
-                                )}
-
-                                <button
-                                  type="button"
-                                  disabled={idx === 0}
-                                  onClick={() => handleMoveImage(idx, idx - 1)}
-                                  className="h-8 px-2.5 rounded-xl bg-[var(--bg-screen)] hover:bg-[var(--bg-neutral)] border border-[var(--border-neutral)] disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1 text-[var(--content-primary)] text-xs font-semibold transition-colors cursor-pointer"
-                                  title="Move image up"
-                                >
-                                  <ArrowUp className="h-3.5 w-3.5" />
-                                  <span className="hidden sm:inline">Up</span>
-                                </button>
-
-                                <button
-                                  type="button"
-                                  disabled={idx === galleryImages.length - 1}
-                                  onClick={() => handleMoveImage(idx, idx + 1)}
-                                  className="h-8 px-2.5 rounded-xl bg-[var(--bg-screen)] hover:bg-[var(--bg-neutral)] border border-[var(--border-neutral)] disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1 text-[var(--content-primary)] text-xs font-semibold transition-colors cursor-pointer"
-                                  title="Move image down"
-                                >
-                                  <ArrowDown className="h-3.5 w-3.5" />
-                                  <span className="hidden sm:inline">Down</span>
-                                </button>
-
-                                {!isCover && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleSetAsCover(url)}
-                                    className="h-8 px-2.5 rounded-xl hover:bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:text-amber-500 border border-[var(--border-neutral)] flex items-center gap-1 text-xs font-semibold transition-colors cursor-pointer"
-                                    title="Set as project cover"
-                                  >
-                                    <Star className="h-3.5 w-3.5" />
-                                    <span className="hidden sm:inline">Set Cover</span>
-                                  </button>
-                                )}
-
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveImage(idx)}
-                                  className="h-8 w-8 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 flex items-center justify-center transition-colors cursor-pointer ml-1"
-                                  title="Delete image"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              </div>
-                            </div>
-
-                            <div className="relative w-full bg-[var(--bg-neutral)] overflow-hidden flex items-center justify-center min-h-[260px] sm:min-h-[380px]">
-                              <Image
-                                src={url}
-                                alt={`Project Spread ${idx + 1}`}
-                                width={1200}
-                                height={800}
-                                className="w-full h-auto object-contain max-h-[700px]"
-                                sizes="(max-width: 1024px) 100vw, 800px"
-                                priority={idx === 0}
-                                unoptimized={url.startsWith("blob:")}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Add Another Image Box at bottom */}
-                  <div
-                    onClick={() => additionalFileInputRef.current?.click()}
-                    className="rounded-3xl border-2 border-dashed border-[var(--border-neutral)] hover:border-[var(--primary-forest-green)] bg-[var(--bg-elevated)]/40 hover:bg-[var(--bg-neutral)]/40 p-6 text-center flex flex-col items-center justify-center gap-2 text-[var(--content-tertiary)] hover:text-[var(--primary-forest-green)] transition-all cursor-pointer group"
-                  >
-                    <div className="h-10 w-10 rounded-full bg-[var(--bg-screen)] border border-[var(--border-neutral)] group-hover:border-[var(--primary-forest-green)] flex items-center justify-center">
-                      <Plus className="h-5 w-5" />
-                    </div>
-                    <span className="text-xs font-bold">Add More Slides</span>
-                  </div>
-                </div>
-              )}
+          <div className="space-y-8 animate-fade-in">
+            {/* Project Title Input */}
+            <div className="space-y-2">
+              <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] block">
+                Project Title *
+              </label>
+              <input
+                ref={titleInputRef}
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Give your project a title..."
+                className={cn(
+                  bricolage.className,
+                  "w-full text-3xl sm:text-5xl font-black text-[var(--content-primary)] bg-transparent border-b-2 border-transparent hover:border-[var(--border-neutral)] focus:border-[var(--primary-forest-green)] pb-3 transition-all focus:outline-none placeholder:text-[var(--content-tertiary)]/50 tracking-tight"
+                )}
+              />
             </div>
 
-            {/* --------------------------------------------------------------- */}
-            {/* RIGHT COLUMN: PROJECT DETAILS, NARRATIVE & TAXONOMY (lg:col-span-5) */}
-            {/* --------------------------------------------------------------- */}
-            <div className="lg:col-span-5 space-y-6">
-              {/* 1. Project Title */}
-              <div className="p-5 sm:p-6 rounded-3xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] space-y-2.5 shadow-xs">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] block">
-                    Project Title *
-                  </label>
-                  <span className="text-[10px] font-mono text-[var(--content-tertiary)]">
-                    Required
-                  </span>
-                </div>
-                <input
-                  ref={titleInputRef}
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Give your project a title..."
-                  className={cn(
-                    bricolage.className,
-                    "w-full text-2xl sm:text-3xl font-black text-[var(--content-primary)] bg-transparent border-b-2 border-[var(--border-neutral)] focus:border-[var(--primary-forest-green)] pb-2 transition-all focus:outline-none placeholder:text-[var(--content-tertiary)]/50 tracking-tight"
-                  )}
-                />
-              </div>
-
-              {/* 2. Custom Project Cover (Thumbnail Studio) */}
-              <div className="p-5 sm:p-6 rounded-3xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] space-y-4 shadow-xs">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div>
-                    <span className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] flex items-center gap-1.5">
-                      <Star className="h-4 w-4 text-[var(--brand-secondary)]" />
-                      <span>Card Cover (Thumbnail)</span>
-                    </span>
-                    <p className="text-[11px] text-[var(--content-secondary)] mt-0.5">
-                      Cover shown on feeds and directory cards.
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="accent"
-                    size="sm"
-                    disabled={isSaving || isDraftSaving}
-                    onClick={() => coverFileInputRef.current?.click()}
-                    className="gap-1.5 shrink-0 font-bold text-xs shadow-xs self-start sm:self-auto"
-                  >
-                    <UploadCloud className="h-3.5 w-3.5" />
-                    <span>Upload Custom</span>
-                  </Button>
-                </div>
-
-                {/* Active Cover Preview & Slide Picker */}
-                <div className="space-y-3">
-                  <div className="relative aspect-[16/10] w-full rounded-2xl bg-[var(--bg-neutral)] overflow-hidden border border-[var(--border-neutral)] shadow-sm group">
-                    {activeCoverUrl ? (
-                      <Image
-                        src={activeCoverUrl}
-                        alt="Project thumbnail cover"
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 1024px) 100vw, 400px"
-                        unoptimized={Boolean(activeCoverUrl?.startsWith("blob:"))}
-                      />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center text-xs text-[var(--content-tertiary)]">
-                        No cover selected
+            {/* Upload Dropzone (When Empty) */}
+            {galleryImages.length === 0 ? (
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDraggingGallery(true);
+                }}
+                onDragLeave={() => setIsDraggingGallery(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDraggingGallery(false);
+                  if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    handleGalleryFiles(e.dataTransfer.files);
+                  }
+                }}
+                onClick={() => galleryFileInputRef.current?.click()}
+                className={cn(
+                  "rounded-[32px] bg-[var(--bg-elevated)] border-2 border-dashed p-16 sm:p-28 text-center cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-5 group shadow-xs",
+                  isDraggingGallery
+                    ? "border-[var(--primary-forest-green)] bg-[var(--bg-neutral)] scale-[0.99] ring-8 ring-[var(--primary-forest-green)]/10"
+                    : "border-[var(--border-neutral)] hover:border-[var(--primary-forest-green)] hover:shadow-sm"
+                )}
+              >
+                {isProcessingFiles ? (
+                  <div className="flex flex-col items-center py-6 space-y-4">
+                    <Loader2 className="h-14 w-14 animate-spin text-[var(--primary-forest-green)]" />
+                    <div className="space-y-1 text-center">
+                      <h3 className="text-base font-bold text-[var(--content-primary)]">
+                        Uploading Images ({uploadProgress?.current || 0}/{uploadProgress?.total || 0})...
+                      </h3>
+                      <p className="text-xs text-[var(--content-secondary)]">
+                        Optimizing and saving to CDN storage
+                      </p>
+                    </div>
+                    {uploadProgress && (
+                      <div className="w-64 h-2 rounded-full bg-[var(--bg-neutral)] overflow-hidden border border-[var(--border-neutral)]">
+                        <div
+                          className="h-full bg-[var(--primary-forest-green)] transition-all duration-300 rounded-full"
+                          style={{
+                            width: `${Math.round((uploadProgress.current / uploadProgress.total) * 100)}%`,
+                          }}
+                        />
                       </div>
                     )}
-                    <div className="absolute top-2.5 right-2.5 rounded-full bg-[var(--brand-secondary)] px-2 py-0.5 text-[10px] font-mono font-bold text-white shadow-xs flex items-center gap-1">
-                      <Star className="h-3 w-3 fill-current" />
-                      <span>Cover</span>
-                    </div>
-                    {coverImage && coverImage !== galleryImages[0] && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (coverImage && coverImage.startsWith("blob:") && !galleryImages.includes(coverImage)) {
-                            try {
-                              URL.revokeObjectURL(coverImage);
-                            } catch {}
-                            pendingFilesRef.current.delete(coverImage);
-                          }
-                          setCoverImage(galleryImages[0] || "");
-                        }}
-                        className="absolute bottom-2.5 left-2.5 rounded-full bg-black/80 hover:bg-black text-white px-2.5 py-0.5 text-[10px] font-mono font-bold shadow-xs cursor-pointer transition-colors"
-                        title="Revert to first slide"
-                      >
-                        Revert to Slide #1
-                      </button>
-                    )}
                   </div>
-
-                  {galleryImages.length > 0 && (
-                    <div className="space-y-1.5 pt-1">
-                      <span className="text-[11px] font-bold text-[var(--content-secondary)] block">
-                        Or pick from uploaded slides:
-                      </span>
-                      <div className="flex gap-2 overflow-x-auto pb-1.5 pt-0.5">
-                        {galleryImages.map((url, i) => {
-                          const isSelected = activeCoverUrl === url;
-                          return (
-                            <div
-                              key={url + i}
-                              onClick={() => setCoverImage(url)}
-                              className={cn(
-                                "relative h-14 w-20 rounded-xl overflow-hidden shrink-0 cursor-pointer border-2 transition-all",
-                                isSelected
-                                  ? "border-[var(--brand-secondary)] ring-2 ring-[var(--brand-secondary)]/30 scale-105"
-                                  : "border-[var(--border-neutral)] opacity-70 hover:opacity-100"
-                              )}
-                              title={`Use slide #${i + 1} as cover`}
-                            >
-                              <Image
-                                src={url}
-                                alt={`Slide ${i + 1}`}
-                                fill
-                                className="object-cover"
-                                sizes="80px"
-                                unoptimized={url.startsWith("blob:")}
-                              />
-                              <span className="absolute bottom-1 left-1 bg-black/80 text-white text-[8px] font-mono px-1 rounded">
-                                #{i + 1}
-                              </span>
-                              {isSelected && (
-                                <div className="absolute top-1 right-1 bg-[var(--brand-secondary)] text-white p-0.5 rounded-full">
-                                  <Check className="h-2 w-2 stroke-[3]" />
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* 3. Creative Disciplines & Specializations */}
-              <div className="p-5 sm:p-6 rounded-3xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] space-y-4 shadow-xs">
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] flex items-center gap-1.5">
-                      <Sparkles className="h-4 w-4 text-[var(--brand-secondary)]" />
-                      <span>Disciplines ({categories.length}/{MAX_CATEGORIES})</span>
-                    </span>
-                    <span className="text-[11px] text-[var(--content-secondary)]">
-                      Max {MAX_CATEGORIES}
-                    </span>
-                  </div>
-                  <p className="text-xs text-[var(--content-secondary)]">
-                    Categorize your project for curation and directory discovery.
-                  </p>
-                </div>
-
-                {/* Category Pills Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {taxonomy.map((cat) => {
-                    const isSelected = categories.includes(cat.name);
-                    return (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => handleToggleCategory(cat.name)}
-                        className={cn(
-                          "flex items-center justify-between gap-2 p-2.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer text-xs font-bold shadow-2xs select-none",
-                          isSelected
-                            ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-xs scale-[1.01]"
-                            : "bg-[var(--bg-screen)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:text-[var(--content-primary)] hover:border-[var(--content-secondary)]/40"
-                        )}
-                      >
-                        <span className="truncate">{cat.name}</span>
-                        {isSelected && <Check className="h-3 w-3 shrink-0 stroke-[3]" />}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Subcategory / Specializations Chips */}
-                {availableSubCategories.length > 0 && (
-                  <div className="space-y-2 pt-3 border-t border-[var(--border-neutral)]">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] flex items-center gap-1.5">
-                        <Tag className="h-3.5 w-3.5 text-[var(--brand-secondary)]" />
-                        <span>Specializations ({specializations.length}/{MAX_SPECIALIZATIONS})</span>
-                      </label>
-                      <span className="text-[10px] text-[var(--content-tertiary)] font-mono">
-                        Optional
-                      </span>
+                ) : (
+                  <>
+                    <div className="h-24 w-24 rounded-3xl bg-[var(--bg-screen)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-tertiary)] group-hover:text-[var(--primary-forest-green)] group-hover:border-[var(--primary-forest-green)] group-hover:scale-105 transition-all shadow-2xs">
+                      <UploadCloud className="h-12 w-12 stroke-[1.5]" />
                     </div>
 
-                    <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto p-0.5">
-                      {availableSubCategories.map((sub) => {
-                        const isSubSelected = specializations.includes(sub);
-                        return (
-                          <button
-                            key={sub}
-                            type="button"
-                            onClick={() => handleToggleSpecialization(sub)}
-                            className={cn(
-                              "rounded-full px-2.5 py-1 text-[11px] font-semibold border transition-all cursor-pointer select-none",
-                              isSubSelected
-                                ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-2xs"
-                                : "bg-[var(--bg-screen)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
-                            )}
-                          >
-                            {isSubSelected ? "✓ " : "+ "}
-                            {sub}
-                          </button>
-                        );
-                      })}
+                    <div className="space-y-2 max-w-md">
+                      <h3 className="text-xl font-black text-[var(--content-primary)]">
+                        Drag & drop your images here, or Browse
+                      </h3>
+                      <p className="text-xs text-[var(--content-secondary)] leading-relaxed">
+                        PNG, JPG, WebP, GIF up to {maxUploadSizeMb}MB each. Upload all your project case study slides at once.
+                      </p>
                     </div>
-                  </div>
+                  </>
                 )}
               </div>
+            ) : (
+              /* Images List with Grid / Stack View Switcher */
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <span className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] flex items-center gap-1.5">
+                    <ImageIcon className="h-4 w-4 text-[var(--primary-forest-green)]" />
+                    <span>{galleryImages.length} Images Uploaded</span>
+                  </span>
 
-              {/* 4. Project Story & Case Study Narrative */}
-              <div className="p-5 sm:p-6 rounded-3xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] space-y-3 shadow-xs">
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <FileText className="h-4 w-4 text-[var(--primary-forest-green)]" />
-                      <span className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)]">
-                        Project Story & Narrative
-                      </span>
+                  <div className="flex items-center gap-2 self-end sm:self-auto">
+                    {/* Segmented View Mode Toggle */}
+                    <div className="flex items-center gap-1 p-1 rounded-2xl bg-[var(--bg-neutral)] border border-[var(--border-neutral)] shadow-2xs">
+                      <button
+                        type="button"
+                        onClick={() => setSlideViewMode("grid")}
+                        className={cn(
+                          "flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer",
+                          slideViewMode === "grid"
+                            ? "bg-[var(--bg-elevated)] text-[var(--content-primary)] shadow-xs"
+                            : "text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
+                        )}
+                        title="Compact thumbnail grid for rapid reordering"
+                      >
+                        <LayoutGrid className="h-3.5 w-3.5" />
+                        <span>Reorder Deck</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSlideViewMode("stack")}
+                        className={cn(
+                          "flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer",
+                          slideViewMode === "stack"
+                            ? "bg-[var(--bg-elevated)] text-[var(--content-primary)] shadow-xs"
+                            : "text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
+                        )}
+                        title="Full-size spread stack"
+                      >
+                        <Rows3 className="h-3.5 w-3.5" />
+                        <span>Full View</span>
+                      </button>
                     </div>
-                    <span className="text-[10px] font-mono text-[var(--content-tertiary)]">
-                      Markdown supported
-                    </span>
+
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => additionalFileInputRef.current?.click()}
+                      className="gap-1.5 font-bold text-xs shadow-xs"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>Add Images</span>
+                    </Button>
                   </div>
-                  <p className="text-xs text-[var(--content-secondary)]">
-                    Share your design rationale, user challenges, and creative solutions.
-                  </p>
                 </div>
 
-                {/* Markdown Toolbar */}
-                <div className="flex flex-wrap items-center gap-1 p-1 rounded-xl bg-[var(--bg-neutral)] border border-[var(--border-neutral)] text-xs">
-                  <button
-                    type="button"
-                    onClick={() => insertMarkdown("## ", "\n")}
-                    className="px-2 py-0.5 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-                    title="Add Section Heading"
-                  >
-                    <Heading2 className="h-3 w-3" />
-                    <span>Heading</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => insertMarkdown("### ", "\n")}
-                    className="px-2 py-0.5 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-                    title="Add Subheading"
-                  >
-                    <Heading3 className="h-3 w-3" />
-                    <span>Subhead</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => insertMarkdown("**", "**")}
-                    className="px-2 py-0.5 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-                    title="Bold text"
-                  >
-                    <Bold className="h-3 w-3" />
-                    <span>Bold</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => insertMarkdown("- ", "\n")}
-                    className="px-2 py-0.5 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-                    title="Bullet list"
-                  >
-                    <List className="h-3 w-3" />
-                    <span>List</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => insertMarkdown("> ", "\n")}
-                    className="px-2 py-0.5 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-                    title="Quote or Insight block"
-                  >
-                    <Quote className="h-3 w-3" />
-                    <span>Quote</span>
-                  </button>
-                </div>
+                {/* 1. COMPACT REORDER GRID DECK */}
+                {slideViewMode === "grid" ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 animate-fade-in">
+                    {galleryImages.map((url, idx) => {
+                      const isCover = coverImage === url || (!coverImage && idx === 0);
+                      return (
+                        <div
+                          key={url + idx}
+                          draggable
+                          onDragStart={(e) => {
+                            setDraggedSlideIdx(idx);
+                            e.dataTransfer.effectAllowed = "move";
+                          }}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            e.dataTransfer.dropEffect = "move";
+                            if (dragOverSlideIdx !== idx) setDragOverSlideIdx(idx);
+                          }}
+                          onDragLeave={() => {
+                            if (dragOverSlideIdx === idx) setDragOverSlideIdx(null);
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            setDragOverSlideIdx(null);
+                            if (draggedSlideIdx !== null && draggedSlideIdx !== idx) {
+                              handleMoveImage(draggedSlideIdx, idx);
+                              setDraggedSlideIdx(null);
+                            }
+                          }}
+                          className={cn(
+                            "group relative rounded-2xl border bg-[var(--bg-elevated)] overflow-hidden shadow-xs transition-all flex flex-col cursor-grab active:cursor-grabbing",
+                            isCover
+                              ? "border-[var(--brand-secondary)] ring-2 ring-[var(--brand-secondary)]/20"
+                              : dragOverSlideIdx === idx
+                              ? "border-[var(--primary-forest-green)] ring-2 ring-[var(--primary-forest-green)]/40 scale-[1.02]"
+                              : "border-[var(--border-neutral)] hover:border-[var(--content-secondary)]/50",
+                            draggedSlideIdx === idx && "opacity-40"
+                          )}
+                        >
+                          {/* Slide Badges */}
+                          <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5">
+                            <span className="rounded-md bg-black/80 backdrop-blur-xs text-white font-mono font-bold px-1.5 py-0.5 text-[10px] shadow-xs">
+                              #{idx + 1}
+                            </span>
+                            {isCover && (
+                              <span className="rounded-md bg-amber-500 text-black font-bold px-1.5 py-0.5 text-[10px] flex items-center gap-0.5 shadow-xs">
+                                <Star className="h-2.5 w-2.5 fill-black" />
+                                <span>Cover</span>
+                              </span>
+                            )}
+                          </div>
 
-                <div className="relative">
-                  <Textarea
-                    ref={textareaRef}
-                    value={body}
-                    onChange={(e) => setBody(e.target.value)}
-                    maxLength={25000}
-                    placeholder="Write your case study story, problem statement, and design rationale here...&#10;&#10;Use ## Heading for sections and - for bullets."
-                    rows={6}
-                    className="text-sm bg-[var(--bg-screen)] leading-relaxed rounded-2xl border-[var(--border-neutral)] p-4 pb-8 focus:border-[var(--primary-forest-green)] shadow-2xs w-full resize-y min-h-[160px]"
-                  />
-                  <div className="absolute bottom-2.5 right-4 pointer-events-none select-none">
-                    <span className="text-[10px] font-mono font-bold text-[var(--content-tertiary)] px-2 py-0.5 rounded-full bg-[var(--bg-screen)] border border-[var(--border-neutral)] shadow-2xs">
-                      {body.length.toLocaleString()} chars
-                    </span>
+                          {/* Slide Thumbnail */}
+                          <div className="relative aspect-4/3 w-full bg-[var(--bg-neutral)] overflow-hidden flex items-center justify-center">
+                            <Image
+                              src={url}
+                              alt={`Slide ${idx + 1}`}
+                              fill
+                              className="object-cover transition-transform duration-300 group-hover:scale-105"
+                              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                              priority={idx === 0}
+                              unoptimized={url.startsWith("blob:")}
+                            />
+                          </div>
+
+                          {/* Action Toolbar */}
+                          <div className="p-2 bg-[var(--bg-elevated)] border-t border-[var(--border-neutral)] flex items-center justify-between gap-1 text-xs">
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                disabled={idx === 0}
+                                onClick={() => handleMoveImage(idx, idx - 1)}
+                                className="h-7 w-7 rounded-lg bg-[var(--bg-screen)] hover:bg-[var(--bg-neutral)] border border-[var(--border-neutral)] disabled:opacity-25 disabled:pointer-events-none flex items-center justify-center text-[var(--content-primary)] transition-colors cursor-pointer"
+                                title="Move earlier"
+                              >
+                                <ArrowLeft className="h-3 w-3" />
+                              </button>
+                              <button
+                                type="button"
+                                disabled={idx === galleryImages.length - 1}
+                                onClick={() => handleMoveImage(idx, idx + 1)}
+                                className="h-7 w-7 rounded-lg bg-[var(--bg-screen)] hover:bg-[var(--bg-neutral)] border border-[var(--border-neutral)] disabled:opacity-25 disabled:pointer-events-none flex items-center justify-center text-[var(--content-primary)] transition-colors cursor-pointer"
+                                title="Move later"
+                              >
+                                <ArrowRight className="h-3 w-3" />
+                              </button>
+                              {idx > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleMoveToTop(idx)}
+                                  className="h-7 px-1.5 rounded-lg bg-[var(--primary-forest-green)]/10 hover:bg-[var(--primary-forest-green)]/20 text-[var(--primary-forest-green)] font-bold text-[10px] flex items-center gap-0.5 transition-colors cursor-pointer"
+                                  title="Move directly to position #1 (Top)"
+                                >
+                                  <ChevronsUp className="h-3 w-3" />
+                                  <span>Top</span>
+                                </button>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-1">
+                              {!isCover && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSetAsCover(url)}
+                                  className="h-7 w-7 rounded-lg hover:bg-[var(--bg-neutral)] text-[var(--content-tertiary)] hover:text-amber-500 flex items-center justify-center transition-colors cursor-pointer"
+                                  title="Set as Card Cover"
+                                >
+                                  <Star className="h-3.5 w-3.5" />
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveImage(idx)}
+                                className="h-7 w-7 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
+                                title="Delete image"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
+                ) : (
+                  /* 2. FULL BLEED SPREAD STACK VIEW */
+                  <div className="space-y-6 animate-fade-in">
+                    {galleryImages.map((url, idx) => {
+                      const isCover = coverImage === url || (!coverImage && idx === 0);
+                      return (
+                        <div
+                          key={url + idx}
+                          className="group rounded-3xl border border-[var(--border-neutral)] hover:border-[var(--content-secondary)] bg-[var(--bg-elevated)] overflow-hidden shadow-sm transition-all duration-200"
+                        >
+                          <div className="p-3.5 bg-[var(--bg-elevated)] border-b border-[var(--border-neutral)] flex items-center justify-between gap-3 text-xs">
+                            <div className="flex items-center gap-2.5">
+                              <span className="rounded-lg bg-black/80 dark:bg-white/15 text-white font-mono font-bold px-2 py-0.5 text-xs">
+                                #{idx + 1}
+                              </span>
+                              {isCover ? (
+                                <span className="rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold px-2 py-0.5 text-[11px] flex items-center gap-1 border border-amber-500/30">
+                                  <Star className="h-3 w-3 fill-amber-500" />
+                                  <span>Card Cover</span>
+                                </span>
+                              ) : (
+                                <span className="text-[11px] font-semibold text-[var(--content-secondary)]">
+                                  Case study slide
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                              {idx > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleMoveToTop(idx)}
+                                  className="h-8 px-2 rounded-xl bg-[var(--primary-forest-green)]/10 hover:bg-[var(--primary-forest-green)]/20 text-[var(--primary-forest-green)] font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
+                                  title="Move directly to position #1"
+                                >
+                                  <ChevronsUp className="h-3.5 w-3.5" />
+                                  <span>To Top</span>
+                                </button>
+                              )}
+
+                              <button
+                                type="button"
+                                disabled={idx === 0}
+                                onClick={() => handleMoveImage(idx, idx - 1)}
+                                className="h-8 px-2.5 rounded-xl bg-[var(--bg-screen)] hover:bg-[var(--bg-neutral)] border border-[var(--border-neutral)] disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1 text-[var(--content-primary)] text-xs font-semibold transition-colors cursor-pointer"
+                                title="Move image up"
+                              >
+                                <ArrowUp className="h-3.5 w-3.5" />
+                                <span className="hidden sm:inline">Up</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                disabled={idx === galleryImages.length - 1}
+                                onClick={() => handleMoveImage(idx, idx + 1)}
+                                className="h-8 px-2.5 rounded-xl bg-[var(--bg-screen)] hover:bg-[var(--bg-neutral)] border border-[var(--border-neutral)] disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1 text-[var(--content-primary)] text-xs font-semibold transition-colors cursor-pointer"
+                                title="Move image down"
+                              >
+                                <ArrowDown className="h-3.5 w-3.5" />
+                                <span className="hidden sm:inline">Down</span>
+                              </button>
+
+                              {!isCover && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSetAsCover(url)}
+                                  className="h-8 px-2.5 rounded-xl hover:bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:text-amber-500 border border-[var(--border-neutral)] flex items-center gap-1 text-xs font-semibold transition-colors cursor-pointer"
+                                  title="Set as project cover"
+                                >
+                                  <Star className="h-3.5 w-3.5" />
+                                  <span className="hidden sm:inline">Set Cover</span>
+                                </button>
+                              )}
+
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveImage(idx)}
+                                className="h-8 w-8 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 flex items-center justify-center transition-colors cursor-pointer ml-1"
+                                title="Delete image"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="relative w-full bg-[var(--bg-neutral)] overflow-hidden flex items-center justify-center min-h-[300px] sm:min-h-[440px]">
+                            <Image
+                              src={url}
+                              alt={`Project Spread ${idx + 1}`}
+                              width={1200}
+                              height={800}
+                              className="w-full h-auto object-contain max-h-[800px]"
+                              sizes="(max-width: 1024px) 100vw, 900px"
+                              priority={idx === 0}
+                              unoptimized={url.startsWith("blob:")}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Add Another Image Box at bottom */}
+                <div
+                  onClick={() => additionalFileInputRef.current?.click()}
+                  className="rounded-3xl border-2 border-dashed border-[var(--border-neutral)] hover:border-[var(--primary-forest-green)] bg-[var(--bg-elevated)]/40 hover:bg-[var(--bg-neutral)]/40 p-8 text-center flex flex-col items-center justify-center gap-2 text-[var(--content-tertiary)] hover:text-[var(--primary-forest-green)] transition-all cursor-pointer group"
+                >
+                  <div className="h-12 w-12 rounded-full bg-[var(--bg-screen)] border border-[var(--border-neutral)] group-hover:border-[var(--primary-forest-green)] flex items-center justify-center">
+                    <Plus className="h-6 w-6" />
+                  </div>
+                  <span className="text-sm font-bold">Add Another Image Spread</span>
                 </div>
               </div>
-
-              {/* 5. Discovery Deck (Tools & Tags) */}
-              <div className="p-5 sm:p-6 rounded-3xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] space-y-5 shadow-xs">
-                {/* Tools */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] flex items-center gap-1.5">
-                      <Wrench className="h-3.5 w-3.5 text-[var(--primary-forest-green)]" />
-                      <span>Tools & Software ({tools.length}/10)</span>
-                    </label>
-                    <span className="text-[10px] font-mono text-[var(--content-tertiary)]">
-                      Press Enter to add
-                    </span>
-                  </div>
-
-                  <div className="relative" ref={toolDropdownRef}>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <input
-                          ref={toolInputRef}
-                          type="text"
-                          value={newTool}
-                          onChange={(e) => {
-                            setNewTool(e.target.value);
-                            setToolSearchOpen(true);
-                            setActiveToolIndex(0);
-                          }}
-                          onFocus={() => {
-                            if (newTool.trim()) setToolSearchOpen(true);
-                          }}
-                          onKeyDown={handleToolKeyDown}
-                          placeholder="e.g. Figma, Blender, After Effects..."
-                          className="w-full h-9 rounded-xl bg-[var(--bg-screen)] border border-[var(--border-neutral)] pl-8 pr-3 text-xs text-[var(--content-primary)] focus:outline-none focus:border-[var(--primary-forest-green)] transition-all"
-                        />
-                        <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--content-tertiary)] pointer-events-none" />
-                      </div>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={handleAddTool}
-                        disabled={!newTool.trim()}
-                        className="px-3 h-9 text-xs font-bold"
-                      >
-                        Add
-                      </Button>
-                    </div>
-
-                    {/* Autocomplete Search Dropdown */}
-                    {toolSearchOpen && newTool.trim().length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-1.5 z-50 bg-[var(--bg-elevated)] border border-[var(--border-neutral)] rounded-2xl shadow-xl overflow-hidden">
-                        <div className="px-3 py-1.5 bg-[var(--bg-neutral)]/60 border-b border-[var(--border-neutral)] flex items-center justify-between text-[10px] text-[var(--content-tertiary)] font-mono">
-                          <span className="flex items-center gap-1 font-bold">
-                            <Search className="h-2.5 w-2.5" />
-                            <span>Tools ({filteredTools.length})</span>
-                          </span>
-                          <span className="text-[9px] opacity-75">↑↓ select · ↵ add</span>
-                        </div>
-
-                        {filteredTools.length > 0 ? (
-                          <div className="max-h-48 overflow-y-auto p-1 space-y-0.5">
-                            {filteredTools.map((toolItem, idx) => {
-                              const isAdded = tools.includes(toolItem);
-                              const isHighlighted = idx === activeToolIndex;
-                              return (
-                                <button
-                                  key={toolItem}
-                                  type="button"
-                                  disabled={isAdded}
-                                  onClick={() => handleSelectTool(toolItem)}
-                                  className={cn(
-                                    "w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold text-left transition-colors cursor-pointer",
-                                    isAdded
-                                      ? "opacity-50 cursor-not-allowed bg-transparent text-[var(--content-tertiary)]"
-                                      : isHighlighted
-                                      ? "bg-[var(--primary-forest-green)]/15 text-[var(--primary-forest-green)] font-bold"
-                                      : "hover:bg-[var(--bg-neutral)] text-[var(--content-primary)]"
-                                  )}
-                                >
-                                  <span className="flex items-center gap-2 truncate">
-                                    <Wrench className="h-3 w-3 shrink-0 opacity-60" />
-                                    <span className="truncate">{highlightMatch(toolItem, newTool)}</span>
-                                  </span>
-                                  {isAdded ? (
-                                    <span className="text-[10px] font-mono text-[var(--content-tertiary)]">
-                                      Added
-                                    </span>
-                                  ) : (
-                                    <span className="text-[10px] font-mono text-[var(--primary-forest-green)] flex items-center gap-0.5">
-                                      <Plus className="h-2.5 w-2.5" />
-                                      <span>Select</span>
-                                    </span>
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <div className="p-2.5 text-center text-xs text-[var(--content-secondary)]">
-                            No standard tool matches &quot;{newTool.trim()}&quot;. Press <kbd className="px-1 py-0.5 rounded bg-[var(--bg-screen)] border border-[var(--border-neutral)] text-[10px] font-mono">Enter</kbd> to add.
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {tools.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {tools.map((tool) => (
-                        <span
-                          key={tool}
-                          className="inline-flex items-center gap-1.5 rounded-full bg-[var(--bg-screen)] border border-[var(--border-neutral)] px-2.5 py-0.5 text-xs font-bold text-[var(--content-primary)] shadow-2xs"
-                        >
-                          <span>{tool}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveTool(tool)}
-                            className="hover:text-rose-500 cursor-pointer ml-0.5"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Tags */}
-                <div className="space-y-3 pt-4 border-t border-[var(--border-neutral)]">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--content-tertiary)] flex items-center gap-1.5">
-                      <Tag className="h-3.5 w-3.5 text-[var(--brand-secondary)]" />
-                      <span>Tags & Keywords ({tags.length}/20)</span>
-                    </label>
-                    <span className="text-[10px] font-mono text-[var(--content-tertiary)]">
-                      Press Enter to add
-                    </span>
-                  </div>
-
-                  <div className="relative" ref={tagDropdownRef}>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <input
-                          ref={tagInputRef}
-                          type="text"
-                          value={newTag}
-                          onChange={(e) => {
-                            setNewTag(e.target.value);
-                            setTagSearchOpen(true);
-                            setActiveTagIndex(0);
-                          }}
-                          onFocus={() => {
-                            if (newTag.trim()) setTagSearchOpen(true);
-                          }}
-                          onKeyDown={handleTagKeyDown}
-                          placeholder="e.g. mobile, dark-mode, minimal..."
-                          className="w-full h-9 rounded-xl bg-[var(--bg-screen)] border border-[var(--border-neutral)] pl-8 pr-3 text-xs text-[var(--content-primary)] focus:outline-none focus:border-[var(--brand-secondary)] transition-all"
-                        />
-                        <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--content-tertiary)] pointer-events-none" />
-                      </div>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={handleAddTag}
-                        disabled={!newTag.trim()}
-                        className="px-3 h-9 text-xs font-bold"
-                      >
-                        Add
-                      </Button>
-                    </div>
-
-                    {/* Autocomplete Search Dropdown */}
-                    {tagSearchOpen && newTag.trim().length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-1.5 z-50 bg-[var(--bg-elevated)] border border-[var(--border-neutral)] rounded-2xl shadow-xl overflow-hidden">
-                        <div className="px-3 py-1.5 bg-[var(--bg-neutral)]/60 border-b border-[var(--border-neutral)] flex items-center justify-between text-[10px] text-[var(--content-tertiary)] font-mono">
-                          <span className="flex items-center gap-1 font-bold">
-                            <Search className="h-2.5 w-2.5" />
-                            <span>Tags ({filteredTags.length})</span>
-                          </span>
-                          <span className="text-[9px] opacity-75">↑↓ select · ↵ add</span>
-                        </div>
-
-                        {filteredTags.length > 0 ? (
-                          <div className="max-h-48 overflow-y-auto p-1 space-y-0.5">
-                            {filteredTags.map((tagItem, idx) => {
-                              const isAdded = tags.includes(tagItem);
-                              const isHighlighted = idx === activeTagIndex;
-                              return (
-                                <button
-                                  key={tagItem}
-                                  type="button"
-                                  disabled={isAdded}
-                                  onClick={() => handleSelectTag(tagItem)}
-                                  className={cn(
-                                    "w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold text-left transition-colors cursor-pointer",
-                                    isAdded
-                                      ? "opacity-50 cursor-not-allowed bg-transparent text-[var(--content-tertiary)]"
-                                      : isHighlighted
-                                      ? "bg-[var(--brand-secondary)]/15 text-[var(--brand-secondary)] font-bold"
-                                      : "hover:bg-[var(--bg-neutral)] text-[var(--content-primary)]"
-                                  )}
-                                >
-                                  <span className="flex items-center gap-2 truncate">
-                                    <Tag className="h-3 w-3 shrink-0 opacity-60" />
-                                    <span className="truncate">#{highlightMatch(tagItem, newTag)}</span>
-                                  </span>
-                                  {isAdded ? (
-                                    <span className="text-[10px] font-mono text-[var(--content-tertiary)]">
-                                      Added
-                                    </span>
-                                  ) : (
-                                    <span className="text-[10px] font-mono text-[var(--brand-secondary)] flex items-center gap-0.5">
-                                      <Plus className="h-2.5 w-2.5" />
-                                      <span>Select</span>
-                                    </span>
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <div className="p-2.5 text-center text-xs text-[var(--content-secondary)]">
-                            No platform tags match &quot;{newTag.trim()}&quot;. Press <kbd className="px-1 py-0.5 rounded bg-[var(--bg-screen)] border border-[var(--border-neutral)] text-[10px] font-mono">Enter</kbd> to add.
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="inline-flex items-center gap-1.5 rounded-full bg-[var(--bg-screen)] border border-[var(--border-neutral)] px-2.5 py-0.5 text-xs font-bold text-[var(--content-primary)] shadow-2xs"
-                        >
-                          <span>#{tag}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveTag(tag)}
-                            className="hover:text-rose-500 cursor-pointer ml-0.5"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {suggestedTags.length > 0 && (
-                    <div className="space-y-1 pt-1.5 border-t border-[var(--border-neutral)]">
-                      <p className="text-[10px] text-[var(--content-tertiary)] font-medium">
-                        Suggested:
-                      </p>
-                      <div className="flex flex-wrap gap-1">
-                        {suggestedTags
-                          .filter((tg) => !tags.includes(tg))
-                          .slice(0, 6)
-                          .map((tg) => (
-                            <button
-                              key={tg}
-                              type="button"
-                              onClick={() => handleQuickAddTag(tg)}
-                              className="rounded-full bg-[var(--bg-screen)] hover:bg-[var(--bg-neutral)] border border-[var(--border-neutral)] px-2 py-0.5 text-[10px] text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors cursor-pointer"
-                            >
-                              + #{tg}
-                            </button>
-                          ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </main>
 
       {/* ===================================================================== */}
-      {/* STICKY BOTTOM FOOTER (ACTIONS & PUBLISHING)                           */}
+      {/* STICKY BOTTOM FOOTER (ACTIONS & CONTINUE TO FINAL TOUCHES)             */}
       {/* ===================================================================== */}
       <footer className="shrink-0 border-t border-[var(--border-neutral)] bg-[var(--bg-screen)]/95 backdrop-blur-md sticky bottom-0 z-30">
-        <div className="flex w-full items-center justify-between px-4 sm:px-8 lg:px-12 py-3.5 gap-4 max-w-[1720px] mx-auto">
+        <div className="flex w-full items-center justify-between px-4 sm:px-8 lg:px-[140px] py-3.5 gap-4">
           {/* Left: Cancel */}
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={handleExitClick}
-              className="text-xs font-bold text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors py-2 px-3.5 rounded-xl hover:bg-[var(--bg-neutral)] cursor-pointer"
+              className="text-xs font-bold text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors py-1.5 px-3 rounded-xl hover:bg-[var(--bg-neutral)] cursor-pointer"
             >
               Cancel
             </button>
@@ -2300,26 +1742,6 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
           {/* Right: Actions */}
           <div className="flex items-center gap-2.5 shrink-0">
-            {user?.isSuspended && (
-              <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 font-semibold px-2">
-                <ShieldAlert className="h-4 w-4 shrink-0" />
-                <span>Account Suspended</span>
-              </div>
-            )}
-
-            {/* Pre-Publish Live Preview Button */}
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              disabled={galleryImages.length === 0}
-              onClick={() => setIsPreviewModalOpen(true)}
-              className="gap-1.5 font-bold text-xs shadow-xs px-4"
-            >
-              <Eye className="h-3.5 w-3.5 text-[var(--content-secondary)]" />
-              <span>Preview</span>
-            </Button>
-
             {/* Save Draft */}
             <Button
               type="button"
@@ -2341,39 +1763,690 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
               ) : (
                 <>
                   <Save className="h-3.5 w-3.5" />
-                  <span>Save Draft</span>
+                  <span>Save as draft</span>
                 </>
               )}
             </Button>
 
-            {/* Publish / Save Changes */}
+            {/* Continue to Final Touches */}
             <Button
               type="button"
               variant="accent"
               size="sm"
-              disabled={isSaving || isDraftSaving || galleryImages.length === 0 || Boolean(user?.isSuspended)}
-              onClick={() => handleSave(true)}
-              className="gap-2 font-black shadow-sm px-6 min-w-[140px]"
+              disabled={galleryImages.length === 0 || !title.trim() || Boolean(user?.isSuspended)}
+              onClick={handleProceedToFinalTouches}
+              className="gap-2 font-black shadow-sm px-6 min-w-[140px] rounded-full bg-black text-white hover:bg-neutral-800 dark:bg-white dark:text-black"
             >
-              {isSaving ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  <span>
-                    {uploadProgress
-                      ? `Uploading (${uploadProgress.current}/${uploadProgress.total})...`
-                      : "Publishing..."}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <Send className="h-3.5 w-3.5" />
-                  <span>{mode === "edit" ? "Save Changes" : "Publish Project"}</span>
-                </>
-              )}
+              <span>Continue</span>
+              <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
       </footer>
+
+      {/* ===================================================================== */}
+      {/* FINAL TOUCHES POPUP MODAL (STEP 2 POPUP - DRIBBLE STYLE)              */}
+      {/* ===================================================================== */}
+      {isFinalTouchesOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-fade-in"
+          onClick={() => setIsFinalTouchesOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-4xl bg-[var(--bg-screen)] border border-[var(--border-neutral)] rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[92vh] my-auto animate-scale-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="px-6 pt-6 pb-2 sm:px-8 sm:pt-8 sm:pb-3 flex items-center justify-between">
+              <h2 className={cn(bricolage.className, "text-2xl sm:text-3xl font-extrabold text-[var(--content-primary)] tracking-tight")}>
+                Final Touches
+              </h2>
+
+              <button
+                type="button"
+                onClick={() => setIsFinalTouchesOpen(false)}
+                className="h-8 w-8 rounded-full hover:bg-[var(--bg-neutral)] flex items-center justify-center text-[var(--content-tertiary)] hover:text-[var(--content-primary)] transition-colors cursor-pointer"
+                title="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Modal Scrollable Body */}
+            <div className="overflow-y-auto px-6 pb-6 pt-2 sm:px-8 sm:pb-8 sm:pt-3 space-y-6 flex-1 custom-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+                {/* ------------------------------------------------------------- */}
+                {/* LEFT COLUMN: THUMBNAIL PREVIEW & SELECTION (md:col-span-5)    */}
+                {/* ------------------------------------------------------------- */}
+                <div className="md:col-span-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-[var(--content-primary)]">
+                      Thumbnail preview
+                    </span>
+                    {coverImage && coverImage !== galleryImages[0] && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (coverImage && coverImage.startsWith("blob:") && !galleryImages.includes(coverImage)) {
+                            try {
+                              URL.revokeObjectURL(coverImage);
+                            } catch {}
+                            pendingFilesRef.current.delete(coverImage);
+                          }
+                          setCoverImage(galleryImages[0] || "");
+                        }}
+                        className="text-[11px] font-semibold text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:underline cursor-pointer"
+                      >
+                        Revert to Slide #1
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Card Preview Mockup (Matching Screenshot) */}
+                  <div className="relative aspect-[16/11] w-full rounded-2xl overflow-hidden border border-[var(--border-neutral)] bg-[var(--bg-elevated)] shadow-sm group">
+                    {activeCoverUrl ? (
+                      <Image
+                        src={activeCoverUrl}
+                        alt="Thumbnail preview"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 380px"
+                        unoptimized={Boolean(activeCoverUrl?.startsWith("blob:"))}
+                      />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-xs text-[var(--content-tertiary)]">
+                        No cover image
+                      </div>
+                    )}
+                    <div className="absolute top-2.5 right-2.5 rounded-full bg-black/60 backdrop-blur-xs px-2 py-0.5 text-[10px] font-mono font-bold text-white shadow-xs flex items-center gap-1">
+                      <Star className="h-2.5 w-2.5 fill-current text-amber-400" />
+                      <span>Cover</span>
+                    </div>
+                  </div>
+
+                  {/* Bottom of preview: Likes / Views on right (real data law) */}
+                  <div className="flex items-center justify-end gap-3 text-xs text-[var(--content-secondary)] font-mono">
+                    <span className="flex items-center gap-1">
+                      <Heart className="h-3.5 w-3.5 fill-current text-[var(--content-tertiary)]" />
+                      <span>{initialData?.appreciations ?? 0}</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Eye className="h-3.5 w-3.5 text-[var(--content-tertiary)]" />
+                      <span>{initialData?.views ?? 0}</span>
+                    </span>
+                  </div>
+
+                  {/* Crop / Select Thumbnail Trigger with pink underline like screenshot */}
+                  <div className="space-y-3 pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setIsCoverPickerExpanded(!isCoverPickerExpanded)}
+                      className="text-xs font-semibold text-[var(--content-primary)] underline decoration-[#ea4c89] decoration-2 underline-offset-4 hover:opacity-80 transition-opacity cursor-pointer select-none"
+                    >
+                      <span>{isCoverPickerExpanded ? "Hide thumbnail selector" : "Crop/Select thumbnail"}</span>
+                    </button>
+
+                    {/* Slide Picker Strip & Custom Cover Uploader */}
+                    {isCoverPickerExpanded && (
+                      <div className="p-3 rounded-2xl bg-[var(--bg-neutral)]/70 border border-[var(--border-neutral)] space-y-3 animate-fade-in">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-[var(--content-secondary)]">
+                            Pick from slides:
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => coverFileInputRef.current?.click()}
+                            className="text-[11px] font-bold text-[#ea4c89] hover:underline flex items-center gap-1 cursor-pointer"
+                          >
+                            <UploadCloud className="h-3 w-3" />
+                            <span>Upload Custom</span>
+                          </button>
+                        </div>
+
+                        <div className="flex gap-2 overflow-x-auto pb-1.5 pt-0.5">
+                          {galleryImages.map((url, i) => {
+                            const isSelected = activeCoverUrl === url;
+                            return (
+                              <div
+                                key={url + i}
+                                onClick={() => setCoverImage(url)}
+                                className={cn(
+                                  "relative h-14 w-20 rounded-xl overflow-hidden shrink-0 cursor-pointer border-2 transition-all",
+                                  isSelected
+                                    ? "border-[#ea4c89] ring-2 ring-[#ea4c89]/30 scale-105"
+                                    : "border-[var(--border-neutral)] opacity-70 hover:opacity-100"
+                                )}
+                                title={`Use slide #${i + 1} as cover`}
+                              >
+                                <Image
+                                  src={url}
+                                  alt={`Slide ${i + 1}`}
+                                  fill
+                                  className="object-cover"
+                                  sizes="80px"
+                                  unoptimized={url.startsWith("blob:")}
+                                />
+                                <span className="absolute bottom-1 left-1 bg-black/80 text-white text-[8px] font-mono px-1 rounded">
+                                  #{i + 1}
+                                </span>
+                                {isSelected && (
+                                  <div className="absolute top-1 right-1 bg-[#ea4c89] text-white p-0.5 rounded-full">
+                                    <Check className="h-2 w-2 stroke-[3]" />
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* ------------------------------------------------------------- */}
+                {/* RIGHT COLUMN: TAGS, FEEDBACK, DISCIPLINES, TOOLS & STORY      */}
+                {/* ------------------------------------------------------------- */}
+                <div className="md:col-span-7 space-y-5">
+                  {/* 1. Tags */}
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-[var(--content-primary)]">
+                        Tags (maximum 20)
+                      </label>
+                      <span className="text-[10px] font-mono text-[var(--content-tertiary)]">
+                        {tags.length}/20
+                      </span>
+                    </div>
+
+                    <div className="relative" ref={tagDropdownRef}>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <input
+                            ref={tagInputRef}
+                            type="text"
+                            value={newTag}
+                            onChange={(e) => {
+                              setNewTag(e.target.value);
+                              setTagSearchOpen(true);
+                              setActiveTagIndex(0);
+                            }}
+                            onFocus={() => {
+                              if (newTag.trim()) setTagSearchOpen(true);
+                            }}
+                            onKeyDown={handleTagKeyDown}
+                            placeholder="Add tags..."
+                            className="w-full h-11 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] pl-4 pr-3 text-xs text-[var(--content-primary)] focus:outline-none focus:border-[#ea4c89] transition-all shadow-xs"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={handleAddTag}
+                          disabled={!newTag.trim()}
+                          className="px-4 h-11 text-xs font-bold rounded-2xl"
+                        >
+                          Add
+                        </Button>
+                      </div>
+
+                      {/* Autocomplete Search Dropdown */}
+                      {tagSearchOpen && newTag.trim().length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-1.5 z-50 bg-[var(--bg-elevated)] border border-[var(--border-neutral)] rounded-2xl shadow-xl overflow-hidden">
+                          <div className="px-3.5 py-2 bg-[var(--bg-neutral)]/60 border-b border-[var(--border-neutral)] flex items-center justify-between text-[10px] text-[var(--content-tertiary)] font-mono">
+                            <span className="flex items-center gap-1 font-bold">
+                              <Search className="h-3 w-3" />
+                              <span>Tags ({filteredTags.length})</span>
+                            </span>
+                            <span className="text-[9px] opacity-75">↑↓ select · ↵ add</span>
+                          </div>
+
+                          {filteredTags.length > 0 ? (
+                            <div className="max-h-48 overflow-y-auto p-1 space-y-0.5">
+                              {filteredTags.map((tagItem, idx) => {
+                                const isAdded = tags.includes(tagItem);
+                                const isHighlighted = idx === activeTagIndex;
+                                return (
+                                  <button
+                                    key={tagItem}
+                                    type="button"
+                                    disabled={isAdded}
+                                    onClick={() => handleSelectTag(tagItem)}
+                                    className={cn(
+                                      "w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold text-left transition-colors cursor-pointer",
+                                      isAdded
+                                        ? "opacity-50 cursor-not-allowed bg-transparent text-[var(--content-tertiary)]"
+                                        : isHighlighted
+                                        ? "bg-[var(--brand-secondary)]/15 text-[var(--brand-secondary)] font-bold"
+                                        : "hover:bg-[var(--bg-neutral)] text-[var(--content-primary)]"
+                                    )}
+                                  >
+                                    <span className="flex items-center gap-2 truncate">
+                                      <Tag className="h-3 w-3 shrink-0 opacity-60" />
+                                      <span className="truncate">#{highlightMatch(tagItem, newTag)}</span>
+                                    </span>
+                                    {isAdded ? (
+                                      <span className="text-[10px] font-mono text-[var(--content-tertiary)]">
+                                        Added
+                                      </span>
+                                    ) : (
+                                      <span className="text-[10px] font-mono text-[var(--brand-secondary)] flex items-center gap-0.5">
+                                        <Plus className="h-2.5 w-2.5" />
+                                        <span>Select</span>
+                                      </span>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="p-3 text-center text-xs text-[var(--content-secondary)]">
+                              No platform tags match &quot;{newTag.trim()}&quot;. Press <kbd className="px-1.5 py-0.5 rounded bg-[var(--bg-screen)] border border-[var(--border-neutral)] text-[10px] font-mono">Enter</kbd> to add.
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Added Tags Chips */}
+                    {tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="inline-flex items-center gap-1.5 rounded-full bg-[var(--bg-elevated)] border border-[var(--border-neutral)] px-2.5 py-1 text-xs font-bold text-[var(--content-primary)] shadow-2xs"
+                          >
+                            <span>#{tag}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveTag(tag)}
+                              className="hover:text-rose-500 cursor-pointer ml-0.5"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Suggested tags (clickable links matching screenshot) */}
+                    <div className="text-xs text-[var(--content-secondary)] pt-1 leading-relaxed flex flex-wrap items-center">
+                      <span className="font-bold text-[var(--content-primary)] mr-1.5">Suggested:</span>
+                      {suggestedTags
+                        .filter((tg) => !tags.includes(tg))
+                        .slice(0, 10)
+                        .map((tg, idx, arr) => (
+                          <React.Fragment key={tg}>
+                            <button
+                              type="button"
+                              onClick={() => handleQuickAddTag(tg)}
+                              className="text-[var(--content-secondary)] hover:text-[#ea4c89] hover:underline cursor-pointer"
+                            >
+                              {tg}
+                            </button>
+                            {idx < arr.length - 1 && <span className="mr-1">, </span>}
+                          </React.Fragment>
+                        ))}
+                    </div>
+                  </div>
+
+                  {/* Looking for feedback Toggle (Matching Screenshot) */}
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-sm font-bold text-[var(--content-primary)]">
+                      Looking for feedback
+                    </span>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={lookingForFeedback}
+                      onClick={() => {
+                        const next = !lookingForFeedback;
+                        setLookingForFeedback(next);
+                        if (next) {
+                          if (!tags.includes("feedback") && tags.length < 20) {
+                            setTags((prev) => [...prev, "feedback"]);
+                          }
+                        } else {
+                          setTags((prev) => prev.filter((t) => t !== "feedback"));
+                        }
+                      }}
+                      className={cn(
+                        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                        lookingForFeedback ? "bg-[#ea4c89]" : "bg-neutral-300 dark:bg-neutral-700"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out",
+                          lookingForFeedback ? "translate-x-5" : "translate-x-0"
+                        )}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Subtle Dotted Divider Line (Matching Screenshot) */}
+                  <hr className="border-t border-dashed border-[var(--border-neutral)] my-2" />
+
+                  {/* 2. Creative Disciplines & Specializations */}
+                  <div className="space-y-3 pt-4 border-t border-[var(--border-neutral)]">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-[var(--content-primary)] flex items-center gap-1.5">
+                        <Sparkles className="h-3.5 w-3.5 text-[var(--brand-secondary)]" />
+                        <span>Creative Disciplines ({categories.length}/{MAX_CATEGORIES})</span>
+                      </label>
+                      <span className="text-[11px] text-[var(--content-secondary)]">
+                        Select up to {MAX_CATEGORIES}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {taxonomy.map((cat) => {
+                        const isSelected = categories.includes(cat.name);
+                        return (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => handleToggleCategory(cat.name)}
+                            className={cn(
+                              "flex items-center justify-between gap-2 p-2.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer text-xs font-bold shadow-2xs select-none",
+                              isSelected
+                                ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-xs scale-[1.01]"
+                                : "bg-[var(--bg-screen)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:text-[var(--content-primary)] hover:border-[var(--content-secondary)]/40"
+                            )}
+                          >
+                            <span className="truncate">{cat.name}</span>
+                            {isSelected && <Check className="h-3 w-3 shrink-0 stroke-[3]" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {availableSubCategories.length > 0 && (
+                      <div className="space-y-1.5 pt-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-[var(--content-secondary)]">
+                            Specializations ({specializations.length}/{MAX_SPECIALIZATIONS})
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-0.5">
+                          {availableSubCategories.map((sub) => {
+                            const isSubSelected = specializations.includes(sub);
+                            return (
+                              <button
+                                key={sub}
+                                type="button"
+                                onClick={() => handleToggleSpecialization(sub)}
+                                className={cn(
+                                  "rounded-full px-2.5 py-1 text-[11px] font-semibold border transition-all cursor-pointer select-none",
+                                  isSubSelected
+                                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-2xs"
+                                    : "bg-[var(--bg-screen)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
+                                )}
+                              >
+                                {isSubSelected ? "✓ " : "+ "}
+                                {sub}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 3. Tools & Software */}
+                  <div className="space-y-2.5 pt-4 border-t border-[var(--border-neutral)]">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-[var(--content-primary)] flex items-center gap-1.5">
+                        <Wrench className="h-3.5 w-3.5 text-[var(--primary-forest-green)]" />
+                        <span>Tools & Software ({tools.length}/10)</span>
+                      </label>
+                      <span className="text-[10px] font-mono text-[var(--content-tertiary)]">
+                        Press Enter to add
+                      </span>
+                    </div>
+
+                    <div className="relative" ref={toolDropdownRef}>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <input
+                            ref={toolInputRef}
+                            type="text"
+                            value={newTool}
+                            onChange={(e) => {
+                              setNewTool(e.target.value);
+                              setToolSearchOpen(true);
+                              setActiveToolIndex(0);
+                            }}
+                            onFocus={() => {
+                              if (newTool.trim()) setToolSearchOpen(true);
+                            }}
+                            onKeyDown={handleToolKeyDown}
+                            placeholder="e.g. Figma, Blender, After Effects..."
+                            className="w-full h-10 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] pl-9 pr-3 text-xs text-[var(--content-primary)] focus:outline-none focus:border-[var(--primary-forest-green)] transition-all shadow-xs"
+                          />
+                          <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--content-tertiary)] pointer-events-none" />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={handleAddTool}
+                          disabled={!newTool.trim()}
+                          className="px-4 h-10 text-xs font-bold rounded-2xl"
+                        >
+                          Add
+                        </Button>
+                      </div>
+
+                      {toolSearchOpen && newTool.trim().length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-1.5 z-50 bg-[var(--bg-elevated)] border border-[var(--border-neutral)] rounded-2xl shadow-xl overflow-hidden">
+                          <div className="px-3.5 py-1.5 bg-[var(--bg-neutral)]/60 border-b border-[var(--border-neutral)] flex items-center justify-between text-[10px] text-[var(--content-tertiary)] font-mono">
+                            <span className="flex items-center gap-1 font-bold">
+                              <Search className="h-2.5 w-2.5" />
+                              <span>Tools ({filteredTools.length})</span>
+                            </span>
+                            <span className="text-[9px] opacity-75">↑↓ select · ↵ add</span>
+                          </div>
+
+                          {filteredTools.length > 0 ? (
+                            <div className="max-h-48 overflow-y-auto p-1 space-y-0.5">
+                              {filteredTools.map((toolItem, idx) => {
+                                const isAdded = tools.includes(toolItem);
+                                const isHighlighted = idx === activeToolIndex;
+                                return (
+                                  <button
+                                    key={toolItem}
+                                    type="button"
+                                    disabled={isAdded}
+                                    onClick={() => handleSelectTool(toolItem)}
+                                    className={cn(
+                                      "w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold text-left transition-colors cursor-pointer",
+                                      isAdded
+                                        ? "opacity-50 cursor-not-allowed bg-transparent text-[var(--content-tertiary)]"
+                                        : isHighlighted
+                                        ? "bg-[var(--primary-forest-green)]/15 text-[var(--primary-forest-green)] font-bold"
+                                        : "hover:bg-[var(--bg-neutral)] text-[var(--content-primary)]"
+                                    )}
+                                  >
+                                    <span className="flex items-center gap-2 truncate">
+                                      <Wrench className="h-3 w-3 shrink-0 opacity-60" />
+                                      <span className="truncate">{highlightMatch(toolItem, newTool)}</span>
+                                    </span>
+                                    {isAdded ? (
+                                      <span className="text-[10px] font-mono text-[var(--content-tertiary)]">
+                                        Added
+                                      </span>
+                                    ) : (
+                                      <span className="text-[10px] font-mono text-[var(--primary-forest-green)] flex items-center gap-0.5">
+                                        <Plus className="h-2.5 w-2.5" />
+                                        <span>Select</span>
+                                      </span>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="p-2.5 text-center text-xs text-[var(--content-secondary)]">
+                              No standard tool matches &quot;{newTool.trim()}&quot;. Press <kbd className="px-1 py-0.5 rounded bg-[var(--bg-screen)] border border-[var(--border-neutral)] text-[10px] font-mono">Enter</kbd> to add.
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {tools.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {tools.map((tool) => (
+                          <span
+                            key={tool}
+                            className="inline-flex items-center gap-1.5 rounded-full bg-[var(--bg-elevated)] border border-[var(--border-neutral)] px-2.5 py-1 text-xs font-bold text-[var(--content-primary)] shadow-2xs"
+                          >
+                            <span>{tool}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveTool(tool)}
+                              className="hover:text-rose-500 cursor-pointer ml-0.5"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 4. Project Story & Narrative */}
+                  <div className="space-y-2.5 pt-4 border-t border-[var(--border-neutral)]">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <FileText className="h-3.5 w-3.5 text-[var(--primary-forest-green)]" />
+                        <label className="text-xs font-bold text-[var(--content-primary)]">
+                          Project Story & Narrative
+                        </label>
+                      </div>
+                      <span className="text-[10px] font-mono text-[var(--content-tertiary)]">
+                        Markdown supported
+                      </span>
+                    </div>
+
+                    {/* Markdown Toolbar */}
+                    <div className="flex flex-wrap items-center gap-1 p-1 rounded-xl bg-[var(--bg-neutral)] border border-[var(--border-neutral)] text-xs">
+                      <button
+                        type="button"
+                        onClick={() => insertMarkdown("## ", "\n")}
+                        className="px-2 py-0.5 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                        title="Add Section Heading"
+                      >
+                        <Heading2 className="h-3 w-3" />
+                        <span>Heading</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertMarkdown("### ", "\n")}
+                        className="px-2 py-0.5 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                        title="Add Subheading"
+                      >
+                        <Heading3 className="h-3 w-3" />
+                        <span>Subhead</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertMarkdown("**", "**")}
+                        className="px-2 py-0.5 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                        title="Bold text"
+                      >
+                        <Bold className="h-3 w-3" />
+                        <span>Bold</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertMarkdown("- ", "\n")}
+                        className="px-2 py-0.5 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                        title="Bullet list"
+                      >
+                        <List className="h-3 w-3" />
+                        <span>List</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertMarkdown("> ", "\n")}
+                        className="px-2 py-0.5 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                        title="Quote or Insight block"
+                      >
+                        <Quote className="h-3 w-3" />
+                        <span>Quote</span>
+                      </button>
+                    </div>
+
+                    <div className="relative">
+                      <Textarea
+                        ref={textareaRef}
+                        value={body}
+                        onChange={(e) => setBody(e.target.value)}
+                        maxLength={25000}
+                        placeholder="Write your case study story, problem statement, and design rationale here...&#10;&#10;Use ## Heading for sections and - for bullets."
+                        rows={5}
+                        className="text-xs bg-[var(--bg-elevated)] leading-relaxed rounded-2xl border-[var(--border-neutral)] p-3.5 pb-7 focus:border-[var(--primary-forest-green)] shadow-2xs w-full resize-y min-h-[140px]"
+                      />
+                      <div className="absolute bottom-2 right-3 pointer-events-none select-none">
+                        <span className="text-[10px] font-mono font-bold text-[var(--content-tertiary)] px-2 py-0.5 rounded-full bg-[var(--bg-screen)] border border-[var(--border-neutral)] shadow-2xs">
+                          {body.length.toLocaleString()} chars
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 sm:px-8 sm:py-5 bg-[var(--bg-screen)] border-t border-[var(--border-neutral)] flex items-center justify-between gap-3 sticky bottom-0 z-20">
+              <button
+                type="button"
+                onClick={() => setIsFinalTouchesOpen(false)}
+                className="px-6 py-2.5 rounded-full border border-[var(--border-neutral)] text-xs font-bold text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)] transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  disabled={isDraftSaving || isSaving}
+                  onClick={() => handleSave(false)}
+                  className="px-6 py-2.5 rounded-full border border-[var(--border-neutral)] bg-[var(--bg-screen)] hover:bg-[var(--bg-neutral)] text-xs font-bold text-[var(--content-primary)] transition-colors cursor-pointer shadow-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                >
+                  {isDraftSaving ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <span>Save as draft</span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isSaving || isDraftSaving || galleryImages.length === 0 || !title.trim() || Boolean(user?.isSuspended)}
+                  onClick={() => handleSave(true)}
+                  className="px-7 py-2.5 rounded-full bg-[#0d0c22] hover:bg-[#201f3d] dark:bg-white dark:text-black text-white text-xs font-black transition-all cursor-pointer shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[120px]"
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                      <span>Publishing...</span>
+                    </>
+                  ) : (
+                    <span>{mode === "edit" ? "Save changes" : "Publish now"}</span>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Project Modal for Edit Mode */}
       {mode === "edit" && initialData?.id && (
