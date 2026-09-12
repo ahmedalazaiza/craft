@@ -71,10 +71,14 @@ async function generateNonce(): Promise<[string, string]> {
   }
 }
 
+const DEFAULT_GOOGLE_CLIENT_ID =
+  "109302430142-52mmk3o90r8i5abfj88h9o2koqjjt40l.apps.googleusercontent.com";
+
 export function GoogleOneTap() {
   const { user, isAuthReady, setUser, refreshFromDb } = useSession();
   const isInitializingRef = useRef(false);
-  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  const googleClientId =
+    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || DEFAULT_GOOGLE_CLIENT_ID;
 
   const initGoogleOneTap = async () => {
     // Only show to unauthenticated visitors
@@ -125,10 +129,12 @@ export function GoogleOneTap() {
             toast.dismiss(toastId);
             const msg = err instanceof Error ? err.message : "Authentication failed.";
             toast.error(msg, "Error");
+          } finally {
+            isInitializingRef.current = false;
           }
         },
         auto_select: false,
-        cancel_on_tap_outside: true,
+        cancel_on_tap_outside: false,
         itp_support: true,
         use_fedcm_for_prompt: true,
       });
@@ -137,29 +143,33 @@ export function GoogleOneTap() {
       window.google.accounts.id.prompt((notification: GooglePromptNotification) => {
         if (notification.isNotDisplayed()) {
           const reason = notification.getNotDisplayedReason();
-          if (process.env.NODE_ENV === "development") {
-            if (reason === "unregistered_origin") {
-              console.warn(
-                `[Google One Tap] Origin "${window.location.origin}" is not authorized. ` +
-                  `Please add "${window.location.origin}" and "http://localhost" to ` +
-                  `"Authorized JavaScript origins" in Google Cloud Console.`
-              );
-            } else {
-              console.info("[Google One Tap] Prompt not displayed:", reason);
-            }
+          console.warn(`[Google One Tap] Prompt not displayed. Reason: "${reason}"`);
+          if (reason === "unregistered_origin") {
+            console.error(
+              `[Google One Tap] Origin "${window.location.origin}" is not authorized. ` +
+                `Please add "${window.location.origin}" to ` +
+                `"Authorized JavaScript origins" in Google Cloud Console: ` +
+                `https://console.cloud.google.com/apis/credentials`
+            );
+          } else if (reason === "suppressed_by_user") {
+            console.warn(
+              `[Google One Tap] Prompt suppressed by Google cooldown (user dismissed it recently). ` +
+                `To reset and see it again immediately, clear the 'g_state' cookie in DevTools > Application > Cookies.`
+            );
+          } else if (reason === "opt_out_or_no_session") {
+            console.info(
+              `[Google One Tap] User has no active Google session or has opted out of One Tap in Google Account settings.`
+            );
           }
         } else if (notification.isSkippedMoment()) {
-          if (process.env.NODE_ENV === "development") {
-            console.info("[Google One Tap] Prompt skipped:", notification.getSkippedReason());
-          }
+          console.info("[Google One Tap] Prompt skipped:", notification.getSkippedReason());
         } else if (notification.isDismissedMoment()) {
-          if (process.env.NODE_ENV === "development") {
-            console.info("[Google One Tap] Prompt dismissed:", notification.getDismissedReason());
-          }
+          console.info("[Google One Tap] Prompt dismissed:", notification.getDismissedReason());
         }
       });
     } catch (err) {
       console.warn("[Google One Tap] Initialization error:", err);
+      isInitializingRef.current = false;
     }
   };
 
@@ -180,7 +190,7 @@ export function GoogleOneTap() {
   }, [user, isAuthReady, googleClientId]);
 
   // If user is already authenticated or client ID is not configured, don't load script
-  if (user || !isAuthReady || !googleClientId) {
+  if (user) {
     return null;
   }
 
@@ -188,13 +198,11 @@ export function GoogleOneTap() {
     <Script
       src="https://accounts.google.com/gsi/client"
       strategy="afterInteractive"
-      onLoad={() => {
+      onReady={() => {
         initGoogleOneTap();
       }}
       onError={(e) => {
-        if (process.env.NODE_ENV === "development") {
-          console.warn("[Google One Tap] Failed to load Google Identity script", e);
-        }
+        console.warn("[Google One Tap] Failed to load Google Identity script", e);
       }}
     />
   );
