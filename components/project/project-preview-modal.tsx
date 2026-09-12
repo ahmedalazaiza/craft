@@ -10,6 +10,7 @@ import { bricolage } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 import { getValidAvatarUrl } from "@/lib/avatar";
 import { Creator } from "@/lib/types";
+import { FormattedCaseStudy } from "@/components/project/formatted-case-study";
 
 interface CaseStudySection {
   title?: string;
@@ -216,9 +217,7 @@ export function ProjectPreviewModal({
                   <h2 className="type-title-section text-[var(--content-primary)] font-black text-xl">
                     About this Project
                   </h2>
-                  <div className="type-body-large text-[var(--content-secondary)] leading-relaxed whitespace-pre-line font-normal text-sm sm:text-base">
-                    {body}
-                  </div>
+                  <FormattedCaseStudy content={body} />
                 </div>
               )}
 

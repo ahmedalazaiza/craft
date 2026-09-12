@@ -51,10 +51,12 @@ import {
   List,
   Quote,
   RotateCcw,
+  ChevronDown,
 } from "lucide-react";
 import { DeleteProjectModal } from "@/components/project/delete-project-modal";
 import { ExitConfirmModal } from "@/components/project/exit-confirm-modal";
 import { ProjectPreviewModal } from "@/components/project/project-preview-modal";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 function highlightMatch(text: string, query: string) {
   if (!query) return text;
@@ -81,6 +83,8 @@ interface ProjectFormProps {
 
 const MAX_CATEGORIES = 3;
 const MAX_SPECIALIZATIONS = 9;
+const MAX_TAGS = 9;
+const MAX_TOOLS = 5;
 
 export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const router = useRouter();
@@ -99,11 +103,23 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const toolDropdownRef = useRef<HTMLDivElement>(null);
   const tagInputRef = useRef<HTMLInputElement>(null);
   const tagDropdownRef = useRef<HTMLDivElement>(null);
+  const disciplineInputRef = useRef<HTMLInputElement>(null);
+  const disciplineDropdownRef = useRef<HTMLDivElement>(null);
+  const specInputRef = useRef<HTMLInputElement>(null);
+  const specDropdownRef = useRef<HTMLDivElement>(null);
 
   // AI Auto-Fill State
   const [isAiAnalyzing, setIsAiAnalyzing] = useState(false);
 
   // Autocomplete Search States
+  const [disciplineSearch, setDisciplineSearch] = useState("");
+  const [disciplineDropdownOpen, setDisciplineDropdownOpen] = useState(false);
+  const [activeDisciplineIndex, setActiveDisciplineIndex] = useState(-1);
+
+  const [specSearch, setSpecSearch] = useState("");
+  const [specDropdownOpen, setSpecDropdownOpen] = useState(false);
+  const [activeSpecIndex, setActiveSpecIndex] = useState(-1);
+
   const [toolSearchOpen, setToolSearchOpen] = useState(false);
   const [activeToolIndex, setActiveToolIndex] = useState(-1);
   const [tagSearchOpen, setTagSearchOpen] = useState(false);
@@ -177,7 +193,6 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const [draftSaveFeedback, setDraftSaveFeedback] = useState<string | null>(null);
 
   // UX Expert Improvements States
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isFinalTouchesOpen, setIsFinalTouchesOpen] = useState(false);
@@ -270,25 +285,6 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     } catch {}
     setHasRecoverableDraft(false);
     toast.info("Saved local draft discarded.", "Draft Cleared");
-  };
-
-  const insertMarkdown = (prefix: string, suffix = "") => {
-    const el = textareaRef.current;
-    if (!el) {
-      setBody((prev) => prev + "\n" + prefix + suffix);
-      return;
-    }
-    const start = el.selectionStart;
-    const end = el.selectionEnd;
-    const currentVal = body;
-    const selectedText = currentVal.substring(start, end);
-    const replacement = prefix + (selectedText || "text") + suffix;
-    const newVal = currentVal.substring(0, start) + replacement + currentVal.substring(end);
-    setBody(newVal);
-    setTimeout(() => {
-      el.focus();
-      el.setSelectionRange(start + prefix.length, start + replacement.length - suffix.length);
-    }, 50);
   };
 
   const handleMoveToTop = (fromIdx: number) => {
@@ -460,7 +456,30 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     return Array.from(new Set(list));
   }, [taxonomy]);
 
+  const allMasterSpecializations = useMemo(() => {
+    const subs: string[] = [];
+    const source = taxonomy && taxonomy.length > 0 ? taxonomy : FALLBACK_TAXONOMY;
+    source.forEach((cat) => {
+      if (Array.isArray(cat.subCategories)) subs.push(...cat.subCategories);
+    });
+    return Array.from(new Set(subs));
+  }, [taxonomy]);
+
   // Filtered search matches
+  const filteredDisciplines = useMemo(() => {
+    const q = disciplineSearch.trim().toLowerCase();
+    const source = taxonomy && taxonomy.length > 0 ? taxonomy : FALLBACK_TAXONOMY;
+    if (!q) return source;
+    return source.filter((cat) => cat.name.toLowerCase().includes(q));
+  }, [disciplineSearch, taxonomy]);
+
+  const filteredSpecializations = useMemo(() => {
+    const q = specSearch.trim().toLowerCase();
+    const pool = availableSubCategories.length > 0 ? availableSubCategories : allMasterSpecializations;
+    if (!q) return pool;
+    return pool.filter((sub) => sub.toLowerCase().includes(q));
+  }, [specSearch, availableSubCategories, allMasterSpecializations]);
+
   const filteredTools = useMemo(() => {
     const q = newTool.trim().toLowerCase();
     if (!q) return [];
@@ -495,9 +514,93 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
       .slice(0, 15);
   }, [newTag, allMasterTags]);
 
+  // Keyboard navigation for Creative Disciplines dropdown
+  const handleDisciplineKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (!disciplineDropdownOpen && filteredDisciplines.length > 0) {
+        setDisciplineDropdownOpen(true);
+        setActiveDisciplineIndex(0);
+        return;
+      }
+      if (filteredDisciplines.length > 0) {
+        setActiveDisciplineIndex((prev) => (prev + 1) % filteredDisciplines.length);
+      }
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (filteredDisciplines.length > 0) {
+        setActiveDisciplineIndex((prev) =>
+          prev <= 0 ? filteredDisciplines.length - 1 : prev - 1
+        );
+      }
+    } else if (e.key === "Escape") {
+      setDisciplineDropdownOpen(false);
+      setActiveDisciplineIndex(-1);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (
+        disciplineDropdownOpen &&
+        activeDisciplineIndex >= 0 &&
+        activeDisciplineIndex < filteredDisciplines.length
+      ) {
+        const selected = filteredDisciplines[activeDisciplineIndex];
+        handleToggleCategory(selected.name);
+        setDisciplineSearch("");
+      }
+    }
+  };
+
+  // Keyboard navigation for Specializations dropdown
+  const handleSpecKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (!specDropdownOpen && filteredSpecializations.length > 0) {
+        setSpecDropdownOpen(true);
+        setActiveSpecIndex(0);
+        return;
+      }
+      if (filteredSpecializations.length > 0) {
+        setActiveSpecIndex((prev) => (prev + 1) % filteredSpecializations.length);
+      }
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (filteredSpecializations.length > 0) {
+        setActiveSpecIndex((prev) =>
+          prev <= 0 ? filteredSpecializations.length - 1 : prev - 1
+        );
+      }
+    } else if (e.key === "Escape") {
+      setSpecDropdownOpen(false);
+      setActiveSpecIndex(-1);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (
+        specDropdownOpen &&
+        activeSpecIndex >= 0 &&
+        activeSpecIndex < filteredSpecializations.length
+      ) {
+        const selected = filteredSpecializations[activeSpecIndex];
+        handleToggleSpecialization(selected);
+        setSpecSearch("");
+      }
+    }
+  };
+
   // Close search dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (
+        disciplineDropdownRef.current &&
+        !disciplineDropdownRef.current.contains(e.target as Node)
+      ) {
+        setDisciplineDropdownOpen(false);
+      }
+      if (
+        specDropdownRef.current &&
+        !specDropdownRef.current.contains(e.target as Node)
+      ) {
+        setSpecDropdownOpen(false);
+      }
       if (
         toolDropdownRef.current &&
         !toolDropdownRef.current.contains(e.target as Node)
@@ -665,8 +768,8 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     if (e) e.preventDefault();
     const cleaned = newTag.trim().replace(/^#/, "");
     if (!cleaned) return;
-    if (tags.length >= 20) {
-      toast.warning("Maximum 20 tags allowed per project.", "Tag Limit");
+    if (tags.length >= MAX_TAGS) {
+      toast.warning(`Maximum ${MAX_TAGS} tags allowed per project.`, "Tag Limit");
       return;
     }
     if (!tags.includes(cleaned)) {
@@ -678,7 +781,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   };
 
   const handleQuickAddTag = (tagToAdd: string) => {
-    if (tags.length >= 20) return;
+    if (tags.length >= MAX_TAGS) return;
     if (!tags.includes(tagToAdd)) {
       setTags([...tags, tagToAdd]);
     }
@@ -736,8 +839,8 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
     if (e) e.preventDefault();
     const cleaned = newTool.trim();
     if (!cleaned) return;
-    if (tools.length >= 10) {
-      toast.warning("Maximum 10 creative tools allowed.", "Tool Limit");
+    if (tools.length >= MAX_TOOLS) {
+      toast.warning(`Maximum ${MAX_TOOLS} creative tools allowed.`, "Tool Limit");
       return;
     }
     if (!tools.includes(cleaned)) {
@@ -749,7 +852,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
   };
 
   const handleQuickAddTool = (toolToAdd: string) => {
-    if (tools.length >= 10) return;
+    if (tools.length >= MAX_TOOLS) return;
     if (!tools.includes(toolToAdd)) {
       setTools([...tools, toolToAdd]);
     }
@@ -867,10 +970,10 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
         setSpecializations(aiData.subCategories.slice(0, MAX_SPECIALIZATIONS));
       }
       if (Array.isArray(aiData.tags) && aiData.tags.length > 0) {
-        setTags((prev) => Array.from(new Set([...prev, ...aiData.tags])).slice(0, 20));
+        setTags((prev) => Array.from(new Set([...prev, ...aiData.tags])).slice(0, MAX_TAGS));
       }
       if (Array.isArray(aiData.tools) && aiData.tools.length > 0) {
-        setTools((prev) => Array.from(new Set([...prev, ...aiData.tools])).slice(0, 10));
+        setTools((prev) => Array.from(new Set([...prev, ...aiData.tools])).slice(0, MAX_TOOLS));
       }
 
       toast.success("Project details auto-filled using AI analysis!", "AI Assistant");
@@ -1925,8 +2028,8 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                 {/* RIGHT COLUMN: DISCIPLINES, TAGS, TOOLS & STORY (md:col-span-7) */}
                 {/* ------------------------------------------------------------- */}
                 <div className="md:col-span-7 space-y-6">
-                  {/* 1. Creative Disciplines & Specializations */}
-                  <div className="space-y-3">
+                  {/* 1. Creative Disciplines (Searchable Dropdown) */}
+                  <div className="space-y-2.5">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-bold text-[var(--content-primary)] flex items-center gap-1.5">
                         <Sparkles className="h-3.5 w-3.5 text-[var(--brand-secondary)]" />
@@ -1937,69 +2040,244 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {taxonomy.map((cat) => {
-                        const isSelected = categories.includes(cat.name);
-                        return (
-                          <button
-                            key={cat.id}
-                            type="button"
-                            onClick={() => handleToggleCategory(cat.name)}
-                            className={cn(
-                              "flex items-center justify-between gap-2 p-2.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer text-xs font-bold shadow-2xs select-none",
-                              isSelected
-                                ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-xs scale-[1.01]"
-                                : "bg-[var(--bg-screen)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:text-[var(--content-primary)] hover:border-[var(--content-secondary)]/40"
-                            )}
+                    {/* Selected Disciplines Chips */}
+                    {categories.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {categories.map((catName) => (
+                          <span
+                            key={catName}
+                            className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] px-3 py-1 text-xs font-bold shadow-2xs"
                           >
-                            <span className="truncate">{cat.name}</span>
-                            {isSelected && <Check className="h-3 w-3 shrink-0 stroke-[3]" />}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {availableSubCategories.length > 0 && (
-                      <div className="space-y-1.5 pt-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-bold text-[var(--content-secondary)]">
-                            Specializations ({specializations.length}/{MAX_SPECIALIZATIONS})
+                            <span>{catName}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleCategory(catName)}
+                              className="hover:opacity-75 cursor-pointer ml-0.5"
+                              title={`Remove ${catName}`}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
                           </span>
-                        </div>
-                        <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-0.5">
-                          {availableSubCategories.map((sub) => {
-                            const isSubSelected = specializations.includes(sub);
-                            return (
-                              <button
-                                key={sub}
-                                type="button"
-                                onClick={() => handleToggleSpecialization(sub)}
-                                className={cn(
-                                  "rounded-full px-2.5 py-1 text-[11px] font-semibold border transition-all cursor-pointer select-none",
-                                  isSubSelected
-                                    ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] border-transparent shadow-2xs"
-                                    : "bg-[var(--bg-screen)] text-[var(--content-secondary)] border-[var(--border-neutral)] hover:text-[var(--content-primary)] hover:bg-[var(--bg-neutral)]"
-                                )}
-                              >
-                                {isSubSelected ? "✓ " : "+ "}
-                                {sub}
-                              </button>
-                            );
-                          })}
-                        </div>
+                        ))}
                       </div>
                     )}
+
+                    {/* Searchable Dropdown Input & Menu */}
+                    <div className="relative" ref={disciplineDropdownRef}>
+                      <div className="relative">
+                        <input
+                          ref={disciplineInputRef}
+                          type="text"
+                          value={disciplineSearch}
+                          onChange={(e) => {
+                            setDisciplineSearch(e.target.value);
+                            setDisciplineDropdownOpen(true);
+                            setActiveDisciplineIndex(0);
+                          }}
+                          onFocus={() => setDisciplineDropdownOpen(true)}
+                          onKeyDown={handleDisciplineKeyDown}
+                          placeholder={
+                            categories.length >= MAX_CATEGORIES
+                              ? "Maximum 3 disciplines selected"
+                              : "Search or choose creative disciplines..."
+                          }
+                          className="w-full h-11 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] pl-10 pr-10 text-xs text-[var(--content-primary)] focus:outline-none focus:border-[var(--brand-secondary)] transition-all shadow-xs"
+                        />
+                        <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--content-tertiary)] pointer-events-none" />
+                        <button
+                          type="button"
+                          onClick={() => setDisciplineDropdownOpen(!disciplineDropdownOpen)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--content-tertiary)] hover:text-[var(--content-primary)] p-1 cursor-pointer"
+                        >
+                          <ChevronDown className={cn("h-4 w-4 transition-transform", disciplineDropdownOpen && "rotate-180")} />
+                        </button>
+                      </div>
+
+                      {disciplineDropdownOpen && (
+                        <div className="absolute top-full left-0 right-0 mt-1.5 z-50 bg-[var(--bg-elevated)] border border-[var(--border-neutral)] rounded-2xl shadow-xl overflow-hidden animate-scale-up">
+                          <div className="px-3.5 py-2 bg-[var(--bg-neutral)]/60 border-b border-[var(--border-neutral)] flex items-center justify-between text-[10px] text-[var(--content-tertiary)] font-mono">
+                            <span className="flex items-center gap-1 font-bold">
+                              <Sparkles className="h-3 w-3 text-[var(--brand-secondary)]" />
+                              <span>Disciplines ({filteredDisciplines.length})</span>
+                            </span>
+                            <span className="text-[9px] opacity-75">Click to toggle · Max 3</span>
+                          </div>
+                          <div className="max-h-56 overflow-y-auto p-1.5 space-y-1 custom-scrollbar">
+                            {filteredDisciplines.length > 0 ? (
+                              filteredDisciplines.map((cat, idx) => {
+                                const isSelected = categories.includes(cat.name);
+                                const isHighlighted = idx === activeDisciplineIndex;
+                                return (
+                                  <button
+                                    key={cat.id || cat.name}
+                                    type="button"
+                                    onClick={() => {
+                                      handleToggleCategory(cat.name);
+                                      setDisciplineSearch("");
+                                    }}
+                                    className={cn(
+                                      "w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold text-left transition-colors cursor-pointer",
+                                      isSelected
+                                        ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                                        : isHighlighted
+                                        ? "bg-[var(--brand-secondary)]/10 text-[var(--brand-secondary)]"
+                                        : "hover:bg-[var(--bg-neutral)] text-[var(--content-primary)]"
+                                    )}
+                                  >
+                                    <span className="truncate">{highlightMatch(cat.name, disciplineSearch)}</span>
+                                    {isSelected ? (
+                                      <span className="text-[11px] font-bold flex items-center gap-1 shrink-0 ml-2">
+                                        <Check className="h-3 w-3 stroke-[3]" />
+                                        <span>Selected</span>
+                                      </span>
+                                    ) : (
+                                      <span className="text-[10px] font-mono text-[var(--content-tertiary)] flex items-center gap-0.5 shrink-0 ml-2">
+                                        <Plus className="h-3 w-3" />
+                                        <span>Add</span>
+                                      </span>
+                                    )}
+                                  </button>
+                                );
+                              })
+                            ) : (
+                              <div className="p-3 text-center text-xs text-[var(--content-secondary)]">
+                                No disciplines match &quot;{disciplineSearch.trim()}&quot;
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  {/* 2. Tags */}
+                  {/* 2. Specializations (Searchable Dropdown) */}
                   <div className="space-y-2.5 pt-4 border-t border-[var(--border-neutral)]">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-bold text-[var(--content-primary)] flex items-center gap-1.5">
                         <Tag className="h-3.5 w-3.5 text-[var(--brand-secondary)]" />
-                        <span>Tags (maximum 20)</span>
+                        <span>Specializations ({specializations.length}/{MAX_SPECIALIZATIONS})</span>
+                      </label>
+                      <span className="text-[11px] text-[var(--content-secondary)]">
+                        Select up to {MAX_SPECIALIZATIONS}
+                      </span>
+                    </div>
+
+                    {/* Selected Specializations Chips */}
+                    {specializations.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {specializations.map((subName) => (
+                          <span
+                            key={subName}
+                            className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] px-2.5 py-1 text-xs font-semibold shadow-2xs"
+                          >
+                            <span>{subName}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleSpecialization(subName)}
+                              className="hover:opacity-75 cursor-pointer ml-0.5"
+                              title={`Remove ${subName}`}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Searchable Dropdown Input & Menu */}
+                    <div className="relative" ref={specDropdownRef}>
+                      <div className="relative">
+                        <input
+                          ref={specInputRef}
+                          type="text"
+                          value={specSearch}
+                          onChange={(e) => {
+                            setSpecSearch(e.target.value);
+                            setSpecDropdownOpen(true);
+                            setActiveSpecIndex(0);
+                          }}
+                          onFocus={() => setSpecDropdownOpen(true)}
+                          onKeyDown={handleSpecKeyDown}
+                          placeholder={
+                            specializations.length >= MAX_SPECIALIZATIONS
+                              ? "Maximum 9 specializations selected"
+                              : "Search or select specializations..."
+                          }
+                          className="w-full h-11 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] pl-10 pr-10 text-xs text-[var(--content-primary)] focus:outline-none focus:border-[var(--brand-secondary)] transition-all shadow-xs"
+                        />
+                        <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--content-tertiary)] pointer-events-none" />
+                        <button
+                          type="button"
+                          onClick={() => setSpecDropdownOpen(!specDropdownOpen)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--content-tertiary)] hover:text-[var(--content-primary)] p-1 cursor-pointer"
+                        >
+                          <ChevronDown className={cn("h-4 w-4 transition-transform", specDropdownOpen && "rotate-180")} />
+                        </button>
+                      </div>
+
+                      {specDropdownOpen && (
+                        <div className="absolute top-full left-0 right-0 mt-1.5 z-50 bg-[var(--bg-elevated)] border border-[var(--border-neutral)] rounded-2xl shadow-xl overflow-hidden animate-scale-up">
+                          <div className="px-3.5 py-2 bg-[var(--bg-neutral)]/60 border-b border-[var(--border-neutral)] flex items-center justify-between text-[10px] text-[var(--content-tertiary)] font-mono">
+                            <span className="font-bold">Specializations ({filteredSpecializations.length})</span>
+                            <span className="text-[9px] opacity-75">Click to toggle · Max 9</span>
+                          </div>
+                          <div className="max-h-52 overflow-y-auto p-1.5 space-y-0.5 custom-scrollbar">
+                            {filteredSpecializations.length > 0 ? (
+                              filteredSpecializations.map((sub, idx) => {
+                                const isSelected = specializations.includes(sub);
+                                const isHighlighted = idx === activeSpecIndex;
+                                return (
+                                  <button
+                                    key={sub}
+                                    type="button"
+                                    onClick={() => {
+                                      handleToggleSpecialization(sub);
+                                      setSpecSearch("");
+                                    }}
+                                    className={cn(
+                                      "w-full flex items-center justify-between px-3.5 py-1.5 rounded-xl text-xs font-semibold text-left transition-colors cursor-pointer",
+                                      isSelected
+                                        ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                                        : isHighlighted
+                                        ? "bg-[var(--brand-secondary)]/10 text-[var(--brand-secondary)] font-bold"
+                                        : "hover:bg-[var(--bg-neutral)] text-[var(--content-primary)]"
+                                    )}
+                                  >
+                                    <span className="truncate">{highlightMatch(sub, specSearch)}</span>
+                                    {isSelected ? (
+                                      <span className="text-[10px] font-bold flex items-center gap-1 shrink-0 ml-2">
+                                        <Check className="h-2.5 w-2.5 stroke-[3]" />
+                                        <span>Selected</span>
+                                      </span>
+                                    ) : (
+                                      <span className="text-[10px] font-mono text-[var(--content-tertiary)] flex items-center gap-0.5 shrink-0 ml-2">
+                                        <Plus className="h-2.5 w-2.5" />
+                                        <span>Add</span>
+                                      </span>
+                                    )}
+                                  </button>
+                                );
+                              })
+                            ) : (
+                              <div className="p-3 text-center text-xs text-[var(--content-secondary)]">
+                                No specializations match &quot;{specSearch.trim()}&quot;
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 3. Tags (Max 9) */}
+                  <div className="space-y-2.5 pt-4 border-t border-[var(--border-neutral)]">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-[var(--content-primary)] flex items-center gap-1.5">
+                        <Tag className="h-3.5 w-3.5 text-[var(--brand-secondary)]" />
+                        <span>Tags (maximum {MAX_TAGS})</span>
                       </label>
                       <span className="text-[10px] font-mono text-[var(--content-tertiary)]">
-                        {tags.length}/20
+                        {tags.length}/{MAX_TAGS}
                       </span>
                     </div>
 
@@ -2019,8 +2297,11 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                               if (newTag.trim()) setTagSearchOpen(true);
                             }}
                             onKeyDown={handleTagKeyDown}
-                            placeholder="Add tags..."
-                            className="w-full h-11 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] pl-10 pr-3 text-xs text-[var(--content-primary)] focus:outline-none focus:border-[var(--brand-secondary)] transition-all shadow-xs"
+                            placeholder={
+                              tags.length >= MAX_TAGS ? "Maximum 9 tags reached" : "Add tags..."
+                            }
+                            disabled={tags.length >= MAX_TAGS}
+                            className="w-full h-11 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] pl-10 pr-3 text-xs text-[var(--content-primary)] focus:outline-none focus:border-[var(--brand-secondary)] transition-all shadow-xs disabled:opacity-50"
                           />
                           <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--content-tertiary)] pointer-events-none" />
                         </div>
@@ -2029,7 +2310,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                           variant="secondary"
                           size="sm"
                           onClick={handleAddTag}
-                          disabled={!newTag.trim()}
+                          disabled={!newTag.trim() || tags.length >= MAX_TAGS}
                           className="px-4 h-11 text-xs font-bold rounded-2xl"
                         >
                           Add
@@ -2116,7 +2397,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                     )}
 
                     {/* Suggested tags from taxonomy */}
-                    {suggestedTags.filter((tg) => !tags.includes(tg)).length > 0 && (
+                    {tags.length < MAX_TAGS && suggestedTags.filter((tg) => !tags.includes(tg)).length > 0 && (
                       <div className="text-xs text-[var(--content-secondary)] pt-1 flex flex-wrap items-center gap-1.5 leading-relaxed">
                         <span className="font-bold text-[var(--content-primary)]">Suggested:</span>
                         {suggestedTags
@@ -2136,12 +2417,12 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                     )}
                   </div>
 
-                  {/* 3. Tools & Software */}
+                  {/* 4. Tools & Software (Max 5) */}
                   <div className="space-y-2.5 pt-4 border-t border-[var(--border-neutral)]">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-bold text-[var(--content-primary)] flex items-center gap-1.5">
                         <Wrench className="h-3.5 w-3.5 text-[var(--primary-forest-green)]" />
-                        <span>Tools & Software ({tools.length}/10)</span>
+                        <span>Tools & Software ({tools.length}/{MAX_TOOLS})</span>
                       </label>
                       <span className="text-[10px] font-mono text-[var(--content-tertiary)]">
                         Press Enter to add
@@ -2164,18 +2445,23 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                               if (newTool.trim()) setToolSearchOpen(true);
                             }}
                             onKeyDown={handleToolKeyDown}
-                            placeholder="e.g. Figma, Blender, After Effects..."
-                            className="w-full h-10 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] pl-9 pr-3 text-xs text-[var(--content-primary)] focus:outline-none focus:border-[var(--primary-forest-green)] transition-all shadow-xs"
+                            placeholder={
+                              tools.length >= MAX_TOOLS
+                                ? "Maximum 5 tools reached"
+                                : "e.g. Figma, Blender, After Effects..."
+                            }
+                            disabled={tools.length >= MAX_TOOLS}
+                            className="w-full h-11 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] pl-10 pr-3 text-xs text-[var(--content-primary)] focus:outline-none focus:border-[var(--primary-forest-green)] transition-all shadow-xs disabled:opacity-50"
                           />
-                          <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--content-tertiary)] pointer-events-none" />
+                          <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--content-tertiary)] pointer-events-none" />
                         </div>
                         <Button
                           type="button"
                           variant="secondary"
                           size="sm"
                           onClick={handleAddTool}
-                          disabled={!newTool.trim()}
-                          className="px-4 h-10 text-xs font-bold rounded-2xl"
+                          disabled={!newTool.trim() || tools.length >= MAX_TOOLS}
+                          className="px-4 h-11 text-xs font-bold rounded-2xl"
                         >
                           Add
                         </Button>
@@ -2259,7 +2545,7 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                     )}
                   </div>
 
-                  {/* 4. Project Story & Narrative */}
+                  {/* 5. Project Story & Narrative (Rich Text Editor) */}
                   <div className="space-y-2.5 pt-4 border-t border-[var(--border-neutral)]">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
@@ -2269,75 +2555,16 @@ export function ProjectForm({ initialData, mode }: ProjectFormProps) {
                         </label>
                       </div>
                       <span className="text-[10px] font-mono text-[var(--content-tertiary)]">
-                        Markdown supported
+                        Highlight text to format
                       </span>
                     </div>
 
-                    {/* Markdown Toolbar */}
-                    <div className="flex flex-wrap items-center gap-1 p-1 rounded-xl bg-[var(--bg-neutral)] border border-[var(--border-neutral)] text-xs">
-                      <button
-                        type="button"
-                        onClick={() => insertMarkdown("## ", "\n")}
-                        className="px-2 py-0.5 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-                        title="Add Section Heading"
-                      >
-                        <Heading2 className="h-3 w-3" />
-                        <span>Heading</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => insertMarkdown("### ", "\n")}
-                        className="px-2 py-0.5 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-                        title="Add Subheading"
-                      >
-                        <Heading3 className="h-3 w-3" />
-                        <span>Subhead</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => insertMarkdown("**", "**")}
-                        className="px-2 py-0.5 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-                        title="Bold text"
-                      >
-                        <Bold className="h-3 w-3" />
-                        <span>Bold</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => insertMarkdown("- ", "\n")}
-                        className="px-2 py-0.5 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-                        title="Bullet list"
-                      >
-                        <List className="h-3 w-3" />
-                        <span>List</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => insertMarkdown("> ", "\n")}
-                        className="px-2 py-0.5 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-screen)] border border-[var(--border-neutral)] font-bold text-[var(--content-primary)] text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-                        title="Quote or Insight block"
-                      >
-                        <Quote className="h-3 w-3" />
-                        <span>Quote</span>
-                      </button>
-                    </div>
-
-                    <div className="relative">
-                      <Textarea
-                        ref={textareaRef}
-                        value={body}
-                        onChange={(e) => setBody(e.target.value)}
-                        maxLength={25000}
-                        placeholder="Write your case study story, problem statement, and design rationale here...&#10;&#10;Use ## Heading for sections and - for bullets."
-                        rows={5}
-                        className="text-xs bg-[var(--bg-elevated)] leading-relaxed rounded-2xl border-[var(--border-neutral)] p-3.5 pb-7 focus:border-[var(--primary-forest-green)] shadow-2xs w-full resize-y min-h-[140px]"
-                      />
-                      <div className="absolute bottom-2 right-3 pointer-events-none select-none">
-                        <span className="text-[10px] font-mono font-bold text-[var(--content-tertiary)] px-2 py-0.5 rounded-full bg-[var(--bg-screen)] border border-[var(--border-neutral)] shadow-2xs">
-                          {body.length.toLocaleString()} chars
-                        </span>
-                      </div>
-                    </div>
+                    <RichTextEditor
+                      value={body}
+                      onChange={setBody}
+                      placeholder="Write your case study story, problem statement, and design rationale here... Highlight any text to format."
+                      minHeight="180px"
+                    />
                   </div>
                 </div>
               </div>
