@@ -2,90 +2,128 @@ import { supabase } from "./client";
 
 /**
  * Client-side fast image optimization
- * Resizes large camera photos to optimal web scale (e.g. 2880px / WebP) with ultra-high quality (0.94)
- * Preserves original pristine image bytes if already within bounds to avoid lossy re-encoding
+ * For project media & portfolio case studies:
+ * Preserves pristine original image bytes if already within web standards (<15MB and width <= 3840px).
+ * NEVER clamps or restricts image height independently, ensuring long vertical case studies,
+ * design system boards, and Behance-style vertical mockups retain full crystal-clear native quality.
  */
 export async function optimizeImage(
   file: File,
-  maxWidth = 2880,
-  maxHeight = 2880,
-  quality = 0.94
+  maxWidth = 3840,
+  maxHeight?: number,
+  quality = 0.95
 ): Promise<{ blob: Blob; mimeType: string }> {
   // If it's already an SVG or GIF, return as is
   if (file.type === "image/svg+xml" || file.type === "image/gif") {
     return { blob: file, mimeType: file.type };
   }
 
+  // If not an image MIME type, return as is
+  if (!file.type.startsWith("image/")) {
+    return { blob: file, mimeType: file.type };
+  }
+
   return new Promise((resolve) => {
     const img = new Image();
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-      img.src = e.target?.result as string;
-    };
+    const objectUrl = URL.createObjectURL(file);
 
     img.onload = () => {
-      let width = img.width;
-      let height = img.height;
+      URL.revokeObjectURL(objectUrl);
+      const originalWidth = img.naturalWidth || img.width;
+      const originalHeight = img.naturalHeight || img.height;
 
-      // If already within bounds and reasonable size (<6MB), preserve pristine original pixels
+      let width = originalWidth;
+      let height = originalHeight;
+
+      const fitsWidth = width <= maxWidth;
+      const fitsHeight = !maxHeight || height <= maxHeight;
+      // Allow up to 15MB without lossy recompression if dimensions fit
+      const isAcceptableSize = file.size <= 15 * 1024 * 1024;
+
+      // If already within bounds and reasonable size, preserve pristine original pixels
       if (
-        width <= maxWidth &&
-        height <= maxHeight &&
-        file.size < 6 * 1024 * 1024 &&
-        (file.type === "image/webp" || file.type === "image/png" || file.type === "image/jpeg")
+        fitsWidth &&
+        fitsHeight &&
+        isAcceptableSize &&
+        (file.type === "image/webp" ||
+          file.type === "image/png" ||
+          file.type === "image/jpeg" ||
+          file.type === "image/avif")
       ) {
         resolve({ blob: file, mimeType: file.type });
         return;
       }
 
-      // Maintain aspect ratio
-      if (width > height) {
+      // Maintain aspect ratio without ever crushing height for vertical scrolls
+      if (maxHeight && width <= height) {
+        // Bounding box mode (only when maxHeight is explicitly set, e.g. avatars)
+        if (height > maxHeight) {
+          width = Math.round((width * maxHeight) / height);
+          height = maxHeight;
+        }
         if (width > maxWidth) {
           height = Math.round((height * maxWidth) / width);
           width = maxWidth;
         }
       } else {
-        if (height > maxHeight) {
-          width = Math.round((width * maxHeight) / height);
-          height = maxHeight;
+        // Width-constrained mode (e.g. Project plates, vertical case studies)
+        // Maintain 100% natural height ratio when scaling width
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
         }
       }
 
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
+      // Check canvas memory feasibility
+      const totalPixels = width * height;
+      // If image is ridiculously huge (> 64 megapixels), canvas may crash browser tab
+      if (totalPixels > 64 * 1024 * 1024) {
         resolve({ blob: file, mimeType: file.type });
         return;
       }
 
-      // High-fidelity bicubic interpolation
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = "high";
-      ctx.drawImage(img, 0, 0, width, height);
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
 
-      // WebP compression at 0.94 for gallery-grade clarity without compression banding
-      canvas.toBlob(
-        (blob) => {
-          if (blob) {
-            resolve({ blob, mimeType: "image/webp" });
-          } else {
-            resolve({ blob: file, mimeType: file.type });
-          }
-        },
-        "image/webp",
-        quality
-      );
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve({ blob: file, mimeType: file.type });
+          return;
+        }
+
+        // High-fidelity bicubic interpolation
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Keep PNG if original is PNG and under 6MB
+        const targetMime = file.type === "image/png" && file.size < 6 * 1024 * 1024 ? "image/png" : "image/webp";
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob && blob.size > 0) {
+              resolve({ blob, mimeType: targetMime });
+            } else {
+              resolve({ blob: file, mimeType: file.type });
+            }
+          },
+          targetMime,
+          quality
+        );
+      } catch (canvasErr) {
+        console.warn("Canvas compression failed, falling back to original file:", canvasErr);
+        resolve({ blob: file, mimeType: file.type });
+      }
     };
 
     img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
       resolve({ blob: file, mimeType: file.type });
     };
 
-    reader.readAsDataURL(file);
+    img.src = objectUrl;
   });
 }
 
@@ -98,8 +136,12 @@ export async function uploadMediaFile(
   folder = "projects"
 ): Promise<string> {
   try {
-    // 1. Optimize image client-side to high-res WebP (2880px / 0.94)
-    const { blob, mimeType } = await optimizeImage(file, 2880, 2880, 0.94);
+    const isAvatar = bucket === "avatars" || folder === "avatars";
+    const maxWidth = isAvatar ? 1024 : 3840;
+    const maxHeight = isAvatar ? 1024 : undefined;
+
+    // 1. Optimize image client-side if needed (preserves pristine bytes if within bounds)
+    const { blob, mimeType } = await optimizeImage(file, maxWidth, maxHeight, 0.95);
 
     // 2. Attempt primary high-speed upload to Cloudflare R2 via /api/upload
     try {

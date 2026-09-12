@@ -17,8 +17,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!board) {
     return {
-      title: "Board Not Found",
-      description: "The requested moodboard does not exist or has been removed.",
+      title: "Moodboard — Layerat",
       robots: {
         index: false,
         follow: false,
@@ -50,17 +49,14 @@ export default async function BoardDetailPage({ params }: PageProps) {
   const { id } = await params;
   const { board, projects } = await fetchBoardById(id);
 
-  if (!board) {
-    notFound();
-  }
-
-  const breadcrumbJsonLd = !board.isPrivate
-    ? generateBreadcrumbJsonLd([
-        { name: "Home", url: "/" },
-        { name: "My Boards", url: "/boards" },
-        { name: board.title, url: `/boards/${board.id}` },
-      ])
-    : null;
+  const breadcrumbJsonLd =
+    board && !board.isPrivate
+      ? generateBreadcrumbJsonLd([
+          { name: "Home", url: "/" },
+          { name: "My Boards", url: "/boards" },
+          { name: board.title, url: `/boards/${board.id}` },
+        ])
+      : null;
 
   return (
     <>
@@ -71,7 +67,11 @@ export default async function BoardDetailPage({ params }: PageProps) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
         />
       )}
-      <BoardDetailClient initialBoard={board} initialProjects={projects} />
+      <BoardDetailClient
+        boardId={id}
+        initialBoard={board || null}
+        initialProjects={projects || []}
+      />
     </>
   );
 }

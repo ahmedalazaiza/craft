@@ -335,7 +335,7 @@ export function CreatorsClient({ initialCreators = [] }: CreatorsClientProps) {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 min-h-[500px]">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 min-h-[500px]">
             {filteredCreators.map((creator, idx) => (
               <StaggerGridItem key={creator.id} index={idx}>
                 <CreatorListItem creator={creator} />

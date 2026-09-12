@@ -23,7 +23,7 @@ interface NewProjectLinkProps {
  */
 export function NewProjectLink({
   className,
-  variant = "accent",
+  variant = "brand",
   size = "sm",
   children,
   showIcon = true,

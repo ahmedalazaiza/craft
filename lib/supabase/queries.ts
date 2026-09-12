@@ -2167,13 +2167,22 @@ export function mapBoardRow(row: any, itemsCount?: number, coverImages?: string[
 /**
  * Fetch all boards created by a user with item counts and up to 4 preview cover images
  */
-export async function fetchUserBoards(userId: string): Promise<Board[]> {
+export async function fetchUserBoards(
+  userId: string,
+  publicOnly: boolean = false
+): Promise<Board[]> {
   try {
-    const { data: boardsData, error } = await supabase
+    let query = supabase
       .from("boards")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
+
+    if (publicOnly) {
+      query = query.eq("is_private", false);
+    }
+
+    const { data: boardsData, error } = await query;
 
     if (error || !boardsData) {
       return [];
@@ -2460,5 +2469,41 @@ export async function fetchProjectsByIds(projectIds: string[]): Promise<Project[
     return [];
   }
 }
+
+/**
+ * Submit a new contact message inquiry to Supabase
+ */
+export async function insertContactMessage(payload: {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  category?: "general" | "support" | "feedback" | "partnership" | "report";
+  userId?: string | null;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase.from("contact_messages").insert({
+      name: payload.name.trim(),
+      email: payload.email.trim().toLowerCase(),
+      subject: payload.subject.trim(),
+      message: payload.message.trim(),
+      category: payload.category || "general",
+      status: "unread",
+      user_id: payload.userId || null,
+    });
+
+    if (error) {
+      console.error("Error inserting contact message:", error.message || error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Failed to submit contact message.";
+    console.error("Failed to submit contact message:", err);
+    return { success: false, error: msg };
+  }
+}
+
 
 

@@ -6,6 +6,7 @@ export interface ButtonProps
   variant?:
     | "primary"
     | "accent"
+    | "brand"
     | "cta"
     | "primary-cta"
     | "destructive"
@@ -28,7 +29,7 @@ export function buttonVariants({
   const baseStyles =
     "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-all duration-150 cursor-pointer disabled:pointer-events-none disabled:opacity-50 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--btn-cta-bg)] focus-visible:ring-offset-2 active:scale-[0.98]";
 
-  // 2 UNIFIED CANONICAL BUTTON STYLES ACROSS THE ENTIRE PLATFORM
+  // UNIFIED CANONICAL BUTTON STYLES ACROSS THE ENTIRE PLATFORM
   const variantStyles = {
     // 1. PRIMARY BUTTON: Solid Black in Light Mode, Solid White in Dark Mode
     primary:
@@ -40,7 +41,11 @@ export function buttonVariants({
     "primary-cta":
       "bg-[var(--btn-cta-bg)] text-[var(--btn-cta-fg)] font-bold hover:bg-[var(--btn-cta-bg-hover)] active:bg-[var(--btn-cta-bg-active)] shadow-xs border border-transparent",
 
-    // 2. SECONDARY BUTTON: Bordered Elevated Surface with Content Primary Text
+    // 2. BRAND BUTTON: Signature Brand Purple (#8510DE) with subtle glow
+    brand:
+      "bg-[var(--brand-secondary)] text-white font-bold hover:bg-[var(--brand-secondary-hover)] active:bg-[var(--brand-secondary)] shadow-xs hover:shadow-[0_2px_16px_var(--brand-secondary-glow)] border border-transparent transition-all",
+
+    // 3. SECONDARY BUTTON: Bordered Elevated Surface with Content Primary Text
     secondary:
       "bg-[var(--bg-elevated)] text-[var(--content-primary)] font-semibold border border-[var(--border-neutral)] hover:bg-[var(--bg-neutral)] hover:border-[var(--border-neutral)] active:bg-[var(--bg-neutral-active)] shadow-xs",
     tertiary:

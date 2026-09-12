@@ -8,7 +8,7 @@ import { useSession } from "@/lib/session-context";
 import { bricolage } from "@/lib/fonts";
 import { ProjectCard } from "@/components/project/project-card";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { FadeIn, StaggerGridItem } from "@/components/ui/motion-wrapper";
 import { toast } from "@/components/ui/toast";
 import {
@@ -23,6 +23,7 @@ import {
   Loader2,
   User,
 } from "lucide-react";
+import { fetchBoardById } from "@/lib/supabase/queries";
 import { Board, Project } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { getValidAvatarUrl } from "@/lib/avatar";
@@ -30,37 +31,99 @@ import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface BoardDetailClientProps {
-  initialBoard: Board;
+  boardId: string;
+  initialBoard: Board | null;
   initialProjects: Project[];
 }
 
 export function BoardDetailClient({
+  boardId,
   initialBoard,
   initialProjects,
 }: BoardDetailClientProps) {
   const router = useRouter();
   const {
     user,
+    boards,
     updateBoard,
     deleteBoard,
     toggleProjectInBoard,
+    isLoadingDb,
+    isAdmin,
   } = useSession();
 
-  const [board, setBoard] = useState<Board>(initialBoard);
+  const [board, setBoard] = useState<Board | null>(initialBoard);
   const [projects, setProjects] = useState<Project[]>(initialProjects);
+  const [isClientLoading, setIsClientLoading] = useState<boolean>(!initialBoard);
+  const [hasCheckedClient, setHasCheckedClient] = useState<boolean>(!!initialBoard);
 
-  const isOwner = user && user.id === board.userId;
+  const isOwner = Boolean(user && board && (user.id === board.userId || isAdmin));
 
   // Edit Modal State
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [editTitle, setEditTitle] = useState(board.title);
-  const [editDescription, setEditDescription] = useState(board.description || "");
-  const [editIsPrivate, setEditIsPrivate] = useState(board.isPrivate);
+  const [editTitle, setEditTitle] = useState(board?.title || "");
+  const [editDescription, setEditDescription] = useState(board?.description || "");
+  const [editIsPrivate, setEditIsPrivate] = useState(board?.isPrivate ?? false);
   const [isUpdating, setIsUpdating] = useState(false);
 
   // Delete Confirm State
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Load private board on the client when not accessible via anonymous SSR
+  React.useEffect(() => {
+    if (initialBoard) {
+      setBoard(initialBoard);
+      setProjects(initialProjects);
+      setIsClientLoading(false);
+      setHasCheckedClient(true);
+      return;
+    }
+
+    if (isLoadingDb) return;
+
+    let isMounted = true;
+
+    async function loadPrivateBoard() {
+      setIsClientLoading(true);
+      try {
+        // 1. Check if it exists in session context boards (instant access)
+        const sessionBoard = boards.find((b) => b.id === boardId);
+        if (sessionBoard && isMounted) {
+          setBoard(sessionBoard);
+        }
+
+        // 2. Fetch with authenticated client in browser
+        const { board: fetchedBoard, projects: fetchedProjects } = await fetchBoardById(boardId);
+
+        if (isMounted) {
+          if (fetchedBoard) {
+            setBoard(fetchedBoard);
+            setProjects(fetchedProjects);
+          }
+          setHasCheckedClient(true);
+          setIsClientLoading(false);
+        }
+      } catch (err) {
+        if (isMounted) {
+          console.warn("Failed to load private board on client:", err);
+          setHasCheckedClient(true);
+          setIsClientLoading(false);
+        }
+      }
+    }
+
+    loadPrivateBoard();
+  }, [boardId, initialBoard, isLoadingDb, boards]);
+
+  // Sync edit modal state whenever board is updated
+  React.useEffect(() => {
+    if (board) {
+      setEditTitle(board.title);
+      setEditDescription(board.description || "");
+      setEditIsPrivate(board.isPrivate);
+    }
+  }, [board]);
 
   const isAnyModalOpen = isEditOpen || isDeleteOpen;
 
@@ -93,7 +156,7 @@ export function BoardDetailClient({
   // Submit Edit
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editTitle.trim()) return;
+    if (!board || !editTitle.trim()) return;
 
     try {
       setIsUpdating(true);
@@ -104,12 +167,12 @@ export function BoardDetailClient({
       });
 
       if (updated) {
-        setBoard((prev) => ({
+        setBoard((prev) => (prev ? {
           ...prev,
           title: editTitle.trim(),
           description: editDescription.trim(),
           isPrivate: editIsPrivate,
-        }));
+        } : null));
         toast.success("Your board changes have been saved.", "Board Updated");
         setIsEditOpen(false);
       } else {
@@ -124,6 +187,7 @@ export function BoardDetailClient({
 
   // Submit Delete
   const handleDeleteSubmit = async () => {
+    if (!board) return;
     try {
       setIsDeleting(true);
       const success = await deleteBoard(board.id);
@@ -142,12 +206,112 @@ export function BoardDetailClient({
 
   // Remove Project from Board
   const handleRemoveProject = async (projectId: string) => {
+    if (!board) return;
     const success = await toggleProjectInBoard(board.id, projectId);
     if (success) {
       setProjects((prev) => prev.filter((p) => p.id !== projectId));
       toast.info("Item removed from this board.", "Project Removed");
     }
   };
+
+  // 1. Loading State (Session restoring or fetching private board)
+  if ((isLoadingDb || isClientLoading) && !board) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center space-y-4">
+        <div className="h-14 w-14 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-neutral)] flex items-center justify-center shadow-xs">
+          <Loader2 className="h-6 w-6 animate-spin text-[var(--brand-secondary)]" />
+        </div>
+        <div className="space-y-1">
+          <h2 className={cn(bricolage.className, "text-xl font-bold text-[var(--content-primary)]")}>
+            Loading Moodboard...
+          </h2>
+          <p className="text-xs text-[var(--content-secondary)]">
+            Retrieving board data and layout...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Not Found or Unauthenticated State
+  if (hasCheckedClient && !board) {
+    if (!user) {
+      return (
+        <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center space-y-4">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 border border-amber-500/20 mb-2">
+            <Lock className="h-8 w-8" />
+          </div>
+          <h1 className={cn(bricolage.className, "text-2xl font-bold text-[var(--content-primary)]")}>
+            Private Moodboard
+          </h1>
+          <p className="text-sm text-[var(--content-secondary)] max-w-md mx-auto leading-relaxed">
+            This board is private or requires authentication to view. Please log in to your account.
+          </p>
+          <div className="flex items-center gap-3 pt-2">
+            <Link
+              href={`/login?redirect=/boards/${boardId}`}
+              className={buttonVariants({ variant: "brand", size: "default" })}
+            >
+              <span>Sign In to View</span>
+            </Link>
+            <Link
+              href="/"
+              className={buttonVariants({ variant: "secondary", size: "default" })}
+            >
+              <span>Back to Home</span>
+            </Link>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center space-y-4">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--bg-elevated)] text-[var(--content-tertiary)] border border-[var(--border-neutral)] mb-2">
+          <FolderPlus className="h-8 w-8" />
+        </div>
+        <h1 className={cn(bricolage.className, "text-2xl font-bold text-[var(--content-primary)]")}>
+          Board Not Found
+        </h1>
+        <p className="text-sm text-[var(--content-secondary)] max-w-md mx-auto leading-relaxed">
+          The requested moodboard does not exist, has been deleted, or you do not have permission to view it.
+        </p>
+        <Link
+          href="/boards"
+          className={buttonVariants({ variant: "secondary", size: "default" })}
+        >
+          <span>Back to My Boards</span>
+        </Link>
+      </div>
+    );
+  }
+
+  // 3. Privacy Rule: Private boards are strictly restricted to the account owner or admins
+  if (board && board.isPrivate && !isOwner) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 border border-amber-500/20 mb-4">
+          <Lock className="h-8 w-8" />
+        </div>
+        <h1 className="type-title-section text-[var(--content-primary)]">
+          Private Board
+        </h1>
+        <p className="mt-2 type-body-default text-[var(--content-secondary)] max-w-md">
+          This board is private. Only the creator has permission to view its contents.
+        </p>
+        <Link
+          href="/boards"
+          className={cn(buttonVariants({ variant: "secondary" }), "mt-6")}
+        >
+          Back to My Boards
+        </Link>
+      </div>
+    );
+  }
+
+  if (!board) {
+    return null;
+  }
 
   const creatorName =
     board.creator?.displayName ||

@@ -111,6 +111,15 @@ export function SiteFooter() {
                   Community Guidelines
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/contact"
+                  prefetch={true}
+                  className="text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors"
+                >
+                  Contact Us
+                </Link>
+              </li>
             </ul>
           </div>
 

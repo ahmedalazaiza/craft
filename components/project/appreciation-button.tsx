@@ -38,15 +38,17 @@ export function AppreciationButton({
         title={appreciated ? "Remove appreciation" : "Appreciate this project"}
         aria-label={appreciated ? `Remove appreciation (${count})` : `Appreciate this project (${count})`}
         className={cn(
-          "flex h-10 w-10 sm:h-8 sm:w-8 min-h-[40px] min-w-[40px] sm:min-h-0 sm:min-w-0 items-center justify-center rounded-full bg-white/95 dark:bg-neutral-900/95 text-neutral-900 dark:text-white hover:bg-white backdrop-blur-md transition-all duration-150 cursor-pointer shadow-md hover:scale-110 active:scale-95",
-          appreciated && "text-[var(--brand-secondary)]",
+          "flex h-10 w-10 sm:h-8 sm:w-8 min-h-[40px] min-w-[40px] sm:min-h-0 sm:min-w-0 items-center justify-center rounded-full backdrop-blur-md transition-all duration-150 cursor-pointer shadow-md hover:scale-110 active:scale-95",
+          appreciated
+            ? "bg-black text-white border border-white/20"
+            : "bg-white/95 dark:bg-neutral-900/95 text-neutral-900 dark:text-white hover:bg-white",
           className
         )}
       >
         <Heart
           className={cn(
             "h-4.5 w-4.5 sm:h-4 sm:w-4 transition-transform duration-150",
-            appreciated ? "fill-[var(--brand-secondary)] text-[var(--brand-secondary)] scale-110" : "fill-none text-current"
+            appreciated ? "fill-white text-white scale-110" : "fill-none text-current"
           )}
         />
       </button>

@@ -92,9 +92,9 @@ export function NotificationsPopover() {
             <motion.span
               key={unreadNotificationsCount}
               initial={{ scale: 0.3, opacity: 0 }}
-              animate={{ scale: [1.35, 0.95, 1], opacity: 1 }}
+              animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.3, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 600, damping: 22 }}
+              transition={{ type: "spring", stiffness: 600, damping: 20 }}
               className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--content-primary)] px-1 text-[10px] font-black text-[var(--bg-screen)] ring-2 ring-[var(--bg-screen)] shadow-xs pointer-events-none"
             >
               {unreadNotificationsCount}

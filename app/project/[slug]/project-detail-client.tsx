@@ -24,10 +24,11 @@ import { DeleteProjectModal } from "@/components/project/delete-project-modal";
 import { FormattedCaseStudy } from "@/components/project/formatted-case-study";
 import { incrementProjectViewsInDb } from "@/lib/supabase/queries";
 import { supabase } from "@/lib/supabase/client";
-import { formatProjectPublishedDate } from "@/lib/utils";
+import { formatProjectPublishedDate, formatViews, cn } from "@/lib/utils";
 import {
   Heart,
   MessageSquare,
+  Eye,
   Share2,
   BookmarkPlus,
   Maximize2,
@@ -43,7 +44,6 @@ import {
   Lock,
   Flag,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface ProjectDetailClientProps {
   initialProject: Project;
@@ -321,7 +321,7 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
         {/* 1. PROJECT HEADER BAR: Info, Tags & Tools Chip Matrix, Metas        */}
         {/* =================================================================== */}
         <div className="space-y-6 mb-8">
-          <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-[var(--border-neutral)]">
+          <header className="relative z-30 flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-[var(--border-neutral)]">
             <div className="space-y-3 flex-1 min-w-0">
               {(isDraft || project.featured) && (
                 <div className="flex flex-wrap items-center gap-2">
@@ -348,26 +348,41 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
               </h1>
 
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--content-secondary)]">
-                <Link
-                  href={`/u/${project.creator.username}`}
-                  prefetch={true}
-                  className="flex items-center gap-2 hover:opacity-80 transition-opacity font-bold text-[var(--content-primary)]"
-                >
-                  <div className="relative h-6 w-6 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-1 ring-[var(--border-neutral)]">
-                    <Image
-                      src={getValidAvatarUrl(project.creator.avatarUrl)}
-                      alt={project.creator.displayName}
-                      fill
-                      sizes="24px"
-                      className="object-cover"
-                    />
+                <div className="flex items-center gap-2">
+                  <div className="relative shrink-0">
+                    <Link
+                      href={`/u/${project.creator.username}`}
+                      prefetch={true}
+                      className={cn(
+                        "relative block h-7 w-7 sm:h-8 sm:w-8 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-1 ring-[var(--border-neutral)] hover:opacity-85 transition-opacity",
+                        project.creator.badge?.trim().toLowerCase() === "founding member" &&
+                          "ring-2 ring-[var(--brand-secondary)]/60 shadow-[0_0_8px_var(--brand-secondary-glow)]"
+                      )}
+                    >
+                      <Image
+                        src={getValidAvatarUrl(project.creator.avatarUrl)}
+                        alt={project.creator.displayName}
+                        fill
+                        sizes="32px"
+                        className="object-cover"
+                      />
+                    </Link>
+                    {project.creator.badge?.trim().toLowerCase() === "founding member" && (
+                      <div className="absolute -bottom-0.5 -right-0.5 z-20">
+                        <FoundingBadge variant="avatar" size="xs" position="bottom" />
+                      </div>
+                    )}
                   </div>
-                  <span>{project.creator.displayName}</span>
-                  {project.creator.isVerified !== false && <VerifiedBadge size="sm" />}
-                  {project.creator.badge?.trim().toLowerCase() === "founding member" && (
-                    <FoundingBadge size="sm" />
-                  )}
-                </Link>
+
+                  <Link
+                    href={`/u/${project.creator.username}`}
+                    prefetch={true}
+                    className="flex items-center gap-1.5 hover:opacity-80 transition-opacity font-bold text-[var(--content-primary)]"
+                  >
+                    <span>{project.creator.displayName}</span>
+                    {project.creator.isVerified !== false && <VerifiedBadge size="sm" />}
+                  </Link>
+                </div>
 
                 <span className="text-[var(--content-tertiary)]">•</span>
                 <span>{project.creator.city || project.creator.location || "Global"}</span>
@@ -386,79 +401,60 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
               </div>
             </div>
 
-            {/* Right Meta Column & Author Actions */}
-            <div className="flex flex-col md:items-end gap-3 shrink-0">
-              <div className="flex items-center gap-3 sm:gap-4 text-xs font-mono">
-                <span className="text-[var(--content-secondary)]">
-                  <strong className="text-[var(--content-primary)] font-bold">{project.appreciations}</strong>{" "}
-                  {project.appreciations === 1 ? "appreciation" : "appreciations"}
-                </span>
-                <span className="text-[var(--content-tertiary)]">•</span>
-                <span className="text-[var(--content-secondary)]">
-                  <strong className="text-[var(--content-primary)] font-bold">{project.views ?? 0}</strong>{" "}
-                  {(project.views ?? 0) === 1 ? "view" : "views"}
-                </span>
-                <span className="text-[var(--content-tertiary)]">•</span>
-                <span className="text-[var(--content-secondary)]">
-                  <strong className="text-[var(--content-primary)] font-bold">{project.comments?.length || 0}</strong>{" "}
-                  {(project.comments?.length || 0) === 1 ? "comment" : "comments"}
-                </span>
-              </div>
-
-              {canEdit && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  {/* If Draft, Show Direct Publish Button */}
-                  {isDraft ? (
-                    <Button
-                      type="button"
-                      variant="accent"
-                      size="default"
-                      disabled={isPublishing}
-                      onClick={handlePublishProject}
-                      className="shrink-0 gap-2 font-bold shadow-md"
-                    >
-                      {isPublishing ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Send className="h-4 w-4" />
-                      )}
-                      <span>{isPublishing ? "Publishing..." : "Publish Project"}</span>
-                    </Button>
-                  ) : null}
-
-                  {/* Edit Case Study Link */}
-                  <Link
-                    href={`/me/projects/${project.id}`}
-                    prefetch={true}
-                    className={buttonVariants({
-                      variant: isAdmin && !isAuthor ? "accent" : "secondary",
-                      size: "default",
-                      className: "shrink-0 gap-2 font-bold shadow-xs",
-                    })}
-                    title="Edit Case Study"
-                  >
-                    <Edit3 className="h-4 w-4" />
-                    <span>
-                      {isAdmin && !isAuthor
-                        ? "Edit Project (Admin)"
-                        : isDraft
-                        ? "Edit Details"
-                        : "Edit Case Study"}
-                    </span>
-                  </Link>
-
-                  {/* Delete Project Button */}
-                  <button
+            {/* Author / Admin Actions */}
+            {canEdit && (
+              <div className="flex items-center gap-2 flex-wrap shrink-0">
+                {/* If Draft, Show Direct Publish Button */}
+                {isDraft ? (
+                  <Button
                     type="button"
-                    onClick={() => setIsDeleteModalOpen(true)}
-                    className="h-10 w-10 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center transition-all cursor-pointer shadow-xs shrink-0"
-                    title="Delete Project"
+                    variant="accent"
+                    size="default"
+                    disabled={isPublishing}
+                    onClick={handlePublishProject}
+                    className="shrink-0 gap-2 font-bold shadow-md"
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              )}
-            </div>
+                    {isPublishing ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                    <span>{isPublishing ? "Publishing..." : "Publish Project"}</span>
+                  </Button>
+                ) : null}
+
+                {/* Edit Case Study Link */}
+                <Link
+                  href={`/me/projects/${project.id}`}
+                  prefetch={true}
+                  className={buttonVariants({
+                    variant: isAdmin && !isAuthor ? "accent" : "secondary",
+                    size: "default",
+                    className: "shrink-0 gap-2 font-bold shadow-xs",
+                  })}
+                  title="Edit Case Study"
+                >
+                  <Edit3 className="h-4 w-4" />
+                  <span>
+                    {isAdmin && !isAuthor
+                      ? "Edit Project (Admin)"
+                      : isDraft
+                      ? "Edit Details"
+                      : "Edit Case Study"}
+                  </span>
+                </Link>
+
+                {/* Delete Project Button */}
+                <button
+                  type="button"
+                  onClick={() => setIsDeleteModalOpen(true)}
+                  className="h-10 w-10 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center transition-all cursor-pointer shadow-xs shrink-0"
+                  title="Delete Project"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            )}
           </header>
 
           {/* ================================================================= */}
@@ -511,17 +507,27 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                     <button
                       type="button"
                       onClick={handleScrollToComments}
-                      className="h-12 w-12 rounded-full bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] flex items-center justify-center transition-all cursor-pointer select-none group relative"
+                      className="h-12 w-12 rounded-full bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] hover:bg-[var(--btn-cta-bg)] hover:text-[var(--btn-cta-fg)] flex flex-col items-center justify-center transition-all cursor-pointer select-none group border-0 shadow-xs"
                       title="Jump to critique & discussion"
-                      aria-label="Jump to critique & discussion"
+                      aria-label={`Jump to critique & discussion (${project.comments?.length ?? 0} comments)`}
                     >
                       <MessageSquare className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-                      {project.comments && project.comments.length > 0 && (
-                        <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--chip-bg)] text-[var(--chip-fg)] px-1 text-[9px] font-mono font-bold">
-                          {project.comments.length}
-                        </span>
-                      )}
+                      <span className="text-[10px] font-bold font-mono tracking-tight mt-0.5">
+                        {formatViews(project.comments?.length ?? 0)}
+                      </span>
                     </button>
+
+                    {/* 4. Views Metric Indicator */}
+                    <div
+                      className="h-12 w-12 rounded-full bg-[var(--bg-neutral)]/70 text-[var(--content-primary)] flex flex-col items-center justify-center select-none group border-0 shadow-xs cursor-default"
+                      title={`${project.views ?? 0} ${(project.views ?? 0) === 1 ? "view" : "views"}`}
+                      aria-label={`${project.views ?? 0} views`}
+                    >
+                      <Eye className="h-4 w-4 transition-transform duration-200 group-hover:scale-110 text-[var(--content-primary)]" />
+                      <span className="text-[10px] font-bold font-mono tracking-tight mt-0.5">
+                        {formatViews(project.views ?? 0)}
+                      </span>
+                    </div>
 
                     {/* 3. Social Share Trigger */}
                     <button
@@ -592,13 +598,13 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
               </div>
 
               {/* Separated 4th Action: Publisher Profile Avatar */}
-              <div className="mt-4 pt-2">
+              <div className="mt-4 pt-2 relative">
                 <Link
                   href={`/u/${project.creator.username}`}
                   className={cn(
-                    "group relative block h-12 w-12 rounded-full ring-2 ring-[var(--border-neutral)] hover:ring-[var(--primary-forest-green)] transition-all shadow-md",
+                    "group relative block h-12 w-12 rounded-full ring-2 ring-[var(--border-neutral)] hover:ring-[var(--content-primary)] transition-all shadow-md",
                     project.creator.badge?.trim().toLowerCase() === "founding member" &&
-                      "ring-amber-400/60 dark:ring-amber-400/40 shadow-[0_0_12px_rgba(245,158,11,0.2)]"
+                      "ring-2 ring-[var(--brand-secondary)]/70 shadow-[0_0_14px_var(--brand-secondary-glow)]"
                   )}
                   title={`View ${project.creator.displayName}'s studio profile`}
                 >
@@ -612,29 +618,43 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
                     />
                   </div>
                 </Link>
+                {project.creator.badge?.trim().toLowerCase() === "founding member" && (
+                  <div className="absolute bottom-0 -right-1 z-20">
+                    <FoundingBadge variant="avatar" size="sm" position="top" />
+                  </div>
+                )}
               </div>
             </aside>
 
             {/* ------------------------------------------------------------- */}
-            {/* RIGHT/CENTER: Continuous Image List (0px Gap, Seamless Stack) */}
+            {/* RIGHT/CENTER: Continuous Image List (or 16px Rounded Cards if Multi) */}
             {/* ------------------------------------------------------------- */}
             <main className="flex-1 min-w-0">
-              <div className="flex flex-col gap-0 w-full rounded-none overflow-hidden border-0 shadow-sm">
+              <div
+                className={cn(
+                  "flex flex-col w-full border-0",
+                  allImages.length > 1 ? "gap-4" : "gap-0 overflow-hidden shadow-sm"
+                )}
+              >
                 {allImages.map((img, idx) => (
                   <div
                     key={idx}
                     onClick={() => openLightbox(idx)}
-                    className="relative w-full rounded-none bg-[var(--bg-neutral)] overflow-hidden cursor-pointer select-none group min-h-[280px] sm:min-h-[480px]"
+                    className={cn(
+                      "relative w-full bg-[var(--bg-neutral)] overflow-hidden cursor-pointer select-none group min-h-[280px] sm:min-h-[480px]",
+                      allImages.length > 1 ? "rounded-[16px] shadow-xs" : "rounded-none"
+                    )}
                   >
-                    <Image
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
                       src={img}
                       alt={`${project.title} gallery image ${idx + 1}`}
-                      width={2880}
-                      height={1800}
-                      unoptimized
-                      priority={idx === 0}
                       loading={idx === 0 ? "eager" : "lazy"}
-                      className="w-full h-auto block"
+                      decoding="async"
+                      className={cn(
+                        "w-full h-auto block",
+                        allImages.length > 1 && "rounded-[16px]"
+                      )}
                       style={{ imageRendering: "auto" }}
                     />
 
@@ -651,12 +671,14 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
               {/* ----------------------------------------------------------- */}
               <div className="mt-12 space-y-10">
                 {/* Body Case Study Narrative */}
-                <div className="rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-screen)] p-6 sm:p-10 shadow-xs">
-                  <h2 className="type-title-section text-[var(--content-primary)] mb-4">
-                    About this Project
-                  </h2>
-                  <FormattedCaseStudy content={project.body || project.summary} />
-                </div>
+                {(project.body || project.summary) && (
+                  <div className="rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-screen)] p-6 sm:p-10 shadow-xs">
+                    <h2 className="type-title-section text-[var(--content-primary)] mb-4">
+                      About this Project
+                    </h2>
+                    <FormattedCaseStudy content={project.body || project.summary} />
+                  </div>
+                )}
 
                 {/* Project Details: Categories, Disciplines, Tags & Tools Matrix */}
                 <div className="rounded-[28px] border border-[var(--border-neutral)] bg-[var(--bg-screen)] p-6 sm:p-10 shadow-xs space-y-8">
@@ -790,8 +812,18 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
               aria-label="Jump to discussion"
             >
               <MessageSquare className="h-4 w-4 shrink-0" />
-              <span className="font-mono text-xs">{project.comments?.length || 0}</span>
+              <span className="font-mono text-xs">{formatViews(project.comments?.length || 0)}</span>
             </button>
+
+            {/* Views Indicator */}
+            <div
+              className="h-11 min-h-[44px] px-3 rounded-full bg-[var(--bg-neutral)] text-[var(--content-primary)] flex items-center gap-1.5 text-xs font-bold shrink-0 cursor-default"
+              title={`${project.views ?? 0} ${(project.views ?? 0) === 1 ? "view" : "views"}`}
+              aria-label={`${project.views ?? 0} views`}
+            >
+              <Eye className="h-4 w-4 shrink-0" />
+              <span className="font-mono text-xs">{formatViews(project.views ?? 0)}</span>
+            </div>
 
             <button
               type="button"
@@ -848,22 +880,33 @@ export function ProjectDetailClient({ initialProject }: ProjectDetailClientProps
 
         <div className="h-5 w-[1px] bg-[var(--border-neutral)] mx-0.5 shrink-0" />
 
-        <Link
-          href={`/u/${project.creator.username}`}
-          className="relative h-11 w-11 min-h-[44px] min-w-[44px] rounded-full ring-1 ring-[var(--border-neutral)] shrink-0 overflow-hidden active:scale-95 transition-all"
-          title={project.creator.displayName}
-          aria-label={`View ${project.creator.displayName}'s profile`}
-        >
-          <div className="relative h-full w-full rounded-full overflow-hidden">
-            <Image
-              src={getValidAvatarUrl(project.creator.avatarUrl)}
-              alt={project.creator.displayName}
-              fill
-              sizes="44px"
-              className="object-cover"
-            />
-          </div>
-        </Link>
+        <div className="relative shrink-0">
+          <Link
+            href={`/u/${project.creator.username}`}
+            className={cn(
+              "relative block h-11 w-11 min-h-[44px] min-w-[44px] rounded-full ring-1 ring-[var(--border-neutral)] overflow-hidden active:scale-95 transition-all",
+              project.creator.badge?.trim().toLowerCase() === "founding member" &&
+                "ring-2 ring-[var(--brand-secondary)]/70 shadow-[0_0_10px_var(--brand-secondary-glow)]"
+            )}
+            title={project.creator.displayName}
+            aria-label={`View ${project.creator.displayName}'s profile`}
+          >
+            <div className="relative h-full w-full rounded-full overflow-hidden">
+              <Image
+                src={getValidAvatarUrl(project.creator.avatarUrl)}
+                alt={project.creator.displayName}
+                fill
+                sizes="44px"
+                className="object-cover"
+              />
+            </div>
+          </Link>
+          {project.creator.badge?.trim().toLowerCase() === "founding member" && (
+            <div className="absolute -bottom-0.5 -right-0.5 z-20">
+              <FoundingBadge variant="avatar" size="sm" position="top" />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Full-screen Lightbox Modal */}

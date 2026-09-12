@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/session-context";
 import { bricolage } from "@/lib/fonts";
 import { ProjectCard } from "@/components/project/project-card";
+import { BoardCard } from "@/components/board/board-card";
 import { NewProjectLink } from "@/components/project/new-project-link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,7 @@ import {
   Settings,
   Check,
   FolderKanban,
+  FolderHeart,
   Users,
 } from "lucide-react";
 import { cn, normalizeUrl, formatDisplayUrl } from "@/lib/utils";
@@ -44,8 +46,8 @@ import { getCanonicalShareUrl } from "@/lib/seo";
 
 export function MeClient() {
   const router = useRouter();
-  const { user, projects, updateProfile, isLoadingDb } = useSession();
-  const [activeTab, setActiveTab] = useState<"published" | "drafts">("published");
+  const { user, projects, updateProfile, isLoadingDb, boards, deleteBoard } = useSession();
+  const [activeTab, setActiveTab] = useState<"published" | "boards" | "drafts">("published");
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -110,6 +112,7 @@ export function MeClient() {
   );
   const publishedProjects = userProjects.filter((p) => p.published);
   const draftProjects = userProjects.filter((p) => !p.published);
+  const userBoards = boards.filter((b) => (b.itemsCount ?? 0) > 0);
   const totalAppreciations = userProjects.reduce(
     (sum, p) => sum + p.appreciations,
     0
@@ -141,7 +144,15 @@ export function MeClient() {
         <Breadcrumbs
           items={[
             { label: "My Profile", href: "/me" },
-            { label: activeTab === "published" ? "Published Projects" : "Drafts", isCurrent: true },
+            {
+              label:
+                activeTab === "published"
+                  ? "Published Projects"
+                  : activeTab === "boards"
+                  ? "Boards"
+                  : "Drafts",
+              isCurrent: true,
+            },
           ]}
         />
 
@@ -164,7 +175,7 @@ export function MeClient() {
                         <div
                           className={cn(
                             "relative h-24 w-24 rounded-full overflow-hidden border-2 border-[var(--border-neutral)] shadow-md bg-[var(--bg-neutral)]",
-                            isFoundingMember && "ring-4 ring-amber-400/50 dark:ring-amber-400/40 shadow-[0_0_20px_rgba(245,158,11,0.18)]"
+                            isFoundingMember && "ring-3 ring-[var(--brand-secondary)]/60 dark:ring-[var(--brand-secondary)]/50 shadow-[0_0_20px_var(--brand-secondary-glow)]"
                           )}
                         >
                           <Image
@@ -176,6 +187,13 @@ export function MeClient() {
                             priority
                           />
                         </div>
+
+                        {/* Founding Member Badge on Avatar */}
+                        {isFoundingMember && (
+                          <div className="absolute -bottom-0.5 -right-0.5 sm:bottom-0 sm:right-0 z-20">
+                            <FoundingBadge variant="avatar" size="lg" position="bottom" />
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex flex-col items-center gap-1.5 w-full">
@@ -191,11 +209,6 @@ export function MeClient() {
                           </h1>
                           {user.isVerified !== false && <VerifiedBadge size="default" className="shrink-0" />}
                         </div>
-                        {isFoundingMember && (
-                          <div className="pt-0.5">
-                            <FoundingBadge size="default" />
-                          </div>
-                        )}
                       </div>
                     </>
                   );
@@ -356,8 +369,8 @@ export function MeClient() {
           <main className="lg:col-span-8 xl:col-span-8 2xl:col-span-9 space-y-6 min-w-0">
             {/* Header Toolbar: Tabs on Left + New Project Button on Right */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[var(--border-neutral)]">
-              {/* Tab Switcher: Published vs Drafts */}
-              <div className="flex items-center gap-1.5 bg-[var(--bg-neutral)] p-1 rounded-full text-xs font-semibold">
+              {/* Tab Switcher: Published vs Boards vs Drafts */}
+              <div className="flex items-center gap-1.5 bg-[var(--bg-neutral)] p-1 rounded-full text-xs font-semibold flex-wrap">
                 <button
                   type="button"
                   onClick={() => setActiveTab("published")}
@@ -370,6 +383,22 @@ export function MeClient() {
                 >
                   Published ({publishedProjects.length})
                 </button>
+
+                {userBoards.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("boards")}
+                    className={cn(
+                      "px-3.5 py-1.5 rounded-full transition-all cursor-pointer",
+                      activeTab === "boards"
+                        ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                        : "text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
+                    )}
+                  >
+                    Boards ({userBoards.length})
+                  </button>
+                )}
+
                 <button
                   type="button"
                   onClick={() => setActiveTab("drafts")}
@@ -384,17 +413,63 @@ export function MeClient() {
                 </button>
               </div>
 
-              {/* + New Project CTA */}
-              {((activeTab === "published" && publishedProjects.length > 0) ||
-                (activeTab === "drafts" && draftProjects.length > 0)) && (
-                <NewProjectLink size="sm" className="text-xs sm:text-sm">
-                  New Project
-                </NewProjectLink>
+              {/* + Action CTA */}
+              {activeTab === "boards" ? (
+                <Link
+                  href="/boards"
+                  className={cn(
+                    buttonVariants({ variant: "secondary", size: "sm" }),
+                    "text-xs sm:text-sm gap-1.5 font-bold"
+                  )}
+                >
+                  <FolderHeart className="h-4 w-4" />
+                  <span>Manage Boards</span>
+                </Link>
+              ) : (
+                ((activeTab === "published" && publishedProjects.length > 0) ||
+                  (activeTab === "drafts" && draftProjects.length > 0)) && (
+                  <NewProjectLink size="sm" className="text-xs sm:text-sm">
+                    New Project
+                  </NewProjectLink>
+                )
               )}
             </div>
 
             {/* Tab Content */}
-            {activeTab === "published" ? (
+            {activeTab === "boards" ? (
+              userBoards.length === 0 ? (
+                <div className="flex min-h-[320px] flex-col items-center justify-center rounded-[24px] border border-dashed border-[var(--border-neutral)] bg-[var(--bg-neutral)]/30 p-10 text-center">
+                  <div className="h-12 w-12 rounded-full bg-[var(--bg-neutral)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-primary)] mb-4">
+                    <FolderHeart className="h-6 w-6" />
+                  </div>
+                  <h3 className="type-title-subsection text-[var(--content-primary)]">
+                    No boards with projects
+                  </h3>
+                  <p className="mt-1.5 type-body-default text-[var(--content-secondary)] max-w-sm">
+                    Create moodboards and save projects from across the community.
+                  </p>
+                  <Link
+                    href="/boards"
+                    className={cn(buttonVariants({ variant: "accent" }), "mt-6 gap-2")}
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Manage Boards</span>
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-5 sm:gap-6">
+                  {userBoards.map((board, idx) => (
+                    <StaggerGridItem key={board.id} index={idx}>
+                      <BoardCard
+                        board={board}
+                        creatorName={user.displayName}
+                        onDelete={deleteBoard}
+                      />
+                    </StaggerGridItem>
+                  ))}
+                </div>
+              )
+            ) : activeTab === "published" ? (
               publishedProjects.length === 0 ? (
                 <div className="flex min-h-[320px] flex-col items-center justify-center rounded-[24px] border border-dashed border-[var(--border-neutral)] bg-[var(--bg-neutral)]/30 p-10 text-center">
                   <div className="h-12 w-12 rounded-full bg-[var(--bg-neutral)] border border-[var(--border-neutral)] flex items-center justify-center text-[var(--content-primary)] mb-4">

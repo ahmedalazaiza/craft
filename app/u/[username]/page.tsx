@@ -1,6 +1,6 @@
 import React, { cache } from "react";
 import type { Metadata } from "next";
-import { fetchCreatorByUsername, fetchProjects } from "@/lib/supabase/queries";
+import { fetchCreatorByUsername, fetchProjects, fetchUserBoards } from "@/lib/supabase/queries";
 import { getProfileMetadata, generateProfileJsonLd, generateBreadcrumbJsonLd } from "@/lib/seo";
 import { CreatorProfileClient } from "./creator-profile-client";
 import { CreatorNotFoundClient } from "@/components/creator/creator-not-found-client";
@@ -48,6 +48,9 @@ export default async function UserProfilePage({ params }: PageProps) {
     publishedOnly: true,
   });
 
+  // Fetch creator's public boards directly on the server (publicOnly: true strictly enforces is_private = false at DB level)
+  const initialBoards = await fetchUserBoards(creator.id, true);
+
   const profileJsonLd = generateProfileJsonLd(creator);
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([
     { name: "Home", url: "/" },
@@ -67,7 +70,11 @@ export default async function UserProfilePage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <CreatorProfileClient initialCreator={creator} initialProjects={initialProjects || []} />
+      <CreatorProfileClient
+        initialCreator={creator}
+        initialProjects={initialProjects || []}
+        initialBoards={initialBoards || []}
+      />
     </>
   );
 }

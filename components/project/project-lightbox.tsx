@@ -33,10 +33,12 @@ export function ProjectLightbox({
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
-  const [isLoadingImage, setIsLoadingImage] = useState(true);
+  const [isLoadingImage, setIsLoadingImage] = useState(false);
+  const [showSpinner, setShowSpinner] = useState(false);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
   const pointerDownPos = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
@@ -48,11 +50,44 @@ export function ProjectLightbox({
   const safeIndex = Math.max(0, Math.min(currentIndex, total - 1));
   const currentImage = images[safeIndex];
 
-  // Reset zoom & loading indicator when navigating between images or opening
+  // Reset zoom & loading state when navigating between images or opening
   useEffect(() => {
     setIsZoomed(false);
-    setIsLoadingImage(true);
+    // Check if the image is already cached/complete in DOM
+    if (imgRef.current && imgRef.current.complete) {
+      setIsLoadingImage(false);
+    } else {
+      setIsLoadingImage(true);
+    }
   }, [safeIndex, isOpen]);
+
+  // Only show spinner if loading genuinely takes >150ms (avoids flicker on cached images)
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    if (isLoadingImage) {
+      timer = setTimeout(() => setShowSpinner(true), 150);
+    } else {
+      setShowSpinner(false);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [isLoadingImage]);
+
+  // Preload adjacent images for instantaneous navigation
+  useEffect(() => {
+    if (!isOpen || total <= 1) return;
+    const nextIdx = (safeIndex + 1) % total;
+    const prevIdx = (safeIndex - 1 + total) % total;
+    if (images[nextIdx]?.url) {
+      const imgNext = new window.Image();
+      imgNext.src = images[nextIdx].url;
+    }
+    if (images[prevIdx]?.url) {
+      const imgPrev = new window.Image();
+      imgPrev.src = images[prevIdx].url;
+    }
+  }, [safeIndex, isOpen, images, total]);
 
   // When entering zoom mode, ensure scroll container starts at top
   useEffect(() => {
@@ -245,31 +280,28 @@ export function ProjectLightbox({
           >
             <motion.div
               key={currentImage.url}
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.96 }}
-              transition={{ duration: 0.22, ease: "easeOut" }}
+              initial={{ opacity: 0.65 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.12, ease: "easeOut" }}
               className={cn(
-                "relative transition-all duration-300",
+                "relative",
                 isZoomed
                   ? "w-full max-w-full sm:max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto flex flex-col items-center"
                   : "flex items-center justify-center max-h-[78vh] max-w-[90vw]"
               )}
             >
-              {/* Sleek Loading Indicator */}
-              {isLoadingImage && (
-                <div className="absolute inset-0 min-h-[250px] flex flex-col items-center justify-center gap-3 z-10">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 shadow-xl">
-                    <Loader2 className="h-7 w-7 animate-spin text-white" />
+              {/* Subtle Non-intrusive Spinner (Only shown if genuinely slow network >150ms) */}
+              {showSpinner && (
+                <div className="absolute inset-0 min-h-[200px] flex flex-col items-center justify-center gap-3 z-10 pointer-events-none">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black/60 backdrop-blur-md border border-white/15 shadow-xl">
+                    <Loader2 className="h-6 w-6 animate-spin text-white" />
                   </div>
-                  <span className="text-xs font-semibold text-white/70 tracking-wide">
-                    Loading high-res spread...
-                  </span>
                 </div>
               )}
 
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
+                ref={imgRef}
                 src={currentImage.url}
                 alt={currentImage.alt}
                 onLoad={() => setIsLoadingImage(false)}
@@ -277,8 +309,7 @@ export function ProjectLightbox({
                 onPointerDown={handlePointerDown}
                 onPointerUp={handleImagePointerUp}
                 className={cn(
-                  "rounded-xl sm:rounded-2xl shadow-2xl transition-opacity duration-300 select-none",
-                  isLoadingImage ? "opacity-0" : "opacity-100",
+                  "rounded-xl sm:rounded-2xl shadow-2xl select-none",
                   isZoomed
                     ? "w-full max-w-full h-auto object-contain cursor-zoom-out block"
                     : "max-h-[76vh] max-w-[88vw] w-auto h-auto object-contain cursor-zoom-in"

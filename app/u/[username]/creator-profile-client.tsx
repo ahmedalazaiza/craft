@@ -5,10 +5,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { useSession } from "@/lib/session-context";
-import { Creator, Project } from "@/lib/types";
+import { Creator, Project, Board } from "@/lib/types";
 import { bricolage } from "@/lib/fonts";
 
 import { ProjectCard } from "@/components/project/project-card";
+import { BoardCard } from "@/components/board/board-card";
 import { NewProjectLink } from "@/components/project/new-project-link";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import {
   Share2,
   Settings,
   FolderKanban,
+  FolderHeart,
   Heart,
   Users,
   X,
@@ -48,9 +50,11 @@ import { getCanonicalShareUrl } from "@/lib/seo";
 export function CreatorProfileClient({
   initialCreator,
   initialProjects = [],
+  initialBoards = [],
 }: {
   initialCreator: Creator;
   initialProjects?: Project[];
+  initialBoards?: Board[];
 }) {
   const {
     projects,
@@ -61,6 +65,8 @@ export function CreatorProfileClient({
     updateProfile,
     isLoadingDb,
     platformSettings,
+    boards: sessionBoards,
+    deleteBoard,
   } = useSession();
 
   const isCurrentUser =
@@ -81,7 +87,7 @@ export function CreatorProfileClient({
     notFound();
   }
 
-  const [activeTab, setActiveTab] = useState<"published" | "drafts">("published");
+  const [activeTab, setActiveTab] = useState<"published" | "boards" | "drafts">("published");
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -186,6 +192,24 @@ export function CreatorProfileClient({
     return allCreatorProjects.filter((p) => !p.published);
   }, [allCreatorProjects]);
 
+  // Boards belonging to this creator:
+  // - For account owner: all user boards with projects (public + private, private boards have lock icon)
+  // - For visitors: strictly public boards with projects (is_private === false && itemsCount > 0)
+  const visibleBoards = useMemo(() => {
+    if (isCurrentUser) {
+      const sourceBoards = sessionBoards && sessionBoards.length > 0 ? sessionBoards : initialBoards;
+      return sourceBoards.filter((b) => (b.itemsCount ?? 0) > 0);
+    }
+    return initialBoards.filter((b) => !b.isPrivate && (b.itemsCount ?? 0) > 0);
+  }, [isCurrentUser, sessionBoards, initialBoards]);
+
+  // Fallback to published tab if active tab was boards and all boards were removed
+  useEffect(() => {
+    if (activeTab === "boards" && visibleBoards.length === 0) {
+      setActiveTab("published");
+    }
+  }, [activeTab, visibleBoards.length]);
+
   const displayedProjects =
     isCurrentUser && activeTab === "drafts" ? draftProjects : publishedProjects;
 
@@ -229,7 +253,7 @@ export function CreatorProfileClient({
                           }}
                           className={cn(
                             "group relative h-28 w-28 rounded-full overflow-hidden bg-[var(--bg-neutral)] ring-4 ring-[var(--border-neutral)] shadow-sm",
-                            isFoundingMember && "ring-amber-400/50 dark:ring-amber-400/40 shadow-[0_0_20px_rgba(245,158,11,0.18)]",
+                            isFoundingMember && "ring-3 ring-[var(--brand-secondary)]/60 dark:ring-[var(--brand-secondary)]/50 shadow-[0_0_20px_var(--brand-secondary-glow)]",
                             isCurrentUser && "cursor-pointer hover:ring-[var(--primary-forest-green)] transition-all"
                           )}
                           title={isCurrentUser ? "Click to edit studio profile & avatar" : undefined}
@@ -249,6 +273,13 @@ export function CreatorProfileClient({
                             </div>
                           )}
                         </div>
+
+                        {/* Founding Member Badge on Avatar */}
+                        {isFoundingMember && (
+                          <div className="absolute -bottom-0.5 -right-0.5 sm:bottom-0 sm:right-0 z-20">
+                            <FoundingBadge variant="avatar" size="lg" position="bottom" />
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex flex-col items-center gap-1.5 w-full">
@@ -267,20 +298,15 @@ export function CreatorProfileClient({
                           )}
                         </div>
 
-                        {isFoundingMember ? (
-                          <div className="pt-0.5">
-                            <FoundingBadge size="default" />
-                          </div>
-                        ) : (
-                          creator.badge &&
+                        {creator.badge &&
+                          !isFoundingMember &&
                           !["superadmin", "super_admin", "admin", "curator", "moderator", "root"].includes(
                             creator.badge.toLowerCase().replace(/[\s_-]/g, "")
                           ) && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-[var(--chip-bg)] border border-[var(--border-neutral)] px-2.5 py-0.5 text-xs font-bold text-[var(--chip-fg)] uppercase tracking-wider">
                               {creator.badge}
                             </span>
-                          )
-                        )}
+                          )}
                       </div>
                     </>
                   );
@@ -460,8 +486,52 @@ export function CreatorProfileClient({
             {/* Header & Tab Controls */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[var(--border-neutral)]">
               {isCurrentUser ? (
-                /* Studio Owner Tabs (Published vs Drafts) */
-                <div className="flex items-center gap-2">
+                /* Studio Owner Tabs (Published, Boards [if available], Drafts) */
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("published")}
+                    className={cn(
+                      "rounded-full px-4 py-1.5 text-xs font-bold transition-all cursor-pointer",
+                      activeTab === "published"
+                        ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                        : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
+                    )}
+                  >
+                    Published Projects ({publishedProjects.length})
+                  </button>
+
+                  {visibleBoards.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("boards")}
+                      className={cn(
+                        "rounded-full px-4 py-1.5 text-xs font-bold transition-all cursor-pointer",
+                        activeTab === "boards"
+                          ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                          : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
+                      )}
+                    >
+                      Boards ({visibleBoards.length})
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("drafts")}
+                    className={cn(
+                      "rounded-full px-4 py-1.5 text-xs font-bold transition-all cursor-pointer",
+                      activeTab === "drafts"
+                        ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
+                        : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
+                    )}
+                  >
+                    Drafts ({draftProjects.length})
+                  </button>
+                </div>
+              ) : visibleBoards.length > 0 ? (
+                /* Public Visitor Tabs (Published vs Boards) */
+                <div className="flex items-center gap-2 flex-wrap">
                   <button
                     type="button"
                     onClick={() => setActiveTab("published")}
@@ -477,19 +547,19 @@ export function CreatorProfileClient({
 
                   <button
                     type="button"
-                    onClick={() => setActiveTab("drafts")}
+                    onClick={() => setActiveTab("boards")}
                     className={cn(
                       "rounded-full px-4 py-1.5 text-xs font-bold transition-all cursor-pointer",
-                      activeTab === "drafts"
+                      activeTab === "boards"
                         ? "bg-[var(--chip-bg)] text-[var(--chip-fg)] shadow-xs"
                         : "bg-[var(--bg-neutral)] text-[var(--content-secondary)] hover:text-[var(--content-primary)]"
                     )}
                   >
-                    Drafts ({draftProjects.length})
+                    Boards ({visibleBoards.length})
                   </button>
                 </div>
               ) : (
-                /* Public Visitor Header */
+                /* Public Visitor Header (when no public boards) */
                 <div>
                   <h2
                     className={cn(
@@ -505,15 +575,26 @@ export function CreatorProfileClient({
                 </div>
               )}
 
-              {/* Action Toolbar on Right (Sort Switcher or New Project CTA) */}
+              {/* Action Toolbar on Right (Sort Switcher or New Project / Manage Boards CTA) */}
               <div className="flex items-center gap-3">
                 {isCurrentUser ? (
-                  displayedProjects.length > 0 && (
+                  activeTab === "boards" ? (
+                    <Link
+                      href="/boards"
+                      className={cn(
+                        buttonVariants({ variant: "secondary", size: "sm" }),
+                        "text-xs sm:text-sm gap-1.5 font-bold"
+                      )}
+                    >
+                      <FolderHeart className="h-4 w-4" />
+                      <span>Manage Boards</span>
+                    </Link>
+                  ) : displayedProjects.length > 0 ? (
                     <NewProjectLink size="sm" className="text-xs sm:text-sm">
                       New Project
                     </NewProjectLink>
-                  )
-                ) : (
+                  ) : null
+                ) : activeTab === "published" ? (
                   <div className="flex items-center gap-1.5 bg-[var(--bg-neutral)] p-1 rounded-full text-xs font-semibold shrink-0">
                     <button
                       type="button"
@@ -540,12 +621,52 @@ export function CreatorProfileClient({
                       Most Appreciated
                     </button>
                   </div>
-                )}
+                ) : null}
               </div>
             </div>
 
-            {/* Projects Grid / Empty State */}
-            {displayedProjects.length === 0 ? (
+            {/* Content Area: Boards Grid vs Projects Grid */}
+            {activeTab === "boards" ? (
+              visibleBoards.length === 0 ? (
+                <div className="flex min-h-[340px] flex-col items-center justify-center rounded-[28px] border border-dashed border-[var(--border-neutral)] bg-[var(--bg-screen)] p-10 text-center my-6">
+                  <div className="h-14 w-14 rounded-full bg-[var(--bg-neutral)] flex items-center justify-center text-[var(--content-tertiary)] mb-4">
+                    <FolderHeart className="h-7 w-7" />
+                  </div>
+
+                  <h2 className="type-title-subsection text-[var(--content-primary)]">
+                    No boards with projects
+                  </h2>
+
+                  <p className="mt-2 type-body-default text-[var(--content-secondary)] max-w-md">
+                    {isCurrentUser
+                      ? "Create moodboards and curate visual inspiration from published projects."
+                      : `${creator.displayName} hasn't published any public boards with projects yet.`}
+                  </p>
+
+                  {isCurrentUser && (
+                    <Link
+                      href="/boards"
+                      className={cn(buttonVariants({ variant: "accent" }), "mt-6 gap-2")}
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span>Manage Boards</span>
+                    </Link>
+                  )}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-5 sm:gap-6">
+                  {visibleBoards.map((board, idx) => (
+                    <StaggerGridItem key={board.id} index={idx}>
+                      <BoardCard
+                        board={board}
+                        creatorName={creator.displayName}
+                        onDelete={isCurrentUser ? deleteBoard : undefined}
+                      />
+                    </StaggerGridItem>
+                  ))}
+                </div>
+              )
+            ) : displayedProjects.length === 0 ? (
               <div className="flex min-h-[340px] flex-col items-center justify-center rounded-[28px] border border-dashed border-[var(--border-neutral)] bg-[var(--bg-screen)] p-10 text-center my-6">
                 <div className="h-14 w-14 rounded-full bg-[var(--bg-neutral)] flex items-center justify-center text-[var(--content-tertiary)] mb-4">
                   <FolderKanban className="h-7 w-7" />

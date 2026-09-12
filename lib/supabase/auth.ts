@@ -516,3 +516,40 @@ export async function signInWithGoogle(redirectPath: string = "/"): Promise<{ er
     return { error: errorMsg };
   }
 }
+
+/**
+ * Sign in or sign up with Google ID Token (Google One Tap)
+ */
+export async function signInWithGoogleIdToken(
+  idToken: string,
+  nonce?: string
+): Promise<AuthResponse> {
+  try {
+    const { data, error } = await supabase.auth.signInWithIdToken({
+      provider: "google",
+      token: idToken,
+      nonce: nonce,
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    if (!data.user) {
+      return { success: false, error: "Failed to establish user session." };
+    }
+
+    // Retrieve or auto-create creator profile for Google user
+    const creator = await getCurrentAuthUser();
+
+    return {
+      success: true,
+      user: creator || undefined,
+    };
+  } catch (err: unknown) {
+    const errorMsg =
+      err instanceof Error ? err.message : "Google One Tap sign in failed.";
+    return { success: false, error: errorMsg };
+  }
+}
+

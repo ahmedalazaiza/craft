@@ -93,3 +93,20 @@ export function formatProjectPublishedDate(
     isRecent: false,
   };
 }
+
+/**
+ * Formats view counts into clean compact strings:
+ * - Under 1,000: exact number (e.g. 0, 450, 999)
+ * - 1,000 to 999,999: "1k", "1.2k", "10k", "850k"
+ * - 1,000,000+: "1M", "2.4M"
+ */
+export function formatViews(count: number): string {
+  const safeCount = Math.max(0, typeof count === "number" && !isNaN(count) ? count : 0);
+  if (safeCount >= 1000000) {
+    return (safeCount / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+  }
+  if (safeCount >= 1000) {
+    return (safeCount / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+  }
+  return safeCount.toString();
+}

@@ -253,3 +253,18 @@ export interface BoardItem {
   createdAt: string;
   project?: Project;
 }
+
+export interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  category: "general" | "support" | "feedback" | "partnership" | "report";
+  status: "unread" | "read" | "resolved" | "archived";
+  userId?: string | null;
+  adminNotes?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+}
+

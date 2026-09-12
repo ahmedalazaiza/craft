@@ -13,6 +13,7 @@ import { CookieConsentBanner } from "@/components/ui/cookie-consent-banner";
 import { ToastContainer } from "@/components/ui/toast";
 import { MaintenanceScreen } from "@/components/layout/maintenance-screen";
 import { SuspensionBanner } from "@/components/layout/suspension-banner";
+import { GoogleOneTap } from "@/components/auth/google-one-tap";
 import { Analytics } from "@vercel/analytics/next";
 
 
@@ -135,6 +136,7 @@ export default function RootLayout({
               <NetworkStatusIndicator />
               <CookieConsentBanner />
               <ToastContainer />
+              <GoogleOneTap />
             </MaintenanceScreen>
           </SessionProvider>
         </ThemeProvider>

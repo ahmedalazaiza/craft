@@ -71,31 +71,43 @@ export function ProfileDropdown() {
     router.push("/");
   };
 
+  const isFoundingMember = (user.badge as string | undefined)?.trim().toLowerCase() === "founding member";
+
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Avatar Trigger Button (Unified with icon button dimensions) */}
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className={cn(
-          "relative h-9 w-9 rounded-full overflow-hidden transition-all duration-200 cursor-pointer select-none shrink-0",
-          isOpen
-            ? "ring-2 ring-[var(--content-primary)] ring-offset-2 ring-offset-[var(--bg-screen)]"
-            : "ring-1 ring-[var(--border-neutral)] hover:ring-2 hover:ring-[var(--content-primary)]"
+      <div className="relative shrink-0">
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className={cn(
+            "relative h-9 w-9 rounded-full overflow-hidden transition-all duration-200 cursor-pointer select-none shrink-0",
+            isFoundingMember && "ring-2 ring-[var(--brand-secondary)]/70 shadow-[0_0_8px_var(--brand-secondary-glow)]",
+            isOpen
+              ? "ring-2 ring-[var(--content-primary)] ring-offset-2 ring-offset-[var(--bg-screen)]"
+              : "ring-1 ring-[var(--border-neutral)] hover:ring-2 hover:ring-[var(--content-primary)]"
+          )}
+          title={`Signed in as ${user.displayName}`}
+          aria-label="User profile menu"
+        >
+          <div className="relative h-full w-full rounded-full overflow-hidden">
+            <Image
+              src={getValidAvatarUrl(user.avatarUrl)}
+              alt={user.displayName}
+              fill
+              sizes="36px"
+              className="object-cover"
+            />
+          </div>
+        </button>
+        {isFoundingMember && (
+          <div className="absolute -bottom-0.5 -right-0.5 z-10 pointer-events-none">
+            <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-gradient-to-tr from-[#6810a6] via-[var(--brand-secondary)] to-[#a855f7] text-white ring-1.5 ring-[var(--bg-elevated)] shadow-xs">
+              <Sparkles className="h-2 w-2 fill-white/50 text-white" />
+            </span>
+          </div>
         )}
-        title={`Signed in as ${user.displayName}`}
-        aria-label="User profile menu"
-      >
-        <div className="relative h-full w-full rounded-full overflow-hidden">
-          <Image
-            src={getValidAvatarUrl(user.avatarUrl)}
-            alt={user.displayName}
-            fill
-            sizes="36px"
-            className="object-cover"
-          />
-        </div>
-      </button>
+      </div>
 
       {/* Dropdown Menu Popover */}
       <AnimatePresence>
@@ -113,8 +125,8 @@ export function ProfileDropdown() {
                 <div
                   className={cn(
                     "relative h-full w-full rounded-full overflow-hidden ring-1 ring-[var(--border-neutral)]",
-                    (user.badge as string | undefined)?.trim().toLowerCase() === "founding member" &&
-                      "ring-2 ring-amber-400/60 dark:ring-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]"
+                    isFoundingMember &&
+                      "ring-2 ring-[var(--brand-secondary)]/60 shadow-[0_0_10px_var(--brand-secondary-glow)]"
                   )}
                 >
                   <Image
@@ -125,6 +137,11 @@ export function ProfileDropdown() {
                     className="object-cover"
                   />
                 </div>
+                {isFoundingMember && (
+                  <div className="absolute -bottom-0.5 -right-0.5 z-20 pointer-events-none">
+                    <FoundingBadge variant="avatar" size="sm" showTooltip={false} />
+                  </div>
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 flex-wrap">
@@ -136,15 +153,13 @@ export function ProfileDropdown() {
                 <div className="text-[11px] text-[var(--content-tertiary)] truncate">
                   @{user.username}
                 </div>
-                <div className="mt-1 flex flex-wrap gap-1">
-                  {(user.badge as string | undefined)?.trim().toLowerCase() === "founding member" ? (
-                    <FoundingBadge size="sm" />
-                  ) : user.isVerified !== false ? (
+                {user.isVerified !== false && !isFoundingMember && (
+                  <div className="mt-1 flex flex-wrap gap-1">
                     <div className="inline-flex items-center gap-1 rounded-full bg-[var(--chip-bg)] px-2 py-0.5 text-[10px] font-semibold text-[var(--chip-fg)]">
                       <span>Verified Creator</span>
                     </div>
-                  ) : null}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
 

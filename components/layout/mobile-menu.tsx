@@ -327,9 +327,9 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                   <motion.span
                     key={unreadNotificationsCount}
                     initial={{ scale: 0.3, opacity: 0 }}
-                    animate={{ scale: [1.35, 0.95, 1], opacity: 1 }}
+                    animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.3, opacity: 0 }}
-                    transition={{ type: "spring", stiffness: 600, damping: 22 }}
+                    transition={{ type: "spring", stiffness: 600, damping: 20 }}
                     className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-[var(--brand-secondary)] text-black"
                   >
                     {unreadNotificationsCount}
