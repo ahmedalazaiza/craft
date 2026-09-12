@@ -294,7 +294,18 @@ export function ContactClient() {
               {errorMessage && (
                 <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 flex items-start gap-3 text-xs sm:text-sm">
                   <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
-                  <div className="flex-1 font-medium">{errorMessage}</div>
+                  <div className="flex-1 font-medium space-y-1">
+                    <p>{errorMessage}</p>
+                    <p className="text-xs text-[var(--content-secondary)]">
+                      You can also email us directly at{" "}
+                      <a
+                        href="mailto:support@layerat.com"
+                        className="underline font-semibold text-[var(--content-primary)] hover:text-[var(--brand-secondary)]"
+                      >
+                        support@layerat.com
+                      </a>
+                    </p>
+                  </div>
                 </div>
               )}
 

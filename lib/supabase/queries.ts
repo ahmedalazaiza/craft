@@ -2495,14 +2495,18 @@ export async function insertContactMessage(payload: {
 
     if (error) {
       console.error("Error inserting contact message:", error.message || error);
-      return { success: false, error: error.message };
+      const userMessage =
+        error.code === "PGRST205" || error.message?.includes("Could not find the table") || error.message?.includes("schema cache")
+          ? "Database service is being initialized. Please run the contact_messages SQL migration in Supabase or email support@layerat.com directly."
+          : "Unable to deliver your message right now. Please try again or email us directly.";
+      return { success: false, error: userMessage };
     }
 
     return { success: true };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Failed to submit contact message.";
     console.error("Failed to submit contact message:", err);
-    return { success: false, error: msg };
+    return { success: false, error: "An unexpected error occurred while sending your message. Please email support@layerat.com directly." };
   }
 }
 
