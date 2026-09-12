@@ -245,7 +245,7 @@ export function ContactClient() {
                   Message Delivered!
                 </h3>
                 <p className="text-sm sm:text-base text-[var(--content-secondary)] max-w-md mx-auto leading-relaxed">
-                  Thank you for reaching out, <span className="font-semibold text-[var(--content-primary)]">{name}</span>. We have safely logged your inquiry into our administrative dashboard and will reply to <span className="font-semibold text-[var(--content-primary)]">{email}</span> within 24-48 business hours.
+                  Thank you for reaching out. The Layerat team has received your message and will be in touch with you soon.
                 </p>
               </div>
 
