@@ -15,6 +15,7 @@ import {
   CMSPageRecord,
   Board,
   BoardItem,
+  ContactMessage,
 } from "@/lib/types";
 import { DEFAULT_AVATAR_URL, upgradeGoogleAvatarUrl } from "@/lib/avatar";
 import { getAuthRedirectUrl } from "@/lib/seo";
@@ -2502,6 +2503,83 @@ export async function insertContactMessage(payload: {
     const msg = err instanceof Error ? err.message : "Failed to submit contact message.";
     console.error("Failed to submit contact message:", err);
     return { success: false, error: msg };
+  }
+}
+
+/**
+ * Fetch contact messages for admin dashboard with resilient error handling
+ */
+export async function fetchContactMessages(
+  statusFilter?: string
+): Promise<ContactMessage[]> {
+  try {
+    let query = supabase
+      .from("contact_messages")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (statusFilter && statusFilter !== "all") {
+      query = query.eq("status", statusFilter);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      // If table doesn't exist yet in Supabase schema cache, fail gracefully without breaking the dashboard
+      if (error.code === "PGRST205" || error.message?.includes("Could not find the table") || error.message?.includes("schema cache")) {
+        console.warn("[Contact Messages] Table 'contact_messages' does not exist yet in Supabase. Run migration SQL in Supabase Editor to enable.");
+        return [];
+      }
+      console.error("Error fetching contact messages:", error.message || error);
+      return [];
+    }
+
+    if (!data) return [];
+
+    return data.map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      subject: row.subject,
+      message: row.message,
+      category: row.category,
+      status: row.status,
+      userId: row.user_id,
+      adminNotes: row.admin_notes,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }));
+  } catch (err) {
+    console.warn("Could not fetch contact messages:", err);
+    return [];
+  }
+}
+
+/**
+ * Update contact message status or notes (Admins only)
+ */
+export async function updateContactMessageStatus(
+  messageId: string,
+  updates: { status?: "unread" | "read" | "resolved" | "archived"; adminNotes?: string }
+): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from("contact_messages")
+      .update({
+        ...(updates.status ? { status: updates.status } : {}),
+        ...(updates.adminNotes !== undefined ? { admin_notes: updates.adminNotes } : {}),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", messageId);
+
+    if (error) {
+      console.error("Error updating contact message:", error.message || error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("Failed to update contact message:", err);
+    return false;
   }
 }
 

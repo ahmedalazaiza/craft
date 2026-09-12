@@ -44,21 +44,36 @@ DROP POLICY IF EXISTS "Admins can view contact messages" ON public.contact_messa
 CREATE POLICY "Admins can view contact messages"
   ON public.contact_messages FOR SELECT
   TO authenticated
-  USING (public.is_admin(auth.uid()));
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = auth.uid() AND role IN ('admin', 'superadmin')
+    )
+  );
 
 -- Only platform admins can update status/notes
 DROP POLICY IF EXISTS "Admins can update contact messages" ON public.contact_messages;
 CREATE POLICY "Admins can update contact messages"
   ON public.contact_messages FOR UPDATE
   TO authenticated
-  USING (public.is_admin(auth.uid()));
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = auth.uid() AND role IN ('admin', 'superadmin')
+    )
+  );
 
 -- Only platform admins can delete messages
 DROP POLICY IF EXISTS "Admins can delete contact messages" ON public.contact_messages;
 CREATE POLICY "Admins can delete contact messages"
   ON public.contact_messages FOR DELETE
   TO authenticated
-  USING (public.is_admin(auth.uid()));
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = auth.uid() AND role IN ('admin', 'superadmin')
+    )
+  );
 
 -- 5. Enable Realtime Replication
 DO $$
